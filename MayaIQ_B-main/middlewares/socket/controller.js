@@ -621,7 +621,7 @@ const banGroupUserWithIp = async (groupId, userId, ipAddress, bannedBy) => {
         // First, ban the user normally
         await banGroupUser(groupId, userId);
         
-        // Then, add IP ban for verified users
+        // Then, add IP ban for both verified and anonymous users
         await PG_query(`INSERT INTO ip_bans (group_id, user_id, ip_address, banned_by)
             VALUES (${groupId}, ${userId}, '${ipAddress}', ${bannedBy})
             ON CONFLICT (group_id, ip_address, is_active) 

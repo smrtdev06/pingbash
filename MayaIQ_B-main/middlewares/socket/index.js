@@ -371,6 +371,20 @@ module.exports = async (http) => {
                 const res = isExpired(socket, data, chatCode.GET_GROUP_MSG);
                 if (!res.expired) {
                     try {
+                        // Get user's IP address
+                        const clientIp = socket.handshake.address || 
+                                        socket.handshake.headers['x-forwarded-for'] || 
+                                        socket.handshake.headers['x-real-ip'] ||
+                                        socket.request.connection.remoteAddress;
+
+                        // Check if IP is banned from this group
+                        const isIpBanned = await Controller.checkIpBan(data.groupId, clientIp);
+                        if (isIpBanned) {
+                            console.log(`IP ${clientIp} is banned from group ${data.groupId}`);
+                            socket.emit(chatCode.FORBIDDEN, "You are banned from this group");
+                            return;
+                        }
+
                         // Verify user token and extract user ID
                         const loggedId = verifyUser(data.token);
 
