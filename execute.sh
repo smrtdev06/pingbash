@@ -2,7 +2,7 @@
 
 # Ensure environment variables are loaded
 source ~/.bashrc
-git pull
+git pull  
 pm2 restart 8
 cd MayaIQ_F-main
 npm run build
