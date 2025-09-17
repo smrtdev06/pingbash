@@ -5,9 +5,9 @@ import { faL } from "@fortawesome/free-solid-svg-icons";
 // export const SERVER_URL = "http://localhost:19823"
 export const SERVER_URL = "https://pingbash.com"
 
-export const GOOGLE_MAPS_API_KEY = process.env.GOOGLE_MAPS_API_KEY;
+export const GOOGLE_MAPS_API_KEY:string = process.env.GOOGLE_MAPS_API_KEY || "";
 
-export const CHAT_KEY = process.env.CHAT_KEY;
+export const CHAT_KEY:string = process.env.CHAT_KEY || "";
 
 export const COUNTRY_FLAG_LINK = "https://flagcdn.com/w40/"
 

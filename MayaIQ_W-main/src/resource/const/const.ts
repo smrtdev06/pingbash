@@ -17,9 +17,9 @@ export const SIZE_MODE = "responsive";
 export const CHAT_BOX_WIDTH = 1500;
 export const CHAT_BOX_HEIGHT = 1200;
 
-export const GOOGLE_MAPS_API_KEY = process.env.GOOGLE_MAPS_API_KEY;
+export const GOOGLE_MAPS_API_KEY:string = process.env.GOOGLE_MAPS_API_KEY || "";
 
-export const CHAT_KEY = process.env.CHAT_KEY;
+export const CHAT_KEY:string = process.env.CHAT_KEY || "";
 
 export const COUNTRY_FLAG_LINK = "https://flagcdn.com/w40/"
 
