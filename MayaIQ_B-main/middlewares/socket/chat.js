@@ -281,29 +281,48 @@ module.exports = (socket, users) => {
         try {
             // Get sender ID from the token
             const senderId = verifyUser(data.token);
-            const { userId, groupId} = data;
+            const { userId, groupId } = data;
+
+            // RULE 1: User cannot ban himself
+            if (senderId === userId) {
+                console.log(`Ban attempt blocked: User ${senderId} tried to ban themselves`);
+                socket.emit(chatCode.FORBIDDEN, "Cannot ban yourself");
+                return;
+            }
+
+            // Get user's IP address from socket
+            const clientIp = socket.handshake.address || 
+                            socket.handshake.headers['x-forwarded-for'] || 
+                            socket.handshake.headers['x-real-ip'] ||
+                            socket.request.connection.remoteAddress;
+
+            console.log(`Ban request: User ${senderId} banning user ${userId} (IP: ${clientIp}) in group ${groupId}`);
 
             if (!users.find(user => user.ID == senderId)) {
                 users.push({ ID: senderId, Socket: socket.id });
                 sockets[socket.id] = socket;
             }
-            // Save message to the database
-            await Controller.banGroupUser(groupId, userId);
+
+            // Check if user is verified (has JWT token) or anonymous
+            const isVerifiedUser = !data.token.includes("anonuser");
+            
+            if (isVerifiedUser) {
+                // RULE 2: For verified users, ban both user ID and IP address
+                console.log(`Banning verified user ${userId} and IP ${clientIp}`);
+                await Controller.banGroupUserWithIp(groupId, userId, clientIp, senderId);
+            } else {
+                // RULE 3: For anonymous users, ban only user ID
+                console.log(`Banning anonymous user ${userId} only`);
+                await Controller.banGroupUser(groupId, userId);
+            }
+
             const receivers = await Controller.getReceiverIdsOfGroup(groupId);
             // Find the receiver's and sender's socket IDs
             const receiveUsers = users.filter(user => receivers.find(receiverId => receiverId == user.ID));
-            // const sender = users.find(user => user.ID === senderId);
             
-            // const senderSocketId = sender?.Socket;
             const receiverSocketIds = receiveUsers.map(user => user?.Socket);
-
-            // const senderSocket = sockets[senderSocketId];
             const receiverSockets = receiverSocketIds.map(socketId => sockets[socketId]);
-            // Retrieve message list for the user
-            // const msgList = await Controller.getGroupMsg(groupId);
-            // if (senderSocket) {
-            //     senderSocket.emit(chatCode.BAN_GROUP_USER, userId);
-            // }
+            
             const group = await Controller.getGroup(groupId);
             if (receiverSockets && receiverSockets.length > 0) {
                 receiverSockets.forEach(receiverSocket => {
@@ -313,8 +332,10 @@ module.exports = (socket, users) => {
                     }
                 });
             }
+
+            console.log(`Ban completed successfully for user ${userId} by ${senderId}`);
         } catch (error) {
-            console.error("Error sending message:", error);
+            console.error("Error banning user:", error);
             socket.emit(chatCode.SERVER_ERROR, httpCode.SERVER_ERROR);
         }
     });
@@ -333,40 +354,36 @@ module.exports = (socket, users) => {
         try {
             // Get sender ID from the token
             const senderId = verifyUser(data.token);
-            const { userId, groupId} = data;
+            const { userId, groupId } = data;
+
+            console.log(`Unban request: User ${senderId} unbanning user ${userId} in group ${groupId}`);
 
             if (!users.find(user => user.ID == senderId)) {
                 users.push({ ID: senderId, Socket: socket.id });
                 sockets[socket.id] = socket;
             }
-            // Save message to the database
-            await Controller.unbanGroupUser(groupId, userId);
-            const receivers = await Controller.getReceiverIdsOfGroup(groupId);
-            // Find the receiver's and sender's socket IDs
-            const receiveUsers = users.filter(user => receivers?.find(receiverId => receiverId == user.ID));
-            // const sender = users.find(user => user.ID === senderId);
             
-            // const senderSocketId = sender?.Socket;
+            // Unban user (includes both group_users and ip_bans tables)
+            await Controller.unbanGroupUser(groupId, userId);
+            
+            const receivers = await Controller.getReceiverIdsOfGroup(groupId);
+            const receiveUsers = users.filter(user => receivers?.find(receiverId => receiverId == user.ID));
             const receiverSocketIds = receiveUsers.map(user => user?.Socket);
-
-            // const senderSocket = sockets[senderSocketId];
             const receiverSockets = receiverSocketIds.map(socketId => sockets[socketId]);
-            // Retrieve message list for the user
-            // const msgList = await Controller.getGroupMsg(groupId);
-            // if (senderSocket) {
-            //     senderSocket.emit(chatCode.UNBAN_GROUP_USER, msgList);
-            // }
+            
             const group = await Controller.getGroup(groupId);
             if (receiverSockets && receiverSockets.length > 0) {
-                // receiverSockets.map(receiverSocket => receiverSocket.emit(chatCode.UNBAN_GROUP_USER, userId));
                 receiverSockets.forEach(receiverSocket => {
                     if (receiverSocket && typeof receiverSocket.emit === 'function') {
+                        receiverSocket.emit(chatCode.UNBAN_GROUP_USER, userId);
                         receiverSocket.emit(chatCode.GROUP_UPDATED, group);
                     }
                 });
             }
+
+            console.log(`Unban completed successfully for user ${userId} by ${senderId}`);
         } catch (error) {
-            console.error("Error sending message:", error);
+            console.error("Error unbanning user:", error);
             socket.emit(chatCode.SERVER_ERROR, httpCode.SERVER_ERROR);
         }
     });

@@ -616,23 +616,72 @@ const banGroupUser = async (groupId, userId) => {
     }
 }
 
+const banGroupUserWithIp = async (groupId, userId, ipAddress, bannedBy) => {
+    try {
+        // First, ban the user normally
+        await banGroupUser(groupId, userId);
+        
+        // Then, add IP ban for verified users
+        await PG_query(`INSERT INTO ip_bans (group_id, user_id, ip_address, banned_by)
+            VALUES (${groupId}, ${userId}, '${ipAddress}', ${bannedBy})
+            ON CONFLICT (group_id, ip_address, is_active) 
+            DO UPDATE SET 
+                user_id = ${userId},
+                banned_by = ${bannedBy},
+                banned_at = CURRENT_TIMESTAMP;`)
+        
+        console.log(`IP ban added: User ${userId}, IP ${ipAddress} banned from group ${groupId} by ${bannedBy}`);
+    } catch (error) {
+        console.log("Error banning user with IP:", error);
+    }
+}
+
+const checkIpBan = async (groupId, ipAddress) => {
+    try {
+        const result = await PG_query(`SELECT * FROM ip_bans 
+            WHERE group_id = ${groupId} 
+            AND ip_address = '${ipAddress}' 
+            AND is_active = true;`);
+        return result.rows.length > 0;
+    } catch (error) {
+        console.log("Error checking IP ban:", error);
+        return false;
+    }
+}
+
 const unbanGroupUser = async (groupId, userId) => {
     try {
+        // Unban user in group_users table
         await PG_query(`UPDATE group_users
             SET banned = 0, unban_request = 0
-            WHERE group_id = ${groupId} AND user_id = ${userId};`)        
+            WHERE group_id = ${groupId} AND user_id = ${userId};`)
+        
+        // Also remove any IP bans for this user in this group
+        await PG_query(`UPDATE ip_bans 
+            SET is_active = false 
+            WHERE group_id = ${groupId} AND user_id = ${userId} AND is_active = true;`)
+        
+        console.log(`User ${userId} unbanned from group ${groupId} (including IP bans)`);
     } catch (error) {
-        console.log(error);
+        console.log("Error unbanning user:", error);
     }
 }
 
 const unbanGroupUsers = async (groupId, userIds) => {
     try {
+        // Unban users in group_users table
         await PG_query(`UPDATE group_users
             SET banned = 0, unban_request = 0
             WHERE group_id = ${groupId} AND user_id IN (${userIds});`)
+        
+        // Also remove any IP bans for these users in this group
+        await PG_query(`UPDATE ip_bans 
+            SET is_active = false 
+            WHERE group_id = ${groupId} AND user_id IN (${userIds}) AND is_active = true;`)
+        
+        console.log(`Users [${userIds}] unbanned from group ${groupId} (including IP bans)`);
     } catch (error) {
-        console.log(error);
+        console.log("Error unbanning users:", error);
     }
 }
 
@@ -1084,5 +1133,7 @@ module.exports = {
     getBlockedUsersInfo,
     getBlockedUsers,
     getChatRules,
-    updateChatRules
+    updateChatRules,
+    banGroupUserWithIp,
+    checkIpBan
 }

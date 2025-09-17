@@ -45,4 +45,4 @@ async function executeSqlFile(fileName, dbConfig) {
     }
 }
 
-executeSqlFile('./db/add_chat_rules.sql');
+executeSqlFile('./db/ip_bans.sql');
