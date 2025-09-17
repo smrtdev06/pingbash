@@ -17,6 +17,13 @@ export const SIZE_MODE = "responsive";
 export const CHAT_BOX_WIDTH = 1500;
 export const CHAT_BOX_HEIGHT = 1200;
 
+export const GOOGLE_MAPS_API_KEY = process.env.GOOGLE_MAPS_API_KEY;
+
+export const CHAT_KEY = process.env.CHAT_KEY;
+
+export const COUNTRY_FLAG_LINK = "https://flagcdn.com/w40/"
+
+
 export const BG_COLOR = "#FFFFFF";
 export const BORDER_COLOR =  '#CC0000';
 export const TITLE_COLOR = '#333333';  

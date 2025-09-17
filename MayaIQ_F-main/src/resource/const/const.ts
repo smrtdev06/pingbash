@@ -3,22 +3,27 @@ import { faL } from "@fortawesome/free-solid-svg-icons";
 // export const SERVER_URL = "https://gorgeous-briefly-hermit.ngrok-free.app"
 //export const SERVER_URL = "http://23.27.164.88:19823"
 // export const SERVER_URL = "http://localhost:19823"
- export const SERVER_URL = "https://pingbash.com"
+export const SERVER_URL = "https://pingbash.com"
+
+export const GOOGLE_MAPS_API_KEY = process.env.GOOGLE_MAPS_API_KEY;
+
+export const CHAT_KEY = process.env.CHAT_KEY;
 
 export const COUNTRY_FLAG_LINK = "https://flagcdn.com/w40/"
 
+
 export const SELECTED_GROUP_ID = "selected_group_id";
 export const GROUP_CREATER_ID = "group_creater_id";
-export const GROUP_MEMBER_IDS = "group_member_ids"; 
+export const GROUP_MEMBER_IDS = "group_member_ids";
 
 export const TOKEN_KEY = "MayaIQ_Token";
-export const USER_ID_KEY = "MayaIQ_User";    
+export const USER_ID_KEY = "MayaIQ_User";
 
 // Group Chatting box Style Default Params
 export const SIZE_MODE = "responsive";
 
 export const BG_COLOR = "#FFFFFF";
-export const BORDER_COLOR =  '#CC0000';
+export const BORDER_COLOR = '#CC0000';
 export const TITLE_COLOR = '#333333';
 export const OWNER_MSG_COLOR = '#FFFFFF';
 export const MSG_BG_COLOR = '#FFFFFF';
