@@ -600,19 +600,27 @@ const timoutUser = async (groupId, userId) => {
 
 const banGroupUser = async (groupId, userId) => {
     try {
-        await PG_query(`UPDATE group_users
-            SET banned = 1, unban_request = 0
-            WHERE group_id = ${groupId} AND user_id = ${userId};`)
+        // First, ensure the user exists in group_users table (INSERT if not exists)
+        await PG_query(`INSERT INTO group_users (group_id, user_id, banned, unban_request, is_member)
+            VALUES (${groupId}, ${userId}, 1, 0, 0)
+            ON CONFLICT (group_id, user_id)
+            DO UPDATE SET banned = 1, unban_request = 0;`)
+        
+        console.log(`User ${userId} banned from group ${groupId} (added to group_users if not existed)`);
+        
+        // Delete pinned messages from banned user
         await PG_query(`DELETE FROM pin_messages
             WHERE message_id IN (
                 SELECT id
                 FROM "Messages"
                 WHERE "Sender_Id" = ${userId} and group_id = ${groupId}
             );`)
+        
+        // Delete messages from banned user
         await PG_query(`DELETE FROM "Messages"
             WHERE "Sender_Id" = ${userId} and group_id = ${groupId};`)
     } catch (error) {
-        console.log(error);
+        console.log("Error banning user:", error);
     }
 }
 
@@ -630,7 +638,7 @@ const banGroupUserWithIp = async (groupId, userId, ipAddress, bannedBy) => {
                 banned_by = ${bannedBy},
                 banned_at = CURRENT_TIMESTAMP;`)
         
-        console.log(`IP ban added: User ${userId}, IP ${ipAddress} banned from group ${groupId} by ${bannedBy}`);
+        console.log(`🚫 IP BAN ADDED: User ${userId}, IP ${ipAddress} banned from group ${groupId} by ${bannedBy}`);
     } catch (error) {
         console.log("Error banning user with IP:", error);
     }

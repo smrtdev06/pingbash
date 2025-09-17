@@ -371,22 +371,31 @@ module.exports = async (http) => {
                 const res = isExpired(socket, data, chatCode.GET_GROUP_MSG);
                 if (!res.expired) {
                     try {
+                        // Verify user token and extract user ID first
+                        const loggedId = verifyUser(data.token);
+
                         // Get user's IP address
                         const clientIp = socket.handshake.address || 
                                         socket.handshake.headers['x-forwarded-for'] || 
                                         socket.handshake.headers['x-real-ip'] ||
                                         socket.request.connection.remoteAddress;
 
-                        // Check if IP is banned from this group
-                        const isIpBanned = await Controller.checkIpBan(data.groupId, clientIp);
-                        if (isIpBanned) {
-                            console.log(`IP ${clientIp} is banned from group ${data.groupId}`);
-                            socket.emit(chatCode.FORBIDDEN, "You are banned from this group");
-                            return;
-                        }
+                        // Get group info to check if user is the creator
+                        const group = await Controller.getGroup(data.groupId);
+                        const isGroupCreator = group && group.creater_id === loggedId;
 
-                        // Verify user token and extract user ID
-                        const loggedId = verifyUser(data.token);
+                        // Check if IP is banned from this group (but skip for group creators)
+                        if (!isGroupCreator) {
+                            const isIpBanned = await Controller.checkIpBan(data.groupId, clientIp);
+                            if (isIpBanned) {
+                                console.log(`🚫 IP BAN BLOCKING ACCESS: IP ${clientIp} is banned from group ${data.groupId}`);
+                                console.log(`🚫 User ID: ${loggedId}, Group ID: ${data.groupId}`);
+                                socket.emit(chatCode.FORBIDDEN, "You are banned from this group");
+                                return;
+                            }
+                        } else {
+                            console.log(`👑 Group creator ${loggedId} accessing group ${data.groupId} - IP ban check skipped`);
+                        }
 
                         // Retrieve group messages
                         const groupMessages = await Controller.getGroupMsg(data.groupId);

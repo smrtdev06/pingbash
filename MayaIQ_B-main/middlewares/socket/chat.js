@@ -92,22 +92,31 @@ module.exports = (socket, users) => {
             return;
         }
         try {
-            // Get user's IP address
-            const clientIp = socket.handshake.address || 
-                            socket.handshake.headers['x-forwarded-for'] || 
-                            socket.handshake.headers['x-real-ip'] ||
-                            socket.request.connection.remoteAddress;
+                 // Get sender ID from the token first
+     const senderId = verifyUser(data.token);
 
-            // Check if IP is banned from this group
-            const isIpBanned = await Controller.checkIpBan(data.groupId, clientIp);
-            if (isIpBanned) {
-                console.log(`IP ${clientIp} is banned from group ${data.groupId} - message blocked`);
-                socket.emit(chatCode.FORBIDDEN, "You are banned from this group");
-                return;
-            }
+     // Get user's IP address
+     const clientIp = socket.handshake.address || 
+                     socket.handshake.headers['x-forwarded-for'] || 
+                     socket.handshake.headers['x-real-ip'] ||
+                     socket.request.connection.remoteAddress;
 
-            // Get sender ID from the token
-            const senderId = verifyUser(data.token);
+     // Get group info to check if user is the creator
+     const group = await Controller.getGroup(data.groupId);
+     const isGroupCreator = group && group.creater_id === senderId;
+
+     // Check if IP is banned from this group (but skip for group creators)
+     if (!isGroupCreator) {
+         const isIpBanned = await Controller.checkIpBan(data.groupId, clientIp);
+         if (isIpBanned) {
+             console.log(`🚫 IP BAN BLOCKING MESSAGE: IP ${clientIp} is banned from group ${data.groupId}`);
+             console.log(`🚫 User trying to send message: ${senderId}`);
+             socket.emit(chatCode.FORBIDDEN, "You are banned from this group");
+             return;
+         }
+     } else {
+         console.log(`👑 Group creator ${senderId} sending message to group ${data.groupId} - IP ban check skipped`);
+     }
             const { msg: content, groupId, receiverId } = data;
 
             if (!users.find(user => user.ID == senderId)) {
@@ -162,13 +171,14 @@ module.exports = (socket, users) => {
                             socket.handshake.headers['x-real-ip'] ||
                             socket.request.connection.remoteAddress;
 
-            // Check if IP is banned from this group
-            const isIpBanned = await Controller.checkIpBan(data.groupId, clientIp);
-            if (isIpBanned) {
-                console.log(`IP ${clientIp} is banned from group ${data.groupId} - anonymous message blocked`);
-                socket.emit(chatCode.FORBIDDEN, "You are banned from this group");
-                return;
-            }
+                 // Check if IP is banned from this group
+     const isIpBanned = await Controller.checkIpBan(data.groupId, clientIp);
+     if (isIpBanned) {
+         console.log(`🚫 IP BAN BLOCKING ANON MESSAGE: IP ${clientIp} is banned from group ${data.groupId}`);
+         console.log(`🚫 Anonymous user trying to send message: ${anonId}`);
+         socket.emit(chatCode.FORBIDDEN, "You are banned from this group");
+         return;
+     }
             
             // Get sender ID from the token
             const { anonId, msg: content, groupId, receiverId } = data;
@@ -1127,13 +1137,21 @@ module.exports = (socket, users) => {
             // Get the group with all members to find banned users
             const group = await Controller.getGroup(groupId);
             if (!group || !group.members) {
+                console.log(`No group data or members found for group ${groupId}`);
                 socket.emit(chatCode.GET_BANNED_USERS, []);
                 return;
             }
 
+            console.log(`Group ${groupId} has ${group.members.length} total members`);
+            console.log(`Sample member data:`, group.members[0]);
+
             // Filter banned users
             const bannedUsers = group.members.filter(member => member.banned === 1);
             console.log(`Found ${bannedUsers.length} banned users in group ${groupId}`);
+            
+            if (bannedUsers.length > 0) {
+                console.log(`Banned users:`, bannedUsers.map(u => ({ id: u.id, name: u.name, banned: u.banned })));
+            }
 
             socket.emit(chatCode.GET_BANNED_USERS, bannedUsers);
         } catch (error) {
