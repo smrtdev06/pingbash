@@ -1,0 +1,14 @@
+PORT='19823'
+DB_USER='postgres'
+DB_NAME='chatdb'
+DB_PORT='5432'
+DB_PASSWORD='postgres'
+
+JWT_SECRET='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9'
+JWT_EXPIRES_IN='1h'
+
+SMTP_HOST='smtp.gmail.com'
+SMPT_PORT='587'
+SMTP_USER='raidamaster89@gmail.com'
+SMTP_PASS='iwoo lnuh bmam ilmf'
+

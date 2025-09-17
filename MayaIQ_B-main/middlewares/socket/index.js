@@ -1,0 +1,415 @@
+/**
+ * @author
+ * @published June 9, 2024
+ * @description
+ **  index for Chat function
+ */
+// Import necessary modules and dependencies
+const chatCode = require("../../libs/chatCode");
+const httpCode = require("../../libs/httpCode");
+const socketIo = require("socket.io");
+const jwt = require('jsonwebtoken');
+const { isExpired } = require("./method");
+const Controller = require("./controller.js");
+const chatSocket = require("./chat");
+const { users, sockets } = require("../../libs/global.js");
+
+// Export the function responsible for setting up the chat server
+module.exports = async (http) => {
+    // Function to verify user token and extract user ID
+    const verifyUser = (token) => {
+        try {
+            const { id } = jwt.verify(token, process.env.JWT_SECRET);
+            return id;
+        } catch (error) {
+            console.error("Failed to verify user token:", error);
+            throw new Error("Invalid token");
+        }
+    };
+
+    // Initialize Socket.IO with HTTP server
+    const io = socketIo(http, {
+        cors: {
+            origin: '*',
+            methods: ['GET', 'POST']
+        }
+    });
+
+    // Socket.IO event handlers
+    io.on('connection', (socket) => {
+        console.log("A user connected");
+
+        // Emit REFRESH event to the connected socket
+        socket.emit(chatCode.REFRESH);
+
+        // Attach chatSocket event handlers to the socket
+        chatSocket(socket, users);
+
+        // Event handler to fetch user list for chat
+        socket.on(chatCode.GET_USERS, async (data) => {
+            if (!data.token) {
+                socket.emit(chatCode.FORBIDDEN, httpCode.FORBIDDEN);
+            } else {
+                const res = isExpired(socket, data, chatCode.GET_USERS);
+                if (!res.expired) {
+                    try {
+                        // Verify user token and extract user ID
+                        const loggedId = verifyUser(data.token);
+
+                        // Retrieve user list for chat
+                        const chatList = await Controller.getUsers(loggedId);
+
+                        // Assign socket IDs to users in the chat list
+                        chatList.forEach(chat => {
+                            chat["Socket"] = users.find(user => user.ID === chat.Opposite_Id)?.Socket || null;
+                        });
+
+                        // Emit GET_USERS event with chat list to the socket
+                        socket.emit(chatCode.GET_USERS, chatList);
+                    } catch (error) {
+                        console.error("Error getting users:", error);
+                    }
+                } else {
+                    socket.emit(chatCode.EXPIRED);
+                }
+            }
+        });
+
+        // Event handler to fetch friend users
+        socket.on(chatCode.GET_FRIEND_USERS, async (data) => {
+            if (!data.token) {
+                socket.emit(chatCode.FORBIDDEN, httpCode.FORBIDDEN);
+            } else {
+                const res = isExpired(socket, data, chatCode.GET_FRIEND_USERS);
+                if (!res.expired) {
+                    try {
+                        const loggedId = verifyUser(data.token);
+                        const friends = await Controller.getFriends(loggedId);
+                        
+                        // Assign socket IDs to friends
+                        friends.forEach(friend => {
+                            friend["Socket"] = users.find(user => user.ID === friend.Opposite_Id)?.Socket || null;
+                        });
+                        
+                        socket.emit(chatCode.GET_FRIEND_USERS, friends);
+                    } catch (error) {
+                        console.error("Error getting friends:", error);
+                        socket.emit(chatCode.SERVER_ERROR, httpCode.SERVER_ERROR);
+                    }
+                } else {
+                    socket.emit(chatCode.EXPIRED);
+                }
+            }
+        });
+
+        // Event handler to search users
+        socket.on(chatCode.GET_SEARCH_USERS, async (data) => {
+            if (!data.token || !data.search) {
+                socket.emit(chatCode.FORBIDDEN, httpCode.FORBIDDEN);
+            } else {
+                const res = isExpired(socket, data, chatCode.GET_SEARCH_USERS);
+                if (!res.expired) {
+                    try {
+                        const searchResults = await Controller.getSearchUsers(data.search);
+                        
+                        // Assign socket IDs to search results
+                        searchResults.forEach(user => {
+                            user["Socket"] = users.find(u => u.ID === user.Opposite_Id)?.Socket || null;
+                        });
+                        
+                        socket.emit(chatCode.GET_SEARCH_USERS, searchResults);
+                    } catch (error) {
+                        console.error("Error searching users:", error);
+                        socket.emit(chatCode.SERVER_ERROR, httpCode.SERVER_ERROR);
+                    }
+                } else {
+                    socket.emit(chatCode.EXPIRED);
+                }
+            }
+        });
+
+        // Event handler to get chat rules for a group
+        socket.on(chatCode.GET_CHAT_RULES, async (data) => {
+            if (!data.token || !data.groupId) {
+                socket.emit(chatCode.FORBIDDEN, httpCode.FORBIDDEN);
+            } else {
+                const res = isExpired(socket, data, chatCode.GET_CHAT_RULES);
+                if (!res.expired) {
+                    try {
+                        const chatRules = await Controller.getChatRules(data.groupId);
+                        if (chatRules) {
+                            socket.emit(chatCode.GET_CHAT_RULES, {
+                                chatRules: chatRules.chat_rules || '',
+                                showChatRules: chatRules.show_chat_rules || false,
+                                isCreator: chatRules.creater_id === res.user?.id
+                            });
+                        } else {
+                            socket.emit(chatCode.GET_CHAT_RULES, {
+                                chatRules: '',
+                                showChatRules: false,
+                                isCreator: false
+                            });
+                        }
+                    } catch (error) {
+                        console.error("Error getting chat rules:", error);
+                        socket.emit(chatCode.SERVER_ERROR, httpCode.SERVER_ERROR);
+                    }
+                } else {
+                    socket.emit(chatCode.EXPIRED);
+                }
+            }
+        });
+
+        // Event handler to update chat rules for a group
+        socket.on(chatCode.UPDATE_CHAT_RULES, async (data) => {
+            if (!data.token || !data.groupId) {
+                socket.emit(chatCode.FORBIDDEN, httpCode.FORBIDDEN);
+            } else {
+                const res = isExpired(socket, data, chatCode.UPDATE_CHAT_RULES);
+                if (!res.expired) {
+                    try {
+                        console.log("UPDATE_CHAT_RULES - User ID:", res.user?.id);
+                        const result = await Controller.updateChatRules(
+                            data.groupId, 
+                            data.chatRules, 
+                            data.showChatRules, 
+                            res.user?.id
+                        );
+                        
+                        if (result.success) {
+                            // Emit to the sender
+                            socket.emit(chatCode.UPDATE_CHAT_RULES, {
+                                success: true,
+                                chatRules: result.chatRules,
+                                showChatRules: result.showChatRules
+                            });
+                            
+                            // Broadcast to all users in the group
+                            socket.broadcast.emit(chatCode.UPDATE_CHAT_RULES, {
+                                groupId: data.groupId,
+                                chatRules: result.chatRules,
+                                showChatRules: result.showChatRules
+                            });
+                        } else {
+                            console.log("UPDATE_CHAT_RULES failed:", result.error);
+                            socket.emit(chatCode.FORBIDDEN, result.error);
+                        }
+                    } catch (error) {
+                        console.error("Error updating chat rules:", error);
+                        socket.emit(chatCode.SERVER_ERROR, httpCode.SERVER_ERROR);
+                    }
+                } else {
+                    socket.emit(chatCode.EXPIRED);
+                }
+            }
+        });
+
+        // Event handler to fetch messages for a specific user
+        socket.on(chatCode.GET_MSG, async (data) => {
+            if (!data.token) {
+                socket.emit(chatCode.FORBIDDEN, httpCode.FORBIDDEN);
+            } else {
+                const res = isExpired(socket, data, chatCode.GET_MSG);
+                if (!res.expired) {
+                    try {
+                        // Verify user token and extract user ID
+                        const loggedId = verifyUser(data.token);
+
+                        // Retrieve message list for the user
+                        const msgList = await Controller.getMsg(loggedId, data.target);
+
+                        // Emit GET_MSG event with message list to the socket
+                        socket.emit(chatCode.GET_MSG, msgList);
+                    } catch (error) {
+                        console.error("Error getting messages:", error);
+                    }
+                } else {
+                    socket.emit(chatCode.EXPIRED);
+                }
+            }
+        });
+
+        // Event handler to fetch chat history for a user
+        socket.on(chatCode.GET_HISTORY, async (data) => {
+            if (!data.token) {
+                socket.emit(chatCode.FORBIDDEN, httpCode.FORBIDDEN);
+            } else {
+                const res = isExpired(socket, data, chatCode.GET_HISTORY);
+                if (!res.expired) {
+                    try {
+                        // Verify user token and extract user ID
+                        const loggedId = verifyUser(data.token);
+
+                        // Retrieve chat history for the user
+                        const historyList = await Controller.getHistory(loggedId, data.target, data.limit);
+
+                        // Emit GET_HISTORY event with history list to the socket
+                        socket.emit(chatCode.GET_HISTORY, historyList);
+                    } catch (error) {
+                        console.error("Error getting chat history:", error);
+                    }
+                } else {
+                    socket.emit(chatCode.EXPIRED);
+                }
+            }
+        });
+
+        // Event handler for user login
+        socket.on(chatCode.USER_LOGGED, async (data) => {
+            if (!data.token) {
+                socket.emit(chatCode.FORBIDDEN, httpCode.FORBIDDEN);
+            } else {
+                const res = isExpired(socket, data, chatCode.USER_LOGGED);
+                if (!res.expired) {
+                    try {
+                        // Verify user token and extract user ID
+                        const loggedId = verifyUser(data.token);
+
+                        // Find user position in the users array
+                        const loggedUserPos = users.findIndex(user => user.ID === loggedId);
+
+                        // Update or add user to the users array
+                        if (loggedUserPos === -1) {
+                            users.push({ ID: loggedId, Socket: socket.id });
+                        } else {
+                            users[loggedUserPos].Socket = socket.id;
+                        }
+
+                        // Add socket to the sockets object
+                        sockets[socket.id] = socket;
+
+                        // Broadcast USER_LOGGED event with user ID and socket ID
+                        socket.broadcast.emit(chatCode.LOGGED_NEW_USER, { ID: loggedId, Socket: socket.id });
+                    } catch (error) {
+                        console.error(error);
+                    }
+                } else {
+                    socket.emit(chatCode.EXPIRED);
+                }
+            }
+        });
+
+        // Event handler for message read
+        socket.on(chatCode.READ_MSG, async (data) => {
+            if (!data.token || !data.id) {
+                socket.emit(chatCode.FORBIDDEN, httpCode.FORBIDDEN);
+            } else {
+                const res = isExpired(socket, data, chatCode.READ_MSG);
+                if (!res.expired) {
+                    try {
+                        const receiver = verifyUser(data.token);
+
+                        await Controller.readMSG(data.id, receiver);
+                        // Emit REFRESH event to the connected socket
+                        socket.emit(chatCode.REFRESH);
+                    } catch (error) {
+                        console.error(error);
+                    }
+                } else {
+                    socket.emit(chatCode.EXPIRED);
+                }
+            }
+        });
+
+        // Event handler to fetch user's created groups
+        socket.on(chatCode.GET_MY_GROUPS, async (data) => {
+            if (!data.token) {
+                socket.emit(chatCode.FORBIDDEN, httpCode.FORBIDDEN);
+            } else {
+                const res = isExpired(socket, data, chatCode.GET_MY_GROUPS);
+                if (!res.expired) {
+                    try {
+                        // Verify user token and extract user ID
+                        const loggedId = verifyUser(data.token);
+
+                        // Retrieve user's created groups
+                        const myGroups = await Controller.getMyGroups(loggedId);
+
+                        // Emit GET_MY_GROUPS event with groups list to the socket
+                        socket.emit(chatCode.GET_MY_GROUPS, myGroups);
+                    } catch (error) {
+                        console.error("Error getting my groups:", error);
+                        socket.emit(chatCode.SERVER_ERROR, httpCode.SERVER_ERROR);
+                    }
+                } else {
+                    socket.emit(chatCode.EXPIRED);
+                }
+            }
+        });
+
+        // Event handler to fetch user's favorite groups
+        socket.on(chatCode.GET_FAV_GROUPS, async (data) => {
+            if (!data.token) {
+                socket.emit(chatCode.FORBIDDEN, httpCode.FORBIDDEN);
+            } else {
+                const res = isExpired(socket, data, chatCode.GET_FAV_GROUPS);
+                if (!res.expired) {
+                    try {
+                        // Verify user token and extract user ID
+                        const loggedId = verifyUser(data.token);
+
+                        // Retrieve user's favorite groups
+                        const favGroups = await Controller.getFavGroups(loggedId);
+
+                        // Emit GET_FAV_GROUPS event with groups list to the socket
+                        socket.emit(chatCode.GET_FAV_GROUPS, favGroups);
+                    } catch (error) {
+                        console.error("Error getting favorite groups:", error);
+                        socket.emit(chatCode.SERVER_ERROR, httpCode.SERVER_ERROR);
+                    }
+                } else {
+                    socket.emit(chatCode.EXPIRED);
+                }
+            }
+        });
+
+        // Event handler to fetch group messages
+        socket.on(chatCode.GET_GROUP_MSG, async (data) => {
+            if (!data.token || !data.groupId) {
+                socket.emit(chatCode.FORBIDDEN, httpCode.FORBIDDEN);
+            } else {
+                const res = isExpired(socket, data, chatCode.GET_GROUP_MSG);
+                if (!res.expired) {
+                    try {
+                        // Verify user token and extract user ID
+                        const loggedId = verifyUser(data.token);
+
+                        // Retrieve group messages
+                        const groupMessages = await Controller.getGroupMsg(data.groupId);
+
+                        // Emit GET_GROUP_MSG event with messages list to the socket
+                        socket.emit(chatCode.GET_GROUP_MSG, groupMessages);
+                    } catch (error) {
+                        console.error("Error getting group messages:", error);
+                        socket.emit(chatCode.SERVER_ERROR, httpCode.SERVER_ERROR);
+                    }
+                } else {
+                    socket.emit(chatCode.EXPIRED);
+                }
+            }
+        });
+
+        // Event handler for socket disconnection
+        socket.on(chatCode.DISCONNECT, () => {
+            try {
+                console.log('Client disconnected');
+
+                // Find and remove user from the users array
+                const disconnectedUserPos = users.findIndex(user => user.Socket === socket.id);
+
+                if (disconnectedUserPos !== -1) {
+                    const ID = users[disconnectedUserPos].ID;
+                    users.splice(disconnectedUserPos, 1);
+
+                    // Remove socket from the sockets object
+                    delete sockets[socket.id];
+
+                    // Broadcast USER_OUT event with disconnected user's ID
+                    socket.broadcast.emit(chatCode.USER_OUT, { ID });
+                }
+            } catch (error) {
+                console.error(error);
+            }
+        });
+    });
+};
