@@ -326,6 +326,13 @@ export const getGroupOnlineUsers = (token: string | null, groupId: number | null
   }
 }
 
+export const getBannedUsers = (token: string | null, groupId: number | null | undefined) => {
+  if (token && groupId) {
+    console.log(`🚫 Requesting banned users for group ${groupId}`);
+    socket.emit(ChatConst.GET_BANNED_USERS, { token, groupId })
+  }
+}
+
 export const getChatRules = (token: string | null, groupId: number | null) => {
   console.log('🔍 [Chat Rules] getChatRules called with groupId:', groupId, 'token:', token ? 'Available' : 'Missing');
   if (token && groupId) {

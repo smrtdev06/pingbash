@@ -18,8 +18,10 @@ interface ChatUserCardProps {
     subtitle?: string
     dateString?: string
     statusColor?: string
+    isBlocked?: boolean
     muted?: boolean
     onClick?: React.MouseEventHandler
+    onUnblock?: (userId: number) => void
 }
 
 const ChatUserCard: React.FC<ChatUserCardProps> = ({
@@ -33,8 +35,10 @@ const ChatUserCard: React.FC<ChatUserCardProps> = ({
     subtitle,
     dateString,
     statusColor,
+    isBlocked,
     muted,
-    onClick
+    onClick,
+    onUnblock
 }) => {
   // Add this function to handle the "Chat Now" button click  
 

@@ -57,6 +57,7 @@ import {
   getBlockedUsers,
   blockUser,
   getGroupOnlineUsers,
+  getBannedUsers,
   getChatRules,
   updateChatRules
  } from "@/resource/utils/chat";
@@ -884,22 +885,71 @@ const ChatsContent: React.FC = () => {
   };
 
   const handleBanGroupUser = (userId: number) => {
-    // const updateMsgList = msgList.map(msg => msg.Sender_Id == userId ? {...msg, sender_banned: 1} : msg);
+    console.log(`🚫 [F] User ${userId} banned - updating UI`);
+    
+    // Remove messages from banned user
     const updateMsgList = groupMsgList.filter(msg => msg.Sender_Id != userId);
-    setGroupMsgList(updateMsgList)
-    // dispatch(setMessageList(updateMsgList));
+    setGroupMsgList(updateMsgList);
+    
+    // Update banned users list immediately
+    if (selectedChatGroup?.members) {
+      const updatedMembers = selectedChatGroup.members.map(member => 
+        member.id === userId ? { ...member, banned: 1 } : member
+      );
+      const updatedGroup = { ...selectedChatGroup, members: updatedMembers };
+      setSelectedChatGroup(updatedGroup);
+      
+      // Update banned users list
+      setGroupBannedUsers(updatedMembers.filter(mem => mem.banned == 1));
+      console.log(`🚫 [F] Banned users list updated - now ${updatedMembers.filter(mem => mem.banned == 1).length} banned users`);
+    }
   }
 
   const handleUnbanGroupUser = (userId: number) => {
+    console.log(`✅ [F] User ${userId} unbanned - updating UI`);
+    
+    // Restore messages from unbanned user
     const updateMsgList = groupMsgList.map(msg => msg.Sender_Id == userId ? {...msg, sender_banned: 0} : msg);
-    setGroupMsgList(updateMsgList)
-    // dispatch(setMessageList(updateMsgList));
+    setGroupMsgList(updateMsgList);
+    
+    // Update banned users list immediately
+    if (selectedChatGroup?.members) {
+      const updatedMembers = selectedChatGroup.members.map(member => 
+        member.id === userId ? { ...member, banned: 0 } : member
+      );
+      const updatedGroup = { ...selectedChatGroup, members: updatedMembers };
+      setSelectedChatGroup(updatedGroup);
+      
+      // Update banned users list
+      setGroupBannedUsers(updatedMembers.filter(mem => mem.banned == 1));
+      console.log(`✅ [F] Banned users list updated - now ${updatedMembers.filter(mem => mem.banned == 1).length} banned users`);
+    }
   }
 
   const handleUnbanGroupUsers = (userIds: number[] | null) => {
+    console.log(`✅ [F] Users ${userIds} unbanned - updating UI`);
+    
+    // Restore messages from unbanned users
     const updateMsgList = groupMsgList.map(msg => userIds?.includes(msg.Sender_Id ?? -1) ? {...msg, sender_banned: 0} : msg);
-    setGroupMsgList(updateMsgList)
-    // dispatch(setMessageList(updateMsgList));
+    setGroupMsgList(updateMsgList);
+    
+    // Update banned users list immediately
+    if (selectedChatGroup?.members && userIds) {
+      const updatedMembers = selectedChatGroup.members.map(member => 
+        userIds.includes(member.id) ? { ...member, banned: 0 } : member
+      );
+      const updatedGroup = { ...selectedChatGroup, members: updatedMembers };
+      setSelectedChatGroup(updatedGroup);
+      
+      // Update banned users list
+      setGroupBannedUsers(updatedMembers.filter(mem => mem.banned == 1));
+      console.log(`✅ [F] Banned users list updated - now ${updatedMembers.filter(mem => mem.banned == 1).length} banned users`);
+    }
+  }
+
+  const handleGetBannedUsers = (bannedUsers: ChatUser[]) => {
+    console.log(`🚫 [F] Received banned users:`, bannedUsers.length, "users");
+    setGroupBannedUsers(bannedUsers);
   }
 
   const handleSendGroupMsg = useCallback((data: MessageUnit[]) => {
@@ -920,7 +970,10 @@ const ChatsContent: React.FC = () => {
   const handleGroupUpdated = (updatedGroup: ChatGroup) => {
     dispatch(setIsLoading(false));
     if (selectedChatGroup?.id == updatedGroup.id) {
-      setSelectedChatGroup(updatedGroup)
+      setSelectedChatGroup(updatedGroup);
+      // Update banned users list when group is updated
+      setGroupBannedUsers(updatedGroup?.members?.filter(mem => mem.banned == 1) ?? []);
+      console.log(`🔄 [F] Group updated - banned users: ${updatedGroup?.members?.filter(mem => mem.banned == 1).length}`);
     }
     if (myGroupList.find(grp => grp.id == updatedGroup.id)) {
       dispatch(setMyGroupList(myGroupList.map(grp => grp.id == updatedGroup.id ? updatedGroup : grp)));
@@ -1039,6 +1092,7 @@ const ChatsContent: React.FC = () => {
     socket.on(ChatConst.BAN_GROUP_USER, handleBanGroupUser);
     socket.on(ChatConst.UNBAN_GROUP_USER, handleUnbanGroupUser);
     socket.on(ChatConst.UNBAN_GROUP_USERS, handleUnbanGroupUsers);
+    socket.on(ChatConst.GET_BANNED_USERS, handleGetBannedUsers);
 
     // Receive updated message afer delete group message.
     socket.on(ChatConst.DELETE_GROUP_MSG, handleDeleteGroupMsg);
@@ -1065,6 +1119,7 @@ const ChatsContent: React.FC = () => {
       socket.off(ChatConst.BAN_GROUP_USER, handleBanGroupUser);
       socket.off(ChatConst.UNBAN_GROUP_USER, handleUnbanGroupUser);
       socket.off(ChatConst.UNBAN_GROUP_USERS, handleUnbanGroupUsers);
+      socket.off(ChatConst.GET_BANNED_USERS, handleGetBannedUsers);
       socket.off(ChatConst.DELETE_GROUP_MSG, handleDeleteGroupMsg);
       socket.off(ChatConst.CLEAR_GROUP_CHAT, handleClearGroupChat);
       socket.off(ChatConst.GROUP_UPDATED, handleGroupUpdated);
@@ -1302,10 +1357,29 @@ const ChatsContent: React.FC = () => {
 
   const banUser = () => {
     if (banUserId == null) return;
+    
+    // RULE 1: User cannot ban himself
+    const currentUserId = getCurrentUserId();
+    if (banUserId === currentUserId) {
+      toast.error("You cannot ban yourself");
+      setOpenBanUserConfirmPopup(false);
+      setBanUserId(null);
+      return;
+    }
+    
     const token = localStorage.getItem(TOKEN_KEY)
+    console.log(`Frontend: Attempting to ban user ${banUserId} (current user: ${currentUserId})`);
     banGroupUser(token, selectedChatGroup?.id, banUserId);
     setOpenBanUserConfirmPopup(false);
     setBanUserId(null);
+    
+    // Refresh banned users list after a short delay
+    setTimeout(() => {
+      if (selectedChatGroup?.members) {
+        setGroupBannedUsers(selectedChatGroup.members.filter(mem => mem.banned == 1));
+        console.log(`🔄 [F] Refreshed banned users list after ban operation`);
+      }
+    }, 1000);
   }
 
   const unbanUser = () => {
@@ -1316,6 +1390,7 @@ const ChatsContent: React.FC = () => {
 
   const unbanUsers = (userIds: number[]) => {
     const token = localStorage.getItem(TOKEN_KEY)
+    console.log(`Frontend: Unbanning users ${userIds} from group ${selectedChatGroup?.id}`);
     unbanGroupUsers(token, selectedChatGroup?.id, userIds);
     setOpenBannedUsersWidget(false);
     dispatch(setIsLoading(true));
@@ -1701,6 +1776,9 @@ const ChatsContent: React.FC = () => {
     } else if (optionId == "4") {
       setOpenCensoredPopup(true);
     } else if (optionId == "5") {
+      console.log("🚫 [F] Opening banned users menu - fetching banned users");
+      const token = localStorage.getItem(TOKEN_KEY);
+      getBannedUsers(token, selectedChatGroup?.id);
       setOpenBannedUsersWidget(true);
     }
   }
@@ -1883,7 +1961,7 @@ const ChatsContent: React.FC = () => {
                               src="/logo-orange.png"
                               style={{ color: "transparent", width: "48px", height: "38px" }}
                             />
-                            <span className="text-[20px] font-bold truncate w-[100%]">{selectedChatGroup?.name}</span>
+                            {/*<span className="text-[20px] font-bold truncate w-[100%]">{selectedChatGroup?.name}</span>*/}
                           </p>
                         </div>
                         

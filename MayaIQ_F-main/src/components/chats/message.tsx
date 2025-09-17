@@ -375,7 +375,7 @@ const Message: React.FC<MessageProps> = ({
                 </Tooltip.Root>
               </Tooltip.Provider>
             }
-            {showBan &&
+            {showBan && senderId !== userId &&
               <Tooltip.Provider>
                 <Tooltip.Root>
                   <Tooltip.Trigger asChild>

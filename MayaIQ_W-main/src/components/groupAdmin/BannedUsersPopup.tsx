@@ -90,15 +90,31 @@ const BannedUsersPopup: React.FC<BannedUsersPopupProps> = ({
   };
 
   const handleUnban = () => {
-    unbanUsers(Array.from(selectedUserIds));
+    const selectedIds = Array.from(selectedUserIds);
+    console.log(`Unbanning selected users: ${selectedIds}`);
+    unbanUsers(selectedIds);
+    setIsSelecting(false);
+    setSelectedUserIds(new Set());
   };
 
   const handleUnbanAll = () => {
-    unbanUsers(users.map(user => user.id));
+    const allIds = users.map(user => user.id);
+    console.log(`Unbanning all users: ${allIds}`);
+    unbanUsers(allIds);
   };
 
   const handleUnbanVerified = () => {
-    unbanUsers(users.map(user => user.id));
+    // Only unban verified users (those with email addresses, not anonymous)
+    const verifiedUsers = users.filter(user => user.email && !user.email.includes('anon'));
+    const verifiedIds = verifiedUsers.map(user => user.id);
+    console.log(`Unbanning verified users: ${verifiedIds}`);
+    unbanUsers(verifiedIds);
+  };
+
+  // Add individual unblock function
+  const handleIndividualUnblock = (userId: number) => {
+    console.log(`Unbanning individual user: ${userId}`);
+    unbanUsers([userId]);
   };
 
   if (!isOpen) return null;
@@ -171,6 +187,8 @@ const BannedUsersPopup: React.FC<BannedUsersPopupProps> = ({
                     dateString={""}
                     unread={0} //Number(user.Unread_Message_Count)
                     statusColor={""}
+                    isBlocked={true}
+                    onUnblock={handleIndividualUnblock}
                 />
               </div>
             ))

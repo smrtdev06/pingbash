@@ -321,3 +321,10 @@ export const updateChatRules = (token: string | null, groupId: number | null, ch
     console.log('🔍 [W] [Chat Rules] Cannot emit UPDATE_CHAT_RULES - missing token or groupId');
   }
 }
+
+export const getBannedUsers = (token: string | null, groupId: number | null | undefined) => {
+  if (token && groupId) {
+    console.log(`🚫 [W] Requesting banned users for group ${groupId}`);
+    socket.emit(ChatConst.GET_BANNED_USERS, { token, groupId })
+  }
+}

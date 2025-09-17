@@ -57,5 +57,6 @@ export default {
   UNBLOCK_USER: "unblock user",
   GET_GROUP_ONLINE_USERS: "get group online users",
   UPDATE_CHAT_RULES: "update chat rules",
-  GET_CHAT_RULES: "get chat rules"
+  GET_CHAT_RULES: "get chat rules",
+  GET_BANNED_USERS: "get banned users"
 }
