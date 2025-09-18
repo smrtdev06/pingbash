@@ -236,24 +236,24 @@ router.post("/groups/join", authenticateUser, async (req, res) => {
              return res.status(httpCode.FORBIDDEN).send({ error: "Your IP address is banned from this group" });
          }
 
-         console.log(`✅ User ${userId} authorized to join group ${groupId} (IP: ${userIp})`);
-         
-         await PG_query(`INSERT INTO "group_users" ("group_id", "user_id") VALUES (${groupId}, ${userId});`);
-         let groups = await PG_query(`SELECT 
-                 g.id,
-                 g.name,
-                 g.creater_id,
-                 CASE 
-                     WHEN gu.user_id IS NOT NULL THEN true 
-                     ELSE false 
-                 END AS isMember
-             FROM 
-                 groups g
-             LEFT JOIN 
-                 group_users gu 
-                 ON g.id = gu.group_id AND gu.user_id = ${userId};`); 
-          // Send success response with user list and professions
-          return res.status(httpCode.SUCCESS).send({ groups: groups.rows, message: "Joined Successfully!"});
+                 console.log(`✅ User ${userId} authorized to join group ${groupId} (IP: ${userIp})`);
+        
+        // Use INSERT ... ON CONFLICT to handle existing users
+        await PG_query(`
+            INSERT INTO group_users (group_id, user_id, is_member, role_id, banned, muted, to_time) 
+            VALUES (${groupId}, ${userId}, 1, 0, 0, 0, NULL)
+            ON CONFLICT (group_id, user_id) 
+            DO UPDATE SET is_member = 1, banned = 0, muted = 0, to_time = NULL;
+        `);
+        
+        console.log(`✅ User ${userId} successfully joined/updated in group ${groupId}`);
+        
+        // Return success response
+        return res.status(httpCode.SUCCESS).send({ 
+            message: "Joined Successfully!",
+            groupId: groupId,
+            userId: userId 
+        });
      } catch (error) {
          console.log(error);
          // Send error response
