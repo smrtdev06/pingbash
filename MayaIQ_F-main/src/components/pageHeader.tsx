@@ -79,6 +79,14 @@ const PageHeader: React.FC = () => {
           
           if (sessionRestored) {
             console.log("🔍 [F] PageHeader - Session restored successfully");
+            
+            // Start periodic token refresh for restored sessions
+            const { startTokenRefreshInterval } = await import('../resource/utils/auth');
+            const refreshInterval = startTokenRefreshInterval();
+            if (refreshInterval) {
+              (window as any).tokenRefreshInterval = refreshInterval;
+            }
+            
             userLoggedIn(token);
           } else {
             console.log("🔍 [F] PageHeader - Session restoration failed");

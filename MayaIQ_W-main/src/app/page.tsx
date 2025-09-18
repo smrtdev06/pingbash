@@ -863,6 +863,16 @@ const ChatsContent: React.FC = () => {
           
           if (sessionRestored) {
             console.log("🔍 [W] Session restored - user remains logged in");
+            
+            // Start periodic token refresh for logged-in users
+            const { startTokenRefreshInterval } = await import('../resource/utils/auth');
+            const refreshInterval = startTokenRefreshInterval();
+            
+            // Store interval ID for cleanup
+            if (refreshInterval) {
+              (window as any).tokenRefreshInterval = refreshInterval;
+            }
+            
             // Continue with logged-in user flow
             userLoggedIn(token);
             if (groupName) {
@@ -2142,6 +2152,14 @@ const ChatsContent: React.FC = () => {
       setStayAsAnon(false)
       userLoggedOut()
       localStorage.removeItem(TOKEN_KEY)
+      
+      // Stop token refresh interval on logout
+      if ((window as any).tokenRefreshInterval) {
+        clearInterval((window as any).tokenRefreshInterval);
+        (window as any).tokenRefreshInterval = null;
+        console.log("🔄 [W] Token refresh interval stopped on logout");
+      }
+      
       dispatch(setIsLoading(false))
     } else if (menuId == 7) {
       setShowSigninPopup(true)
@@ -2300,6 +2318,18 @@ const ChatsContent: React.FC = () => {
         setCurrentUserId(res.data.id);
         localStorage.setItem(USER_ID_KEY, res.data.id);
         localStorage.setItem(TOKEN_KEY, res.data.token);
+        
+        // Start periodic token refresh for newly logged-in users
+        try {
+          const { startTokenRefreshInterval } = await import('../resource/utils/auth');
+          const refreshInterval = startTokenRefreshInterval();
+          if (refreshInterval) {
+            (window as any).tokenRefreshInterval = refreshInterval;
+          }
+        } catch (error) {
+          console.log("Failed to start token refresh interval:", error);
+        }
+        
         console.log("=== Group Login===", group)
         loginAsReal(res.data.token, group?.id, getAnonId());
         setShowSigninPopup(false);

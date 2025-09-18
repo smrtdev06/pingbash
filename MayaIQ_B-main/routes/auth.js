@@ -271,8 +271,33 @@ router.post('/register/group', async (req, res) => {
          res.status(httpCode.SERVER_ERROR).send();
      }
  });
+
+// Router for token refresh
+router.post('/refresh-token', authenticateUser, async (req, res) => {
+    try {
+        // Get user ID from the verified token
+        const userId = req.user.id;
+        
+        // Verify user still exists and is active
+        const user = await PG_query(`SELECT * FROM "Users" WHERE "Id" = ${userId} AND "Role" IN (0, 1);`);
+        
+        if (!user.rows.length) {
+            return res.status(httpCode.FORBIDDEN).send('User not found or inactive');
+        }
+        
+        // Create new token with extended expiration
+        const newToken = jwt.sign({ id: userId }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN });
+        
+        console.log(`🔄 Token refreshed for user ${userId}`);
+        res.send({ token: newToken, id: userId });
+        
+    } catch (error) {
+        console.error("Token refresh error:", error);
+        res.status(httpCode.SERVER_ERROR).send('Token refresh failed');
+    }
+});
  
- // Router for user sign in
+// Router for user sign in
  router.post('/login', async (req, res) => {
      const { error } = loginValidation(req.body);
      if (error) return res.status(httpCode.FORBIDDEN).send(error.details[0].message);

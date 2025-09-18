@@ -2,6 +2,35 @@ import axios from 'axios';
 import { SERVER_URL } from '../const/const';
 import { TOKEN_KEY, USER_ID_KEY } from '../const/const';
 
+// Function to refresh token
+export const refreshToken = async (token: string): Promise<string | null> => {
+  try {
+    console.log("🔄 [F] Attempting to refresh token");
+    const response = await axios.post(
+      `${SERVER_URL}/api/auth/refresh-token`,
+      {},
+      {
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          'Authorization': token,
+        },
+      }
+    );
+    
+    if (response.status === 200 && response.data.token) {
+      console.log("🔄 [F] Token refreshed successfully");
+      // Update localStorage with new token
+      localStorage.setItem(TOKEN_KEY, response.data.token);
+      return response.data.token;
+    }
+    return null;
+  } catch (error: any) {
+    console.log("🔄 [F] Token refresh failed:", error.response?.status);
+    return null;
+  }
+};
+
 // Function to validate token with backend
 export const validateToken = async (token: string): Promise<boolean> => {
   try {
@@ -26,11 +55,18 @@ export const validateToken = async (token: string): Promise<boolean> => {
   } catch (error: any) {
     console.log("🔍 [F] Token validation failed:", error.response?.status);
     if (error.response?.status === 401) {
-      // Token expired or invalid
-      console.log("🔍 [F] Token expired, clearing storage");
-      localStorage.removeItem(TOKEN_KEY);
-      localStorage.removeItem(USER_ID_KEY);
-      return false;
+      // Token expired, try to refresh it
+      console.log("🔍 [F] Token expired, attempting refresh");
+      const newToken = await refreshToken(token);
+      if (newToken) {
+        console.log("🔍 [F] Token refreshed, validating new token");
+        return await validateToken(newToken);
+      } else {
+        console.log("🔍 [F] Token refresh failed, clearing storage");
+        localStorage.removeItem(TOKEN_KEY);
+        localStorage.removeItem(USER_ID_KEY);
+        return false;
+      }
     }
     return false;
   }
@@ -87,4 +123,40 @@ export const clearSession = () => {
   localStorage.removeItem(USER_ID_KEY);
   localStorage.removeItem('anonToken');
   localStorage.removeItem('browser_uuid');
+};
+
+// Function to start periodic token refresh
+export const startTokenRefreshInterval = (): NodeJS.Timeout | null => {
+  const token = localStorage.getItem(TOKEN_KEY);
+  if (!token || token.includes('anonuser')) {
+    return null;
+  }
+  
+  console.log("🔄 [F] Starting periodic token refresh (every 24 hours)");
+  
+  // Refresh token every 24 hours (24 * 60 * 60 * 1000 ms)
+  const refreshInterval = setInterval(async () => {
+    const currentToken = localStorage.getItem(TOKEN_KEY);
+    if (currentToken && !currentToken.includes('anonuser')) {
+      console.log("🔄 [F] Periodic token refresh triggered");
+      const newToken = await refreshToken(currentToken);
+      if (!newToken) {
+        console.log("🔄 [F] Periodic token refresh failed - user will need to re-login");
+        clearInterval(refreshInterval);
+      }
+    } else {
+      console.log("🔄 [F] No valid token found, stopping refresh interval");
+      clearInterval(refreshInterval);
+    }
+  }, 24 * 60 * 60 * 1000); // 24 hours
+  
+  return refreshInterval;
+};
+
+// Function to stop token refresh interval
+export const stopTokenRefreshInterval = (intervalId: NodeJS.Timeout | null) => {
+  if (intervalId) {
+    console.log("🔄 [F] Stopping token refresh interval");
+    clearInterval(intervalId);
+  }
 }; 

@@ -49,6 +49,60 @@ const sendNotificationEamil = async (emails, message) => {
     });
  };
 
+const sendPrivateMessageEmailNotification = async (senderId, receiverId, messageContent) => {
+    try {
+        // Get sender and receiver information
+        const senderResult = await PG_query(`SELECT "Name", "Email" FROM "Users" WHERE "Id" = ${senderId}`);
+        const receiverResult = await PG_query(`SELECT "Name", "Email" FROM "Users" WHERE "Id" = ${receiverId}`);
+        
+        if (senderResult.rows.length === 0 || receiverResult.rows.length === 0) {
+            console.log("Sender or receiver not found for email notification");
+            return;
+        }
+        
+        const sender = senderResult.rows[0];
+        const receiver = receiverResult.rows[0];
+        
+        // Truncate message if too long
+        const truncatedMessage = messageContent.length > 100 
+            ? messageContent.substring(0, 100) + '...' 
+            : messageContent;
+        
+        const subject = `New message from ${sender.Name}`;
+        const content = `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+                <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; border-radius: 10px 10px 0 0;">
+                    <h2 style="color: white; margin: 0; text-align: center;">New Private Message</h2>
+                </div>
+                <div style="background: #f8f9fa; padding: 20px; border-radius: 0 0 10px 10px; border: 1px solid #dee2e6;">
+                    <p style="margin: 0 0 15px 0; font-size: 16px;">Hi ${receiver.Name},</p>
+                    <p style="margin: 0 0 15px 0;">You have received a new private message from <strong>${sender.Name}</strong>:</p>
+                    <div style="background: white; padding: 15px; border-left: 4px solid #667eea; margin: 15px 0; border-radius: 5px;">
+                        <p style="margin: 0; font-style: italic; color: #333;">"${truncatedMessage}"</p>
+                    </div>
+                    <p style="margin: 15px 0 0 0; color: #666; font-size: 14px;">
+                        Log in to your chat to view the full message and reply.
+                    </p>
+                </div>
+                <div style="text-align: center; margin-top: 20px; color: #888; font-size: 12px;">
+                    <p>This is an automated notification from Pingbash Chat.</p>
+                </div>
+            </div>`;
+        
+        await transporter.sendMail({
+            from: `${process.env.SMTP_FROM_NAME || 'Pingbash'} <${process.env.SMTP_FROM_EMAIL || process.env.SMTP_USER}>`,
+            to: receiver.Email,
+            subject: subject,
+            html: content
+        });
+        
+        console.log(`📧 Email notification sent to ${receiver.Email} for private message from ${sender.Name}`);
+        
+    } catch (error) {
+        console.error("Error sending private message email notification:", error);
+    }
+};
+
 // To get the User list for the Chat
 const getUsers = async (loggedId) => {
     try {
@@ -635,6 +689,27 @@ const timeoutIpAddress = async (groupId, ipAddress, timeoutBy) => {
         }
     } catch (error) {
         console.log("Error timing out IP address:", error);
+    }
+}
+
+const checkUserTimeout = async (groupId, userId) => {
+    try {
+        // Check if user is timed out in the group_users table
+        const result = await PG_query(`SELECT to_time FROM group_users 
+            WHERE group_id = ${groupId} AND user_id = ${userId} 
+            AND to_time IS NOT NULL AND to_time > CURRENT_TIMESTAMP;`);
+        
+        if (result.rows.length > 0) {
+            return {
+                isTimedOut: true,
+                expiresAt: result.rows[0].to_time
+            };
+        }
+        
+        return { isTimedOut: false };
+    } catch (error) {
+        console.log("Error checking user timeout:", error);
+        return { isTimedOut: false };
     }
 }
 
@@ -1274,6 +1349,7 @@ const updateChatRules = async (groupId, chatRules, showChatRules, userId) => {
 
 module.exports = {
     sendNotificationEamil,
+    sendPrivateMessageEmailNotification,
     getUsers,
     getFriends,
     addFriend,
@@ -1314,6 +1390,7 @@ module.exports = {
     updateGroupChatboxStyle,
     timoutUser,
     timeoutIpAddress,
+    checkUserTimeout,
     checkIpTimeout,
     blockUser,
     unblockUser,

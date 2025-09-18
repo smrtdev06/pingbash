@@ -163,8 +163,24 @@ module.exports = (socket, users) => {
                 senderSocket.emit(chatCode.SEND_MSG, msgList);
             }
 
+            // Handle receiver notification
             if (receiverSocket) {
+                // Receiver is online - send inbox notification via socket
                 receiverSocket.emit(chatCode.SEND_MSG, msgList);
+                console.log(`📨 [PRIVATE] Inbox notification sent to online user ${receiverId}`);
+            } else {
+                // Receiver is offline - send both inbox and email notification
+                console.log(`📨 [PRIVATE] Receiver ${receiverId} is offline - sending email notification`);
+                
+                // Send inbox notification (will be delivered when user comes online)
+                // This is handled by the normal message storage and retrieval system
+                
+                // Send email notification for offline user
+                try {
+                    await Controller.sendPrivateMessageEmailNotification(senderId, receiverId, content);
+                } catch (error) {
+                    console.error("Failed to send email notification:", error);
+                }
             }
         } catch (error) {
             socket.emit(chatCode.SERVER_ERROR, httpCode.SERVER_ERROR);
@@ -207,6 +223,27 @@ module.exports = (socket, users) => {
                 }
             } else {
                 console.log(`👑 Group creator ${senderId} sending message to group ${groupId} - IP ban check skipped`);
+            }
+
+            // Check if user is timed out (but skip for group creators)
+            if (!isGroupCreator) {
+                // Check for user timeout
+                const userTimeoutCheck = await Controller.checkUserTimeout(groupId, senderId);
+                if (userTimeoutCheck.isTimedOut) {
+                    console.log(`⏰ USER TIMEOUT BLOCKING MESSAGE: User ${senderId} is timed out in group ${groupId} until ${userTimeoutCheck.expiresAt}`);
+                    socket.emit(chatCode.FORBIDDEN, `You are temporarily restricted from sending messages until ${new Date(userTimeoutCheck.expiresAt).toLocaleString()}`);
+                    return;
+                }
+
+                // Check for IP timeout (for anonymous users or additional security)
+                const ipTimeoutCheck = await Controller.checkIpTimeout(groupId, clientIp);
+                if (ipTimeoutCheck.isTimedOut) {
+                    console.log(`⏰ IP TIMEOUT BLOCKING MESSAGE: IP ${clientIp} is timed out in group ${groupId} until ${ipTimeoutCheck.expiresAt}`);
+                    socket.emit(chatCode.FORBIDDEN, `Your IP address is temporarily restricted from sending messages until ${new Date(ipTimeoutCheck.expiresAt).toLocaleString()}`);
+                    return;
+                }
+            } else {
+                console.log(`👑 Group creator ${senderId} sending message to group ${groupId} - timeout checks skipped`);
             }
 
             // Add user to users list if not already present
