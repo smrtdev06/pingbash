@@ -33,6 +33,97 @@ const verifyUser = (token) => {
     }
 };
 
+// Helper function to extract real client IP address
+const getClientIpAddress = (socket) => {
+    // Try different methods to get the real client IP
+    let clientIp = null;
+    
+    // Method 1: Check X-Forwarded-For header (most common for proxies)
+    const xForwardedFor = socket.handshake.headers['x-forwarded-for'];
+    if (xForwardedFor) {
+        // X-Forwarded-For can contain multiple IPs, take the first one (original client)
+        clientIp = xForwardedFor.split(',')[0].trim();
+        console.log(`🔍 IP from X-Forwarded-For: ${clientIp}`);
+        if (clientIp && clientIp !== '127.0.0.1' && clientIp !== '::1') {
+            return clientIp;
+        }
+    }
+    
+    // Method 2: Check X-Real-IP header
+    const xRealIp = socket.handshake.headers['x-real-ip'];
+    if (xRealIp) {
+        console.log(`🔍 IP from X-Real-IP: ${xRealIp}`);
+        if (xRealIp !== '127.0.0.1' && xRealIp !== '::1') {
+            return xRealIp;
+        }
+    }
+    
+    // Method 3: Check CF-Connecting-IP (Cloudflare)
+    const cfConnectingIp = socket.handshake.headers['cf-connecting-ip'];
+    if (cfConnectingIp) {
+        console.log(`🔍 IP from CF-Connecting-IP: ${cfConnectingIp}`);
+        if (cfConnectingIp !== '127.0.0.1' && cfConnectingIp !== '::1') {
+            return cfConnectingIp;
+        }
+    }
+    
+    // Method 4: Check X-Client-IP header
+    const xClientIp = socket.handshake.headers['x-client-ip'];
+    if (xClientIp) {
+        console.log(`🔍 IP from X-Client-IP: ${xClientIp}`);
+        if (xClientIp !== '127.0.0.1' && xClientIp !== '::1') {
+            return xClientIp;
+        }
+    }
+    
+    // Method 5: Socket handshake address
+    clientIp = socket.handshake.address;
+    if (clientIp) {
+        console.log(`🔍 IP from handshake.address: ${clientIp}`);
+        if (clientIp !== '127.0.0.1' && clientIp !== '::1') {
+            return clientIp;
+        }
+    }
+    
+    // Method 6: Connection remote address
+    if (socket.request && socket.request.connection) {
+        clientIp = socket.request.connection.remoteAddress;
+        if (clientIp) {
+            console.log(`🔍 IP from connection.remoteAddress: ${clientIp}`);
+            if (clientIp !== '127.0.0.1' && clientIp !== '::1') {
+                return clientIp;
+            }
+        }
+    }
+    
+    // Method 7: Socket connection remote address
+    if (socket.conn && socket.conn.remoteAddress) {
+        clientIp = socket.conn.remoteAddress;
+        console.log(`🔍 IP from conn.remoteAddress: ${clientIp}`);
+        if (clientIp !== '127.0.0.1' && clientIp !== '::1') {
+            return clientIp;
+        }
+    }
+    
+    // If all methods return localhost, use a fallback approach
+    console.log(`⚠️ All IP detection methods returned localhost. Available headers:`, socket.handshake.headers);
+    
+    // For development: generate a unique fake IP based on socket ID
+    if (clientIp === '127.0.0.1' || clientIp === '::1' || !clientIp) {
+        // Create a fake but consistent IP for development/testing
+        const socketId = socket.id || 'unknown';
+        const hash = socketId.split('').reduce((a, b) => {
+            a = ((a << 5) - a) + b.charCodeAt(0);
+            return a & a;
+        }, 0);
+        const fakeIp = `192.168.${Math.abs(hash) % 255}.${Math.abs(hash >> 8) % 255}`;
+        console.log(`🔧 Generated development IP: ${fakeIp} for socket ${socketId}`);
+        return fakeIp;
+    }
+    
+    return clientIp || '127.0.0.1';
+};
+
 // Event handler for sending a message
 module.exports = (socket, users) => {
     socket.on(chatCode.SEND_MSG, async (data) => {
@@ -95,11 +186,8 @@ module.exports = (socket, users) => {
                  // Get sender ID from the token first
      const senderId = verifyUser(data.token);
 
-     // Get user's IP address
-     const clientIp = socket.handshake.address || 
-                     socket.handshake.headers['x-forwarded-for'] || 
-                     socket.handshake.headers['x-real-ip'] ||
-                     socket.request.connection.remoteAddress;
+     // Get user's IP address using improved detection
+     const clientIp = getClientIpAddress(socket);
 
      // Get group info to check if user is the creator
      const group = await Controller.getGroup(data.groupId);
@@ -165,11 +253,8 @@ module.exports = (socket, users) => {
             return;
         }
         try {
-            // Get user's IP address
-            const clientIp = socket.handshake.address || 
-                            socket.handshake.headers['x-forwarded-for'] || 
-                            socket.handshake.headers['x-real-ip'] ||
-                            socket.request.connection.remoteAddress;
+            // Get user's IP address using improved detection
+            const clientIp = getClientIpAddress(socket);
 
                  // Check if IP is banned from this group
      const isIpBanned = await Controller.checkIpBan(data.groupId, clientIp);
@@ -340,10 +425,8 @@ module.exports = (socket, users) => {
             if (bannedUserSocket) {
                 const bannedSocket = sockets[bannedUserSocket.Socket];
                 if (bannedSocket) {
-                    bannedUserIp = bannedSocket.handshake.address || 
-                                  bannedSocket.handshake.headers['x-forwarded-for'] || 
-                                  bannedSocket.handshake.headers['x-real-ip'] ||
-                                  bannedSocket.request.connection.remoteAddress;
+                    // Try multiple methods to get the real client IP
+                    bannedUserIp = getClientIpAddress(bannedSocket);
                 }
             }
 
@@ -1228,6 +1311,40 @@ module.exports = (socket, users) => {
             console.log(`IP unban completed successfully for IPs ${ipAddresses} by ${senderId}`);
         } catch (error) {
             console.error("Error unbanning IPs:", error);
+            socket.emit(chatCode.SERVER_ERROR, httpCode.SERVER_ERROR);
+        }
+    });
+
+    socket.on('DEBUG_IP_BAN', async (data) => {
+        if (!data.groupId || !data.ipAddress || !data.token) {
+            socket.emit(chatCode.FORBIDDEN, httpCode.FORBIDDEN);
+            return;
+        }
+
+        const res = isExpired(socket, data, 'DEBUG_IP_BAN');
+        if (res.expired) {
+            socket.emit(chatCode.EXPIRED);
+            return;
+        }
+        
+        try {
+            const senderId = verifyUser(data.token);
+            console.log(`🔍 DEBUG: Checking IP ban status for ${data.ipAddress} in group ${data.groupId} by user ${senderId}`);
+            
+            const debugInfo = await Controller.debugIpBanStatus(data.groupId, data.ipAddress);
+            const isCurrentlyBanned = await Controller.checkIpBan(data.groupId, data.ipAddress);
+            
+            const result = {
+                ipAddress: data.ipAddress,
+                groupId: data.groupId,
+                isCurrentlyBanned,
+                debugInfo
+            };
+            
+            console.log(`🔍 DEBUG RESULT:`, result);
+            socket.emit('DEBUG_IP_BAN_RESULT', result);
+        } catch (error) {
+            console.error("Error debugging IP ban:", error);
             socket.emit(chatCode.SERVER_ERROR, httpCode.SERVER_ERROR);
         }
     });

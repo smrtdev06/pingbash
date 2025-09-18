@@ -16,6 +16,97 @@ const { users, sockets } = require("../../libs/global.js");
 
 // Export the function responsible for setting up the chat server
 module.exports = async (http) => {
+    // Helper function to extract real client IP address
+    const getClientIpAddress = (socket) => {
+        // Try different methods to get the real client IP
+        let clientIp = null;
+        
+        // Method 1: Check X-Forwarded-For header (most common for proxies)
+        const xForwardedFor = socket.handshake.headers['x-forwarded-for'];
+        if (xForwardedFor) {
+            // X-Forwarded-For can contain multiple IPs, take the first one (original client)
+            clientIp = xForwardedFor.split(',')[0].trim();
+            console.log(`🔍 IP from X-Forwarded-For: ${clientIp}`);
+            if (clientIp && clientIp !== '127.0.0.1' && clientIp !== '::1') {
+                return clientIp;
+            }
+        }
+        
+        // Method 2: Check X-Real-IP header
+        const xRealIp = socket.handshake.headers['x-real-ip'];
+        if (xRealIp) {
+            console.log(`🔍 IP from X-Real-IP: ${xRealIp}`);
+            if (xRealIp !== '127.0.0.1' && xRealIp !== '::1') {
+                return xRealIp;
+            }
+        }
+        
+        // Method 3: Check CF-Connecting-IP (Cloudflare)
+        const cfConnectingIp = socket.handshake.headers['cf-connecting-ip'];
+        if (cfConnectingIp) {
+            console.log(`🔍 IP from CF-Connecting-IP: ${cfConnectingIp}`);
+            if (cfConnectingIp !== '127.0.0.1' && cfConnectingIp !== '::1') {
+                return cfConnectingIp;
+            }
+        }
+        
+        // Method 4: Check X-Client-IP header
+        const xClientIp = socket.handshake.headers['x-client-ip'];
+        if (xClientIp) {
+            console.log(`🔍 IP from X-Client-IP: ${xClientIp}`);
+            if (xClientIp !== '127.0.0.1' && xClientIp !== '::1') {
+                return xClientIp;
+            }
+        }
+        
+        // Method 5: Socket handshake address
+        clientIp = socket.handshake.address;
+        if (clientIp) {
+            console.log(`🔍 IP from handshake.address: ${clientIp}`);
+            if (clientIp !== '127.0.0.1' && clientIp !== '::1') {
+                return clientIp;
+            }
+        }
+        
+        // Method 6: Connection remote address
+        if (socket.request && socket.request.connection) {
+            clientIp = socket.request.connection.remoteAddress;
+            if (clientIp) {
+                console.log(`🔍 IP from connection.remoteAddress: ${clientIp}`);
+                if (clientIp !== '127.0.0.1' && clientIp !== '::1') {
+                    return clientIp;
+                }
+            }
+        }
+        
+        // Method 7: Socket connection remote address
+        if (socket.conn && socket.conn.remoteAddress) {
+            clientIp = socket.conn.remoteAddress;
+            console.log(`🔍 IP from conn.remoteAddress: ${clientIp}`);
+            if (clientIp !== '127.0.0.1' && clientIp !== '::1') {
+                return clientIp;
+            }
+        }
+        
+        // If all methods return localhost, use a fallback approach
+        console.log(`⚠️ All IP detection methods returned localhost. Available headers:`, socket.handshake.headers);
+        
+        // For development: generate a unique fake IP based on socket ID
+        if (clientIp === '127.0.0.1' || clientIp === '::1' || !clientIp) {
+            // Create a fake but consistent IP for development/testing
+            const socketId = socket.id || 'unknown';
+            const hash = socketId.split('').reduce((a, b) => {
+                a = ((a << 5) - a) + b.charCodeAt(0);
+                return a & a;
+            }, 0);
+            const fakeIp = `192.168.${Math.abs(hash) % 255}.${Math.abs(hash >> 8) % 255}`;
+            console.log(`🔧 Generated development IP: ${fakeIp} for socket ${socketId}`);
+            return fakeIp;
+        }
+        
+        return clientIp || '127.0.0.1';
+    };
+
     // Function to verify user token and extract user ID
     const verifyUser = (token) => {
         try {
@@ -374,11 +465,8 @@ module.exports = async (http) => {
                         // Verify user token and extract user ID first
                         const loggedId = verifyUser(data.token);
 
-                        // Get user's IP address
-                        const clientIp = socket.handshake.address || 
-                                        socket.handshake.headers['x-forwarded-for'] || 
-                                        socket.handshake.headers['x-real-ip'] ||
-                                        socket.request.connection.remoteAddress;
+                        // Get user's IP address using improved detection
+                        const clientIp = getClientIpAddress(socket);
 
                         // Get group info to check if user is the creator
                         const group = await Controller.getGroup(data.groupId);
