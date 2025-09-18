@@ -322,6 +322,13 @@ export const updateChatRules = (token: string | null, groupId: number | null, ch
   }
 }
 
+export const anonJoinToGroup = (groupId: number | null | undefined, anonId: number | null | undefined) => {
+  if (groupId && anonId) {
+    console.log(`🔍 [W] Anonymous user ${anonId} joining group ${groupId}`);
+    socket.emit(ChatConst.JOIN_TO_GROUP_ANON, { groupId, anonId })
+  }
+}
+
 export const getBannedUsers = (token: string | null, groupId: number | null | undefined) => {
   if (token && groupId) {
     console.log(`🚫 [W] Requesting banned users for group ${groupId}`);

@@ -308,6 +308,13 @@ export const userJoinToGroup = (token: string | null, groupId: number | null | u
   }
 }
 
+export const anonJoinToGroup = (groupId: number | null | undefined, anonId: number | null | undefined) => {
+  if (groupId && anonId) {
+    console.log(`🔍 Anonymous user ${anonId} joining group ${groupId}`);
+    socket.emit(ChatConst.JOIN_TO_GROUP_ANON, { groupId, anonId })
+  }
+}
+
 export const timeoutGroupUser = (token: string | null, groupId: number | null | undefined, userId: number | null) => {
   if (token && groupId && userId) {
     socket.emit(ChatConst.TIMEOUT_USER, { token, groupId, userId })

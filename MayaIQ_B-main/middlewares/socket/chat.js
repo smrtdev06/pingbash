@@ -183,66 +183,74 @@ module.exports = (socket, users) => {
             return;
         }
         try {
-                 // Get sender ID from the token first
-     const senderId = verifyUser(data.token);
-
-     // Get user's IP address using improved detection
-     const clientIp = getClientIpAddress(socket);
-
-     // Get group info to check if user is the creator
-     const group = await Controller.getGroup(data.groupId);
-     const isGroupCreator = group && group.creater_id === senderId;
-
-     // Check if IP is banned from this group (but skip for group creators)
-     if (!isGroupCreator) {
-         const isIpBanned = await Controller.checkIpBan(data.groupId, clientIp);
-         if (isIpBanned) {
-             console.log(`🚫 IP BAN BLOCKING MESSAGE: IP ${clientIp} is banned from group ${data.groupId}`);
-             console.log(`🚫 User trying to send message: ${senderId}`);
-             socket.emit(chatCode.FORBIDDEN, "You are banned from this group");
-             return;
-         }
-     } else {
-         console.log(`👑 Group creator ${senderId} sending message to group ${data.groupId} - IP ban check skipped`);
-     }
+            // Get sender ID from the token first
+            const senderId = verifyUser(data.token);
             const { msg: content, groupId, receiverId } = data;
 
+            console.log(`🔍 User ${senderId} sending message to group ${groupId}`);
+
+            // Get user's IP address using improved detection
+            const clientIp = getClientIpAddress(socket);
+
+            // Get group info to check if user is the creator
+            const group = await Controller.getGroup(groupId);
+            const isGroupCreator = group && group.creater_id === senderId;
+
+            // Check if IP is banned from this group (but skip for group creators)
+            if (!isGroupCreator) {
+                const isIpBanned = await Controller.checkIpBan(groupId, clientIp);
+                if (isIpBanned) {
+                    console.log(`🚫 IP BAN BLOCKING MESSAGE: IP ${clientIp} is banned from group ${groupId}`);
+                    console.log(`🚫 User trying to send message: ${senderId}`);
+                    socket.emit(chatCode.FORBIDDEN, "You are banned from this group");
+                    return;
+                }
+            } else {
+                console.log(`👑 Group creator ${senderId} sending message to group ${groupId} - IP ban check skipped`);
+            }
+
+            // Add user to users list if not already present
             if (!users.find(user => user.ID == senderId)) {
                 users.push({ ID: senderId, Socket: socket.id });
                 sockets[socket.id] = socket;
             }
+            
             // Save message to the database
             await Controller.saveGroupMsg(senderId, content, groupId, receiverId, data.parent_id);
             const receiverIds = await Controller.getReceiverIdsOfGroup(groupId);
-            // Find the receiver's and sender's socket IDs
-            const receiveUsers = users.filter(user => receiverIds.find(recId => recId == user.ID));
-            // const sender = users.find(user => user.ID === senderId);
             
-            // const senderSocketId = sender?.Socket;
+            // Find the receiver's socket IDs
+            const receiveUsers = users.filter(user => receiverIds.find(recId => recId == user.ID));
             const receiverSocketIds = receiveUsers.map(user => user?.Socket);
-
-            // const senderSocket = sockets[senderSocketId];
-            const receiverSockets = receiverSocketIds.map(socketId => sockets[socketId]);
+            const receiverSockets = receiverSocketIds.map(socketId => sockets[socketId]).filter(socket => socket);
 
             // Retrieve message list for the user
             const msgList = await Controller.getGroupMsg(groupId);
-            // if (senderSocket) {
-            //     console.log("=== Sent To sender =====");
-            //     senderSocket.emit(chatCode.SEND_GROUP_MSG, msgList);
-            // }
-            console.log("======receiverIds =======", receiverIds)
-            console.log("======= users ==========", users)
-            console.log("======= receiverSocketIds =======", receiverSocketIds)
+            
+            console.log("======receiverIds =======", receiverIds);
+            console.log("======= users ==========", users.length);
+            console.log("======= receiverSocketIds =======", receiverSocketIds);
+            
+            // Send message to all receivers
             if (receiverSockets && receiverSockets.length > 0) {
-                
-                receiverSockets.map(receiverSocket => {
-                    receiverSocket.emit(chatCode.SEND_GROUP_MSG, msgList);
-                    receiverSocket.emit(chatCode.GET_GROUP_ONLINE_USERS, receiveUsers?.map(u => u.ID));
+                receiverSockets.forEach(receiverSocket => {
+                    if (receiverSocket && typeof receiverSocket.emit === 'function') {
+                        receiverSocket.emit(chatCode.SEND_GROUP_MSG, msgList);
+                        receiverSocket.emit(chatCode.GET_GROUP_ONLINE_USERS, receiveUsers?.map(u => u.ID));
+                    }
                 });
             }
+            
+            // Send message back to sender
             socket.emit(chatCode.SEND_GROUP_MSG, msgList);
-            socket.emit(chatCode.GET_GROUP_ONLINE_USERS, receiveUsers?.map(u => u.ID))
+            socket.emit(chatCode.GET_GROUP_ONLINE_USERS, receiveUsers?.map(u => u.ID));
+            
+            console.log(`✅ Message sent successfully by user ${senderId} to group ${groupId}`);
+            
         } catch (error) {
+            console.error("Error sending group message:", error);
+            console.error("Error details:", error.message);
+            console.error("Stack trace:", error.stack);
             socket.emit(chatCode.SERVER_ERROR, httpCode.SERVER_ERROR);
         }
     });
@@ -253,55 +261,59 @@ module.exports = (socket, users) => {
             return;
         }
         try {
+            const { anonId, msg: content, groupId, receiverId } = data;
+            console.log("== Anon Id ===", anonId);
+            
             // Get user's IP address using improved detection
             const clientIp = getClientIpAddress(socket);
+            console.log(`🔍 Anonymous user ${anonId} sending message from IP ${clientIp} to group ${groupId}`);
 
-                 // Check if IP is banned from this group
-     const isIpBanned = await Controller.checkIpBan(data.groupId, clientIp);
-     if (isIpBanned) {
-         console.log(`🚫 IP BAN BLOCKING ANON MESSAGE: IP ${clientIp} is banned from group ${data.groupId}`);
-         console.log(`🚫 Anonymous user trying to send message: ${anonId}`);
-         socket.emit(chatCode.FORBIDDEN, "You are banned from this group");
-         return;
-     }
+            // Check if IP is banned from this group
+            const isIpBanned = await Controller.checkIpBan(groupId, clientIp);
+            if (isIpBanned) {
+                console.log(`🚫 IP BAN BLOCKING ANON MESSAGE: IP ${clientIp} is banned from group ${groupId}`);
+                console.log(`🚫 Anonymous user trying to send message: ${anonId}`);
+                socket.emit(chatCode.FORBIDDEN, "You are banned from this group");
+                return;
+            }
             
-            // Get sender ID from the token
-            const { anonId, msg: content, groupId, receiverId } = data;
-            console.log("== Anon Id ===", anonId)
+            // Add user to users list if not already present
             if (!users.find(user => user.ID == anonId)) {
                 users.push({ ID: anonId, Socket: socket.id });
                 sockets[socket.id] = socket;
             }
+            
             // Save message to the database
             await Controller.saveGroupMsg(anonId, content, groupId, receiverId, data.parent_id);
             const receiverIds = await Controller.getReceiverIdsOfGroup(groupId);
-            // Find the receiver's and sender's socket IDs
-            const receiveUsers = users.filter(user => receiverIds.find(recId => recId == user.ID));
-            // const sender = users.find(user => user.ID === senderId);
             
-            // const senderSocketId = sender?.Socket;
+            // Find the receiver's socket IDs
+            const receiveUsers = users.filter(user => receiverIds.find(recId => recId == user.ID));
             const receiverSocketIds = receiveUsers.map(user => user?.Socket);
-
-            // const senderSocket = sockets[senderSocketId];
-            const receiverSockets = receiverSocketIds.map(socketId => sockets[socketId]);
+            const receiverSockets = receiverSocketIds.map(socketId => sockets[socketId]).filter(socket => socket);
 
             // Retrieve message list for the user
             const msgList = await Controller.getGroupMsg(groupId);
-            // if (senderSocket) {
-            //     console.log("=== Sent To sender =====");
-            //     senderSocket.emit(chatCode.SEND_GROUP_MSG, msgList);
-            // }
-            console.log("======receiverIds =======", receiverIds)
-            console.log("======= users ==========", users)
-            console.log("======= receiverSocketIds =======", receiverSocketIds)
+            
+            console.log("======receiverIds =======", receiverIds);
+            console.log("======= users ==========", users.length);
+            console.log("======= receiverSocketIds =======", receiverSocketIds);
+            
+            // Send message to all receivers
             if (receiverSockets && receiverSockets.length > 0) {
-                
-                receiverSockets.map(receiverSocket => {
-                    receiverSocket && receiverSocket.emit(chatCode.SEND_GROUP_MSG, msgList);
+                receiverSockets.forEach(receiverSocket => {
+                    if (receiverSocket && typeof receiverSocket.emit === 'function') {
+                        receiverSocket.emit(chatCode.SEND_GROUP_MSG, msgList);
+                    }
                 });
             }
+            
+            // Send message back to sender
             socket.emit(chatCode.SEND_GROUP_MSG, msgList);
+            console.log(`✅ Anonymous message sent successfully by ${anonId} to group ${groupId}`);
+            
         } catch (error) {
+            console.error("Error sending anonymous group message:", error);
             socket.emit(chatCode.SERVER_ERROR, httpCode.SERVER_ERROR);
         }
     });
@@ -413,6 +425,15 @@ module.exports = (socket, users) => {
                 return;
             }
 
+            // RULE 2: Only Group Master (creator) can ban users
+            const groupInfo = await Controller.getGroup(groupId);
+            if (!groupInfo || groupInfo.creater_id !== senderId) {
+                console.log(`Ban attempt blocked: User ${senderId} is not the group master of group ${groupId} (creator: ${groupInfo?.creater_id})`);
+                socket.emit(chatCode.FORBIDDEN, "Only the group creator can ban users");
+                return;
+            }
+            console.log(`✅ Group Master ${senderId} authorized to ban users in group ${groupId}`);
+
             if (!users.find(user => user.ID == senderId)) {
                 users.push({ ID: senderId, Socket: socket.id });
                 sockets[socket.id] = socket;
@@ -483,7 +504,15 @@ module.exports = (socket, users) => {
             const senderId = verifyUser(data.token);
             const { userId, groupId } = data;
 
-            console.log(`Unban request: User ${senderId} unbanning user ${userId} in group ${groupId}`);
+            // Only Group Master (creator) can unban users
+            const groupInfo = await Controller.getGroup(groupId);
+            if (!groupInfo || groupInfo.creater_id !== senderId) {
+                console.log(`Unban attempt blocked: User ${senderId} is not the group master of group ${groupId} (creator: ${groupInfo?.creater_id})`);
+                socket.emit(chatCode.FORBIDDEN, "Only the group creator can unban users");
+                return;
+            }
+
+            console.log(`Unban request: Group Master ${senderId} unbanning user ${userId} in group ${groupId}`);
 
             if (!users.find(user => user.ID == senderId)) {
                 users.push({ ID: senderId, Socket: socket.id });
@@ -530,6 +559,17 @@ module.exports = (socket, users) => {
             // Get sender ID from the token
             const senderId = verifyUser(data.token);
             const { userIds, groupId} = data;
+
+            // Only Group Master (creator) can unban users
+            const groupInfo = await Controller.getGroup(groupId);
+            if (!groupInfo || groupInfo.creater_id !== senderId) {
+                console.log(`Bulk unban attempt blocked: User ${senderId} is not the group master of group ${groupId} (creator: ${groupInfo?.creater_id})`);
+                socket.emit(chatCode.FORBIDDEN, "Only the group creator can unban users");
+                return;
+            }
+
+            console.log(`Bulk unban request: Group Master ${senderId} unbanning users [${userIds}] in group ${groupId}`);
+
             if (!users.find(user => user.ID == senderId)) {
                 users.push({ ID: senderId, Socket: socket.id });
                 sockets[socket.id] = socket;
@@ -1288,7 +1328,15 @@ module.exports = (socket, users) => {
             const senderId = verifyUser(data.token);
             const { groupId, ipAddresses } = data;
 
-            console.log(`Unban IPs request: User ${senderId} unbanning IPs ${ipAddresses} in group ${groupId}`);
+            // Only Group Master (creator) can unban IPs
+            const groupInfo = await Controller.getGroup(groupId);
+            if (!groupInfo || groupInfo.creater_id !== senderId) {
+                console.log(`IP unban attempt blocked: User ${senderId} is not the group master of group ${groupId} (creator: ${groupInfo?.creater_id})`);
+                socket.emit(chatCode.FORBIDDEN, "Only the group creator can unban IP addresses");
+                return;
+            }
+
+            console.log(`IP unban request: Group Master ${senderId} unbanning IPs ${ipAddresses} in group ${groupId}`);
 
             // Unban IPs
             await Controller.unbanGroupIps(groupId, ipAddresses);
@@ -1311,6 +1359,44 @@ module.exports = (socket, users) => {
             console.log(`IP unban completed successfully for IPs ${ipAddresses} by ${senderId}`);
         } catch (error) {
             console.error("Error unbanning IPs:", error);
+            socket.emit(chatCode.SERVER_ERROR, httpCode.SERVER_ERROR);
+        }
+    });
+
+    socket.on(chatCode.JOIN_TO_GROUP_ANON, async (data) => {
+        if (!data.groupId || !data.anonId) {
+            socket.emit(chatCode.FORBIDDEN, httpCode.FORBIDDEN);
+            return;
+        }
+        try {
+            const { anonId, groupId } = data;
+
+            // Check if IP is banned from this group (anonymous users only need IP check)
+            const clientIp = getClientIpAddress(socket);
+            const ipBanCheck = await Controller.checkIpBan(groupId, clientIp);
+            if (ipBanCheck) {
+                console.log(`Anonymous join attempt blocked: IP ${clientIp} is banned from group ${groupId}`);
+                socket.emit(chatCode.FORBIDDEN, "Your IP address is banned from this group");
+                return;
+            }
+
+            console.log(`✅ Anonymous user ${anonId} authorized to join group ${groupId} (IP: ${clientIp})`);
+
+            // Add anonymous user to users list
+            if (!users.find(user => user.ID == anonId)) {
+                users.push({ ID: anonId, Socket: socket.id });
+                sockets[socket.id] = socket;
+            }
+
+            // Get group info
+            const group = await Controller.getGroup(groupId);
+            socket.emit(chatCode.GROUP_UPDATED, group);
+            socket.emit(chatCode.JOIN_TO_GROUP_ANON, { success: true, groupId, anonId });
+
+            console.log(`✅ Anonymous user ${anonId} successfully joined group ${groupId}`);
+
+        } catch (error) {
+            console.error("Error joining group as anonymous user:", error);
             socket.emit(chatCode.SERVER_ERROR, httpCode.SERVER_ERROR);
         }
     });
@@ -1363,6 +1449,26 @@ module.exports = (socket, users) => {
             // Get sender ID from the token
             const senderId = verifyUser(data.token);
             const {userId, groupId} = data;
+
+            // Check if user is banned from this group
+            const banCheck = await Controller.checkUserBan(groupId, userId);
+            if (banCheck) {
+                console.log(`Join attempt blocked: User ${userId} is banned from group ${groupId}`);
+                socket.emit(chatCode.FORBIDDEN, "You are banned from this group");
+                return;
+            }
+
+            // Check if user's IP is banned from this group
+            const clientIp = getClientIpAddress(socket);
+            const ipBanCheck = await Controller.checkIpBan(groupId, clientIp);
+            if (ipBanCheck) {
+                console.log(`Join attempt blocked: IP ${clientIp} is banned from group ${groupId}`);
+                socket.emit(chatCode.FORBIDDEN, "Your IP address is banned from this group");
+                return;
+            }
+
+            console.log(`✅ User ${userId} authorized to join group ${groupId} (IP: ${clientIp})`);
+
             // Save message to the database
             await Controller.joinToGroup(groupId, userId);
             // Find the receiver's and sender's socket IDs

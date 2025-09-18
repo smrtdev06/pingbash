@@ -211,6 +211,33 @@ router.post("/groups/join", authenticateUser, async (req, res) => {
          // Extracting uploaded file name
          const groupId = req.body.groupId;
          const userId = req.body.userId;
+
+         // Check if user is banned from this group
+         const banCheck = await PG_query(`SELECT banned FROM group_users 
+             WHERE group_id = ${groupId} AND user_id = ${userId} AND banned = 1;`);
+         
+         if (banCheck.rows.length > 0) {
+             console.log(`Join attempt blocked: User ${userId} is banned from group ${groupId}`);
+             return res.status(httpCode.FORBIDDEN).send({ error: "You are banned from this group" });
+         }
+
+         // Check if user's IP is banned (we need to get IP from request)
+         const userIp = req.ip || req.connection.remoteAddress || req.socket.remoteAddress || 
+                        (req.connection.socket ? req.connection.socket.remoteAddress : null) ||
+                        req.headers['x-forwarded-for']?.split(',')[0] || 
+                        req.headers['x-real-ip'] || 
+                        '127.0.0.1';
+
+         const ipBanCheck = await PG_query(`SELECT * FROM ip_bans 
+             WHERE group_id = ${groupId} AND ip_address = '${userIp}' AND is_active = true;`);
+         
+         if (ipBanCheck.rows.length > 0) {
+             console.log(`Join attempt blocked: IP ${userIp} is banned from group ${groupId}`);
+             return res.status(httpCode.FORBIDDEN).send({ error: "Your IP address is banned from this group" });
+         }
+
+         console.log(`✅ User ${userId} authorized to join group ${groupId} (IP: ${userIp})`);
+         
          await PG_query(`INSERT INTO "group_users" ("group_id", "user_id") VALUES (${groupId}, ${userId});`);
          let groups = await PG_query(`SELECT 
                  g.id,

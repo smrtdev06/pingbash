@@ -913,8 +913,10 @@ const ChatsContent: React.FC = () => {
       if (myMemInfo?.id == group?.creater_id || myMemInfo?.role_id == 2 && myMemInfo.manage_censored) {
         options.push({ id: "4", name: "Censored Content" });
       }
-      if (myMemInfo?.id == group?.creater_id || myMemInfo?.role_id == 2 && myMemInfo.ban_user) {
+      // Only Group Master can access ban management
+      if (myMemInfo?.id == group?.creater_id) {
         options.push({ id: "5", name: "Banned Users" });
+        options.push({ id: "6", name: "IP Bans" });
       }
       setAdminManageOptions(options);
 
@@ -1283,6 +1285,22 @@ const ChatsContent: React.FC = () => {
     setShowSigninPopup(true);
   }
 
+  const handleForbidden = (message: string | number) => {
+    dispatch(setIsLoading(false));
+    if (typeof message === 'string') {
+      toast.error(message);
+    } else {
+      toast.error("Access forbidden");
+    }
+  }
+
+  const handleJoinToGroupAnon = (data: any) => {
+    console.log(`🔍 [W] Anonymous join response:`, data);
+    if (data.success) {
+      toast.success(`Successfully joined group ${data.groupId} as anonymous user`);
+    }
+  }
+
   // Setup socket listeners with proper cleanup
   useEffect(() => {
     socket.on(ChatConst.GET_GROUP_ONLINE_USERS, handleGetGroupOnlineUsers)
@@ -1291,6 +1309,7 @@ const ChatsContent: React.FC = () => {
         socket.on(ChatConst.UNBAN_GROUP_USER, handleUnbanGroupUser);
         socket.on(ChatConst.UNBAN_GROUP_USERS, handleUnbanGroupUsers);
         socket.on(ChatConst.GET_BANNED_USERS, handleGetBannedUsers);
+    socket.on(ChatConst.JOIN_TO_GROUP_ANON, handleJoinToGroupAnon);
     // Receive the message afer sending the message.
     socket.on(ChatConst.SEND_GROUP_MSG, handleSendGroupMsg);
     socket.on(ChatConst.DELETE_GROUP_MSG, handleDeleteGroupMsg);
@@ -1299,6 +1318,7 @@ const ChatsContent: React.FC = () => {
 
     socket.on(ChatConst.CLEAR_GROUP_CHAT, handleClearGroupChat);
     socket.on(ChatConst.EXPIRED, handleExpired);
+    socket.on(ChatConst.FORBIDDEN, handleForbidden);
 
     // Chat rules listeners
     console.log("🔍 [W] [Chat Rules] Setting up socket listeners");
@@ -1325,13 +1345,15 @@ const ChatsContent: React.FC = () => {
               socket.off(ChatConst.BAN_GROUP_USER, handleBanGroupUser);
         socket.off(ChatConst.UNBAN_GROUP_USER, handleUnbanGroupUser);
         socket.off(ChatConst.UNBAN_GROUP_USERS, handleUnbanGroupUsers);
-        socket.off(ChatConst.GET_BANNED_USERS, handleGetBannedUsers);
-      socket.off(ChatConst.SEND_GROUP_MSG, handleSendGroupMsg);
-      socket.off(ChatConst.DELETE_GROUP_MSG, handleDeleteGroupMsg);
-      socket.off(ChatConst.GROUP_UPDATED, handleGroupUpdated);
-      socket.off(ChatConst.GET_GROUP_BLOCKED_USERS, handleGetGroupBlockedUsers);
-      socket.off(ChatConst.CLEAR_GROUP_CHAT, handleClearGroupChat);
-      socket.off(ChatConst.EXPIRED, handleExpired);
+            socket.off(ChatConst.GET_BANNED_USERS, handleGetBannedUsers);
+    socket.off(ChatConst.JOIN_TO_GROUP_ANON, handleJoinToGroupAnon);
+    socket.off(ChatConst.SEND_GROUP_MSG, handleSendGroupMsg);
+    socket.off(ChatConst.DELETE_GROUP_MSG, handleDeleteGroupMsg);
+    socket.off(ChatConst.GROUP_UPDATED, handleGroupUpdated);
+    socket.off(ChatConst.GET_GROUP_BLOCKED_USERS, handleGetGroupBlockedUsers);
+    socket.off(ChatConst.CLEAR_GROUP_CHAT, handleClearGroupChat);
+    socket.off(ChatConst.EXPIRED, handleExpired);
+    socket.off(ChatConst.FORBIDDEN, handleForbidden);
       socket.off(ChatConst.GET_CHAT_RULES, handleGetChatRules);
       socket.off(ChatConst.UPDATE_CHAT_RULES, handleUpdateChatRules);
       socket.off(ChatConst.EXPIRED);
@@ -1702,8 +1724,16 @@ const ChatsContent: React.FC = () => {
       return;
     }
     
+    // RULE 2: Only Group Master can ban users
+    if (group?.creater_id !== currentUserId) {
+      toast.error("Only the group creator can ban users");
+      setOpenBanUserConfirmPopup(false);
+      setBanUserId(null);
+      return;
+    }
+    
     const token = localStorage.getItem(TOKEN_KEY)
-    console.log(`Frontend: Attempting to ban user ${banUserId} (current user: ${currentUserId})`);
+    console.log(`Frontend: Group Master ${currentUserId} attempting to ban user ${banUserId}`);
     banGroupUser(token, group?.id, banUserId);
     setOpenBanUserConfirmPopup(false);
     setBanUserId(null);

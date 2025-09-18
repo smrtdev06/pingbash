@@ -679,6 +679,23 @@ const checkIpBan = async (groupId, ipAddress) => {
     }
 }
 
+const checkUserBan = async (groupId, userId) => {
+    try {
+        const result = await PG_query(`SELECT banned FROM group_users 
+            WHERE group_id = ${groupId} 
+            AND user_id = ${userId} 
+            AND banned = 1;`);
+        
+        const isBanned = result.rows.length > 0;
+        console.log(`🔍 User ban check: User ${userId} in group ${groupId} - ${isBanned ? 'BANNED' : 'NOT BANNED'}`);
+        
+        return isBanned;
+    } catch (error) {
+        console.log("Error checking user ban:", error);
+        return false;
+    }
+}
+
 const getIpBans = async (groupId) => {
     try {
         const result = await PG_query(`SELECT 
@@ -1241,6 +1258,7 @@ module.exports = {
     updateChatRules,
     banGroupUserWithIp,
     checkIpBan,
+    checkUserBan,
     getIpBans,
     unbanGroupIps,
     debugIpBanStatus

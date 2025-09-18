@@ -193,7 +193,8 @@ const Message: React.FC<MessageProps> = ({
         setShowBlock(false)
       }
 
-      if ((myMemInfo?.role_id == 1 || group.creater_id == userId  || myMemInfo?.role_id == 2) && senderInfo?.role_id != 1 && senderInfo?.role_id != 2) {
+      // Only Group Master (creator) can ban users
+      if (group.creater_id == userId && senderInfo?.role_id != 1 && senderInfo?.role_id != 2) {
         setShowBan(true)
       } else {
         setShowBan(false)

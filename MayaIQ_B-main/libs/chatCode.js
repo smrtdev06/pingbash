@@ -45,6 +45,7 @@ module.exports = {
   ALL_REFRESH: "allRefresh",
   SERVER_ERROR: "server error",
   JOIN_TO_GROUP: "join to group",
+  JOIN_TO_GROUP_ANON: "join to group anon",
   DELETE_MSG: "delete msg",
   UPDATE_FAV_GROUPS: "update fav groups",
   GROUP_UPDATED: "group updated",

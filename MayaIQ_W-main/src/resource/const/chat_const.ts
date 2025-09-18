@@ -34,6 +34,7 @@ export default {
   GET_FAV_GROUPS: "get fav groups",
   ADD_LISTENER_GROUP: "add listener to group",
   JOIN_TO_GROUP: "join to group",
+  JOIN_TO_GROUP_ANON: "join to group anon",
   GET_RECENT_USERS: "get recent users",
   GET_FRIEND_USERS: "get friend users",
   GET_SEARCH_USERS: "get search users",

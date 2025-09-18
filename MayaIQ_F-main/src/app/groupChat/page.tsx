@@ -485,7 +485,8 @@ const ChatsContent: React.FC = () => {
       if (myMemInfo?.id == selectedChatGroup?.creater_id || myMemInfo?.role_id == 2 && myMemInfo.manage_censored) {
         options.push({ id: "4", name: "Censored Content" });
       }
-      if (myMemInfo?.id == selectedChatGroup?.creater_id || myMemInfo?.role_id == 2 && myMemInfo.ban_user) {
+      // Only Group Master can access ban management
+      if (myMemInfo?.id == selectedChatGroup?.creater_id) {
         options.push({ id: "5", name: "Banned Users" });
         options.push({ id: "6", name: "IP Bans" });
       }
@@ -837,8 +838,13 @@ const ChatsContent: React.FC = () => {
     return Array.from(oldMap.values());
   }
 
-  const handleForbidden = (code: number) => {
+  const handleForbidden = (message: string | number) => {
     dispatch(setIsLoading(false));
+    if (typeof message === 'string') {
+      toast.error(message);
+    } else {
+      toast.error("Access forbidden");
+    }
   }    
 
   const handleGetMyGroups = (data: ChatGroup[]) => {
@@ -961,6 +967,13 @@ const ChatsContent: React.FC = () => {
   const handleGetIpBans = (ipBans: any[]) => {
     console.log(`🚫 [F] Received IP bans:`, ipBans.length, "IP addresses");
     setGroupIpBans(ipBans);
+  }
+
+  const handleJoinToGroupAnon = (data: any) => {
+    console.log(`🔍 [F] Anonymous join response:`, data);
+    if (data.success) {
+      toast.success(`Successfully joined group ${data.groupId} as anonymous user`);
+    }
   }
 
   const handleSendGroupMsg = useCallback((data: MessageUnit[]) => {
@@ -1105,6 +1118,7 @@ const ChatsContent: React.FC = () => {
     socket.on(ChatConst.UNBAN_GROUP_USERS, handleUnbanGroupUsers);
     socket.on(ChatConst.GET_BANNED_USERS, handleGetBannedUsers);
     socket.on(ChatConst.GET_IP_BANS, handleGetIpBans);
+    socket.on(ChatConst.JOIN_TO_GROUP_ANON, handleJoinToGroupAnon);
 
     // Receive updated message afer delete group message.
     socket.on(ChatConst.DELETE_GROUP_MSG, handleDeleteGroupMsg);
@@ -1131,8 +1145,9 @@ const ChatsContent: React.FC = () => {
       socket.off(ChatConst.BAN_GROUP_USER, handleBanGroupUser);
       socket.off(ChatConst.UNBAN_GROUP_USER, handleUnbanGroupUser);
       socket.off(ChatConst.UNBAN_GROUP_USERS, handleUnbanGroupUsers);
-      socket.off(ChatConst.GET_BANNED_USERS, handleGetBannedUsers);
-      socket.off(ChatConst.GET_IP_BANS, handleGetIpBans);
+          socket.off(ChatConst.GET_BANNED_USERS, handleGetBannedUsers);
+    socket.off(ChatConst.GET_IP_BANS, handleGetIpBans);
+    socket.off(ChatConst.JOIN_TO_GROUP_ANON, handleJoinToGroupAnon);
       socket.off(ChatConst.DELETE_GROUP_MSG, handleDeleteGroupMsg);
       socket.off(ChatConst.CLEAR_GROUP_CHAT, handleClearGroupChat);
       socket.off(ChatConst.GROUP_UPDATED, handleGroupUpdated);
@@ -1380,8 +1395,16 @@ const ChatsContent: React.FC = () => {
       return;
     }
     
+    // RULE 2: Only Group Master can ban users
+    if (selectedChatGroup?.creater_id !== currentUserId) {
+      toast.error("Only the group creator can ban users");
+      setOpenBanUserConfirmPopup(false);
+      setBanUserId(null);
+      return;
+    }
+    
     const token = localStorage.getItem(TOKEN_KEY)
-    console.log(`Frontend: Attempting to ban user ${banUserId} (current user: ${currentUserId})`);
+    console.log(`Frontend: Group Master ${currentUserId} attempting to ban user ${banUserId}`);
     banGroupUser(token, selectedChatGroup?.id, banUserId);
     setOpenBanUserConfirmPopup(false);
     setBanUserId(null);
@@ -1402,16 +1425,30 @@ const ChatsContent: React.FC = () => {
   }
 
   const unbanUsers = (userIds: number[]) => {
+    // Only Group Master can unban users
+    const currentUserId = getCurrentUserId();
+    if (selectedChatGroup?.creater_id !== currentUserId) {
+      toast.error("Only the group creator can unban users");
+      return;
+    }
+    
     const token = localStorage.getItem(TOKEN_KEY)
-    console.log(`Frontend: Unbanning users ${userIds} from group ${selectedChatGroup?.id}`);
+    console.log(`Frontend: Group Master ${currentUserId} unbanning users ${userIds} from group ${selectedChatGroup?.id}`);
     unbanGroupUsers(token, selectedChatGroup?.id, userIds);
     setOpenBannedUsersWidget(false);
     dispatch(setIsLoading(true));
   }
 
   const unbanIps = (ipAddresses: string[]) => {
+    // Only Group Master can unban IPs
+    const currentUserId = getCurrentUserId();
+    if (selectedChatGroup?.creater_id !== currentUserId) {
+      toast.error("Only the group creator can unban IP addresses");
+      return;
+    }
+    
     const token = localStorage.getItem(TOKEN_KEY)
-    console.log(`Frontend: Unbanning IPs ${ipAddresses} from group ${selectedChatGroup?.id}`);
+    console.log(`Frontend: Group Master ${currentUserId} unbanning IPs ${ipAddresses} from group ${selectedChatGroup?.id}`);
     unbanGroupIps(token, selectedChatGroup?.id, ipAddresses);
     setOpenIpBansWidget(false);
     dispatch(setIsLoading(true));
