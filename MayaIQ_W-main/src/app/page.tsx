@@ -177,7 +177,20 @@ const ChatsContent: React.FC = () => {
   const [group, setGroup] = useState<ChatGroup>();
   const [socketConnected, setSocketConnected] = useState(false);
   const [pageVisible, setPageVisible] = useState(true);
+
+  // Debug pageVisible changes
+  useEffect(() => {
+    console.log("🔍 [W] pageVisible state updated:", pageVisible);
+  }, [pageVisible]);
   const [pendingMessages, setPendingMessages] = useState<MessageUnit[]>([]);
+
+  // Debug pendingMessages changes
+  useEffect(() => {
+    console.log("🔍 [W] pendingMessages state updated:", pendingMessages?.length, "messages");
+    if (pendingMessages?.length > 0) {
+      console.log("🔍 [W] Pending messages:", pendingMessages);
+    }
+  }, [pendingMessages]);
   const [showTimeoutNotification, setShowTimeoutNotification] = useState(false);
   const [timeoutData, setTimeoutData] = useState<{timeoutMinutes: number; expiresAt: string} | null>(null);
   const [showVerificationPopup, setShowVerificationPopup] = useState(false);
@@ -1494,12 +1507,26 @@ const ChatsContent: React.FC = () => {
       setPageVisible(isVisible);
       console.log("🔍 [W] Page visibility changed:", isVisible ? 'visible' : 'hidden');
       
-      if (isVisible && pendingMessages.length > 0) {
-        console.log("🔍 [W] Page became visible, processing", pendingMessages.length, "pending messages");
-        // Process pending messages when page becomes visible
-        const newList = mergeArrays(groupMsgList, pendingMessages);
-        setGroupMsgList(newList);
-        setPendingMessages([]);
+      if (isVisible) {
+        // Use functional state update to get the latest pendingMessages
+        setPendingMessages(currentPending => {
+          if (currentPending.length > 0) {
+            console.log("🔍 [W] Page became visible, processing", currentPending.length, "pending messages");
+            console.log("🔍 [W] Pending messages:", currentPending);
+            
+            // Use functional state update to get the latest groupMsgList
+            setGroupMsgList(currentGroupMsgList => {
+              console.log("🔍 [W] Current group message list length:", currentGroupMsgList.length);
+              const newList = mergeArrays(currentGroupMsgList, currentPending);
+              console.log("🔍 [W] Merged list length:", newList.length);
+              return newList;
+            });
+            
+            // Clear pending messages
+            return [];
+          }
+          return currentPending;
+        });
       }
     };
 
@@ -2898,7 +2925,7 @@ const ChatsContent: React.FC = () => {
                       {isMobile ? <div className="hidden max-[810px]:flex"><FontAwesomeIcon icon={faPaperPlane} className="text-[16px]" /></div> : "Send"}
                     </button>
                     {/* Debug button for testing membership refresh */}
-                    <button 
+                    {/* <button 
                       onClick={async () => {
                         const token = localStorage.getItem(TOKEN_KEY);
                         if (token && group?.id) {
@@ -2910,7 +2937,7 @@ const ChatsContent: React.FC = () => {
                       title="Debug: Refresh Membership"
                     >
                       🔧
-                    </button>
+                    </button> */}
                   </div>
                   <div className={`flex gap-[10px] ${adminManageOptions?.length > 0 && !isBannedUser ? "min-w-[122px]" : "min-w-[82px]"} relative cursor-pointer max-[810px]:hidden`}>
                     {showOnlineUserCount && <div className="w-auto h-[24px]" onClick={() => setOpenGroupOnlineUsersPopup(!openGroupOnlineUsersPopup)}><FontAwesomeIcon icon={faUser} className="text-[24px] pr-[6px]" />{groupOnlineUserIds.length}</div>}

@@ -168,7 +168,20 @@ const ChatsContent: React.FC = () => {
   const [groupMsgList, setGroupMsgList] = useState<MessageUnit[]>([])
   const [socketConnected, setSocketConnected] = useState(false);
   const [pageVisible, setPageVisible] = useState(true);
+
+  // Debug pageVisible changes
+  useEffect(() => {
+    console.log("🔍 [F] pageVisible state updated:", pageVisible);
+  }, [pageVisible]);
   const [pendingMessages, setPendingMessages] = useState<MessageUnit[]>([]);
+
+  // Debug pendingMessages changes
+  useEffect(() => {
+    console.log("🔍 [F] pendingMessages state updated:", pendingMessages?.length, "messages");
+    if (pendingMessages?.length > 0) {
+      console.log("🔍 [F] Pending messages:", pendingMessages);
+    }
+  }, [pendingMessages]);
   const [showTimeoutNotification, setShowTimeoutNotification] = useState(false);
   const [timeoutData, setTimeoutData] = useState<{timeoutMinutes: number; expiresAt: string} | null>(null);
   const hasShownGroupNotify = useRef(false);
@@ -1180,12 +1193,26 @@ const ChatsContent: React.FC = () => {
       setPageVisible(isVisible);
       console.log("🔍 [F] Page visibility changed:", isVisible ? 'visible' : 'hidden');
       
-      if (isVisible && pendingMessages.length > 0) {
-        console.log("🔍 [F] Page became visible, processing", pendingMessages.length, "pending messages");
-        // Process pending messages when page becomes visible
-        const newList = mergeArrays(groupMsgList, pendingMessages);
-        setGroupMsgList(newList);
-        setPendingMessages([]);
+      if (isVisible) {
+        // Use functional state update to get the latest pendingMessages
+        setPendingMessages(currentPending => {
+          if (currentPending.length > 0) {
+            console.log("🔍 [F] Page became visible, processing", currentPending.length, "pending messages");
+            console.log("🔍 [F] Pending messages:", currentPending);
+            
+            // Use functional state update to get the latest groupMsgList
+            setGroupMsgList(currentGroupMsgList => {
+              console.log("🔍 [F] Current group message list length:", currentGroupMsgList.length);
+              const newList = mergeArrays(currentGroupMsgList, currentPending);
+              console.log("🔍 [F] Merged list length:", newList.length);
+              return newList;
+            });
+            
+            // Clear pending messages
+            return [];
+          }
+          return currentPending;
+        });
       }
     };
 
