@@ -177,6 +177,7 @@ const ChatsContent: React.FC = () => {
   const [group, setGroup] = useState<ChatGroup>();
   const [socketConnected, setSocketConnected] = useState(false);
   const [pageVisible, setPageVisible] = useState(true);
+  const reloadTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Debug pageVisible changes
   useEffect(() => {
@@ -1508,25 +1509,24 @@ const ChatsContent: React.FC = () => {
       console.log("🔍 [W] Page visibility changed:", isVisible ? 'visible' : 'hidden');
       
       if (isVisible) {
-        // Use functional state update to get the latest pendingMessages
-        setPendingMessages(currentPending => {
-          if (currentPending.length > 0) {
-            console.log("🔍 [W] Page became visible, processing", currentPending.length, "pending messages");
-            console.log("🔍 [W] Pending messages:", currentPending);
-            
-            // Use functional state update to get the latest groupMsgList
-            setGroupMsgList(currentGroupMsgList => {
-              console.log("🔍 [W] Current group message list length:", currentGroupMsgList.length);
-              const newList = mergeArrays(currentGroupMsgList, currentPending);
-              console.log("🔍 [W] Merged list length:", newList.length);
-              return newList;
-            });
-            
-            // Clear pending messages
-            return [];
+        console.log("🔍 [W] Window reactivated - scheduling message reload");
+        
+        // Clear pending messages since we're reloading everything
+        setPendingMessages([]);
+        
+        // Clear any existing timeout
+        if (reloadTimeoutRef.current) {
+          clearTimeout(reloadTimeoutRef.current);
+        }
+        
+        // Debounce the reload to prevent rapid successive calls
+        reloadTimeoutRef.current = setTimeout(() => {
+          const token = localStorage.getItem(TOKEN_KEY);
+          if (token && group?.id) {
+            console.log("🔍 [W] Reloading messages for group:", group.id);
+            getGroupMessages(token, group.id);
           }
-          return currentPending;
-        });
+        }, 500); // 500ms debounce
       }
     };
 
@@ -1582,6 +1582,12 @@ const ChatsContent: React.FC = () => {
     // Cleanup listeners on unmount
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
+      
+      // Clear any pending reload timeout
+      if (reloadTimeoutRef.current) {
+        clearTimeout(reloadTimeoutRef.current);
+      }
+      
       socket.off('connect', handleConnect);
       socket.off('disconnect', handleDisconnect);
       socket.off(ChatConst.GET_GROUP_ONLINE_USERS, handleGetGroupOnlineUsers);
