@@ -653,7 +653,7 @@ const ChatsContent: React.FC = () => {
     } else {
       subdomain = ''; // No subdomain, e.g., "example.com" or "localhost"
     }
-    //subdomain = 'testtt';
+    //subdomain = 'testgroup3';
     console.log("🔍 [W] getSubDomain result:", subdomain);
     return subdomain;
   }

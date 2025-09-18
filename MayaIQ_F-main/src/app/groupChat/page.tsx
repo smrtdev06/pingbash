@@ -381,6 +381,11 @@ const ChatsContent: React.FC = () => {
   const [filteredPrevMsgList, setFilteredPrevMsgList] = useState<MessageUnit[]>([])
   const [blockedUserIds, setBlockedUserIds] = useState<number[]>([])
 
+  // Debug blockedUserIds changes
+  useEffect(() => {
+    console.log("🔍 [F] blockedUserIds state updated:", blockedUserIds);
+  }, [blockedUserIds]);
+
   const [showOnlineUserCount, setShowOnlineUserCount] = useState(true)
   const [openGroupOnlineUsersPopup, setOpenGroupOnlineUsersPopup] = useState(false)
   const [groupOnlineUserIds, setGroupOnlineUserIds] = useState<number[]>([])
@@ -587,26 +592,35 @@ const ChatsContent: React.FC = () => {
   }, [socketConnected, selectedChatGroup?.id]);
 
   useEffect(() => {
+    console.log("🔍 [F] Filtering messages - groupMsgList:", groupMsgList?.length, "currentUserId:", getCurrentUserId());
     const myMemInfo = selectedChatGroup?.members?.find(mem => mem.id == getCurrentUserId())
+    console.log("🔍 [F] My member info:", myMemInfo);
     setFilteredPrevMsgList(filteredMsgList)
     let newMsgs = []
     if (myMemInfo?.role_id == 1 || myMemInfo?.role_id == 2) {
+      console.log("🔍 [F] User is moderator/admin - showing all messages");
       newMsgs = groupMsgList.filter(msg => msg.Receiver_Id == null || msg.Receiver_Id == 1 || msg.Receiver_Id == getCurrentUserId() || msg.Sender_Id == getCurrentUserId())      
     } else {
+      console.log("🔍 [F] Regular user - showing public + own messages");
       newMsgs = groupMsgList.filter(msg => msg.Receiver_Id == null || msg.Receiver_Id == getCurrentUserId() || msg.Sender_Id == getCurrentUserId())
     }
 
     if (myMemInfo?.role_id != 1 && myMemInfo?.role_id != 2 && selectedChatGroup?.creater_id != getCurrentUserId()) {
       if (blockedUserIds?.length > 0) {
+        console.log("🔍 [F] Applying blocked user filter - blockedUserIds:", blockedUserIds);
         newMsgs = newMsgs.filter(msg => {
           const senderInfo = selectedChatGroup?.members?.find(u => u.id === msg.Sender_Id)
           if (senderInfo?.role_id == 1 || senderInfo?.role_id == 2) return true
-          console.log("msg sender Id==", msg.Sender_Id ?? -1 )
           return !blockedUserIds.includes(msg.Sender_Id ?? -1)        
         })
+      } else {
+        console.log("🔍 [F] No blocked users - showing all messages");
       }
+    } else {
+      console.log("🔍 [F] User is admin/moderator/creator - no blocked user filtering");
     }
     
+    console.log("🔍 [F] Filtered messages:", newMsgs?.length, "from", groupMsgList?.length);
     setFilteredMsgList(newMsgs)
 
     const prevLength = filteredMsgList.length;
@@ -637,6 +651,7 @@ const ChatsContent: React.FC = () => {
       getGroupMessages(localStorage.getItem(TOKEN_KEY), selectedChatGroup?.id);
     }
     // Reset blocked users when switching groups - personal blocks should not affect group chats
+    console.log("🔍 [F] Resetting blockedUserIds to empty array");
     setBlockedUserIds([]);
 
     const token = localStorage.getItem(TOKEN_KEY);

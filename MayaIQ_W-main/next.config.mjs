@@ -77,9 +77,11 @@ const nextConfig = {
             key: 'X-XSS-Protection',
             value: '1; mode=block'
           },
+          // Removed X-Frame-Options to allow iframe embedding
+          // Add Content-Security-Policy frame-ancestors directive for more control
           {
-            key: 'X-Frame-Options',
-            value: 'SAMEORIGIN'
+            key: 'Content-Security-Policy',
+            value: "frame-ancestors *;"
           },
           {
             key: 'X-Content-Type-Options',
