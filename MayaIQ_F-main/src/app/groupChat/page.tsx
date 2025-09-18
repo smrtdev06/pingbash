@@ -1214,38 +1214,33 @@ const ChatsContent: React.FC = () => {
       console.log("🔍 [F] Page visibility changed:", isVisible ? 'visible' : 'hidden');
       
       if (isVisible) {
-        console.log("🔍 [F] Window reactivated - scheduling message reload");
-        
-        // Clear pending messages since we're reloading everything
-        setPendingMessages([]);
+        console.log("🔍 [F] Window reactivated - processing pending messages");
         
         // Clear any existing timeout
         if (reloadTimeoutRef.current) {
           clearTimeout(reloadTimeoutRef.current);
         }
         
-        // Get current values immediately to avoid closure issues
-        const token = localStorage.getItem(TOKEN_KEY);
-        const selectedGroupId = localStorage.getItem(SELECTED_GROUP_ID);
-        
-        console.log("🔍 [F] Immediate check - Token:", !!token, "Selected Group ID:", selectedGroupId);
-        
-        // Debounce the reload to prevent rapid successive calls
+        // Debounce to prevent rapid successive calls
         reloadTimeoutRef.current = setTimeout(() => {
-          const currentToken = localStorage.getItem(TOKEN_KEY);
-          const currentGroupId = localStorage.getItem(SELECTED_GROUP_ID);
-          
-          console.log("🔍 [F] Timeout fired - checking reload conditions:");
-          console.log("🔍 [F] Token exists:", !!currentToken);
-          console.log("🔍 [F] Selected Group ID:", currentGroupId);
-          
-          if (currentToken && currentGroupId) {
-            console.log("🔍 [F] Reloading messages for group:", currentGroupId);
-            readGroupMsg(currentToken, parseInt(currentGroupId));
-          } else {
-            console.log("🔍 [F] Skipping reload - conditions not met");
-          }
-        }, 200); // 200ms debounce - faster response
+          setPendingMessages(currentPending => {
+            if (currentPending.length > 0) {
+              console.log("🔍 [F] Merging", currentPending.length, "pending messages");
+              console.log("🔍 [F] Pending messages:", currentPending);
+              
+              setGroupMsgList(currentList => {
+                const newList = mergeArrays(currentList, currentPending);
+                console.log("🔍 [F] After merging pending - total messages:", newList?.length);
+                return newList;
+              });
+            } else {
+              console.log("🔍 [F] No pending messages to merge");
+            }
+            
+            // Clear pending messages after processing
+            return [];
+          });
+        }, 100); // 100ms debounce for faster response
       }
     };
 
