@@ -328,3 +328,17 @@ export const getBannedUsers = (token: string | null, groupId: number | null | un
     socket.emit(ChatConst.GET_BANNED_USERS, { token, groupId })
   }
 }
+
+export const getIpBans = (token: string | null, groupId: number | null | undefined) => {
+  if (token && groupId) {
+    console.log(`🚫 [W] Requesting IP bans for group ${groupId}`);
+    socket.emit(ChatConst.GET_IP_BANS, { token, groupId })
+  }
+}
+
+export const unbanGroupIps = (token: string | null, groupId: number | null | undefined, ipAddresses: string[]) => {
+  if (token && groupId) {
+    console.log(`🚫 [W] Unbanning IPs ${ipAddresses} from group ${groupId}`);
+    socket.emit(ChatConst.UNBAN_GROUP_IPS, { token, groupId, ipAddresses })
+  }
+}

@@ -58,6 +58,8 @@ import {
   blockUser,
   getGroupOnlineUsers,
   getBannedUsers,
+  getIpBans,
+  unbanGroupIps,
   getChatRules,
   updateChatRules
  } from "@/resource/utils/chat";
@@ -112,6 +114,7 @@ import ManageChatPopup from "@/components/groupAdmin/ManageChatPopup";
 import PinnedMessagesWidget from "@/components/chats/PinnedMessagesWidget";
 import FilterWidget from "@/components/groupAdmin/FilterWidget";
 import BannedUsersPopup from "@/components/groupAdmin/BannedUsersPopup";
+import IpBansPopup from "@/components/groupAdmin/IpBansPopup";
 import SendNotificationPopup from "@/components/groupAdmin/SendNotificationPopup";
 import GroupOnlineUsersPopup from "@/components/groupAdmin/GroupOnlineUsersPopup";
 import ChatRulesPopup from "@/components/groupAdmin/ChatRulesPopup";
@@ -353,11 +356,13 @@ const ChatsContent: React.FC = () => {
   const adminManagePopoverRef = useRef<HTMLImageElement>(null);
   const [openChatLimitationPopup, setOpenChatLimitationPopup] = useState(false);
   const [openBannedUsersWidget, setOpenBannedUsersWidget] = useState(false);
+  const [openIpBansWidget, setOpenIpBansWidget] = useState(false);
   const [openModeratorsWidget, setOpenModeratorsWidget] = useState(false);
   const [openCensoredPopup, setOpenCensoredPopup] = useState(false);
   const [openManageChatPopup, setOpenManageChatPopup] = useState(false);
   const [showPinnedMessagesView, setShowPinnedMessageView] = useState(false);
   const [groupBannedUsers, setGroupBannedUsers] = useState<ChatUser[]>([]);
+  const [groupIpBans, setGroupIpBans] = useState<any[]>([]);
   const [pinnedMsgIds, setPinnedMsgIds] = useState<number[]>([]);
   const [pinnedMessages, setPinnedMessages] = useState<MessageUnit[]>([]);
   const [tabbedPinMsgId, setTabbedPinMsgId] = useState<number | null>(null);
@@ -482,6 +487,7 @@ const ChatsContent: React.FC = () => {
       }
       if (myMemInfo?.id == selectedChatGroup?.creater_id || myMemInfo?.role_id == 2 && myMemInfo.ban_user) {
         options.push({ id: "5", name: "Banned Users" });
+        options.push({ id: "6", name: "IP Bans" });
       }
       setAdminManageOptions(options);  
       
@@ -952,6 +958,11 @@ const ChatsContent: React.FC = () => {
     setGroupBannedUsers(bannedUsers);
   }
 
+  const handleGetIpBans = (ipBans: any[]) => {
+    console.log(`🚫 [F] Received IP bans:`, ipBans.length, "IP addresses");
+    setGroupIpBans(ipBans);
+  }
+
   const handleSendGroupMsg = useCallback((data: MessageUnit[]) => {
       console.log("🔍 handleSendGroupMsg received:", data?.length, "messages");
       const groupId = data?.length && data[data.length - 1].group_id;
@@ -1093,6 +1104,7 @@ const ChatsContent: React.FC = () => {
     socket.on(ChatConst.UNBAN_GROUP_USER, handleUnbanGroupUser);
     socket.on(ChatConst.UNBAN_GROUP_USERS, handleUnbanGroupUsers);
     socket.on(ChatConst.GET_BANNED_USERS, handleGetBannedUsers);
+    socket.on(ChatConst.GET_IP_BANS, handleGetIpBans);
 
     // Receive updated message afer delete group message.
     socket.on(ChatConst.DELETE_GROUP_MSG, handleDeleteGroupMsg);
@@ -1120,6 +1132,7 @@ const ChatsContent: React.FC = () => {
       socket.off(ChatConst.UNBAN_GROUP_USER, handleUnbanGroupUser);
       socket.off(ChatConst.UNBAN_GROUP_USERS, handleUnbanGroupUsers);
       socket.off(ChatConst.GET_BANNED_USERS, handleGetBannedUsers);
+      socket.off(ChatConst.GET_IP_BANS, handleGetIpBans);
       socket.off(ChatConst.DELETE_GROUP_MSG, handleDeleteGroupMsg);
       socket.off(ChatConst.CLEAR_GROUP_CHAT, handleClearGroupChat);
       socket.off(ChatConst.GROUP_UPDATED, handleGroupUpdated);
@@ -1393,6 +1406,14 @@ const ChatsContent: React.FC = () => {
     console.log(`Frontend: Unbanning users ${userIds} from group ${selectedChatGroup?.id}`);
     unbanGroupUsers(token, selectedChatGroup?.id, userIds);
     setOpenBannedUsersWidget(false);
+    dispatch(setIsLoading(true));
+  }
+
+  const unbanIps = (ipAddresses: string[]) => {
+    const token = localStorage.getItem(TOKEN_KEY)
+    console.log(`Frontend: Unbanning IPs ${ipAddresses} from group ${selectedChatGroup?.id}`);
+    unbanGroupIps(token, selectedChatGroup?.id, ipAddresses);
+    setOpenIpBansWidget(false);
     dispatch(setIsLoading(true));
   }
 
@@ -1780,6 +1801,11 @@ const ChatsContent: React.FC = () => {
       const token = localStorage.getItem(TOKEN_KEY);
       getBannedUsers(token, selectedChatGroup?.id);
       setOpenBannedUsersWidget(true);
+    } else if (optionId == "6") {
+      console.log("🚫 [F] Opening IP bans menu - fetching IP bans");
+      const token = localStorage.getItem(TOKEN_KEY);
+      getIpBans(token, selectedChatGroup?.id);
+      setOpenIpBansWidget(true);
     }
   }
 
@@ -2509,6 +2535,13 @@ const ChatsContent: React.FC = () => {
         isOpen={openBannedUsersWidget}
         onClose={() => setOpenBannedUsersWidget(false)}
         unbanUsers={unbanUsers}
+      />
+
+      <IpBansPopup 
+        ipBans={groupIpBans}
+        isOpen={openIpBansWidget}
+        onClose={() => setOpenIpBansWidget(false)}
+        unbanIps={unbanIps}
       />
 
       <ModeratorsPopup
