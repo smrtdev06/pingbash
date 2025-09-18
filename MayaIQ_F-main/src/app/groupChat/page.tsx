@@ -1233,29 +1233,43 @@ const ChatsContent: React.FC = () => {
       console.log("🔍 [F] Page visibility changed:", isVisible ? 'visible' : 'hidden');
       
       if (isVisible) {
-        console.log("🔍 [F] Window reactivated - reloading messages from server");
+        console.log("🔍 [F] Window reactivated - polling for new messages");
         
         // Clear any existing timeout
         if (reloadTimeoutRef.current) {
           clearTimeout(reloadTimeoutRef.current);
         }
         
-        // Clear pending messages since we're doing a full reload
-        setPendingMessages([]);
+        // Process any pending messages first
+        setPendingMessages(currentPending => {
+          if (currentPending.length > 0) {
+            console.log("🔍 [F] Processing", currentPending.length, "pending messages");
+            setGroupMsgList(currentList => {
+              const newList = mergeArrays(currentList, currentPending);
+              console.log("🔍 [F] After merging pending - total messages:", newList?.length);
+              return newList;
+            });
+          }
+          return []; // Clear pending messages
+        });
         
-        // Debounce to prevent rapid successive calls
+        // Debounce polling to prevent rapid successive calls
         reloadTimeoutRef.current = setTimeout(() => {
           // Get current values directly from localStorage to avoid stale closure
           const token = localStorage.getItem(TOKEN_KEY);
           const selectedGroupId = localStorage.getItem(SELECTED_GROUP_ID);
           
-          console.log("🔍 [F] Reloading messages - Token:", !!token, "Group ID:", selectedGroupId);
+          console.log("🔍 [F] Polling for new messages - Token:", !!token, "Group ID:", selectedGroupId);
           
-          if (token && selectedGroupId && selectedChatGroup?.id) {
-            console.log("🔍 [F] Calling readGroupMsg to reload all messages");
-            readGroupMsg(token, selectedChatGroup.id);
+          if (token && selectedChatGroup?.id && socket.connected) {
+            console.log("🔍 [F] Emitting GET_GROUP_MSG to poll for new messages");
+            // Use socket to poll for messages, just like when sending a new message
+            socket.emit(ChatConst.GET_GROUP_MSG, {
+              token: token,
+              groupId: selectedChatGroup.id
+            });
           } else {
-            console.log("🔍 [F] Cannot reload messages - missing token, group ID, or selectedChatGroup");
+            console.log("🔍 [F] Cannot poll messages - missing token, selectedChatGroup, or socket disconnected");
           }
         }, 200); // 200ms debounce
       }
