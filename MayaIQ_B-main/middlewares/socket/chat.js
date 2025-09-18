@@ -1518,6 +1518,21 @@ module.exports = (socket, users) => {
 
             console.log(`✅ User ${userId} authorized to join group ${groupId} (IP: ${clientIp})`);
 
+            // Add user to users list if not already present for real-time messaging
+            if (!users.find(user => user.ID == userId)) {
+                console.log(`🔗 Adding user ${userId} to socket tracking for real-time messages`);
+                users.push({ ID: userId, Socket: socket.id });
+                sockets[socket.id] = socket;
+            } else {
+                console.log(`🔗 User ${userId} already in socket tracking, updating socket ID`);
+                // Update socket ID in case user reconnected
+                const existingUser = users.find(user => user.ID == userId);
+                if (existingUser) {
+                    existingUser.Socket = socket.id;
+                    sockets[socket.id] = socket;
+                }
+            }
+
             // Save message to the database
             await Controller.joinToGroup(groupId, userId);
             // Find the receiver's and sender's socket IDs

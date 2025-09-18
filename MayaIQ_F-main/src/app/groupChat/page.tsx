@@ -1063,11 +1063,30 @@ const ChatsContent: React.FC = () => {
   }
 
   const handleSendGroupMsg = useCallback((data: MessageUnit[]) => {
-      console.log("🔍 handleSendGroupMsg received:", data?.length, "messages");
+      const currentUserId = getCurrentUserId();
+      const currentUserName = localStorage.getItem('userName') || 'Unknown';
+      
+      console.log("🔍 [F] handleSendGroupMsg received:", data?.length, "messages");
+      console.log("🔍 [F] Current user:", currentUserId, currentUserName);
+      console.log("🔍 [F] Socket connected:", socketConnected);
+      
+      // Check if this is a single new message or bulk update
+      const isBulkUpdate = data?.length > 10;
+      const isNewMessage = data?.length === 1 || (data?.length <= 5 && data?.length > 0);
+      console.log("🔍 [F] Message type:", isBulkUpdate ? "BULK_UPDATE" : isNewMessage ? "NEW_MESSAGE" : "UNKNOWN", "Count:", data?.length);
+      
+      if (isNewMessage && data?.length > 0) {
+        console.log("🔍 [F] New message details:", {
+          sender: data[data.length - 1].sender_name,
+          content: data[data.length - 1].Content,
+          time: data[data.length - 1].Send_Time
+        });
+      }
+      
       const groupId = data?.length && data[data.length - 1].group_id;
-      console.log("🔍 Message group ID:", groupId, "Selected group ID:", selectedChatGroup?.id);
-      console.log("🔍 selectedChatGroup object:", selectedChatGroup);
-      console.log("🔍 Page visible:", pageVisible);
+      console.log("🔍 [F] Message group ID:", groupId, "Selected group ID:", selectedChatGroup?.id);
+      console.log("🔍 [F] selectedChatGroup object:", selectedChatGroup);
+      console.log("🔍 [F] Page visible:", pageVisible);
       
       if (groupId === selectedChatGroup?.id) {
         if (pageVisible) {
