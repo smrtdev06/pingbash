@@ -54,7 +54,7 @@ import {
   sendGroupNotify,
   updateGroupChatboxConfig,
   timeoutGroupUser,
-  getBlockedUsers,
+
   blockUser,
   getGroupOnlineUsers,
   getBannedUsers,
@@ -636,8 +636,8 @@ const ChatsContent: React.FC = () => {
       // Whenever click group, get Group messages
       getGroupMessages(localStorage.getItem(TOKEN_KEY), selectedChatGroup?.id);
     }
-    console.log("get block data")
-    getMyBlockedUsers();
+    // Reset blocked users when switching groups - personal blocks should not affect group chats
+    setBlockedUserIds([]);
 
     const token = localStorage.getItem(TOKEN_KEY);
     if (token && selectedChatGroup) {
@@ -1133,10 +1133,7 @@ const ChatsContent: React.FC = () => {
     }
   };
 
-  const handleGetBlockedUsers = (data: User[]) => {
-    dispatch(setIsLoading(false));
-    setBlockedUserIds(data.map(user => user.Opposite_Id))
-  }
+  // Removed handleGetBlockedUsers - personal blocks should not affect group chat filtering
   
   const handleExpired = () => {
     localStorage.clear()
@@ -1210,7 +1207,7 @@ const ChatsContent: React.FC = () => {
     socket.on(ChatConst.FORBIDDEN, handleForbidden)
     socket.on(ChatConst.SERVER_ERROR, handleServerError)
 
-    socket.on(ChatConst.GET_BLOCKED_USERS_INFO, handleGetBlockedUsers);
+          // Removed blocked users socket handler - not needed for group chats
 
          // Receive the message afer sending the message.
      socket.on(ChatConst.SEND_GROUP_MSG, handleSendGroupMsg);
@@ -1241,7 +1238,7 @@ const ChatsContent: React.FC = () => {
       socket.off(ChatConst.EXPIRED, handleExpired);
       socket.off(ChatConst.FORBIDDEN, handleForbidden);
       socket.off(ChatConst.SERVER_ERROR, handleServerError);
-             socket.off(ChatConst.GET_BLOCKED_USERS_INFO, handleGetBlockedUsers);
+             // Removed blocked users socket cleanup - not needed for group chats
              socket.off(ChatConst.SEND_GROUP_MSG, handleSendGroupMsg);
       socket.off(ChatConst.USER_TIMEOUT_NOTIFICATION, handleTimeoutNotification);
       socket.off(ChatConst.GET_CHAT_RULES, handleGetChatRules);
@@ -1649,11 +1646,7 @@ const ChatsContent: React.FC = () => {
     dispatch(setIsLoading(true));
   }
 
-  const getMyBlockedUsers = () => {
-    const token = localStorage.getItem(TOKEN_KEY)
-    getBlockedUsers(token);
-    dispatch(setIsLoading(true));
-  }
+  // Removed getMyBlockedUsers - personal blocks should not affect group chat filtering
 
   const clearGroupChatMessages = () => {
     const token = localStorage.getItem(TOKEN_KEY)

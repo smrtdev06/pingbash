@@ -29,7 +29,7 @@ import {
   updateGroupChatboxConfig,
   timeoutGroupUser,
   blockUser,
-  getBlockedUsers,
+
   getGroupMessages,
   userLoggedIn,
   userLoggedOut,
@@ -1015,9 +1015,8 @@ const ChatsContent: React.FC = () => {
     }
     setShowMsgReplyView(false);
     setFilterMode(0)
-    if (group && currentUserId) {
-      getMyBlockedUsers();
-    }
+    // Reset blocked users when switching groups - personal blocks should not affect group chats
+    setBlockedUserIds([]);
   }, [group?.id, currentUserId]);
 
   useEffect(() => {
@@ -1165,7 +1164,7 @@ const ChatsContent: React.FC = () => {
     // Receive updated message afer delete group message.
     socket.on(ChatConst.GET_PINNED_MESSAGES, handleGetPinnedMesssages)
     socket.on(ChatConst.USER_LOGGED_WILD_SUB, handleLoginAsWildSub)
-    socket.on(ChatConst.GET_BLOCKED_USERS_INFO, handleGetBlockedUsers);
+    // Removed blocked users socket handler - not needed for group chats
 
     // Cleanup
     return () => {
@@ -1173,7 +1172,7 @@ const ChatsContent: React.FC = () => {
       socket.off(ChatConst.GET_FAV_GROUPS, handleGetFavGroups);
       socket.off(ChatConst.GET_PINNED_MESSAGES, handleGetPinnedMesssages)
       socket.off(ChatConst.USER_LOGGED_WILD_SUB, handleLoginAsWildSub)
-      socket.off(ChatConst.GET_BLOCKED_USERS_INFO, handleGetBlockedUsers);
+      // Removed blocked users socket cleanup - not needed for group chats
     };
   }, [currentUserId]);
 
@@ -1317,10 +1316,7 @@ const ChatsContent: React.FC = () => {
     setBlockedUserIds(data)
   }
 
-  const handleGetBlockedUsers = (data: User[]) => {
-    dispatch(setIsLoading(false));
-    setBlockedUserIds(data.map(user => user.Opposite_Id))
-  }
+  // Removed handleGetBlockedUsers - personal blocks should not affect group chat filtering
 
   const handleClearGroupChat = (groupId: number) => {
     if (groupId == group?.id) {
@@ -1991,11 +1987,7 @@ const ChatsContent: React.FC = () => {
     sendGroupNotify(token, group?.id ?? null, msg)
   }
 
-  const getMyBlockedUsers = () => {
-    const token = localStorage.getItem(TOKEN_KEY)
-    getBlockedUsers(token);
-    dispatch(setIsLoading(true));
-  }
+  // Removed getMyBlockedUsers - personal blocks should not affect group chat filtering
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
