@@ -65,5 +65,7 @@ module.exports = {
   BLOCK_USER: "block user",
   UNBLOCK_USER: "unblock user",
   GET_GROUP_ONLINE_USERS: "get group online users",
-  GET_BANNED_USERS: "get banned users"
+  GET_BANNED_USERS: "get banned users",
+  GET_IP_BANS: "get ip bans",
+  UNBAN_GROUP_IPS: "unban group ips"
 }

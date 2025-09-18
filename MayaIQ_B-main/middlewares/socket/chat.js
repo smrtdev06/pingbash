@@ -1160,6 +1160,78 @@ module.exports = (socket, users) => {
         }
     });
 
+    socket.on(chatCode.GET_IP_BANS, async (data) => {
+        if (!data.groupId || !data.token) {
+            socket.emit(chatCode.FORBIDDEN, httpCode.FORBIDDEN);
+            return;
+        }
+
+        const res = isExpired(socket, data, chatCode.GET_IP_BANS);
+        if (res.expired) {
+            socket.emit(chatCode.EXPIRED);
+            return;
+        }
+        try {
+            // Get sender ID from the token
+            const senderId = verifyUser(data.token);
+            const { groupId } = data;
+
+            console.log(`Getting IP bans for group ${groupId} requested by user ${senderId}`);
+
+            // Get IP bans from the database
+            const ipBans = await Controller.getIpBans(groupId);
+            console.log(`Found ${ipBans.length} IP bans in group ${groupId}`);
+
+            socket.emit(chatCode.GET_IP_BANS, ipBans);
+        } catch (error) {
+            console.error("Error getting IP bans:", error);
+            socket.emit(chatCode.SERVER_ERROR, httpCode.SERVER_ERROR);
+        }
+    });
+
+    socket.on(chatCode.UNBAN_GROUP_IPS, async (data) => {
+        if (!data.groupId || !data.token || !data.ipAddresses) {
+            socket.emit(chatCode.FORBIDDEN, httpCode.FORBIDDEN);
+            return;
+        }
+
+        const res = isExpired(socket, data, chatCode.UNBAN_GROUP_IPS);
+        if (res.expired) {
+            socket.emit(chatCode.EXPIRED);
+            return;
+        }
+        try {
+            // Get sender ID from the token
+            const senderId = verifyUser(data.token);
+            const { groupId, ipAddresses } = data;
+
+            console.log(`Unban IPs request: User ${senderId} unbanning IPs ${ipAddresses} in group ${groupId}`);
+
+            // Unban IPs
+            await Controller.unbanGroupIps(groupId, ipAddresses);
+
+            const receivers = await Controller.getReceiverIdsOfGroup(groupId);
+            const receiveUsers = users.filter(user => receivers?.find(receiverId => receiverId == user.ID));
+            const receiverSocketIds = receiveUsers.map(user => user?.Socket);
+            const receiverSockets = receiverSocketIds.map(socketId => sockets[socketId]);
+
+            const group = await Controller.getGroup(groupId);
+            if (receiverSockets && receiverSockets.length > 0) {
+                receiverSockets.forEach(receiverSocket => {
+                    if (receiverSocket && typeof receiverSocket.emit === 'function') {
+                        receiverSocket.emit(chatCode.UNBAN_GROUP_IPS, ipAddresses);
+                        receiverSocket.emit(chatCode.GROUP_UPDATED, group);
+                    }
+                });
+            }
+
+            console.log(`IP unban completed successfully for IPs ${ipAddresses} by ${senderId}`);
+        } catch (error) {
+            console.error("Error unbanning IPs:", error);
+            socket.emit(chatCode.SERVER_ERROR, httpCode.SERVER_ERROR);
+        }
+    });
+
     socket.on(chatCode.JOIN_TO_GROUP, async (data) => {
         if (!data.groupId || !data.userId) {
             socket.emit(chatCode.FORBIDDEN, httpCode.FORBIDDEN);

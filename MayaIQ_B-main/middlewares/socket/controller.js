@@ -226,9 +226,9 @@ const getGroup = async (groupId) => {
             creator."Name" AS creater_name,
             JSONB_AGG(DISTINCT 
                 JSONB_BUILD_OBJECT(
-                    'id', u."Id",
-                    'name', u."Name",
-                    'email', u."Email",
+                    'id', COALESCE(u."Id", gu2.user_id),
+                    'name', COALESCE(u."Name", 'Anonymous User #' || gu2.user_id),
+                    'email', COALESCE(u."Email", 'anon' || gu2.user_id || '@anonymous.local'),
                     'avatar', u."Photo_Name",
                     'gender', u.gender,
                     'birthday', u.birthday,
@@ -245,7 +245,7 @@ const getGroup = async (groupId) => {
                     'filter_mode', gu2.filter_mode,
                     'to_time', gu2.to_time
                 )
-            ) FILTER (WHERE u."Id" IS NOT NULL) AS members
+            ) FILTER (WHERE gu2.user_id IS NOT NULL) AS members
         FROM 
             groups g
         LEFT JOIN 
@@ -275,9 +275,9 @@ const getMyGroups = async (loggedId) => {
             creator."Name" AS creater_name,
             JSONB_AGG(DISTINCT 
                 JSONB_BUILD_OBJECT(
-                    'id', u."Id",
-                    'name', u."Name",
-                    'email', u."Email",
+                    'id', COALESCE(u."Id", gu2.user_id),
+                    'name', COALESCE(u."Name", 'Anonymous User #' || gu2.user_id),
+                    'email', COALESCE(u."Email", 'anon' || gu2.user_id || '@anonymous.local'),
                     'avatar', u."Photo_Name",
                     'gender', u.gender,
                     'birthday', u.birthday,
@@ -294,7 +294,7 @@ const getMyGroups = async (loggedId) => {
                     'filter_mode', gu2.filter_mode,
                     'to_time', gu2.to_time
                 )
-            ) FILTER (WHERE u."Id" IS NOT NULL) AS members
+            ) FILTER (WHERE gu2.user_id IS NOT NULL) AS members
         FROM 
             groups g
         LEFT JOIN 
@@ -327,9 +327,9 @@ const getFavGroups = async (loggedId) => {
             creator."Name" AS creater_name,
             JSONB_AGG(DISTINCT 
                 JSONB_BUILD_OBJECT(
-                    'id', u."Id",
-                    'name', u."Name",
-                    'email', u."Email",
+                    'id', COALESCE(u."Id", gu2.user_id),
+                    'name', COALESCE(u."Name", 'Anonymous User #' || gu2.user_id),
+                    'email', COALESCE(u."Email", 'anon' || gu2.user_id || '@anonymous.local'),
                     'avatar', u."Photo_Name",
                     'gender', u.gender,
                     'birthday', u.birthday,
@@ -346,7 +346,7 @@ const getFavGroups = async (loggedId) => {
                     'filter_mode', gu2.filter_mode,
                     'to_time', gu2.to_time
                 )
-            ) FILTER (WHERE u."Id" IS NOT NULL) AS members
+            ) FILTER (WHERE gu2.user_id IS NOT NULL) AS members
         FROM 
             groups g
         LEFT JOIN 
@@ -654,6 +654,43 @@ const checkIpBan = async (groupId, ipAddress) => {
     } catch (error) {
         console.log("Error checking IP ban:", error);
         return false;
+    }
+}
+
+const getIpBans = async (groupId) => {
+    try {
+        const result = await PG_query(`SELECT 
+            ib.*,
+            u."Name" as banned_user_name,
+            u."Email" as banned_user_email,
+            banner."Name" as banned_by_name
+        FROM ip_bans ib
+        LEFT JOIN "Users" u ON ib.user_id = u."Id"
+        LEFT JOIN "Users" banner ON ib.banned_by = banner."Id"
+        WHERE ib.group_id = ${groupId} 
+        AND ib.is_active = true
+        ORDER BY ib.banned_at DESC;`);
+        return result.rows;
+    } catch (error) {
+        console.log("Error getting IP bans:", error);
+        return [];
+    }
+}
+
+const unbanGroupIps = async (groupId, ipAddresses) => {
+    try {
+        const ipList = ipAddresses.map(ip => `'${ip}'`).join(',');
+        const result = await PG_query(`UPDATE ip_bans 
+            SET is_active = false 
+            WHERE group_id = ${groupId} 
+            AND ip_address IN (${ipList}) 
+            AND is_active = true;`);
+        
+        console.log(`Unbanned ${result.rowCount} IP addresses from group ${groupId}: ${ipAddresses}`);
+        return result.rowCount;
+    } catch (error) {
+        console.log("Error unbanning IPs:", error);
+        return 0;
     }
 }
 
@@ -1143,5 +1180,7 @@ module.exports = {
     getChatRules,
     updateChatRules,
     banGroupUserWithIp,
-    checkIpBan
+    checkIpBan,
+    getIpBans,
+    unbanGroupIps
 }
