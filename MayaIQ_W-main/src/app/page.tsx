@@ -375,6 +375,11 @@ const ChatsContent: React.FC = () => {
   const [filteredPrevMsgList, setFilteredPrevMsgList] = useState<MessageUnit[]>([])
   const [blockedUserIds, setBlockedUserIds] = useState<number[]>([])
 
+  // Debug blockedUserIds changes
+  useEffect(() => {
+    console.log("🔍 [W] blockedUserIds state updated:", blockedUserIds);
+  }, [blockedUserIds]);
+
   // Debug filteredMsgList changes
   useEffect(() => {
     console.log("🔍 [W] filteredMsgList state updated:", filteredMsgList?.length, "messages");
@@ -1016,6 +1021,7 @@ const ChatsContent: React.FC = () => {
     setShowMsgReplyView(false);
     setFilterMode(0)
     // Reset blocked users when switching groups - personal blocks should not affect group chats
+    console.log("🔍 [W] Resetting blockedUserIds to empty array");
     setBlockedUserIds([]);
   }, [group?.id, currentUserId]);
 
@@ -1111,13 +1117,17 @@ const ChatsContent: React.FC = () => {
 
     if (myMemInfo?.role_id != 1 && myMemInfo?.role_id != 2 && group?.creater_id != getCurrentUserId()) {
       if (blockedUserIds?.length > 0) {
-        console.log("🔍 [W] Applying blocked user filter");
+        console.log("🔍 [W] Applying blocked user filter - blockedUserIds:", blockedUserIds);
         newMsgs = newMsgs.filter(msg => {
           const senderInfo = group?.members?.find(u => u.id === msg.Sender_Id)
           if (senderInfo?.role_id == 1 || senderInfo?.role_id == 2) return true
           return !blockedUserIds.includes(msg.Sender_Id ?? -1)
         })
+      } else {
+        console.log("🔍 [W] No blocked users - showing all messages");
       }
+    } else {
+      console.log("🔍 [W] User is admin/moderator/creator - no blocked user filtering");
     }
     console.log("🔍 [W] Filtered messages:", newMsgs?.length, "from", groupMsgList?.length);
     console.log("🔍 [W] Sample filtered message:", newMsgs?.[0]);
@@ -1311,10 +1321,7 @@ const ChatsContent: React.FC = () => {
     }
   }, [group, groupMsgList, pageVisible]); // Add dependencies so it updates when these change
 
-  const handleGetGroupBlockedUsers = (data: number[]) => {
-    dispatch(setIsLoading(false));
-    setBlockedUserIds(data)
-  }
+  // Removed handleGetGroupBlockedUsers - group blocks should not affect message filtering
 
   // Removed handleGetBlockedUsers - personal blocks should not affect group chat filtering
 
@@ -1518,7 +1525,7 @@ const ChatsContent: React.FC = () => {
     socket.on(ChatConst.SEND_GROUP_MSG, handleSendGroupMsg);
     socket.on(ChatConst.DELETE_GROUP_MSG, handleDeleteGroupMsg);
     socket.on(ChatConst.GROUP_UPDATED, handleGroupUpdated);
-    socket.on(ChatConst.GET_GROUP_BLOCKED_USERS, handleGetGroupBlockedUsers);
+          // Removed group blocked users socket handler - not needed
 
     socket.on(ChatConst.CLEAR_GROUP_CHAT, handleClearGroupChat);
     socket.on(ChatConst.EXPIRED, handleExpired);
@@ -1560,7 +1567,7 @@ const ChatsContent: React.FC = () => {
     socket.off(ChatConst.SEND_GROUP_MSG, handleSendGroupMsg);
     socket.off(ChatConst.DELETE_GROUP_MSG, handleDeleteGroupMsg);
     socket.off(ChatConst.GROUP_UPDATED, handleGroupUpdated);
-    socket.off(ChatConst.GET_GROUP_BLOCKED_USERS, handleGetGroupBlockedUsers);
+            // Removed group blocked users socket cleanup - not needed
     socket.off(ChatConst.CLEAR_GROUP_CHAT, handleClearGroupChat);
     socket.off(ChatConst.EXPIRED, handleExpired);
           socket.off(ChatConst.FORBIDDEN, handleForbidden);
