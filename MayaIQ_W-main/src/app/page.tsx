@@ -173,6 +173,7 @@ const ChatsContent: React.FC = () => {
   }, [groupMsgList]);
 
   const [group, setGroup] = useState<ChatGroup>();
+  const [socketConnected, setSocketConnected] = useState(false);
 
   // Debug group changes
   useEffect(() => {
@@ -1268,6 +1269,25 @@ const ChatsContent: React.FC = () => {
     }
   }, [group, currentUserId, hasSeenRulesForGroup, markRulesAsSeen, pendingChatRulesDisplay]);
 
+  // Load messages when socket connects and group is available
+  useEffect(() => {
+    if (socketConnected && group?.id) {
+      const token = localStorage.getItem(TOKEN_KEY);
+      const currentUserId = getCurrentUserId();
+      
+      console.log("🔍 [W] Socket connected and group available - loading messages");
+      console.log("🔍 [W] Group ID:", group.id, "User ID:", currentUserId, "Socket connected:", socketConnected);
+      
+      if (token) {
+        // Add a small delay to ensure socket is fully ready
+        setTimeout(() => {
+          console.log("🔍 [W] Loading messages after socket connection");
+          getGroupMessages(token, group.id);
+        }, 100);
+      }
+    }
+  }, [socketConnected, group?.id]);
+
   const handleUpdateChatRules = (data: any) => {
     console.log("🔍 [W] [Chat Rules] Chat rules updated:", data);
     if (data.success) {
@@ -1303,6 +1323,25 @@ const ChatsContent: React.FC = () => {
 
   // Setup socket listeners with proper cleanup
   useEffect(() => {
+    // Track socket connection state
+    const handleConnect = () => {
+      console.log("🔍 [W] Socket connected");
+      setSocketConnected(true);
+    };
+    
+    const handleDisconnect = () => {
+      console.log("🔍 [W] Socket disconnected");
+      setSocketConnected(false);
+    };
+
+    socket.on('connect', handleConnect);
+    socket.on('disconnect', handleDisconnect);
+    
+    // Check initial connection state
+    if (socket.connected) {
+      setSocketConnected(true);
+    }
+
     socket.on(ChatConst.GET_GROUP_ONLINE_USERS, handleGetGroupOnlineUsers)
     socket.on(ChatConst.GET_GROUP_MSG, handleGetGroupMessages)
             socket.on(ChatConst.BAN_GROUP_USER, handleBanGroupUser);
@@ -1340,6 +1379,8 @@ const ChatsContent: React.FC = () => {
 
     // Cleanup listeners on unmount
     return () => {
+      socket.off('connect', handleConnect);
+      socket.off('disconnect', handleDisconnect);
       socket.off(ChatConst.GET_GROUP_ONLINE_USERS, handleGetGroupOnlineUsers);
       socket.off(ChatConst.GET_GROUP_MSG, handleGetGroupMessages);
               socket.off(ChatConst.BAN_GROUP_USER, handleBanGroupUser);
@@ -1428,8 +1469,16 @@ const ChatsContent: React.FC = () => {
       if (res.data.group != null) {
         // Load messages for this group using anonymous token
         console.log("🔍 [W] Calling getGroupMessages for group:", res.data.group.id, "with anonymous token");
+        
+        // Load messages immediately and with a retry
         getGroupMessages(token, res.data.group.id);
         getGroupHistoryAnon(res.data.group.id, lastChatDate);
+        
+        // Retry loading messages after a short delay to ensure socket connection
+        setTimeout(() => {
+          console.log("🔍 [W] Retrying message load after anonymous registration");
+          getGroupMessages(token, res.data.group.id);
+        }, 1000);
 
         // Trigger chat rules after successful anonymous registration
         setTimeout(() => {
@@ -1984,8 +2033,16 @@ const ChatsContent: React.FC = () => {
         setShowSigninPopup(false);
         console.log("== LOGIN USER===", res.data.id)
 
-        // Trigger chat rules after successful login
+        // Immediately load messages after successful login
         if (group?.id) {
+          console.log("🔍 [W] Loading messages immediately after login for group:", group.id);
+          // Small delay to ensure socket connection is established
+          setTimeout(() => {
+            getGroupMessages(res.data.token, group.id);
+            console.log("🔍 [W] Requested group messages after login");
+          }, 500);
+
+          // Trigger chat rules after successful login
           setTimeout(() => {
             console.log("🔍 [W] [Chat Rules] Triggering chat rules after successful login");
             triggerChatRulesAfterLogin(res.data.token, 'logged-in');

@@ -165,6 +165,7 @@ const ChatsContent: React.FC = () => {
   const [attachment, setAttachment] = useState<Attachment>()
   const router = useRouter();
   const [groupMsgList, setGroupMsgList] = useState<MessageUnit[]>([])
+  const [socketConnected, setSocketConnected] = useState(false);
   const hasShownGroupNotify = useRef(false);
 
   const myGroupList = useSelector((state: RootState) => state.msg.myGroupList);
@@ -561,6 +562,24 @@ const ChatsContent: React.FC = () => {
     setShowJoinView(false);
 
   }, [selectedChatGroup]);
+
+  // Load messages when socket connects and group is selected
+  useEffect(() => {
+    if (socketConnected && selectedChatGroup?.id) {
+      const token = localStorage.getItem(TOKEN_KEY);
+      
+      console.log("🔍 [F] Socket connected and group selected - loading messages");
+      console.log("🔍 [F] Group ID:", selectedChatGroup.id, "Socket connected:", socketConnected);
+      
+      if (token) {
+        // Add a small delay to ensure socket is fully ready
+        setTimeout(() => {
+          console.log("🔍 [F] Loading messages after socket connection");
+          getGroupMessages(token, selectedChatGroup.id);
+        }, 100);
+      }
+    }
+  }, [socketConnected, selectedChatGroup?.id]);
 
   useEffect(() => {
     const myMemInfo = selectedChatGroup?.members?.find(mem => mem.id == getCurrentUserId())
@@ -1107,6 +1126,25 @@ const ChatsContent: React.FC = () => {
 
   // Setup socket listeners with proper cleanup
   useEffect(() => {
+    // Track socket connection state
+    const handleConnect = () => {
+      console.log("🔍 [F] Socket connected");
+      setSocketConnected(true);
+    };
+    
+    const handleDisconnect = () => {
+      console.log("🔍 [F] Socket disconnected");
+      setSocketConnected(false);
+    };
+
+    socket.on('connect', handleConnect);
+    socket.on('disconnect', handleDisconnect);
+    
+    // Check initial connection state
+    if (socket.connected) {
+      setSocketConnected(true);
+    }
+
     // Get Groups list for chat history in chat page
     socket.on(ChatConst.GET_MY_GROUPS, handleGetMyGroups);
     socket.on(ChatConst.GET_FAV_GROUPS, handleGetFavGroups);
@@ -1138,8 +1176,10 @@ const ChatsContent: React.FC = () => {
      socket.on(ChatConst.GET_CHAT_RULES, handleGetChatRules);
      socket.on(ChatConst.UPDATE_CHAT_RULES, handleUpdateChatRules);
 
-     // Cleanup listeners on unmount
-     return () => {
+         // Cleanup listeners on unmount
+    return () => {
+      socket.off('connect', handleConnect);
+      socket.off('disconnect', handleDisconnect);
       socket.off(ChatConst.GET_MY_GROUPS, handleGetMyGroups);
       socket.off(ChatConst.GET_FAV_GROUPS, handleGetFavGroups);
       socket.off(ChatConst.BAN_GROUP_USER, handleBanGroupUser);
