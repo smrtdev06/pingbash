@@ -1549,33 +1549,31 @@ const ChatsContent: React.FC = () => {
       console.log("🔍 [W] Page visibility changed:", isVisible ? 'visible' : 'hidden');
       
       if (isVisible) {
-        console.log("🔍 [W] Window reactivated - processing pending messages");
+        console.log("🔍 [W] Window reactivated - reloading messages from server");
         
         // Clear any existing timeout
         if (reloadTimeoutRef.current) {
           clearTimeout(reloadTimeoutRef.current);
         }
         
+        // Clear pending messages since we're doing a full reload
+        setPendingMessages([]);
+        
         // Debounce to prevent rapid successive calls
         reloadTimeoutRef.current = setTimeout(() => {
-          setPendingMessages(currentPending => {
-            if (currentPending.length > 0) {
-              console.log("🔍 [W] Merging", currentPending.length, "pending messages");
-              console.log("🔍 [W] Pending messages:", currentPending);
-              
-              setGroupMsgList(currentList => {
-                const newList = mergeArrays(currentList, currentPending);
-                console.log("🔍 [W] After merging pending - total messages:", newList?.length);
-                return newList;
-              });
-            } else {
-              console.log("🔍 [W] No pending messages to merge");
-            }
-            
-            // Clear pending messages after processing
-            return [];
-          });
-        }, 100); // 100ms debounce for faster response
+          // Get current values directly from localStorage to avoid stale closure
+          const token = localStorage.getItem(TOKEN_KEY);
+          const selectedGroupId = localStorage.getItem(SELECTED_GROUP_ID);
+          
+          console.log("🔍 [W] Reloading messages - Token:", !!token, "Group ID:", selectedGroupId);
+          
+          if (token && selectedGroupId) {
+            console.log("🔍 [W] Calling getGroupMessages to reload all messages");
+            getGroupMessages(token, parseInt(selectedGroupId));
+          } else {
+            console.log("🔍 [W] Cannot reload messages - missing token or group ID");
+          }
+        }, 200); // 200ms debounce
       }
     };
 

@@ -1233,33 +1233,31 @@ const ChatsContent: React.FC = () => {
       console.log("🔍 [F] Page visibility changed:", isVisible ? 'visible' : 'hidden');
       
       if (isVisible) {
-        console.log("🔍 [F] Window reactivated - processing pending messages");
+        console.log("🔍 [F] Window reactivated - reloading messages from server");
         
         // Clear any existing timeout
         if (reloadTimeoutRef.current) {
           clearTimeout(reloadTimeoutRef.current);
         }
         
+        // Clear pending messages since we're doing a full reload
+        setPendingMessages([]);
+        
         // Debounce to prevent rapid successive calls
         reloadTimeoutRef.current = setTimeout(() => {
-          setPendingMessages(currentPending => {
-            if (currentPending.length > 0) {
-              console.log("🔍 [F] Merging", currentPending.length, "pending messages");
-              console.log("🔍 [F] Pending messages:", currentPending);
-              
-              setGroupMsgList(currentList => {
-                const newList = mergeArrays(currentList, currentPending);
-                console.log("🔍 [F] After merging pending - total messages:", newList?.length);
-                return newList;
-              });
-            } else {
-              console.log("🔍 [F] No pending messages to merge");
-            }
-            
-            // Clear pending messages after processing
-            return [];
-          });
-        }, 100); // 100ms debounce for faster response
+          // Get current values directly from localStorage to avoid stale closure
+          const token = localStorage.getItem(TOKEN_KEY);
+          const selectedGroupId = localStorage.getItem(SELECTED_GROUP_ID);
+          
+          console.log("🔍 [F] Reloading messages - Token:", !!token, "Group ID:", selectedGroupId);
+          
+          if (token && selectedGroupId && selectedChatGroup?.id) {
+            console.log("🔍 [F] Calling readGroupMsg to reload all messages");
+            readGroupMsg(token, selectedChatGroup.id);
+          } else {
+            console.log("🔍 [F] Cannot reload messages - missing token, group ID, or selectedChatGroup");
+          }
+        }, 200); // 200ms debounce
       }
     };
 
