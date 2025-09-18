@@ -66,7 +66,7 @@ import {
 import { useRouter, useSearchParams } from "next/navigation";
 import { Popover, PopoverTrigger, PopoverContent } from "@nextui-org/popover";
 import ChatConst from "@/resource/const/chat_const";
-import { SERVER_URL, TOKEN_KEY, USER_ID_KEY } from "@/resource/const/const";
+import { SERVER_URL, TOKEN_KEY, USER_ID_KEY, SELECTED_GROUP_ID } from "@/resource/const/const";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
 import { chatDate, containsURL, getCensoredMessage, getCensoredWordArray, isTimedout, now } from "@/resource/utils/helpers";
@@ -1205,14 +1205,28 @@ const ChatsContent: React.FC = () => {
           clearTimeout(reloadTimeoutRef.current);
         }
         
+        // Get current values immediately to avoid closure issues
+        const token = localStorage.getItem(TOKEN_KEY);
+        const selectedGroupId = localStorage.getItem(SELECTED_GROUP_ID);
+        
+        console.log("🔍 [F] Immediate check - Token:", !!token, "Selected Group ID:", selectedGroupId);
+        
         // Debounce the reload to prevent rapid successive calls
         reloadTimeoutRef.current = setTimeout(() => {
-          const token = localStorage.getItem(TOKEN_KEY);
-          if (token && selectedChatGroup?.id) {
-            console.log("🔍 [F] Reloading messages for group:", selectedChatGroup.id);
-            readGroupMsg(token, selectedChatGroup.id);
+          const currentToken = localStorage.getItem(TOKEN_KEY);
+          const currentGroupId = localStorage.getItem(SELECTED_GROUP_ID);
+          
+          console.log("🔍 [F] Timeout fired - checking reload conditions:");
+          console.log("🔍 [F] Token exists:", !!currentToken);
+          console.log("🔍 [F] Selected Group ID:", currentGroupId);
+          
+          if (currentToken && currentGroupId) {
+            console.log("🔍 [F] Reloading messages for group:", currentGroupId);
+            readGroupMsg(currentToken, parseInt(currentGroupId));
+          } else {
+            console.log("🔍 [F] Skipping reload - conditions not met");
           }
-        }, 500); // 500ms debounce
+        }, 200); // 200ms debounce - faster response
       }
     };
 

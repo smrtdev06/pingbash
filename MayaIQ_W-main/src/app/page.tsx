@@ -1519,14 +1519,28 @@ const ChatsContent: React.FC = () => {
           clearTimeout(reloadTimeoutRef.current);
         }
         
+        // Get current values immediately to avoid closure issues
+        const token = localStorage.getItem(TOKEN_KEY);
+        const selectedGroupId = localStorage.getItem(SELECTED_GROUP_ID);
+        
+        console.log("🔍 [W] Immediate check - Token:", !!token, "Selected Group ID:", selectedGroupId);
+        
         // Debounce the reload to prevent rapid successive calls
         reloadTimeoutRef.current = setTimeout(() => {
-          const token = localStorage.getItem(TOKEN_KEY);
-          if (token && group?.id) {
-            console.log("🔍 [W] Reloading messages for group:", group.id);
-            getGroupMessages(token, group.id);
+          const currentToken = localStorage.getItem(TOKEN_KEY);
+          const currentGroupId = localStorage.getItem(SELECTED_GROUP_ID);
+          
+          console.log("🔍 [W] Timeout fired - checking reload conditions:");
+          console.log("🔍 [W] Token exists:", !!currentToken);
+          console.log("🔍 [W] Selected Group ID:", currentGroupId);
+          
+          if (currentToken && currentGroupId) {
+            console.log("🔍 [W] Reloading messages for group:", currentGroupId);
+            getGroupMessages(currentToken, parseInt(currentGroupId));
+          } else {
+            console.log("🔍 [W] Skipping reload - conditions not met");
           }
-        }, 500); // 500ms debounce
+        }, 200); // 200ms debounce - faster response
       }
     };
 
