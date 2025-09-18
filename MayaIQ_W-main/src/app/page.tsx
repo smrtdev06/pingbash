@@ -176,6 +176,25 @@ const ChatsContent: React.FC = () => {
 
   const [group, setGroup] = useState<ChatGroup>();
   const [socketConnected, setSocketConnected] = useState(false);
+
+  // Debug socketConnected changes with user info
+  useEffect(() => {
+    const currentUserId = getCurrentUserId();
+    const currentUserName = localStorage.getItem('userName') || 'Unknown';
+    console.log("🔍 [W] socketConnected state updated:", socketConnected, "for user:", currentUserId, currentUserName);
+    
+    // Add periodic socket health check for debugging
+    if (socketConnected) {
+      const healthCheck = setInterval(() => {
+        console.log("🔍 [W] Socket health check - Connected:", socket.connected, "User:", currentUserName);
+        if (!socket.connected) {
+          console.log("🔍 [W] Socket disconnected unexpectedly for user:", currentUserName);
+        }
+      }, 15000); // Check every 15 seconds
+      
+      return () => clearInterval(healthCheck);
+    }
+  }, [socketConnected]);
   const [pageVisible, setPageVisible] = useState(true);
   const reloadTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -667,7 +686,7 @@ const ChatsContent: React.FC = () => {
     } else {
       subdomain = ''; // No subdomain, e.g., "example.com" or "localhost"
     }
-    //subdomain = 'testgroup3';
+    subdomain = 'testgroup3';
     console.log("🔍 [W] getSubDomain result:", subdomain);
     return subdomain;
   }
@@ -1313,8 +1332,14 @@ const ChatsContent: React.FC = () => {
   }
 
   const handleSendGroupMsg = useCallback((data: MessageUnit[]) => {
+    const currentUserId = getCurrentUserId();
+    const currentUserName = localStorage.getItem('userName') || 'Unknown';
+    
     console.log("🔍 [W] handleSendGroupMsg received:", data?.length, "messages");
+    console.log("🔍 [W] Current user:", currentUserId, currentUserName);
+    console.log("🔍 [W] Socket connected:", socketConnected);
     console.log("🔍 [W] New messages:", data);
+    
     const groupId = data?.length && data[data.length - 1].group_id;
     console.log("🔍 [W] Message group ID:", groupId, "Selected group ID:", group?.id);
     console.log("🔍 [W] Current groupMsgList length:", groupMsgList?.length);
@@ -1325,6 +1350,7 @@ const ChatsContent: React.FC = () => {
         console.log("🔍 [W] Page visible - adding messages immediately");
         const newList = mergeArrays(groupMsgList, data);
         console.log("🔍 [W] Merged list length:", newList?.length);
+        console.log("🔍 [W] Setting groupMsgList to:", newList?.length, "messages");
         setGroupMsgList(newList);
       } else {
         console.log("🔍 [W] Page hidden - queuing messages for later");
@@ -1333,7 +1359,7 @@ const ChatsContent: React.FC = () => {
     } else {
       console.log("🔍 [W] Message not for current group, ignoring");
     }
-  }, [group, groupMsgList, pageVisible]); // Add dependencies so it updates when these change
+  }, [group, groupMsgList, pageVisible, socketConnected]); // Add dependencies so it updates when these change
 
   // Removed handleGetGroupBlockedUsers - group blocks should not affect message filtering
 
@@ -1563,7 +1589,12 @@ const ChatsContent: React.FC = () => {
         socket.on(ChatConst.GET_BANNED_USERS, handleGetBannedUsers);
     socket.on(ChatConst.JOIN_TO_GROUP_ANON, handleJoinToGroupAnon);
     // Receive the message afer sending the message.
-    socket.on(ChatConst.SEND_GROUP_MSG, handleSendGroupMsg);
+    socket.on(ChatConst.SEND_GROUP_MSG, (data) => {
+      const currentUserId = getCurrentUserId();
+      const currentUserName = localStorage.getItem('userName') || 'Unknown';
+      console.log("🔍 [W] SEND_GROUP_MSG socket event received by user:", currentUserName, "data:", data?.length, "messages");
+      handleSendGroupMsg(data);
+    });
     socket.on(ChatConst.DELETE_GROUP_MSG, handleDeleteGroupMsg);
     socket.on(ChatConst.GROUP_UPDATED, handleGroupUpdated);
           // Removed group blocked users socket handler - not needed
@@ -1611,7 +1642,7 @@ const ChatsContent: React.FC = () => {
         socket.off(ChatConst.UNBAN_GROUP_USERS, handleUnbanGroupUsers);
             socket.off(ChatConst.GET_BANNED_USERS, handleGetBannedUsers);
     socket.off(ChatConst.JOIN_TO_GROUP_ANON, handleJoinToGroupAnon);
-    socket.off(ChatConst.SEND_GROUP_MSG, handleSendGroupMsg);
+          socket.off(ChatConst.SEND_GROUP_MSG);
     socket.off(ChatConst.DELETE_GROUP_MSG, handleDeleteGroupMsg);
     socket.off(ChatConst.GROUP_UPDATED, handleGroupUpdated);
             // Removed group blocked users socket cleanup - not needed

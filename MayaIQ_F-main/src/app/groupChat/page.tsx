@@ -167,6 +167,25 @@ const ChatsContent: React.FC = () => {
   const router = useRouter();
   const [groupMsgList, setGroupMsgList] = useState<MessageUnit[]>([])
   const [socketConnected, setSocketConnected] = useState(false);
+
+  // Debug socketConnected changes with user info
+  useEffect(() => {
+    const currentUserId = getCurrentUserId();
+    const currentUserName = localStorage.getItem('userName') || 'Unknown';
+    console.log("🔍 [F] socketConnected state updated:", socketConnected, "for user:", currentUserId, currentUserName);
+    
+    // Add periodic socket health check for debugging
+    if (socketConnected) {
+      const healthCheck = setInterval(() => {
+        console.log("🔍 [F] Socket health check - Connected:", socket.connected, "User:", currentUserName);
+        if (!socket.connected) {
+          console.log("🔍 [F] Socket disconnected unexpectedly for user:", currentUserName);
+        }
+      }, 15000); // Check every 15 seconds
+      
+      return () => clearInterval(healthCheck);
+    }
+  }, [socketConnected]);
   const [pageVisible, setPageVisible] = useState(true);
   const reloadTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -1266,7 +1285,12 @@ const ChatsContent: React.FC = () => {
           // Removed blocked users socket handler - not needed for group chats
 
          // Receive the message afer sending the message.
-     socket.on(ChatConst.SEND_GROUP_MSG, handleSendGroupMsg);
+     socket.on(ChatConst.SEND_GROUP_MSG, (data) => {
+      const currentUserId = getCurrentUserId();
+      const currentUserName = localStorage.getItem('userName') || 'Unknown';
+      console.log("🔍 [F] SEND_GROUP_MSG socket event received by user:", currentUserName, "data:", data?.length, "messages");
+      handleSendGroupMsg(data);
+    });
 
      // Timeout notification listener
      socket.on(ChatConst.USER_TIMEOUT_NOTIFICATION, handleTimeoutNotification);
@@ -1301,7 +1325,7 @@ const ChatsContent: React.FC = () => {
       socket.off(ChatConst.FORBIDDEN, handleForbidden);
       socket.off(ChatConst.SERVER_ERROR, handleServerError);
              // Removed blocked users socket cleanup - not needed for group chats
-             socket.off(ChatConst.SEND_GROUP_MSG, handleSendGroupMsg);
+             socket.off(ChatConst.SEND_GROUP_MSG);
       socket.off(ChatConst.USER_TIMEOUT_NOTIFICATION, handleTimeoutNotification);
       socket.off(ChatConst.GET_CHAT_RULES, handleGetChatRules);
       socket.off(ChatConst.UPDATE_CHAT_RULES, handleUpdateChatRules);
