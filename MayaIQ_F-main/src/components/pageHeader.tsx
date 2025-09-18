@@ -67,11 +67,36 @@ const PageHeader: React.FC = () => {
   }, []);
 
   useEffect(() => {
+    const initializeAuth = async () => {
+      const token = localStorage.getItem(TOKEN_KEY);
+      
+      // Try to restore session if token exists
+      if (token && !token.includes('anonuser')) {
+        console.log("🔍 [F] PageHeader - Attempting to restore user session");
+        try {
+          const { restoreUserSession } = await import('../resource/utils/auth');
+          const sessionRestored = await restoreUserSession();
+          
+          if (sessionRestored) {
+            console.log("🔍 [F] PageHeader - Session restored successfully");
+            userLoggedIn(token);
+          } else {
+            console.log("🔍 [F] PageHeader - Session restoration failed");
+          }
+        } catch (error) {
+          console.error("🔍 [F] PageHeader - Session restoration error:", error);
+        }
+      } else if (token) {
+        // For anonymous tokens, just proceed normally
+        userLoggedIn(token);
+      }
+    };
+
     socket.on(ChatConst.REFRESH, () => {
       socket.emit(ChatConst.USER_LOGGED, { token: localStorage.getItem(TOKEN_KEY) });
     })
 
-    userLoggedIn(localStorage.getItem(TOKEN_KEY))
+    initializeAuth();
 
     // getUserData();
   }, [getUserData]);

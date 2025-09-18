@@ -88,6 +88,7 @@ import EmbedCodeDialog from "@/components/chats/EmbedCodeDialog";
 import { isValidGroupName } from "@/resource/utils/helpers";
 import { GroupPropsEditWidget } from "@/components/chats/GroupPropsEditWidget";
 import GroupCreatPopup from "@/components/groups/groupCreatPopup";
+import TimeoutNotification from "@/components/TimeoutNotification";
 import { 
   ALLOW_USER_MSG_STYLE, 
   BG_COLOR, 
@@ -166,6 +167,10 @@ const ChatsContent: React.FC = () => {
   const router = useRouter();
   const [groupMsgList, setGroupMsgList] = useState<MessageUnit[]>([])
   const [socketConnected, setSocketConnected] = useState(false);
+  const [pageVisible, setPageVisible] = useState(true);
+  const [pendingMessages, setPendingMessages] = useState<MessageUnit[]>([]);
+  const [showTimeoutNotification, setShowTimeoutNotification] = useState(false);
+  const [timeoutData, setTimeoutData] = useState<{timeoutMinutes: number; expiresAt: string} | null>(null);
   const hasShownGroupNotify = useRef(false);
 
   const myGroupList = useSelector((state: RootState) => state.msg.myGroupList);
@@ -995,20 +1000,40 @@ const ChatsContent: React.FC = () => {
     }
   }
 
+  const handleTimeoutNotification = (data: any) => {
+    console.log(`⏰ [F] Timeout notification received:`, data);
+    const { timeoutMinutes, expiresAt, message } = data;
+    
+    setTimeoutData({ timeoutMinutes, expiresAt });
+    setShowTimeoutNotification(true);
+    
+    // Show toast message as well
+    toast.error(message, {
+      duration: 5000,
+      position: 'top-center'
+    });
+  }
+
   const handleSendGroupMsg = useCallback((data: MessageUnit[]) => {
       console.log("🔍 handleSendGroupMsg received:", data?.length, "messages");
       const groupId = data?.length && data[data.length - 1].group_id;
       console.log("🔍 Message group ID:", groupId, "Selected group ID:", selectedChatGroup?.id);
       console.log("🔍 selectedChatGroup object:", selectedChatGroup);
+      console.log("🔍 Page visible:", pageVisible);
+      
       if (groupId === selectedChatGroup?.id) {
-        console.log("🔍 Adding messages to current group");
-        const newList = mergeArrays(groupMsgList, data);
-        setGroupMsgList(newList)
-        // dispatch(setMessageList([...newList]));
+        if (pageVisible) {
+          console.log("🔍 Page visible - adding messages immediately");
+          const newList = mergeArrays(groupMsgList, data);
+          setGroupMsgList(newList);
+        } else {
+          console.log("🔍 Page hidden - queuing messages for later");
+          setPendingMessages(prev => mergeArrays(prev, data));
+        }
       } else {
         console.log("🔍 Message not for current group, ignoring");
       }
-    }, [selectedChatGroup, groupMsgList]); // Add dependencies so it updates when these change
+    }, [selectedChatGroup, groupMsgList, pageVisible]); // Add dependencies so it updates when these change
 
   const handleGroupUpdated = (updatedGroup: ChatGroup) => {
     dispatch(setIsLoading(false));
@@ -1137,6 +1162,24 @@ const ChatsContent: React.FC = () => {
       setSocketConnected(false);
     };
 
+    // Track page visibility for real-time messages
+    const handleVisibilityChange = () => {
+      const isVisible = !document.hidden;
+      setPageVisible(isVisible);
+      console.log("🔍 [F] Page visibility changed:", isVisible ? 'visible' : 'hidden');
+      
+      if (isVisible && pendingMessages.length > 0) {
+        console.log("🔍 [F] Page became visible, processing", pendingMessages.length, "pending messages");
+        // Process pending messages when page becomes visible
+        const newList = mergeArrays(groupMsgList, pendingMessages);
+        setGroupMsgList(newList);
+        setPendingMessages([]);
+      }
+    };
+
+    // Listen for page visibility changes
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
     socket.on('connect', handleConnect);
     socket.on('disconnect', handleDisconnect);
     
@@ -1172,12 +1215,16 @@ const ChatsContent: React.FC = () => {
          // Receive the message afer sending the message.
      socket.on(ChatConst.SEND_GROUP_MSG, handleSendGroupMsg);
 
+     // Timeout notification listener
+     socket.on(ChatConst.USER_TIMEOUT_NOTIFICATION, handleTimeoutNotification);
+
      // Chat rules listeners
      socket.on(ChatConst.GET_CHAT_RULES, handleGetChatRules);
      socket.on(ChatConst.UPDATE_CHAT_RULES, handleUpdateChatRules);
 
          // Cleanup listeners on unmount
     return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
       socket.off('connect', handleConnect);
       socket.off('disconnect', handleDisconnect);
       socket.off(ChatConst.GET_MY_GROUPS, handleGetMyGroups);
@@ -1195,9 +1242,10 @@ const ChatsContent: React.FC = () => {
       socket.off(ChatConst.FORBIDDEN, handleForbidden);
       socket.off(ChatConst.SERVER_ERROR, handleServerError);
              socket.off(ChatConst.GET_BLOCKED_USERS_INFO, handleGetBlockedUsers);
-       socket.off(ChatConst.SEND_GROUP_MSG, handleSendGroupMsg);
-       socket.off(ChatConst.GET_CHAT_RULES, handleGetChatRules);
-       socket.off(ChatConst.UPDATE_CHAT_RULES, handleUpdateChatRules);
+             socket.off(ChatConst.SEND_GROUP_MSG, handleSendGroupMsg);
+      socket.off(ChatConst.USER_TIMEOUT_NOTIFICATION, handleTimeoutNotification);
+      socket.off(ChatConst.GET_CHAT_RULES, handleGetChatRules);
+      socket.off(ChatConst.UPDATE_CHAT_RULES, handleUpdateChatRules);
      };
    }, [handleSendGroupMsg]); // Include handleSendGroupMsg so socket listener updates when it changes
 
@@ -1315,16 +1363,55 @@ const ChatsContent: React.FC = () => {
     
   } 
 
-  const groupSelectHandler = (
+  const groupSelectHandler = async (
     group : ChatGroup
   ) => {
     console.log("🔍 Group selected:", group.id, "Previous:", selectedChatGroup?.id);
     if (window.innerWidth < 810) { setUserNavShow(false); }
     // router.push(`${path}?Group=${id}`);
     if (selectedChatGroup?.id == group.id) return;
-    setSelectedChatGroup(group)
-    console.log("🔍 setSelectedChatGroup called with group:", group.id);
-    const token = localStorage.getItem(TOKEN_KEY)
+    
+    const token = localStorage.getItem(TOKEN_KEY);
+    
+    // Ensure user is joined to the group and then load messages
+    console.log("🔍 [F] Joining user to group:", group.id);
+    try {
+      await axios.post(`${SERVER_URL}/api/private/update/groups/join`, {
+        groupId: group.id,
+        userId: getCurrentUserId()
+      }, {
+        headers: {
+          "Accept": "application/json",
+          "Content-type": "application/json", 
+          Authorization: token,
+        },
+      });
+      console.log("🔍 [F] User successfully joined group, refreshing group data");
+      
+      // Refresh group data to get updated member list
+      const updatedGroupRes = await axios.get(`${SERVER_URL}/api/private/get/groups/${group.id}`, {
+        headers: {
+          "Accept": "application/json",
+          "Content-type": "application/json",
+          Authorization: token,
+        },
+      });
+      
+      if (updatedGroupRes.data) {
+        console.log("🔍 [F] Updated group data with members:", updatedGroupRes.data);
+        setSelectedChatGroup(updatedGroupRes.data);
+        console.log("🔍 setSelectedChatGroup called with updated group:", updatedGroupRes.data.id);
+      } else {
+        setSelectedChatGroup(group);
+        console.log("🔍 setSelectedChatGroup called with original group:", group.id);
+      }
+    } catch (joinError) {
+      console.error("🔍 [F] Error joining group:", joinError);
+      // Continue anyway - user might already be in group
+      setSelectedChatGroup(group);
+      console.log("🔍 setSelectedChatGroup called with group:", group.id);
+    }
+    
     // To call the function to send the socket function to make the Read_Time to set
     readGroupMsg(token, group.id)
   }
@@ -2676,6 +2763,14 @@ const ChatsContent: React.FC = () => {
             updateChatRules(token, selectedChatGroup.id, rules, config.settings.showChatRules);
           }
         }}
+      />
+
+      {/* Timeout Notification */}
+      <TimeoutNotification
+        isVisible={showTimeoutNotification}
+        timeoutMinutes={timeoutData?.timeoutMinutes || 15}
+        expiresAt={timeoutData?.expiresAt || ''}
+        onClose={() => setShowTimeoutNotification(false)}
       />
     </div>
   );

@@ -33,8 +33,18 @@ const SideBar: React.FC = () => {
   }
 
   useEffect(() => {
-    if (!localStorage.getItem(TOKEN_KEY)) router.push(`/auth?Role=${param.get("Role")}&Collection=login`)
-  }, [])
+    const token = localStorage.getItem(TOKEN_KEY);
+    console.log("🔍 [F] SideBar - checking authentication, token exists:", !!token);
+    
+    // Only redirect if we're on a protected route and no token exists
+    // Don't redirect immediately - let the app determine if the user needs to login
+    if (!token && path !== '/auth' && path !== '/') {
+      console.log("🔍 [F] SideBar - No token on protected route, redirecting to auth");
+      router.push(`/auth?Role=${param.get("Role")}&Collection=login`);
+    } else if (token) {
+      console.log("🔍 [F] SideBar - Token exists, user should remain logged in");
+    }
+  }, [path, param, router])
 
   return (
     <Suspense fallback={<div>Loading...</div>}>

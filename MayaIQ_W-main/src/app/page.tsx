@@ -99,6 +99,8 @@ import {
 import { darkenColor } from "@/resource/utils/colors";
 import SwitchButton from "@/components/SwitchButton";
 import { v4 as uuidv4 } from 'uuid';
+import TimeoutNotification from '../components/TimeoutNotification';
+import { VerificationPopup } from '../components/VerificationPopup';
 import FilterWidget from "@/components/groupAdmin/FilterWidget";
 import ChatLimitPopup from "@/components/groupAdmin/ChatLimitPopup";
 import ManageChatPopup from "@/components/groupAdmin/ManageChatPopup";
@@ -174,6 +176,12 @@ const ChatsContent: React.FC = () => {
 
   const [group, setGroup] = useState<ChatGroup>();
   const [socketConnected, setSocketConnected] = useState(false);
+  const [pageVisible, setPageVisible] = useState(true);
+  const [pendingMessages, setPendingMessages] = useState<MessageUnit[]>([]);
+  const [showTimeoutNotification, setShowTimeoutNotification] = useState(false);
+  const [timeoutData, setTimeoutData] = useState<{timeoutMinutes: number; expiresAt: string} | null>(null);
+  const [showVerificationPopup, setShowVerificationPopup] = useState(false);
+  const [verificationEmail, setVerificationEmail] = useState('');
 
   // Debug group changes
   useEffect(() => {
@@ -671,6 +679,47 @@ const ChatsContent: React.FC = () => {
   }
 
   // Function to find group by name (for logged-in users)
+  // Function to ensure user is a member and refresh group data
+  const ensureGroupMembership = useCallback(async (groupId: number, token: string) => {
+    console.log("🔍 [W] ensureGroupMembership called for group:", groupId);
+    try {
+      // Ensure user is joined to the group
+      await axios.post(`${SERVER_URL}/api/private/update/groups/join`, {
+        groupId: groupId,
+        userId: getCurrentUserId()
+      }, {
+        headers: {
+          "Accept": "application/json",
+          "Content-type": "application/json", 
+          Authorization: token,
+        },
+      });
+      console.log("🔍 [W] User successfully joined group, refreshing group data");
+      
+      // Refresh group data to get updated member list
+      const updatedGroupRes = await axios.get(`${SERVER_URL}/api/private/get/groups/${groupId}`, {
+        headers: {
+          "Accept": "application/json",
+          "Content-type": "application/json",
+          Authorization: token,
+        },
+      });
+      
+      if (updatedGroupRes.data) {
+        console.log("🔍 [W] Updated group data with members:", updatedGroupRes.data);
+        console.log("🔍 [W] Updated members array:", updatedGroupRes.data.members);
+        console.log("🔍 [W] Current user ID:", getCurrentUserId());
+        const myMember = updatedGroupRes.data.members?.find((m: any) => m.id == getCurrentUserId());
+        console.log("🔍 [W] My member info after refresh:", myMember);
+        setGroup(updatedGroupRes.data);
+        return updatedGroupRes.data;
+      }
+    } catch (error) {
+      console.error("🔍 [W] Error ensuring group membership:", error);
+    }
+    return null;
+  }, []);
+
   const findGroupByName = useCallback(async (token: string, groupName: string) => {
     console.log("🔍 [W] findGroupByName called with:", { token, groupName });
     try {
@@ -689,6 +738,44 @@ const ChatsContent: React.FC = () => {
         console.log("🔍 [W] Group found, setting group:", res.data);
         localStorage.setItem(SELECTED_GROUP_ID, res.data.id.toString());
         setGroup(res.data);
+        
+        // Ensure user is joined to the group and then load messages
+        console.log("🔍 [W] Joining user to group:", res.data.id);
+        try {
+          await axios.post(`${SERVER_URL}/api/private/update/groups/join`, {
+            groupId: res.data.id,
+            userId: getCurrentUserId()
+          }, {
+            headers: {
+              "Accept": "application/json",
+              "Content-type": "application/json", 
+              Authorization: token,
+            },
+          });
+          console.log("🔍 [W] User successfully joined group, refreshing group data");
+          
+          // Refresh group data to get updated member list
+          const updatedGroupRes = await axios.get(`${SERVER_URL}/api/private/get/groups/byname/${groupName}`, {
+            headers: {
+              "Accept": "application/json",
+              "Content-type": "application/json",
+              Authorization: token,
+            },
+          });
+          
+          if (updatedGroupRes.data) {
+            console.log("🔍 [W] Updated group data with members:", updatedGroupRes.data);
+            console.log("🔍 [W] Updated members array:", updatedGroupRes.data.members);
+            console.log("🔍 [W] Current user ID:", getCurrentUserId());
+            const myMember = updatedGroupRes.data.members?.find((m: any) => m.id == getCurrentUserId());
+            console.log("🔍 [W] My member info after refresh:", myMember);
+            setGroup(updatedGroupRes.data);
+          }
+        } catch (joinError) {
+          console.error("🔍 [W] Error joining group:", joinError);
+          // Continue anyway - user might already be in group
+        }
+        
         // Load messages for this group
         console.log("🔍 [W] Calling getGroupMessages for group:", res.data.id);
         getGroupMessages(token, res.data.id);
@@ -720,50 +807,89 @@ const ChatsContent: React.FC = () => {
     const checkScreenSize = () => {
       setIsMobile(window.innerWidth < 768);
     };
-    const token = localStorage.getItem(TOKEN_KEY);
-    const groupId = getChatGroupID();
-    const userId = getCurrentUserId();
-    const groupName = getSubDomain();
-    console.log("🔍 [W] Initialization:", { token, groupId, userId, groupName });
-    setCurrentUserId(userId);
-    // For logged-in users, try to find the group by subdomain name
-    if (token && getCurrentUserId() != 0) {
-      console.log("🔍 [W] User is logged in - finding group by subdomain");
-      // Notify backend that user is logged in
-      userLoggedIn(token);
-      if (groupName) {
-        console.log("🔍 [W] Looking for group with name:", groupName);
-        // Find group by name via API call (similar to MayaIQ_F-main)
-        findGroupByName(token, groupName);
-      } else if (groupId && groupId !== 0) {
-        console.log("🔍 [W] Using stored group ID:", groupId);
-        loginAsReal(token, groupId, getAnonId());
-        getGroupMessages(token, groupId);
-      } else {
-        console.log("🔍 [W] No group specified - user needs to select a group");
-      }
-    } else {
-      console.log("🔍 [W] User not logged in - registering as anonymous");
-      registerAsAnon(getAnonId());
+    
+    const initializeApp = async () => {
+      const token = localStorage.getItem(TOKEN_KEY);
+      const groupId = getChatGroupID();
+      const userId = getCurrentUserId();
+      const groupName = getSubDomain();
+      console.log("🔍 [W] Initialization:", { token, groupId, userId, groupName });
+      setCurrentUserId(userId);
 
-      // For anonymous users, still try to load group by subdomain
-      if (groupName) {
-        console.log("🔍 [W] Anonymous user - calling registerAnon for group:", groupName);
-        const getBrowserUUID = () => {
-          let uuid = localStorage.getItem("browser_uuid");
-          if (!uuid) {
-            uuid = Math.random().toString(36).substring(2, 15);
-            localStorage.setItem("browser_uuid", uuid);
+      // Try to restore session if token exists
+      if (token && !token.includes('anonuser')) {
+        console.log("🔍 [W] Attempting to restore user session");
+        try {
+          const { restoreUserSession } = await import('../resource/utils/auth');
+          const sessionRestored = await restoreUserSession();
+          
+          if (sessionRestored) {
+            console.log("🔍 [W] Session restored - user remains logged in");
+            // Continue with logged-in user flow
+            userLoggedIn(token);
+            if (groupName) {
+              findGroupByName(token, groupName);
+            } else if (groupId && groupId !== 0) {
+              loginAsReal(token, groupId, getAnonId());
+              getGroupMessages(token, groupId);
+            }
+            return; // Exit early since user is logged in
+          } else {
+            console.log("🔍 [W] Session restoration failed - proceeding as anonymous");
+            // Clear invalid session data
+            localStorage.removeItem(TOKEN_KEY);
+            localStorage.removeItem(USER_ID_KEY);
           }
-          return uuid;
+        } catch (error) {
+          console.error("🔍 [W] Session restoration error:", error);
         }
-        const browserUUid = getBrowserUUID();
-        const anontoken = "anonuser" + groupName + browserUUid;
-        localStorage.setItem('anonToken', anontoken); // Store for later use
-        setAnonToken(anontoken);
-        registerAnon(anontoken, getAnonId(), groupName);
       }
-    }
+
+      // Continue with existing logic for users without valid session
+      const currentToken = localStorage.getItem(TOKEN_KEY);
+      const currentUserId = getCurrentUserId();
+      
+      // For logged-in users, try to find the group by subdomain name
+      if (currentToken && currentUserId != 0) {
+        console.log("🔍 [W] User is logged in - finding group by subdomain");
+        // Notify backend that user is logged in
+        userLoggedIn(currentToken);
+        if (groupName) {
+          console.log("🔍 [W] Looking for group with name:", groupName);
+          // Find group by name via API call (similar to MayaIQ_F-main)
+          findGroupByName(currentToken, groupName);
+        } else if (groupId && groupId !== 0) {
+          console.log("🔍 [W] Using stored group ID:", groupId);
+          loginAsReal(currentToken, groupId, getAnonId());
+          getGroupMessages(currentToken, groupId);
+        } else {
+          console.log("🔍 [W] No group specified - user needs to select a group");
+        }
+      } else {
+        console.log("🔍 [W] User not logged in - registering as anonymous");
+        registerAsAnon(getAnonId());
+
+        // For anonymous users, still try to load group by subdomain
+        if (groupName) {
+          console.log("🔍 [W] Anonymous user - calling registerAnon for group:", groupName);
+          const getBrowserUUID = () => {
+            let uuid = localStorage.getItem("browser_uuid");
+            if (!uuid) {
+              uuid = Math.random().toString(36).substring(2, 15);
+              localStorage.setItem("browser_uuid", uuid);
+            }
+            return uuid;
+          }
+          const browserUUid = getBrowserUUID();
+          const anontoken = "anonuser" + groupName + browserUUid;
+          localStorage.setItem('anonToken', anontoken); // Store for later use
+          setAnonToken(anontoken);
+          registerAnon(anontoken, getAnonId(), groupName);
+        }
+      }
+    };
+
+    initializeApp();
     checkScreenSize();
     const interval = setInterval(getCurrentGroupOnlineUsers, 1 * 60 * 1000);
     window.addEventListener('resize', checkScreenSize);
@@ -771,7 +897,7 @@ const ChatsContent: React.FC = () => {
       clearInterval(interval)
       window.removeEventListener('resize', checkScreenSize);
     }
-  }, []);
+  }, [dispatch]);
 
   useEffect(() => {
     const getBrowserUUID = () => {
@@ -1169,16 +1295,22 @@ const ChatsContent: React.FC = () => {
     const groupId = data?.length && data[data.length - 1].group_id;
     console.log("🔍 [W] Message group ID:", groupId, "Selected group ID:", group?.id);
     console.log("🔍 [W] Current groupMsgList length:", groupMsgList?.length);
+    console.log("🔍 [W] Page visible:", pageVisible);
+    
     if (groupId === group?.id) {
-      console.log("🔍 [W] Adding messages to current group");
-      const newList = mergeArrays(groupMsgList, data);
-      console.log("🔍 [W] Merged list length:", newList?.length);
-      // dispatch(setMessageList([...newList]));    
-      setGroupMsgList(newList)
+      if (pageVisible) {
+        console.log("🔍 [W] Page visible - adding messages immediately");
+        const newList = mergeArrays(groupMsgList, data);
+        console.log("🔍 [W] Merged list length:", newList?.length);
+        setGroupMsgList(newList);
+      } else {
+        console.log("🔍 [W] Page hidden - queuing messages for later");
+        setPendingMessages(prev => mergeArrays(prev, data));
+      }
     } else {
       console.log("🔍 [W] Message not for current group, ignoring");
     }
-  }, [group, groupMsgList]); // Add dependencies so it updates when these change
+  }, [group, groupMsgList, pageVisible]); // Add dependencies so it updates when these change
 
   const handleGetGroupBlockedUsers = (data: number[]) => {
     dispatch(setIsLoading(false));
@@ -1275,18 +1407,23 @@ const ChatsContent: React.FC = () => {
       const token = localStorage.getItem(TOKEN_KEY);
       const currentUserId = getCurrentUserId();
       
-      console.log("🔍 [W] Socket connected and group available - loading messages");
+      console.log("🔍 [W] Socket connected and group available - ensuring membership and loading messages");
       console.log("🔍 [W] Group ID:", group.id, "User ID:", currentUserId, "Socket connected:", socketConnected);
       
-      if (token) {
+      if (token && currentUserId > 0) {
         // Add a small delay to ensure socket is fully ready
-        setTimeout(() => {
-          console.log("🔍 [W] Loading messages after socket connection");
+        setTimeout(async () => {
+          console.log("🔍 [W] Ensuring group membership and loading messages after socket connection");
+          
+          // First ensure the user is a member of the group
+          await ensureGroupMembership(group.id, token);
+          
+          // Then load messages
           getGroupMessages(token, group.id);
         }, 100);
       }
     }
-  }, [socketConnected, group?.id]);
+  }, [socketConnected, group?.id, ensureGroupMembership]);
 
   const handleUpdateChatRules = (data: any) => {
     console.log("🔍 [W] [Chat Rules] Chat rules updated:", data);
@@ -1321,6 +1458,20 @@ const ChatsContent: React.FC = () => {
     }
   }
 
+  const handleTimeoutNotification = (data: any) => {
+    console.log(`⏰ [W] Timeout notification received:`, data);
+    const { timeoutMinutes, expiresAt, message } = data;
+    
+    setTimeoutData({ timeoutMinutes, expiresAt });
+    setShowTimeoutNotification(true);
+    
+    // Show toast message as well
+    toast.error(message, {
+      duration: 5000,
+      position: 'top-center'
+    });
+  }
+
   // Setup socket listeners with proper cleanup
   useEffect(() => {
     // Track socket connection state
@@ -1333,6 +1484,24 @@ const ChatsContent: React.FC = () => {
       console.log("🔍 [W] Socket disconnected");
       setSocketConnected(false);
     };
+
+    // Track page visibility for real-time messages
+    const handleVisibilityChange = () => {
+      const isVisible = !document.hidden;
+      setPageVisible(isVisible);
+      console.log("🔍 [W] Page visibility changed:", isVisible ? 'visible' : 'hidden');
+      
+      if (isVisible && pendingMessages.length > 0) {
+        console.log("🔍 [W] Page became visible, processing", pendingMessages.length, "pending messages");
+        // Process pending messages when page becomes visible
+        const newList = mergeArrays(groupMsgList, pendingMessages);
+        setGroupMsgList(newList);
+        setPendingMessages([]);
+      }
+    };
+
+    // Listen for page visibility changes
+    document.addEventListener('visibilitychange', handleVisibilityChange);
 
     socket.on('connect', handleConnect);
     socket.on('disconnect', handleDisconnect);
@@ -1359,6 +1528,9 @@ const ChatsContent: React.FC = () => {
     socket.on(ChatConst.EXPIRED, handleExpired);
     socket.on(ChatConst.FORBIDDEN, handleForbidden);
 
+    // Timeout notification listener
+    socket.on(ChatConst.USER_TIMEOUT_NOTIFICATION, handleTimeoutNotification);
+
     // Chat rules listeners
     console.log("🔍 [W] [Chat Rules] Setting up socket listeners");
     socket.on(ChatConst.GET_CHAT_RULES, handleGetChatRules);
@@ -1379,6 +1551,7 @@ const ChatsContent: React.FC = () => {
 
     // Cleanup listeners on unmount
     return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
       socket.off('connect', handleConnect);
       socket.off('disconnect', handleDisconnect);
       socket.off(ChatConst.GET_GROUP_ONLINE_USERS, handleGetGroupOnlineUsers);
@@ -1394,7 +1567,8 @@ const ChatsContent: React.FC = () => {
     socket.off(ChatConst.GET_GROUP_BLOCKED_USERS, handleGetGroupBlockedUsers);
     socket.off(ChatConst.CLEAR_GROUP_CHAT, handleClearGroupChat);
     socket.off(ChatConst.EXPIRED, handleExpired);
-    socket.off(ChatConst.FORBIDDEN, handleForbidden);
+          socket.off(ChatConst.FORBIDDEN, handleForbidden);
+      socket.off(ChatConst.USER_TIMEOUT_NOTIFICATION, handleTimeoutNotification);
       socket.off(ChatConst.GET_CHAT_RULES, handleGetChatRules);
       socket.off(ChatConst.UPDATE_CHAT_RULES, handleUpdateChatRules);
       socket.off(ChatConst.EXPIRED);
@@ -2061,6 +2235,7 @@ const ChatsContent: React.FC = () => {
   });
 
   const handleSignup = useCallback(async (email: string, name: string, password: string) => {
+    dispatch(setIsLoading(true));
     try {
       const res = await axios.post(`${SERVER_URL}/api/user/register/group`, {
         Email: email,
@@ -2068,24 +2243,31 @@ const ChatsContent: React.FC = () => {
         Password: password
       });
 
-      // Error Notification
+      // Handle verification flow
       if (res.status === httpCode.SUCCESS) {
-        toast.success(messages.login.success);
-        setCurrentUserId(res.data.id);
-        console.log("== LOGIN USER DATA===", res.data)
-        localStorage.setItem(USER_ID_KEY, res.data.id);
-        localStorage.setItem(TOKEN_KEY, res.data.token);
-        loginAsReal(res.data.token, group?.id, getAnonId());
-        setShowSigninPopup(false);
-        setShowSignupPopup(false)
-        console.log("== LOGIN USER===", res.data.id)
+        if (res.data.requiresVerification) {
+          // Show verification popup
+          setVerificationEmail(res.data.email);
+          setShowSignupPopup(false);
+          setShowVerificationPopup(true);
+          toast.success("Verification email sent! Please check your email.");
+        } else {
+          // Old flow for backward compatibility
+          toast.success(messages.login.success);
+          setCurrentUserId(res.data.id);
+          localStorage.setItem(USER_ID_KEY, res.data.id);
+          localStorage.setItem(TOKEN_KEY, res.data.token);
+          loginAsReal(res.data.token, group?.id, getAnonId());
+          setShowSigninPopup(false);
+          setShowSignupPopup(false);
 
-        // Trigger chat rules after successful signup/login
-        if (group?.id) {
-          setTimeout(() => {
-            console.log("🔍 [W] [Chat Rules] Triggering chat rules after successful signup");
-            triggerChatRulesAfterLogin(res.data.token, 'logged-in');
-          }, 1000); // Small delay to ensure loginAsReal completes
+          // Trigger chat rules after successful signup/login
+          if (group?.id) {
+            setTimeout(() => {
+              console.log("🔍 [W] [Chat Rules] Triggering chat rules after successful signup");
+              triggerChatRulesAfterLogin(res.data.token, 'logged-in');
+            }, 1000);
+          }
         }
       } else if (res.status === httpCode.NOT_MATCHED) {
         toast.error(messages.common.notMatched);
@@ -2093,12 +2275,60 @@ const ChatsContent: React.FC = () => {
         toast.error(messages.common.failure);
       }
 
-    } catch (error) {
-      toast.error(messages.common.serverError);
+    } catch (error: any) {
+      if (error.response?.status === httpCode.DUPLICATED) {
+        toast.error("This email is already registered. Please try signing in instead.");
+      } else {
+        toast.error(messages.common.serverError);
+      }
     }
     dispatch(setIsLoading(false));
-  }, [dispatch]);
+  }, [dispatch, group, getAnonId, loginAsReal, triggerChatRulesAfterLogin]);
 
+  const handleVerification = useCallback(async (email: string, otp: string) => {
+    dispatch(setIsLoading(true));
+    try {
+      const res = await axios.post(`${SERVER_URL}/api/user/confirm/group`, {
+        email: email,
+        otp: parseInt(otp)
+      });
+
+      if (res.status === httpCode.SUCCESS) {
+        toast.success("Account verified successfully! Welcome to Pingbash!");
+        setCurrentUserId(res.data.id);
+        localStorage.setItem(USER_ID_KEY, res.data.id);
+        localStorage.setItem(TOKEN_KEY, res.data.token);
+        loginAsReal(res.data.token, group?.id, getAnonId());
+        setShowVerificationPopup(false);
+
+        // Trigger chat rules after successful verification
+        if (group?.id) {
+          setTimeout(() => {
+            console.log("🔍 [W] [Chat Rules] Triggering chat rules after verification");
+            triggerChatRulesAfterLogin(res.data.token, 'logged-in');
+          }, 1000);
+        }
+      } else {
+        toast.error("Invalid verification code. Please try again.");
+      }
+    } catch (error: any) {
+      if (error.response?.status === httpCode.FORBIDDEN) {
+        toast.error(error.response.data || "Invalid or expired verification code.");
+      } else {
+        toast.error("Verification failed. Please try again.");
+      }
+    }
+    dispatch(setIsLoading(false));
+  }, [dispatch, group, getAnonId, loginAsReal, triggerChatRulesAfterLogin]);
+
+  const handleResendCode = useCallback(async (email: string) => {
+    try {
+      await axios.post(`${SERVER_URL}/api/user/resend`, { email });
+      toast.success("Verification code resent successfully!");
+    } catch (error) {
+      toast.error("Failed to resend verification code. Please try again.");
+    }
+  }, []);
 
   // Admin and Mods tools Actions
   const handleAdminOptionClick = (optionId: string) => {
@@ -2668,6 +2898,20 @@ const ChatsContent: React.FC = () => {
                     <button onClick={() => sendGroupMsgHandler("msg", "")} className="h-[30px] active:translate-y-[2px] py-[3px] max-[320px]:px-[12px] px-[26px] rounded-full text-[14px] max-[320px]:text-[10px] text-white bg-gradient-to-r from-[#BD00FF] to-[#3A4EFF]">
                       {isMobile ? <div className="hidden max-[810px]:flex"><FontAwesomeIcon icon={faPaperPlane} className="text-[16px]" /></div> : "Send"}
                     </button>
+                    {/* Debug button for testing membership refresh */}
+                    <button 
+                      onClick={async () => {
+                        const token = localStorage.getItem(TOKEN_KEY);
+                        if (token && group?.id) {
+                          console.log("🔍 [W] Manual membership refresh triggered");
+                          await ensureGroupMembership(group.id, token);
+                        }
+                      }}
+                      className="h-[30px] px-2 text-xs bg-red-500 text-white rounded"
+                      title="Debug: Refresh Membership"
+                    >
+                      🔧
+                    </button>
                   </div>
                   <div className={`flex gap-[10px] ${adminManageOptions?.length > 0 && !isBannedUser ? "min-w-[122px]" : "min-w-[82px]"} relative cursor-pointer max-[810px]:hidden`}>
                     {showOnlineUserCount && <div className="w-auto h-[24px]" onClick={() => setOpenGroupOnlineUsersPopup(!openGroupOnlineUsersPopup)}><FontAwesomeIcon icon={faUser} className="text-[24px] pr-[6px]" />{groupOnlineUserIds.length}</div>}
@@ -2783,6 +3027,13 @@ const ChatsContent: React.FC = () => {
           setShowSignupPopup(false)
           setShowSigninPopup(true)
         }}
+      />
+      <VerificationPopup
+        isOpen={showVerificationPopup}
+        onClose={() => setShowVerificationPopup(false)}
+        onVerify={handleVerification}
+        email={verificationEmail}
+        onResendCode={handleResendCode}
       />
       <GroupCreatPopup isOpen={openEditGroupPop} onClose={() => setOpenEditGroupPop(false)}>
         <h2 className="text-xl font-semibold mb-2 flex justify-center">Group: {group?.name}</h2>
@@ -2973,6 +3224,14 @@ const ChatsContent: React.FC = () => {
             updateChatRules(token, group.id, rules, groupConfig.settings.showChatRules);
           }
         }}
+      />
+
+      {/* Timeout Notification */}
+      <TimeoutNotification
+        isVisible={showTimeoutNotification}
+        timeoutMinutes={timeoutData?.timeoutMinutes || 15}
+        expiresAt={timeoutData?.expiresAt || ''}
+        onClose={() => setShowTimeoutNotification(false)}
       />
     </div>
   );
