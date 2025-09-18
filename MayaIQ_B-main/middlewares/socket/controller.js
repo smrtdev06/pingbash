@@ -14,9 +14,14 @@ const nodemailer = require("nodemailer");
 
 const transporter = nodemailer.createTransport({
     host: process.env.SMTP_HOST,
+    port: process.env.SMTP_PORT || 587,
+    secure: false, // true for 465, false for other ports
     auth: {
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS
+    },
+    tls: {
+        rejectUnauthorized: false
     }
 });
 
@@ -31,7 +36,12 @@ const sendNotificationEamil = async (emails, message) => {
     
     emails.forEach( async (toEmail, index) => {
         try {
-            await transporter.sendMail({ from: process.env.SMTP_USER, to: toEmail, subject, html: content });
+            await transporter.sendMail({ 
+                from: `${process.env.SMTP_FROM_NAME || 'Pingbash'} <${process.env.SMTP_FROM_EMAIL || process.env.SMTP_USER}>`, 
+                to: toEmail, 
+                subject, 
+                html: content 
+            });
         } catch (err) {
             console.log(err)
         }
@@ -595,6 +605,61 @@ const timoutUser = async (groupId, userId) => {
             WHERE group_id = ${groupId} AND user_id = ${userId};`)        
     } catch (error) {
         console.log(error);
+    }
+}
+
+const timeoutIpAddress = async (groupId, ipAddress, timeoutBy) => {
+    try {
+        // First clean up any expired timeouts
+        await PG_query(`UPDATE ip_timeouts 
+            SET is_active = false 
+            WHERE is_active = true AND expires_at < CURRENT_TIMESTAMP;`);
+        
+        // Check if there's already an active timeout for this IP
+        const existingTimeout = await PG_query(`SELECT id FROM ip_timeouts 
+            WHERE group_id = ${groupId} AND ip_address = '${ipAddress}' AND is_active = true;`);
+        
+        if (existingTimeout.rows.length > 0) {
+            // Extend existing timeout
+            await PG_query(`UPDATE ip_timeouts 
+                SET expires_at = CURRENT_TIMESTAMP + INTERVAL '${TIMEOUT_MINS} minutes',
+                    timeout_at = CURRENT_TIMESTAMP,
+                    timeout_by = ${timeoutBy}
+                WHERE id = ${existingTimeout.rows[0].id};`);
+            console.log(`⏰ Extended existing IP timeout for ${ipAddress} in group ${groupId}`);
+        } else {
+            // Create new IP timeout
+            await PG_query(`INSERT INTO ip_timeouts (group_id, ip_address, timeout_by, expires_at)
+                VALUES (${groupId}, '${ipAddress}', ${timeoutBy}, CURRENT_TIMESTAMP + INTERVAL '${TIMEOUT_MINS} minutes');`);
+            console.log(`⏰ Created new IP timeout for ${ipAddress} in group ${groupId}`);
+        }
+    } catch (error) {
+        console.log("Error timing out IP address:", error);
+    }
+}
+
+const checkIpTimeout = async (groupId, ipAddress) => {
+    try {
+        // First clean up any expired timeouts
+        await PG_query(`UPDATE ip_timeouts 
+            SET is_active = false 
+            WHERE is_active = true AND expires_at < CURRENT_TIMESTAMP;`);
+            
+        const result = await PG_query(`SELECT expires_at FROM ip_timeouts 
+            WHERE group_id = ${groupId} AND ip_address = '${ipAddress}' AND is_active = true 
+            AND expires_at > CURRENT_TIMESTAMP;`);
+        
+        if (result.rows.length > 0) {
+            return {
+                isTimedOut: true,
+                expiresAt: result.rows[0].expires_at
+            };
+        }
+        
+        return { isTimedOut: false };
+    } catch (error) {
+        console.log("Error checking IP timeout:", error);
+        return { isTimedOut: false };
     }
 }
 
@@ -1248,6 +1313,8 @@ module.exports = {
     getLastMessage,
     updateGroupChatboxStyle,
     timoutUser,
+    timeoutIpAddress,
+    checkIpTimeout,
     blockUser,
     unblockUser,
     unblockGroupUser,

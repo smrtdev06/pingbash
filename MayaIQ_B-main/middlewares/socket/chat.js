@@ -276,6 +276,14 @@ module.exports = (socket, users) => {
                 socket.emit(chatCode.FORBIDDEN, "You are banned from this group");
                 return;
             }
+
+            // Check if IP is timed out from this group
+            const ipTimeoutCheck = await Controller.checkIpTimeout(groupId, clientIp);
+            if (ipTimeoutCheck.isTimedOut) {
+                console.log(`⏰ IP TIMEOUT BLOCKING ANON MESSAGE: IP ${clientIp} is timed out from group ${groupId} until ${ipTimeoutCheck.expiresAt}`);
+                socket.emit(chatCode.FORBIDDEN, `You are temporarily restricted from sending messages. Restriction expires at ${new Date(ipTimeoutCheck.expiresAt).toLocaleString()}`);
+                return;
+            }
             
             // Add user to users list if not already present
             if (!users.find(user => user.ID == anonId)) {
@@ -612,27 +620,68 @@ module.exports = (socket, users) => {
             const senderId = verifyUser(data.token);
             const { userId, groupId} = data;
 
+            // Check if sender is group creator
+            const groupInfo = await Controller.getGroup(groupId);
+            if (!groupInfo || groupInfo.creater_id !== senderId) {
+                socket.emit(chatCode.FORBIDDEN, "Only the group creator can timeout users");
+                return;
+            }
+
             if (!users.find(user => user.ID == senderId)) {
                 users.push({ ID: senderId, Socket: socket.id });
                 sockets[socket.id] = socket;
             }
-            // Save message to the database
-            await Controller.timoutUser(groupId, userId);
+            
+            // Check if this is an anonymous user by checking token format
+            const isAnonymousUser = data.token && data.token.includes('anonuser');
+            
+            if (isAnonymousUser) {
+                // For anonymous users, apply IP-based timeout
+                const timeoutUser = users.find(user => user.ID == userId);
+                if (timeoutUser) {
+                    const timeoutSocket = sockets[timeoutUser.Socket];
+                    if (timeoutSocket) {
+                        const clientIp = getClientIpAddress(timeoutSocket);
+                        await Controller.timeoutIpAddress(groupId, clientIp, senderId);
+                        console.log(`⏰ Anonymous user ${userId} (IP: ${clientIp}) timed out in group ${groupId} by ${senderId} for ${chatCode.TIMEOUT_MINS} minutes`);
+                        
+                        // Send notification to the timed out anonymous user
+                        timeoutSocket.emit(chatCode.USER_TIMEOUT_NOTIFICATION, { 
+                            groupId, 
+                            timeoutMinutes: chatCode.TIMEOUT_MINS,
+                            message: `You have been temporarily restricted from sending messages for ${chatCode.TIMEOUT_MINS} minutes.`,
+                            expiresAt: new Date(Date.now() + chatCode.TIMEOUT_MINS * 60 * 1000).toISOString()
+                        });
+                        console.log(`📢 Timeout notification sent to anonymous user ${userId} (IP: ${clientIp})`);
+                    }
+                }
+            } else {
+                // For verified users, apply user-based timeout
+                await Controller.timoutUser(groupId, userId);
+                console.log(`⏰ User ${userId} timed out in group ${groupId} by ${senderId} for ${chatCode.TIMEOUT_MINS} minutes`);
+                
+                // Send notification to the timed out user
+                const timeoutUser = users.find(user => user.ID == userId);
+                if (timeoutUser) {
+                    const timeoutSocket = sockets[timeoutUser.Socket];
+                    if (timeoutSocket) {
+                        timeoutSocket.emit(chatCode.USER_TIMEOUT_NOTIFICATION, { 
+                            groupId, 
+                            timeoutMinutes: chatCode.TIMEOUT_MINS,
+                            message: `You have been temporarily restricted from sending messages for ${chatCode.TIMEOUT_MINS} minutes.`,
+                            expiresAt: new Date(Date.now() + chatCode.TIMEOUT_MINS * 60 * 1000).toISOString()
+                        });
+                        console.log(`📢 Timeout notification sent to user ${userId}`);
+                    }
+                }
+            }
+            
             const receivers = await Controller.getReceiverIdsOfGroup(groupId);
             // Find the receiver's and sender's socket IDs
             const receiveUsers = users.filter(user => receivers.find(receiverId => receiverId == user.ID));
-            // const sender = users.find(user => user.ID === senderId);
-            
-            // const senderSocketId = sender?.Socket;
             const receiverSocketIds = receiveUsers.map(user => user?.Socket);
-
-            // const senderSocket = sockets[senderSocketId];
             const receiverSockets = receiverSocketIds.map(socketId => sockets[socketId]);
-            // Retrieve message list for the user
-            // const msgList = await Controller.getGroupMsg(groupId);
-            // if (senderSocket) {
-            //     senderSocket.emit(chatCode.BAN_GROUP_USER, userId);
-            // }
+            
             const group = await Controller.getGroup(groupId);
             if (receiverSockets && receiverSockets.length > 0) {
                 receiverSockets.map(receiverSocket => receiverSocket && receiverSocket.emit(chatCode.GROUP_UPDATED, group));

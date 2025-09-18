@@ -45,4 +45,4 @@ async function executeSqlFile(fileName, dbConfig) {
     }
 }
 
-executeSqlFile('./db/ip_bans.sql');
+executeSqlFile('./db/ip_timeouts.sql');

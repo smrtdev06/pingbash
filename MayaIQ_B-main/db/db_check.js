@@ -12,8 +12,9 @@ const pool = new Pool({
 async function logAllBannedRecords() {
   try {
     // Get all banned users from group_users table
+
     const bannedUsers = await pool.query(`
-      SELECT * FROM group_users WHERE banned = 1
+      SELECT * FROM public.Users
     `);
     console.log('🚫 Banned users in group_users:', bannedUsers.rows);
 

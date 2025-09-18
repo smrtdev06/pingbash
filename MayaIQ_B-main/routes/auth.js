@@ -7,16 +7,22 @@
  const httpCode = require('../libs/httpCode.js');
  const { PG_query } = require('../db/index.js');
  const nodemailer = require("nodemailer");
+const emailTemplates = require("../templates/emailTemplates");
  
  const otpStore = new Map();
  
  const transporter = nodemailer.createTransport({
-     host: process.env.SMTP_HOST,
-     auth: {
-         user: process.env.SMTP_USER,
-         pass: process.env.SMTP_PASS
-     }
- });
+    host: process.env.SMTP_HOST,
+    port: process.env.SMTP_PORT || 587,
+    secure: false, // true for 465, false for other ports
+    auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS
+    },
+    tls: {
+        rejectUnauthorized: false
+    }
+});
  
  // Generated OTP for sign up
  const generateOTP = () => {
@@ -27,15 +33,16 @@
      const otp = generateOTP();
      const expiry = new Date(Date.now() + 5 * 60 * 1000).toISOString(); // UTC expiry time
  
-     // Send OTP to user's email
-     const subject = 'Email Verification';
-     const message = `<center>
-              <h2>Verify your email address</h2>
-              <h3>To start using Pingbash, please input this verification code into your form:</h3>
-              <div style="font-size:30px;font-weight:bold">${otp}</div>
-              </center>`;
+         // Send OTP to user's email using professional template
+    const subject = 'Verify Your Pingbash Account';
+    const message = emailTemplates.verification(otp);
  
-     await transporter.sendMail({ from: process.env.SMTP_USER, to: email, subject, html: message });
+     await transporter.sendMail({ 
+        from: `${process.env.SMTP_FROM_NAME || 'Pingbash'} <${process.env.SMTP_FROM_EMAIL || process.env.SMTP_USER}>`, 
+        to: email, 
+        subject, 
+        html: message 
+    });
  
      // Record OTP temporarily with UTC expiry time
      otpStore.set(email, { otp, expiry });
@@ -85,39 +92,59 @@
      }
  });
 
- // Router for user register from group embedded
- router.post('/register/group', async (req, res) => {
-    console.log(req.body);
-     const { error } = registerValidation(req.body);
-     if (error) return res.status(httpCode.INVALID_MSG).send(error.details[0].message);
- 
-     let email = req.body.Email.toLowerCase();
- 
-     try {
-         let isExist = await PG_query(`SELECT * FROM "Users" WHERE "Email" = '${email}';`);
-         if (isExist.rows.length) {
-             return res.status(httpCode.DUPLICATED).send("You already signed up here!");
-         } else {
-             const salt = bcrypt.genSaltSync(10);
-             const hashedPassword = bcrypt.hashSync(req.body.Password, salt);
-            const result = await PG_query(`
-                INSERT INTO "Users" ("Name", "Email", "Password", "Role")
-                VALUES (
-                    '${req.body.Name}', 
-                    '${email}', 
-                    '${hashedPassword}',
-                    1
-                )
-                RETURNING "Id";
-                `);
-            const token = jwt.sign({ id: result.rows[0].Id }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN });
-            return res.status(httpCode.SUCCESS).send({ token, id: result.rows[0].Id });
-         }
-     } catch (error) {
-         errorHandler(error);
-         res.status(httpCode.SERVER_ERROR).send();
-     }
- });
+ // Router for user register from group embedded (with email verification)
+router.post('/register/group', async (req, res) => {
+   console.log(req.body);
+    const { error } = registerValidation(req.body);
+    if (error) return res.status(httpCode.INVALID_MSG).send(error.details[0].message);
+
+    let email = req.body.Email.toLowerCase();
+
+    try {
+        let isExist = await PG_query(`SELECT * FROM "Users" WHERE "Email" = '${email}';`);
+        if (isExist.rows.length) {
+            return res.status(httpCode.DUPLICATED).send("You already signed up here!");
+        } else {
+            const salt = bcrypt.genSaltSync(10);
+            const hashedPassword = bcrypt.hashSync(req.body.Password, salt);
+            
+            // Store user data temporarily for verification
+            const userData = {
+                name: req.body.Name,
+                email: email,
+                hashedPassword: hashedPassword,
+                role: 1
+            };
+            
+            // Generate and send OTP for verification
+            const otp = generateOTP();
+            const expiry = new Date(Date.now() + 5 * 60 * 1000).toISOString(); // UTC expiry time
+            
+            // Store both OTP and user data temporarily
+            otpStore.set(email, { otp, expiry, userData });
+            
+            // Send verification email using professional template
+            const subject = 'Verify Your Pingbash Account';
+            const message = emailTemplates.verification(otp);
+            
+            await transporter.sendMail({ 
+                from: `${process.env.SMTP_FROM_NAME || 'Pingbash'} <${process.env.SMTP_FROM_EMAIL || process.env.SMTP_USER}>`, 
+                to: email, 
+                subject, 
+                html: message 
+            });
+            
+            return res.status(httpCode.SUCCESS).send({ 
+                message: "Verification email sent! Please check your email and verify your account.",
+                requiresVerification: true,
+                email: email
+            });
+        }
+    } catch (error) {
+        errorHandler(error);
+        res.status(httpCode.SERVER_ERROR).send();
+    }
+});
 
  // Router for user register
  router.get("/test", (req, res) => {
@@ -169,8 +196,68 @@
          errorHandler(error);
          res.status(httpCode.SERVER_ERROR).send();
      }
- });
+  });
+
+ // Router for group registration verification
+ router.post("/confirm/group", async (req, res) => {
+     const { error } = confirmValidation(req.body);
+     if (error) return res.status(httpCode.INVALID_MSG).send(error.details[0].message);
  
+     try {
+         const { email, otp } = req.body;
+         if (!otpStore.has(email)) return res.status(httpCode.FORBIDDEN).send("Verification code not found or expired.");
+ 
+         const { otp: storedOtp, expiry, userData } = otpStore.get(email);
+ 
+         if (new Date().toISOString() > expiry) {
+             otpStore.delete(email);
+             return res.status(httpCode.FORBIDDEN).send("Verification code has expired!");
+         }
+ 
+         if (storedOtp !== otp) {
+             return res.status(httpCode.FORBIDDEN).send('Invalid verification code');
+         }
+ 
+         otpStore.delete(email);
+
+         // Create the user account now that verification is complete
+         const result = await PG_query(`
+             INSERT INTO "Users" ("Name", "Email", "Password", "Role")
+             VALUES (
+                 '${userData.name}', 
+                 '${userData.email}', 
+                 '${userData.hashedPassword}',
+                 ${userData.role}
+             )
+             RETURNING "Id";
+         `);
+
+         const token = jwt.sign({ id: result.rows[0].Id }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN });
+
+         // Send welcome email
+         const welcomeSubject = 'Welcome to Pingbash! 🎉';
+         const welcomeMessage = emailTemplates.welcome(userData.name);
+         
+         try {
+             await transporter.sendMail({ 
+                 from: `${process.env.SMTP_FROM_NAME || 'Pingbash'} <${process.env.SMTP_FROM_EMAIL || process.env.SMTP_USER}>`, 
+                 to: userData.email, 
+                 subject: welcomeSubject, 
+                 html: welcomeMessage 
+             });
+         } catch (emailError) {
+             console.log("Welcome email failed:", emailError);
+             // Don't fail the registration if welcome email fails
+         }
+
+         res.send({ token, id: result.rows[0].Id });
+ 
+     } catch (error) {
+         errorHandler(error);
+         res.status(httpCode.SERVER_ERROR).send();
+     }
+ });
+
  // Router for Resend verification
  router.post("/resend", async (req, res) => {
      const { error } = resendEmailVailidation(req.body);
