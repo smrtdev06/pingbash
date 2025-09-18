@@ -240,10 +240,10 @@ router.post("/groups/join", authenticateUser, async (req, res) => {
         
         // Use INSERT ... ON CONFLICT to handle existing users
         await PG_query(`
-            INSERT INTO group_users (group_id, user_id, is_member, role_id, banned, muted, to_time) 
-            VALUES (${groupId}, ${userId}, 1, 0, 0, 0, NULL)
+            INSERT INTO group_users (group_id, user_id, is_member, role_id, banned, to_time) 
+            VALUES (${groupId}, ${userId}, 1, 0, 0, NULL)
             ON CONFLICT (group_id, user_id) 
-            DO UPDATE SET is_member = 1, banned = 0, muted = 0, to_time = NULL;
+            DO UPDATE SET is_member = 1, banned = 0, to_time = NULL;
         `);
         
         console.log(`✅ User ${userId} successfully joined/updated in group ${groupId}`);
