@@ -104,9 +104,11 @@ export const getGroupMessages = (token: string | null, groupId: number | null | 
   }
 
   // Validate token format before sending
+  console.log("🔍 [W] Validating token:", token.substring(0, 20) + "...");
   const validation = validateTokenFormat(token);
   if (!validation.isValid) {
     console.error("❌ [W] Invalid token format detected:", validation.error);
+    console.error("❌ [W] Full token for debugging:", token);
     return;
   }
   console.log("✅ [W] Token validation passed, type:", validation.type);

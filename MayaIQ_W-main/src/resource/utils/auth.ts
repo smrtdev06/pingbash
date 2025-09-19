@@ -80,11 +80,15 @@ export const validateTokenFormat = (token: string | null): { isValid: boolean; t
 
   // Check if it's an anonymous token
   if (token.startsWith('anon')) {
-    const anonUserId = token.replace('anon', '');
-    if (anonUserId && !isNaN(Number(anonUserId))) {
+    // Anonymous tokens can have various formats:
+    // - anon123 (simple numeric)
+    // - anonusergroupnameXXXXXX (with group name and random string)
+    // Just check if it starts with 'anon' and has content after it
+    const anonContent = token.replace('anon', '');
+    if (anonContent && anonContent.length > 0) {
       return { isValid: true, type: 'anonymous' };
     } else {
-      return { isValid: false, type: 'invalid', error: 'Invalid anonymous token format' };
+      return { isValid: false, type: 'invalid', error: 'Invalid anonymous token format - no content after anon prefix' };
     }
   }
 

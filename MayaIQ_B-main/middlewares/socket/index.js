@@ -118,15 +118,39 @@ module.exports = async (http) => {
 
             // Check if token is an anonymous token
             if (typeof token === 'string' && token.startsWith('anon')) {
-                console.log("🔍 Anonymous token detected:", token.substring(0, 10) + "...");
-                // Extract user ID from anonymous token (format: "anonUSER_ID")
-                const anonUserId = token.replace('anon', '');
-                if (anonUserId && !isNaN(anonUserId)) {
-                    return parseInt(anonUserId);
-                } else {
-                    console.error("❌ Invalid anonymous token format:", token);
+                console.log("🔍 Anonymous token detected:", token.substring(0, 15) + "...");
+                
+                // Anonymous tokens can have various formats:
+                // - anon123 (simple numeric user ID)
+                // - anonusergroupnameXXXXXX (complex format with group name)
+                
+                const anonContent = token.replace('anon', '');
+                if (!anonContent || anonContent.length === 0) {
+                    console.error("❌ Invalid anonymous token - no content after anon prefix:", token);
                     throw new Error("Invalid anonymous token");
                 }
+                
+                // Try to extract numeric user ID from the end or use a hash-based approach
+                // For complex tokens like "anonusertestgroup3kkwclwlrpuj", we need a different strategy
+                
+                // First, try simple numeric format (anon123)
+                if (!isNaN(anonContent)) {
+                    return parseInt(anonContent);
+                }
+                
+                // For complex format, generate a consistent user ID based on the token
+                // This ensures the same token always maps to the same user ID
+                let hash = 0;
+                for (let i = 0; i < anonContent.length; i++) {
+                    const char = anonContent.charCodeAt(i);
+                    hash = ((hash << 5) - hash) + char;
+                    hash = hash & hash; // Convert to 32-bit integer
+                }
+                
+                // Ensure positive number and within reasonable range
+                const userId = Math.abs(hash) % 1000000 + 100000; // Range: 100000-1099999
+                console.log("🔍 Generated user ID for anonymous token:", userId, "from content:", anonContent.substring(0, 10) + "...");
+                return userId;
             }
 
             // Check if token looks like a JWT (has 3 parts separated by dots)
