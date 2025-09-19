@@ -686,7 +686,7 @@ const ChatsContent: React.FC = () => {
     } else {
       subdomain = ''; // No subdomain, e.g., "example.com" or "localhost"
     }
-    subdomain = 'testgroup3';
+    //subdomain = 'testgroup3';
     console.log("🔍 [W] getSubDomain result:", subdomain);
     return subdomain;
   }
@@ -1590,19 +1590,6 @@ const ChatsContent: React.FC = () => {
     });
   }
 
-  // Setup socket listeners with proper cleanup
-  useEffect(() => {
-    // Track socket connection state
-    const handleConnect = () => {
-      console.log("🔍 [W] Socket connected");
-      setSocketConnected(true);
-    };
-    
-      const handleDisconnect = () => {
-    console.log("🔍 [W] Socket disconnected");
-    setSocketConnected(false);
-  };
-
   const handleUserOut = useCallback((data: { ID: number }) => {
     console.log("🔍 [W] User logged out/disconnected:", data.ID);
     
@@ -1627,6 +1614,19 @@ const ChatsContent: React.FC = () => {
       return { ...prevGroup, members: updatedMembers };
     });
   }, []); // Remove the problematic dependency
+
+  // Setup socket listeners with proper cleanup
+  useEffect(() => {
+    // Track socket connection state
+    const handleConnect = () => {
+      console.log("🔍 [W] Socket connected");
+      setSocketConnected(true);
+    };
+    
+    const handleDisconnect = () => {
+      console.log("🔍 [W] Socket disconnected");
+      setSocketConnected(false);
+    };
 
     // Track page visibility for real-time messages
     const handleVisibilityChange = () => {
@@ -1755,24 +1755,24 @@ const ChatsContent: React.FC = () => {
       socket.off(ChatConst.USER_OUT, handleUserOut);
       socket.off(ChatConst.GET_GROUP_ONLINE_USERS, handleGetGroupOnlineUsers);
       socket.off(ChatConst.GET_GROUP_MSG, handleGetGroupMessages);
-              socket.off(ChatConst.BAN_GROUP_USER, handleBanGroupUser);
-        socket.off(ChatConst.UNBAN_GROUP_USER, handleUnbanGroupUser);
-        socket.off(ChatConst.UNBAN_GROUP_USERS, handleUnbanGroupUsers);
-            socket.off(ChatConst.GET_BANNED_USERS, handleGetBannedUsers);
-    socket.off(ChatConst.JOIN_TO_GROUP_ANON, handleJoinToGroupAnon);
-          socket.off(ChatConst.SEND_GROUP_MSG);
-    socket.off(ChatConst.DELETE_GROUP_MSG, handleDeleteGroupMsg);
-    socket.off(ChatConst.GROUP_UPDATED, handleGroupUpdated);
-            // Removed group blocked users socket cleanup - not needed
-    socket.off(ChatConst.CLEAR_GROUP_CHAT, handleClearGroupChat);
-    socket.off(ChatConst.EXPIRED, handleExpired);
-          socket.off(ChatConst.FORBIDDEN, handleForbidden);
+      socket.off(ChatConst.BAN_GROUP_USER, handleBanGroupUser);
+      socket.off(ChatConst.UNBAN_GROUP_USER, handleUnbanGroupUser);
+      socket.off(ChatConst.UNBAN_GROUP_USERS, handleUnbanGroupUsers);
+      socket.off(ChatConst.GET_BANNED_USERS, handleGetBannedUsers);
+      socket.off(ChatConst.JOIN_TO_GROUP_ANON, handleJoinToGroupAnon);
+      socket.off(ChatConst.SEND_GROUP_MSG);
+      socket.off(ChatConst.DELETE_GROUP_MSG, handleDeleteGroupMsg);
+      socket.off(ChatConst.GROUP_UPDATED, handleGroupUpdated);
+      // Removed group blocked users socket cleanup - not needed
+      socket.off(ChatConst.CLEAR_GROUP_CHAT, handleClearGroupChat);
+      socket.off(ChatConst.EXPIRED, handleExpired);
+      socket.off(ChatConst.FORBIDDEN, handleForbidden);
       socket.off(ChatConst.USER_TIMEOUT_NOTIFICATION, handleTimeoutNotification);
       socket.off(ChatConst.GET_CHAT_RULES, handleGetChatRules);
       socket.off(ChatConst.UPDATE_CHAT_RULES, handleUpdateChatRules);
       socket.off(ChatConst.EXPIRED);
     };
-  }, [handleSendGroupMsg, handleGetChatRules]); // Include handlers so socket listeners update when they change
+  }, []); // Empty dependency array to prevent re-running
 
   useEffect(() => {
     const options: { id: number; name: string }[] = [];
