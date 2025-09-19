@@ -1802,15 +1802,33 @@ const ChatsContent: React.FC = () => {
         // Load messages for this group using anonymous token
         console.log("🔍 [W] Calling getGroupMessages for group:", res.data.group.id, "with anonymous token");
         
-        // Load messages immediately and with a retry
-        getGroupMessages(token, res.data.group.id);
-        getGroupHistoryAnon(res.data.group.id, lastChatDate);
+        // Wait for socket connection before loading messages
+        let attempts = 0;
+        const maxAttempts = 25; // 5 seconds max wait
+        const waitForSocketAndLoadMessages = () => {
+          attempts++;
+          if (socket.connected) {
+            console.log("🔍 [W] Socket connected, loading messages for anonymous user (attempt", attempts, ")");
+            getGroupMessages(token, res.data.group.id);
+            getGroupHistoryAnon(res.data.group.id, lastChatDate);
+          } else if (attempts < maxAttempts) {
+            console.log("🔍 [W] Socket not connected yet, waiting... (attempt", attempts, "/", maxAttempts, ")");
+            setTimeout(waitForSocketAndLoadMessages, 200);
+          } else {
+            console.warn("🔍 [W] Socket connection timeout after", maxAttempts, "attempts, loading messages anyway");
+            getGroupMessages(token, res.data.group.id);
+            getGroupHistoryAnon(res.data.group.id, lastChatDate);
+          }
+        };
         
-        // Retry loading messages after a short delay to ensure socket connection
+        // Start the wait process
+        waitForSocketAndLoadMessages();
+        
+        // Also retry after a longer delay as backup
         setTimeout(() => {
-          console.log("🔍 [W] Retrying message load after anonymous registration");
+          console.log("🔍 [W] Backup message load after anonymous registration");
           getGroupMessages(token, res.data.group.id);
-        }, 1000);
+        }, 2000);
 
         // Trigger chat rules after successful anonymous registration
         setTimeout(() => {
@@ -2437,7 +2455,38 @@ const ChatsContent: React.FC = () => {
           setCurrentUserId(res.data.id);
           localStorage.setItem(USER_ID_KEY, res.data.id);
           localStorage.setItem(TOKEN_KEY, res.data.token);
-          loginAsReal(res.data.token, group?.id, getAnonId());
+          
+          // Load messages immediately after successful signup
+          if (group?.id) {
+            console.log("🔍 [W] Loading messages immediately after signup for group:", group.id);
+            
+            // Wait for socket connection before loading messages
+            let attempts = 0;
+            const maxAttempts = 25; // 5 seconds max wait
+            const waitForSocketAndLoadMessages = () => {
+              attempts++;
+              if (socket.connected) {
+                console.log("🔍 [W] Socket connected, loading messages after signup (attempt", attempts, ")");
+                getGroupMessages(res.data.token, group.id);
+              } else if (attempts < maxAttempts) {
+                console.log("🔍 [W] Socket not connected yet, waiting... (attempt", attempts, "/", maxAttempts, ")");
+                setTimeout(waitForSocketAndLoadMessages, 200);
+              } else {
+                console.warn("🔍 [W] Socket connection timeout after", maxAttempts, "attempts, loading messages anyway");
+                getGroupMessages(res.data.token, group.id);
+              }
+            };
+            
+            // Start the wait process
+            waitForSocketAndLoadMessages();
+            
+            // Also retry after a longer delay as backup
+            setTimeout(() => {
+              console.log("🔍 [W] Backup message load after signup");
+              getGroupMessages(res.data.token, group.id);
+            }, 2000);
+          }
+          
           setShowSigninPopup(false);
           setShowSignupPopup(false);
 
@@ -2446,7 +2495,7 @@ const ChatsContent: React.FC = () => {
             setTimeout(() => {
               console.log("🔍 [W] [Chat Rules] Triggering chat rules after successful signup");
               triggerChatRulesAfterLogin(res.data.token, 'logged-in');
-            }, 1000);
+            }, 1500);
           }
         }
       } else if (res.status === httpCode.NOT_MATCHED) {
@@ -2478,7 +2527,38 @@ const ChatsContent: React.FC = () => {
         setCurrentUserId(res.data.id);
         localStorage.setItem(USER_ID_KEY, res.data.id);
         localStorage.setItem(TOKEN_KEY, res.data.token);
-        loginAsReal(res.data.token, group?.id, getAnonId());
+        
+        // Load messages immediately after successful verification
+        if (group?.id) {
+          console.log("🔍 [W] Loading messages immediately after verification for group:", group.id);
+          
+          // Wait for socket connection before loading messages
+          let attempts = 0;
+          const maxAttempts = 25; // 5 seconds max wait
+          const waitForSocketAndLoadMessages = () => {
+            attempts++;
+            if (socket.connected) {
+              console.log("🔍 [W] Socket connected, loading messages after verification (attempt", attempts, ")");
+              getGroupMessages(res.data.token, group.id);
+            } else if (attempts < maxAttempts) {
+              console.log("🔍 [W] Socket not connected yet, waiting... (attempt", attempts, "/", maxAttempts, ")");
+              setTimeout(waitForSocketAndLoadMessages, 200);
+            } else {
+              console.warn("🔍 [W] Socket connection timeout after", maxAttempts, "attempts, loading messages anyway");
+              getGroupMessages(res.data.token, group.id);
+            }
+          };
+          
+          // Start the wait process
+          waitForSocketAndLoadMessages();
+          
+          // Also retry after a longer delay as backup
+          setTimeout(() => {
+            console.log("🔍 [W] Backup message load after verification");
+            getGroupMessages(res.data.token, group.id);
+          }, 2000);
+        }
+        
         setShowVerificationPopup(false);
 
         // Trigger chat rules after successful verification
@@ -2486,7 +2566,7 @@ const ChatsContent: React.FC = () => {
           setTimeout(() => {
             console.log("🔍 [W] [Chat Rules] Triggering chat rules after verification");
             triggerChatRulesAfterLogin(res.data.token, 'logged-in');
-          }, 1000);
+          }, 1500);
         }
       } else {
         toast.error("Invalid verification code. Please try again.");

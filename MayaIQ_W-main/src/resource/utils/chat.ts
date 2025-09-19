@@ -91,6 +91,13 @@ export const getMessages = (token: string | null, target: number | null | undefi
 
 export const getGroupMessages = (token: string | null, groupId: number | null | undefined) => {
   console.log("🔍 [W] Emitting GET_GROUP_MSG for group:", groupId, "with token:", token?.substring(0, 20) + "...");
+  console.log("🔍 [W] Socket connected status:", socket.connected);
+  console.log("🔍 [W] Socket ID:", socket.id);
+  
+  if (!socket.connected) {
+    console.warn("🔍 [W] WARNING: Attempting to emit GET_GROUP_MSG but socket is not connected!");
+  }
+  
   socket.emit(ChatConst.GET_GROUP_MSG, { token, groupId })
 }
 
