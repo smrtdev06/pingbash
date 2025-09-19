@@ -1377,16 +1377,17 @@ const ChatsContent: React.FC = () => {
     
     const groupId = data?.length && data[data.length - 1].group_id;
     console.log("🔍 [W] Message group ID:", groupId, "Selected group ID:", group?.id);
-    console.log("🔍 [W] Current groupMsgList length:", groupMsgList?.length);
     console.log("🔍 [W] Page visible:", pageVisible);
     
     if (groupId === group?.id) {
       if (pageVisible) {
         console.log("🔍 [W] Page visible - adding messages immediately");
-        const newList = mergeArrays(groupMsgList, data);
-        console.log("🔍 [W] Merged list length:", newList?.length);
-        console.log("🔍 [W] Setting groupMsgList to:", newList?.length, "messages");
-        setGroupMsgList(newList);
+        setGroupMsgList(prevList => {
+          const newList = mergeArrays(prevList, data);
+          console.log("🔍 [W] Merged list length:", newList?.length);
+          console.log("🔍 [W] Setting groupMsgList to:", newList?.length, "messages");
+          return newList;
+        });
       } else {
         console.log("🔍 [W] Page hidden - queuing messages for later");
         setPendingMessages(prev => mergeArrays(prev, data));
@@ -1394,7 +1395,7 @@ const ChatsContent: React.FC = () => {
     } else {
       console.log("🔍 [W] Message not for current group, ignoring");
     }
-  }, [group, groupMsgList, pageVisible, socketConnected]); // Add dependencies so it updates when these change
+  }, [group, pageVisible, socketConnected]); // Remove groupMsgList from dependencies to prevent infinite loop
 
   // Removed handleGetGroupBlockedUsers - group blocks should not affect message filtering
 
@@ -1613,21 +1614,19 @@ const ChatsContent: React.FC = () => {
     });
     
     // Update group members online status if applicable
-    if (group?.members) {
-      setGroup(prevGroup => {
-        if (!prevGroup) return prevGroup;
-        
-        const updatedMembers = prevGroup.members?.map(member => {
-          if (member.id === data.ID) {
-            return { ...member, isOnline: false };
-          }
-          return member;
-        });
-        
-        return { ...prevGroup, members: updatedMembers };
+    setGroup(prevGroup => {
+      if (!prevGroup?.members) return prevGroup;
+      
+      const updatedMembers = prevGroup.members.map(member => {
+        if (member.id === data.ID) {
+          return { ...member, isOnline: false };
+        }
+        return member;
       });
-    }
-  }, [group?.members]);
+      
+      return { ...prevGroup, members: updatedMembers };
+    });
+  }, []); // Remove the problematic dependency
 
     // Track page visibility for real-time messages
     const handleVisibilityChange = () => {
