@@ -41,12 +41,24 @@ socket.on('connect', () => {
   console.log('🔍 [W] Socket connected successfully!', socket.id);
 });
 
-socket.on('disconnect', () => {
-  console.log('🔍 [W] Socket disconnected');
+socket.on('disconnect', (reason) => {
+  console.log('🔍 [W] Socket disconnected:', reason);
 });
 
 socket.on('connect_error', (error) => {
   console.error('🔍 [W] Socket connection error:', error);
+});
+
+socket.on('reconnect', (attemptNumber) => {
+  console.log('🔍 [W] Socket reconnected after', attemptNumber, 'attempts');
+});
+
+socket.on('reconnect_error', (error) => {
+  console.error('🔍 [W] Socket reconnection error:', error);
+});
+
+socket.on('reconnect_failed', () => {
+  console.error('🔍 [W] Socket reconnection failed - max attempts reached');
 });
 
 // Log all socket events for debugging

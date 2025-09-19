@@ -239,9 +239,12 @@ const ChatsContent: React.FC = () => {
       // More frequent polling for iframes since visibility detection is unreliable
       const pollInterval = setInterval(() => {
         const token = localStorage.getItem(TOKEN_KEY);
-        if (token && socket.connected) {
+        // Only poll if socket is connected and we're not already waiting for a response
+        if (token && socket.connected && !socket.disconnected) {
           console.log("🔍 [W] Iframe polling - requesting latest messages");
           socket.emit(ChatConst.GET_GROUP_MSG, { token, groupId: group.id });
+        } else {
+          console.log("🔍 [W] Skipping iframe poll - socket not ready or disconnected");
         }
       }, 5000); // Poll every 5 seconds for iframes
       

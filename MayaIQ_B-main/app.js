@@ -33,20 +33,7 @@ const logStream = fs.createWriteStream(path.join(__dirname, 'requests.txt'), { f
 // Setup the logger with custom format
 app.use(morgan(customFormat, { stream: logStream }));
 
-const socketIO = require("socket.io")(http, {
-   cors: {
-      origin: "*"
-   }
-});
-
-
-//Add this before the app.get() block
-// socketIO.on("connection", (socket) => {
-//   console.log("One user connected")
-//   socket.on("disconnect", () => {
-//     console.log("A user disconnected");
-//   });
-// });
+// Socket.IO initialization moved to middlewares/socket/index.js to avoid duplicate servers
 
 
 
