@@ -1262,37 +1262,10 @@ const ChatsContent: React.FC = () => {
       setSocketConnected(true);
     };
     
-      const handleDisconnect = () => {
-    console.log("🔍 [F] Socket disconnected");
-    setSocketConnected(false);
-  };
-
-  const handleUserOut = useCallback((data: { ID: number }) => {
-    console.log("🔍 [F] User logged out/disconnected:", data.ID);
-    
-    // Update online users list by removing the disconnected user
-    setGroupOnlineUserIds(prevUserIds => {
-      const updatedUserIds = prevUserIds.filter(userId => userId !== data.ID);
-      console.log("🔍 [F] Updated online users after user out:", updatedUserIds.length);
-      return updatedUserIds;
-    });
-    
-    // Update group members online status if applicable
-    if (selectedChatGroup?.members) {
-      setSelectedChatGroup(prevGroup => {
-        if (!prevGroup) return prevGroup;
-        
-        const updatedMembers = prevGroup.members?.map(member => {
-          if (member.id === data.ID) {
-            return { ...member, isOnline: false };
-          }
-          return member;
-        });
-        
-        return { ...prevGroup, members: updatedMembers };
-      });
-    }
-  }, [selectedChatGroup?.members]);
+    const handleDisconnect = () => {
+      console.log("🔍 [F] Socket disconnected");
+      setSocketConnected(false);
+    };
 
     // Track page visibility for real-time messages
     const handleVisibilityChange = () => {
@@ -1345,18 +1318,9 @@ const ChatsContent: React.FC = () => {
 
     // Listen for page visibility changes
     document.addEventListener('visibilitychange', handleVisibilityChange);
-    
-    // Handle page close/refresh to emit logout event
-    const handleBeforeUnload = () => {
-      console.log("🔍 [F] Page is being closed/refreshed, emitting logout");
-      socket.emit(ChatConst.USER_OUT, localStorage.getItem(TOKEN_KEY));
-    };
-    
-    window.addEventListener('beforeunload', handleBeforeUnload);
 
     socket.on('connect', handleConnect);
     socket.on('disconnect', handleDisconnect);
-    socket.on(ChatConst.USER_OUT, handleUserOut);
     
     // Check initial connection state
     if (socket.connected) {
@@ -1404,17 +1368,15 @@ const ChatsContent: React.FC = () => {
 
                  // Cleanup listeners on unmount
    return () => {
-           document.removeEventListener('visibilitychange', handleVisibilityChange);
-      window.removeEventListener('beforeunload', handleBeforeUnload);
+     document.removeEventListener('visibilitychange', handleVisibilityChange);
      
      // Clear any pending reload timeout
      if (reloadTimeoutRef.current) {
        clearTimeout(reloadTimeoutRef.current);
      }
      
-           socket.off('connect', handleConnect);
-      socket.off('disconnect', handleDisconnect);
-      socket.off(ChatConst.USER_OUT, handleUserOut);
+     socket.off('connect', handleConnect);
+     socket.off('disconnect', handleDisconnect);
       socket.off(ChatConst.GET_MY_GROUPS, handleGetMyGroups);
       socket.off(ChatConst.GET_FAV_GROUPS, handleGetFavGroups);
       socket.off(ChatConst.BAN_GROUP_USER, handleBanGroupUser);

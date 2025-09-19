@@ -110,70 +110,11 @@ module.exports = async (http) => {
     // Function to verify user token and extract user ID
     const verifyUser = (token) => {
         try {
-            // Check if token exists and is not empty
-            if (!token || token.trim() === '') {
-                console.error("❌ Token verification failed: Token is null, undefined, or empty");
-                throw new Error("Token is missing");
-            }
-
-            // Check if token is an anonymous token
-            if (typeof token === 'string' && token.startsWith('anon')) {
-                console.log("🔍 Anonymous token detected:", token.substring(0, 15) + "...");
-                
-                // Anonymous tokens can have various formats:
-                // - anon123 (simple numeric user ID)
-                // - anonusergroupnameXXXXXX (complex format with group name)
-                
-                const anonContent = token.replace('anon', '');
-                if (!anonContent || anonContent.length === 0) {
-                    console.error("❌ Invalid anonymous token - no content after anon prefix:", token);
-                    throw new Error("Invalid anonymous token");
-                }
-                
-                // Try to extract numeric user ID from the end or use a hash-based approach
-                // For complex tokens like "anonusertestgroup3kkwclwlrpuj", we need a different strategy
-                
-                // First, try simple numeric format (anon123)
-                if (!isNaN(anonContent)) {
-                    return parseInt(anonContent);
-                }
-                
-                // For complex format, generate a consistent user ID based on the token
-                // This ensures the same token always maps to the same user ID
-                let hash = 0;
-                for (let i = 0; i < anonContent.length; i++) {
-                    const char = anonContent.charCodeAt(i);
-                    hash = ((hash << 5) - hash) + char;
-                    hash = hash & hash; // Convert to 32-bit integer
-                }
-                
-                // Ensure positive number and within reasonable range
-                const userId = Math.abs(hash) % 1000000 + 100000; // Range: 100000-1099999
-                console.log("🔍 Generated user ID for anonymous token:", userId, "from content:", anonContent.substring(0, 10) + "...");
-                return userId;
-            }
-
-            // Check if token looks like a JWT (has 3 parts separated by dots)
-            if (typeof token === 'string' && token.split('.').length !== 3) {
-                console.error("❌ Token verification failed: Token is not a valid JWT format");
-                console.error("❌ Token received:", token.substring(0, 50) + "...");
-                throw new Error("Malformed JWT token");
-            }
-
-            // Verify JWT token
             const { id } = jwt.verify(token, process.env.JWT_SECRET);
-            console.log("✅ JWT token verified successfully for user:", id);
             return id;
         } catch (error) {
-            if (error.name === 'JsonWebTokenError') {
-                console.error("❌ JWT Error:", error.message);
-                console.error("❌ Token that failed:", token ? token.substring(0, 50) + "..." : "null/undefined");
-            } else if (error.name === 'TokenExpiredError') {
-                console.error("❌ JWT Token expired:", error.message);
-            } else {
-                console.error("❌ Token verification error:", error.message);
-            }
-            throw new Error("Invalid token: " + error.message);
+            console.error("Failed to verify user token:", error);
+            throw new Error("Invalid token");
         }
     };
 
@@ -515,19 +456,14 @@ module.exports = async (http) => {
 
         // Event handler to fetch group messages
         socket.on(chatCode.GET_GROUP_MSG, async (data) => {
-            console.log("🔍 GET_GROUP_MSG received - Token exists:", !!data.token, "Group ID:", data.groupId);
-            
             if (!data.token || !data.groupId) {
-                console.error("❌ GET_GROUP_MSG: Missing token or groupId");
                 socket.emit(chatCode.FORBIDDEN, httpCode.FORBIDDEN);
             } else {
                 const res = isExpired(socket, data, chatCode.GET_GROUP_MSG);
                 if (!res.expired) {
                     try {
-                        console.log("🔍 Attempting to verify token for GET_GROUP_MSG...");
                         // Verify user token and extract user ID first
                         const loggedId = verifyUser(data.token);
-                        console.log("✅ Token verified successfully, user ID:", loggedId);
 
                         // Get user's IP address using improved detection
                         const clientIp = getClientIpAddress(socket);
@@ -596,30 +532,6 @@ module.exports = async (http) => {
             }
         });
 
-        // Event handler for user logout
-        socket.on(chatCode.USER_OUT, (data) => {
-            try {
-                console.log('User logged out:', data);
-
-                // Find and remove user from the users array
-                const loggedOutUserPos = users.findIndex(user => user.Socket === socket.id);
-
-                if (loggedOutUserPos !== -1) {
-                    const ID = users[loggedOutUserPos].ID;
-                    users.splice(loggedOutUserPos, 1);
-
-                    // Remove socket from the sockets object
-                    delete sockets[socket.id];
-
-                    // Broadcast USER_OUT event with logged out user's ID
-                    socket.broadcast.emit(chatCode.USER_OUT, { ID });
-                    console.log(`📤 User ${ID} logged out and removed from online users`);
-                }
-            } catch (error) {
-                console.error('Error handling user logout:', error);
-            }
-        });
-
         // Event handler for socket disconnection
         socket.on(chatCode.DISCONNECT, () => {
             try {
@@ -637,10 +549,9 @@ module.exports = async (http) => {
 
                     // Broadcast USER_OUT event with disconnected user's ID
                     socket.broadcast.emit(chatCode.USER_OUT, { ID });
-                    console.log(`📤 User ${ID} disconnected and removed from online users`);
                 }
             } catch (error) {
-                console.error('Error handling socket disconnect:', error);
+                console.error(error);
             }
         });
     });

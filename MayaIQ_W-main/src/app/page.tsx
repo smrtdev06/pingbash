@@ -861,12 +861,8 @@ const ChatsContent: React.FC = () => {
       if (token && !token.includes('anonuser')) {
         console.log("🔍 [W] Attempting to restore user session");
         try {
-                // First, cleanup any corrupted tokens
-      const { cleanupCorruptedTokens, restoreUserSession } = await import('../resource/utils/auth');
-      cleanupCorruptedTokens();
-      
-      // Try to restore user session first
-      const sessionRestored = await restoreUserSession();
+          const { restoreUserSession } = await import('../resource/utils/auth');
+          const sessionRestored = await restoreUserSession();
           
           if (sessionRestored) {
             console.log("🔍 [W] Session restored - user remains logged in");
@@ -1377,17 +1373,16 @@ const ChatsContent: React.FC = () => {
     
     const groupId = data?.length && data[data.length - 1].group_id;
     console.log("🔍 [W] Message group ID:", groupId, "Selected group ID:", group?.id);
+    console.log("🔍 [W] Current groupMsgList length:", groupMsgList?.length);
     console.log("🔍 [W] Page visible:", pageVisible);
     
     if (groupId === group?.id) {
       if (pageVisible) {
         console.log("🔍 [W] Page visible - adding messages immediately");
-        setGroupMsgList(prevList => {
-          const newList = mergeArrays(prevList, data);
-          console.log("🔍 [W] Merged list length:", newList?.length);
-          console.log("🔍 [W] Setting groupMsgList to:", newList?.length, "messages");
-          return newList;
-        });
+        const newList = mergeArrays(groupMsgList, data);
+        console.log("🔍 [W] Merged list length:", newList?.length);
+        console.log("🔍 [W] Setting groupMsgList to:", newList?.length, "messages");
+        setGroupMsgList(newList);
       } else {
         console.log("🔍 [W] Page hidden - queuing messages for later");
         setPendingMessages(prev => mergeArrays(prev, data));
@@ -1395,7 +1390,7 @@ const ChatsContent: React.FC = () => {
     } else {
       console.log("🔍 [W] Message not for current group, ignoring");
     }
-  }, [group, pageVisible, socketConnected]); // Remove groupMsgList from dependencies to prevent infinite loop
+  }, [group, groupMsgList, pageVisible, socketConnected]); // Add dependencies so it updates when these change
 
   // Removed handleGetGroupBlockedUsers - group blocks should not affect message filtering
 
@@ -1590,31 +1585,6 @@ const ChatsContent: React.FC = () => {
     });
   }
 
-  const handleUserOut = useCallback((data: { ID: number }) => {
-    console.log("🔍 [W] User logged out/disconnected:", data.ID);
-    
-    // Update online users list by removing the disconnected user
-    setGroupOnlineUserIds(prevUserIds => {
-      const updatedUserIds = prevUserIds.filter(userId => userId !== data.ID);
-      console.log("🔍 [W] Updated online users after user out:", updatedUserIds.length);
-      return updatedUserIds;
-    });
-    
-    // Update group members online status if applicable
-    setGroup(prevGroup => {
-      if (!prevGroup?.members) return prevGroup;
-      
-      const updatedMembers = prevGroup.members.map(member => {
-        if (member.id === data.ID) {
-          return { ...member, isOnline: false };
-        }
-        return member;
-      });
-      
-      return { ...prevGroup, members: updatedMembers };
-    });
-  }, []); // Remove the problematic dependency
-
   // Setup socket listeners with proper cleanup
   useEffect(() => {
     // Track socket connection state
@@ -1679,18 +1649,9 @@ const ChatsContent: React.FC = () => {
 
     // Listen for page visibility changes
     document.addEventListener('visibilitychange', handleVisibilityChange);
-    
-    // Handle page close/refresh to emit logout event
-    const handleBeforeUnload = () => {
-      console.log("🔍 [W] Page is being closed/refreshed, emitting logout");
-      socket.emit(ChatConst.USER_OUT, localStorage.getItem(TOKEN_KEY));
-    };
-    
-    window.addEventListener('beforeunload', handleBeforeUnload);
 
     socket.on('connect', handleConnect);
     socket.on('disconnect', handleDisconnect);
-    socket.on(ChatConst.USER_OUT, handleUserOut);
     
     // Check initial connection state
     if (socket.connected) {
@@ -1743,7 +1704,6 @@ const ChatsContent: React.FC = () => {
     // Cleanup listeners on unmount
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
-      window.removeEventListener('beforeunload', handleBeforeUnload);
       
       // Clear any pending reload timeout
       if (reloadTimeoutRef.current) {
@@ -1752,27 +1712,26 @@ const ChatsContent: React.FC = () => {
       
       socket.off('connect', handleConnect);
       socket.off('disconnect', handleDisconnect);
-      socket.off(ChatConst.USER_OUT, handleUserOut);
       socket.off(ChatConst.GET_GROUP_ONLINE_USERS, handleGetGroupOnlineUsers);
       socket.off(ChatConst.GET_GROUP_MSG, handleGetGroupMessages);
-      socket.off(ChatConst.BAN_GROUP_USER, handleBanGroupUser);
-      socket.off(ChatConst.UNBAN_GROUP_USER, handleUnbanGroupUser);
-      socket.off(ChatConst.UNBAN_GROUP_USERS, handleUnbanGroupUsers);
-      socket.off(ChatConst.GET_BANNED_USERS, handleGetBannedUsers);
-      socket.off(ChatConst.JOIN_TO_GROUP_ANON, handleJoinToGroupAnon);
-      socket.off(ChatConst.SEND_GROUP_MSG);
-      socket.off(ChatConst.DELETE_GROUP_MSG, handleDeleteGroupMsg);
-      socket.off(ChatConst.GROUP_UPDATED, handleGroupUpdated);
-      // Removed group blocked users socket cleanup - not needed
-      socket.off(ChatConst.CLEAR_GROUP_CHAT, handleClearGroupChat);
-      socket.off(ChatConst.EXPIRED, handleExpired);
-      socket.off(ChatConst.FORBIDDEN, handleForbidden);
+              socket.off(ChatConst.BAN_GROUP_USER, handleBanGroupUser);
+        socket.off(ChatConst.UNBAN_GROUP_USER, handleUnbanGroupUser);
+        socket.off(ChatConst.UNBAN_GROUP_USERS, handleUnbanGroupUsers);
+            socket.off(ChatConst.GET_BANNED_USERS, handleGetBannedUsers);
+    socket.off(ChatConst.JOIN_TO_GROUP_ANON, handleJoinToGroupAnon);
+          socket.off(ChatConst.SEND_GROUP_MSG);
+    socket.off(ChatConst.DELETE_GROUP_MSG, handleDeleteGroupMsg);
+    socket.off(ChatConst.GROUP_UPDATED, handleGroupUpdated);
+            // Removed group blocked users socket cleanup - not needed
+    socket.off(ChatConst.CLEAR_GROUP_CHAT, handleClearGroupChat);
+    socket.off(ChatConst.EXPIRED, handleExpired);
+          socket.off(ChatConst.FORBIDDEN, handleForbidden);
       socket.off(ChatConst.USER_TIMEOUT_NOTIFICATION, handleTimeoutNotification);
       socket.off(ChatConst.GET_CHAT_RULES, handleGetChatRules);
       socket.off(ChatConst.UPDATE_CHAT_RULES, handleUpdateChatRules);
       socket.off(ChatConst.EXPIRED);
     };
-  }, []); // Empty dependency array to prevent re-running
+  }, [handleSendGroupMsg, handleGetChatRules]); // Include handlers so socket listeners update when they change
 
   useEffect(() => {
     const options: { id: number; name: string }[] = [];
@@ -2243,16 +2202,7 @@ const ChatsContent: React.FC = () => {
       setCurrentUserId(-1)
       dispatch(setIsLoading(true))
       setStayAsAnon(false)
-      
-      // Emit logout event and disconnect socket for immediate cleanup
       userLoggedOut()
-      
-      // Small delay to ensure the logout event is sent before disconnecting
-      setTimeout(() => {
-        socket.disconnect();
-        console.log("🔍 [W] Socket disconnected on logout");
-      }, 100);
-      
       localStorage.removeItem(TOKEN_KEY)
       
       // Stop token refresh interval on logout
