@@ -619,6 +619,8 @@ const ChatsContent: React.FC = () => {
         setTimeout(() => {
           console.log("🔍 [F] Loading messages after socket connection");
           getGroupMessages(token, selectedChatGroup.id);
+          // Check for persisted timeout state after loading group
+          checkPersistedTimeout(selectedChatGroup.id);
         }, 100);
       }
     }

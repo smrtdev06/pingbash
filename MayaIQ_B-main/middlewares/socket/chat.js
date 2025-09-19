@@ -736,11 +736,13 @@ module.exports = (socket, users) => {
             const receiverSocketIds = receiveUsers.map(user => user?.Socket);
             const receiverSockets = receiverSocketIds.map(socketId => sockets[socketId]);
             
-            const group = await Controller.getGroup(groupId);
+            // Broadcast group update to all members so they see updated timeout status
+            const updatedGroup = await Controller.getGroup(groupId);
+            
             if (receiverSockets && receiverSockets.length > 0) {
-                receiverSockets.map(receiverSocket => receiverSocket && receiverSocket.emit(chatCode.GROUP_UPDATED, group));
+                receiverSockets.map(receiverSocket => receiverSocket && receiverSocket.emit(chatCode.GROUP_UPDATED, updatedGroup));
             }
-            socket.emit(chatCode.GROUP_UPDATED, group)
+            socket.emit(chatCode.GROUP_UPDATED, updatedGroup)
         } catch (error) {
             console.error("Error sending message:", error);
             socket.emit(chatCode.SERVER_ERROR, httpCode.SERVER_ERROR);

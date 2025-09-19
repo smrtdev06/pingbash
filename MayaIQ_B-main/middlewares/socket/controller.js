@@ -357,7 +357,8 @@ const getGroup = async (groupId) => {
                     'manage_censored', gu2.manage_censored,
                     'ban_user', gu2.ban_user,
                     'filter_mode', gu2.filter_mode,
-                    'to_time', gu2.to_time
+                    'to_time', gu2.to_time,
+                    'is_timed_out', CASE WHEN gu2.to_time IS NOT NULL AND gu2.to_time > CURRENT_TIMESTAMP THEN true ELSE false END
                 )
             ) FILTER (WHERE gu2.user_id IS NOT NULL) AS members
         FROM 

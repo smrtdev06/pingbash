@@ -883,6 +883,8 @@ const ChatsContent: React.FC = () => {
             } else if (groupId && groupId !== 0) {
               loginAsReal(token, groupId, getAnonId());
               getGroupMessages(token, groupId);
+              // Check for persisted timeout state after loading group
+              setTimeout(() => checkPersistedTimeout(groupId), 500);
             }
             return; // Exit early since user is logged in
           } else {
@@ -913,6 +915,8 @@ const ChatsContent: React.FC = () => {
           console.log("🔍 [W] Using stored group ID:", groupId);
           loginAsReal(currentToken, groupId, getAnonId());
           getGroupMessages(currentToken, groupId);
+          // Check for persisted timeout state after loading group
+          setTimeout(() => checkPersistedTimeout(groupId), 500);
         } else {
           console.log("🔍 [W] No group specified - user needs to select a group");
         }

@@ -176,7 +176,8 @@ const Message: React.FC<MessageProps> = ({
       const senderInfo = group?.members?.find(user => user.id == message.Sender_Id);
       const myMemInfo = group?.members?.find(user => user.id == userId);
       if (userId > 0 && userId < 100000) {
-        if ((myMemInfo?.role_id == 1 || group.creater_id == userId  || myMemInfo?.role_id == 2) && senderInfo?.role_id != 1 && senderInfo?.role_id != 2 && isTimedout(senderInfo?.to_time ?? "") == "") {
+        // Show TO button if: user has permissions AND sender is not admin/mod AND sender is not currently timed out
+        if ((myMemInfo?.role_id == 1 || group.creater_id == userId  || myMemInfo?.role_id == 2) && senderInfo?.role_id != 1 && senderInfo?.role_id != 2 && !senderInfo?.is_timed_out) {
           setShowTO(true)
         } else {
           setShowTO(false)

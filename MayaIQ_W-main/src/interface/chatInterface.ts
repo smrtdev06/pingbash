@@ -35,6 +35,7 @@ export interface ChatUser {
   ban_user: boolean | null;
   filter_mode: number;
   to_time: string | null;
+  is_timed_out?: boolean;
 }
 
 export interface ChatOption {
