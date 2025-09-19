@@ -40,6 +40,9 @@ import {
 } from "@/resource/utils/chat";
 import { Popover, PopoverTrigger, PopoverContent } from "@nextui-org/popover";
 import ChatConst from "@/resource/const/chat_const";
+// Temporarily disabled ad imports for debugging
+// import AdBanner from "@/components/AdBanner";
+// import { getAdConfig, trackAdImpression, trackAdClosure } from "@/components/AdConfig";
 import {
   CHAT_BOX_HEIGHT,
   CHAT_BOX_WIDTH,
@@ -215,6 +218,16 @@ const ChatsContent: React.FC = () => {
   const [timeoutData, setTimeoutData] = useState<{timeoutMinutes: number; expiresAt: string} | null>(null);
   const [showVerificationPopup, setShowVerificationPopup] = useState(false);
   const [verificationEmail, setVerificationEmail] = useState('');
+
+  // Ad monetization state - temporarily disabled for debugging
+  // const [adConfig] = useState(() => getAdConfig('chatboxTop'));
+
+  // Track ad impression when chat loads - temporarily disabled for debugging
+  // useEffect(() => {
+  //   if (group?.id && adConfig.enabled) {
+  //     trackAdImpression('chatbox-top', adConfig.adSlot);
+  //   }
+  // }, [group?.id, adConfig]);
 
   // Debug group changes
   useEffect(() => {
@@ -2854,6 +2867,18 @@ const ChatsContent: React.FC = () => {
               <article className={`overflow-y-auto h-full ${hideChat ? "hidden" : "flex"} flex-col px-[14px] pt-[20px] overflow-x-hidden min-h-20`}
                 style={{ background: groupConfig.colors.msgBg ?? MSG_BG_COLOR }}
               >
+                {/* Ad Banner at the top of chatbox - Temporarily disabled for debugging */}
+                {/* {false && <div className="mb-4 -mx-[14px] -mt-[20px]">
+                  <AdBanner
+                    adSlot={getAdConfig('chatboxTop').adSlot}
+                    adFormat={getAdConfig('chatboxTop').adFormat}
+                    className="flex-shrink-0"
+                    onClose={() => {
+                      trackAdClosure('chatbox-top', getAdConfig('chatboxTop').adSlot);
+                    }}
+                  />
+                </div>} */}
+                
                 {/* <div className="text-center text-sm"><button onClick={() => setLastChatDate(lastChatDate + 1)}
                   style={{color: groupConfig.colors.msgText ?? MSG_COLOR}}  
                 >Read More</button></div> */}
