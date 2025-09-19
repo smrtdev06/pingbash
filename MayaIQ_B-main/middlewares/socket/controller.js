@@ -14,7 +14,7 @@ const nodemailer = require("nodemailer");
 
 const transporter = nodemailer.createTransport({
     host: process.env.SMTP_HOST,
-    port: process.env.SMTP_PORT || 587,
+    port: parseInt(process.env.SMTP_PORT) || 587,
     secure: false, // true for 465, false for other ports
     auth: {
         user: process.env.SMTP_USER,
@@ -22,6 +22,16 @@ const transporter = nodemailer.createTransport({
     },
     tls: {
         rejectUnauthorized: false
+    }
+});
+
+// Test SMTP connection on startup
+transporter.verify(function(error, success) {
+    if (error) {
+        console.log('❌ SMTP connection failed:', error);
+        console.log('📧 Email notifications will not work. Please check SMTP configuration in .env file');
+    } else {
+        console.log('✅ SMTP server is ready to send emails');
     }
 });
 
@@ -51,17 +61,41 @@ const sendNotificationEamil = async (emails, message) => {
 
 const sendPrivateMessageEmailNotification = async (senderId, receiverId, messageContent) => {
     try {
+        console.log(`📧 [EMAIL] Attempting to send email notification: sender=${senderId}, receiver=${receiverId}`);
+        
         // Get sender and receiver information
         const senderResult = await PG_query(`SELECT "Name", "Email" FROM "Users" WHERE "Id" = ${senderId}`);
         const receiverResult = await PG_query(`SELECT "Name", "Email" FROM "Users" WHERE "Id" = ${receiverId}`);
         
-        if (senderResult.rows.length === 0 || receiverResult.rows.length === 0) {
-            console.log("Sender or receiver not found for email notification");
+        console.log(`📧 [EMAIL] Sender query result: ${senderResult.rows.length} rows`);
+        console.log(`📧 [EMAIL] Receiver query result: ${receiverResult.rows.length} rows`);
+        
+        if (senderResult.rows.length === 0) {
+            console.log(`❌ [EMAIL] Sender with ID ${senderId} not found in database`);
+            return;
+        }
+        
+        if (receiverResult.rows.length === 0) {
+            console.log(`❌ [EMAIL] Receiver with ID ${receiverId} not found in database`);
             return;
         }
         
         const sender = senderResult.rows[0];
         const receiver = receiverResult.rows[0];
+        
+        console.log(`📧 [EMAIL] Sender: ${sender.Name} (${sender.Email})`);
+        console.log(`📧 [EMAIL] Receiver: ${receiver.Name} (${receiver.Email})`);
+        
+        if (!receiver.Email) {
+            console.log(`❌ [EMAIL] Receiver ${receiver.Name} has no email address`);
+            return;
+        }
+        
+        // Check SMTP configuration
+        if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
+            console.log(`❌ [EMAIL] SMTP configuration incomplete. Host: ${process.env.SMTP_HOST}, User: ${process.env.SMTP_USER}, Pass: ${process.env.SMTP_PASS ? '[SET]' : '[NOT SET]'}`);
+            return;
+        }
         
         // Truncate message if too long
         const truncatedMessage = messageContent.length > 100 
@@ -89,17 +123,33 @@ const sendPrivateMessageEmailNotification = async (senderId, receiverId, message
                 </div>
             </div>`;
         
-        await transporter.sendMail({
+        console.log(`📧 [EMAIL] Sending email to ${receiver.Email} with subject: ${subject}`);
+        
+        const mailOptions = {
             from: `${process.env.SMTP_FROM_NAME || 'Pingbash'} <${process.env.SMTP_FROM_EMAIL || process.env.SMTP_USER}>`,
             to: receiver.Email,
             subject: subject,
             html: content
+        };
+        
+        console.log(`📧 [EMAIL] Mail options:`, {
+            from: mailOptions.from,
+            to: mailOptions.to,
+            subject: mailOptions.subject
         });
         
-        console.log(`📧 Email notification sent to ${receiver.Email} for private message from ${sender.Name}`);
+        const result = await transporter.sendMail(mailOptions);
+        
+        console.log(`✅ [EMAIL] Email notification sent successfully to ${receiver.Email} for private message from ${sender.Name}`);
+        console.log(`📧 [EMAIL] Message ID: ${result.messageId}`);
         
     } catch (error) {
-        console.error("Error sending private message email notification:", error);
+        console.error("❌ [EMAIL] Error sending private message email notification:", error);
+        console.error("❌ [EMAIL] Error details:", {
+            message: error.message,
+            code: error.code,
+            response: error.response
+        });
     }
 };
 
@@ -651,14 +701,34 @@ const deleteGroupMsg = async (msgId) => {
     }
 };
 
-const timoutUser = async (groupId, userId) => {
+const timeoutUser = async (groupId, userId) => {
     try {
-        // let toTime = Date.now() + TIMEOUT_MINS * 60 * 1000
-        await PG_query(`UPDATE group_users
+        console.log(`⏰ [TIMEOUT] Setting timeout for user ${userId} in group ${groupId} for ${TIMEOUT_MINS} minutes`);
+        
+        // First ensure the user exists in group_users table
+        const userExists = await PG_query(`SELECT * FROM group_users WHERE group_id = ${groupId} AND user_id = ${userId};`);
+        
+        if (userExists.rows.length === 0) {
+            console.log(`⏰ [TIMEOUT] User ${userId} not found in group ${groupId}, adding them first`);
+            await PG_query(`INSERT INTO group_users (group_id, user_id, is_member, role_id, banned) 
+                VALUES (${groupId}, ${userId}, 1, 0, 0) 
+                ON CONFLICT (group_id, user_id) DO NOTHING;`);
+        }
+        
+        // Set timeout
+        const result = await PG_query(`UPDATE group_users
             SET to_time = CURRENT_TIMESTAMP + INTERVAL '${TIMEOUT_MINS} minutes'
-            WHERE group_id = ${groupId} AND user_id = ${userId};`)        
+            WHERE group_id = ${groupId} AND user_id = ${userId}
+            RETURNING to_time;`);
+            
+        if (result.rows.length > 0) {
+            console.log(`✅ [TIMEOUT] User ${userId} timed out until: ${result.rows[0].to_time}`);
+        } else {
+            console.log(`❌ [TIMEOUT] Failed to timeout user ${userId} in group ${groupId}`);
+        }
+        
     } catch (error) {
-        console.log(error);
+        console.error(`❌ [TIMEOUT] Error timing out user ${userId} in group ${groupId}:`, error);
     }
 }
 
@@ -694,21 +764,27 @@ const timeoutIpAddress = async (groupId, ipAddress, timeoutBy) => {
 
 const checkUserTimeout = async (groupId, userId) => {
     try {
+        console.log(`⏰ [CHECK] Checking timeout for user ${userId} in group ${groupId}`);
+        
         // Check if user is timed out in the group_users table
         const result = await PG_query(`SELECT to_time FROM group_users 
             WHERE group_id = ${groupId} AND user_id = ${userId} 
             AND to_time IS NOT NULL AND to_time > CURRENT_TIMESTAMP;`);
         
+        console.log(`⏰ [CHECK] Timeout check result: ${result.rows.length} rows`);
+        
         if (result.rows.length > 0) {
+            console.log(`⏰ [CHECK] User ${userId} is timed out until: ${result.rows[0].to_time}`);
             return {
                 isTimedOut: true,
                 expiresAt: result.rows[0].to_time
             };
         }
         
+        console.log(`⏰ [CHECK] User ${userId} is not timed out`);
         return { isTimedOut: false };
     } catch (error) {
-        console.log("Error checking user timeout:", error);
+        console.error(`❌ [CHECK] Error checking user timeout for user ${userId} in group ${groupId}:`, error);
         return { isTimedOut: false };
     }
 }
@@ -1388,7 +1464,7 @@ module.exports = {
     sendGroupNotification,
     getLastMessage,
     updateGroupChatboxStyle,
-    timoutUser,
+    timeoutUser,
     timeoutIpAddress,
     checkUserTimeout,
     checkIpTimeout,

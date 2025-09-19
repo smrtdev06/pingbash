@@ -8,7 +8,7 @@ JWT_SECRET='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9'
 JWT_EXPIRES_IN='30d'
 
 SMTP_HOST='smtp.gmail.com'
-SMPT_PORT='587'
+SMTP_PORT='587'
 SMTP_USER='no-reply@pingbash.com'
 SMTP_PASS='your_app_password_here'
 SMTP_FROM_NAME='Pingbash'

@@ -694,7 +694,7 @@ module.exports = (socket, users) => {
                 }
             } else {
                 // For verified users, apply user-based timeout
-                await Controller.timoutUser(groupId, userId);
+                await Controller.timeoutUser(groupId, userId);
                 console.log(`⏰ User ${userId} timed out in group ${groupId} by ${senderId} for ${chatCode.TIMEOUT_MINS} minutes`);
                 
                 // Send notification to the timed out user
