@@ -1048,12 +1048,51 @@ const ChatsContent: React.FC = () => {
     }
   }
 
+  // Check for persisted timeout state
+  const checkPersistedTimeout = useCallback((groupId: number) => {
+    try {
+      const timeoutKey = `timeout_${groupId}`;
+      const timeoutInfo = localStorage.getItem(timeoutKey);
+      
+      if (timeoutInfo) {
+        const parsed = JSON.parse(timeoutInfo);
+        const now = new Date().getTime();
+        const expiry = new Date(parsed.expiresAt).getTime();
+        
+        if (expiry > now) {
+          // Timeout is still active
+          console.log(`⏰ [F] Restored timeout state for group ${groupId}, expires at ${parsed.expiresAt}`);
+          setTimeoutData({ timeoutMinutes: parsed.timeoutMinutes, expiresAt: parsed.expiresAt });
+          setShowTimeoutNotification(true);
+          return true;
+        } else {
+          // Timeout has expired, clean up
+          console.log(`⏰ [F] Timeout expired for group ${groupId}, cleaning up`);
+          localStorage.removeItem(timeoutKey);
+          return false;
+        }
+      }
+      return false;
+    } catch (error) {
+      console.error(`⏰ [F] Error checking persisted timeout:`, error);
+      return false;
+    }
+  }, []);
+
   const handleTimeoutNotification = (data: any) => {
     console.log(`⏰ [F] Timeout notification received:`, data);
-    const { timeoutMinutes, expiresAt, message } = data;
+    const { timeoutMinutes, expiresAt, message, groupId } = data;
     
     setTimeoutData({ timeoutMinutes, expiresAt });
     setShowTimeoutNotification(true);
+    
+    // Persist timeout state in localStorage for page refresh persistence
+    const timeoutInfo = {
+      groupId: groupId,
+      expiresAt: expiresAt,
+      timeoutMinutes: timeoutMinutes
+    };
+    localStorage.setItem(`timeout_${groupId}`, JSON.stringify(timeoutInfo));
     
     // Show toast message as well
     toast.error(message, {
@@ -1520,6 +1559,9 @@ const ChatsContent: React.FC = () => {
       setSelectedChatGroup(group);
       console.log("🔍 setSelectedChatGroup called with group:", group.id);
     }
+    
+    // Check for persisted timeout state when switching groups
+    checkPersistedTimeout(group.id);
     
     // To call the function to send the socket function to make the Read_Time to set
     readGroupMsg(token, group.id)

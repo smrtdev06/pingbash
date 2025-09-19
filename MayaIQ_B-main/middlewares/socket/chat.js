@@ -1572,6 +1572,25 @@ module.exports = (socket, users) => {
 
             console.log(`✅ User ${userId} authorized to join group ${groupId} (IP: ${clientIp})`);
 
+            // Check if user is timed out (for notification purposes, not blocking join)
+            const groupInfo = await Controller.getGroup(groupId);
+            const isGroupCreator = groupInfo && groupInfo.creater_id === userId;
+            
+            if (!isGroupCreator) {
+                const userTimeoutCheck = await Controller.checkUserTimeout(groupId, userId);
+                if (userTimeoutCheck.isTimedOut) {
+                    console.log(`⏰ [JOIN] User ${userId} is timed out until ${userTimeoutCheck.expiresAt}`);
+                    // Send timeout notification immediately on join
+                    socket.emit(chatCode.USER_TIMEOUT_NOTIFICATION, {
+                        groupId: groupId,
+                        timeoutMinutes: 15,
+                        message: `You are temporarily restricted from sending messages for 15 minutes.`,
+                        expiresAt: new Date(userTimeoutCheck.expiresAt).toISOString()
+                    });
+                    console.log(`📢 [JOIN] Timeout notification sent to user ${userId} on group join`);
+                }
+            }
+
             // Add user to users list if not already present for real-time messaging
             if (!users.find(user => user.ID == userId)) {
                 console.log(`🔗 Adding user ${userId} to socket tracking for real-time messages`);

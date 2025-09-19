@@ -485,11 +485,36 @@ module.exports = async (http) => {
                             console.log(`👑 Group creator ${loggedId} accessing group ${data.groupId} - IP ban check skipped`);
                         }
 
+                        // Check if user is timed out (for notification purposes, not blocking)
+                        let timeoutStatus = null;
+                        if (!isGroupCreator) {
+                            const userTimeoutCheck = await Controller.checkUserTimeout(data.groupId, loggedId);
+                            if (userTimeoutCheck.isTimedOut) {
+                                timeoutStatus = {
+                                    isTimedOut: true,
+                                    expiresAt: userTimeoutCheck.expiresAt,
+                                    timeoutMinutes: 15
+                                };
+                                console.log(`⏰ [GET_MSG] User ${loggedId} is timed out until ${userTimeoutCheck.expiresAt}`);
+                            }
+                        }
+
                         // Retrieve group messages
                         const groupMessages = await Controller.getGroupMsg(data.groupId);
 
                         // Emit GET_GROUP_MSG event with messages list to the socket
                         socket.emit(chatCode.GET_GROUP_MSG, groupMessages);
+                        
+                        // If user is timed out, send timeout notification
+                        if (timeoutStatus) {
+                            socket.emit(chatCode.USER_TIMEOUT_NOTIFICATION, {
+                                groupId: data.groupId,
+                                timeoutMinutes: timeoutStatus.timeoutMinutes,
+                                message: `You are temporarily restricted from sending messages for ${timeoutStatus.timeoutMinutes} minutes.`,
+                                expiresAt: new Date(timeoutStatus.expiresAt).toISOString()
+                            });
+                            console.log(`📢 [GET_MSG] Timeout notification sent to user ${loggedId} on message load`);
+                        }
                     } catch (error) {
                         console.error("Error getting group messages:", error);
                         socket.emit(chatCode.SERVER_ERROR, httpCode.SERVER_ERROR);
