@@ -72,6 +72,51 @@ export const validateToken = async (token: string): Promise<boolean> => {
   }
 };
 
+// Function to validate token format before using it
+export const validateTokenFormat = (token: string | null): { isValid: boolean; type: 'jwt' | 'anonymous' | 'invalid'; error?: string } => {
+  if (!token || token.trim() === '') {
+    return { isValid: false, type: 'invalid', error: 'Token is null, undefined, or empty' };
+  }
+
+  // Check if it's an anonymous token
+  if (token.startsWith('anon')) {
+    const anonUserId = token.replace('anon', '');
+    if (anonUserId && !isNaN(Number(anonUserId))) {
+      return { isValid: true, type: 'anonymous' };
+    } else {
+      return { isValid: false, type: 'invalid', error: 'Invalid anonymous token format' };
+    }
+  }
+
+  // Check if it's a JWT token (should have 3 parts separated by dots)
+  if (token.split('.').length === 3) {
+    return { isValid: true, type: 'jwt' };
+  }
+
+  return { isValid: false, type: 'invalid', error: 'Token is not a valid JWT or anonymous token format' };
+};
+
+// Function to safely get token from localStorage with validation
+export const getSafeToken = (): string | null => {
+  try {
+    const token = localStorage.getItem(TOKEN_KEY);
+    const validation = validateTokenFormat(token);
+    
+    if (!validation.isValid) {
+      console.error("❌ [F] Invalid token in localStorage:", validation.error);
+      // Clear invalid token
+      localStorage.removeItem(TOKEN_KEY);
+      return null;
+    }
+    
+    console.log("✅ [F] Valid token retrieved from localStorage, type:", validation.type);
+    return token;
+  } catch (error) {
+    console.error("❌ [F] Error accessing localStorage:", error);
+    return null;
+  }
+};
+
 // Function to check if user should remain logged in
 export const shouldMaintainSession = (): boolean => {
   const token = localStorage.getItem(TOKEN_KEY);
@@ -158,5 +203,36 @@ export const stopTokenRefreshInterval = (intervalId: NodeJS.Timeout | null) => {
   if (intervalId) {
     console.log("🔄 [F] Stopping token refresh interval");
     clearInterval(intervalId);
+  }
+}; 
+
+// Function to cleanup corrupted tokens on app initialization
+export const cleanupCorruptedTokens = (): void => {
+  try {
+    console.log("🔍 [F] Checking for corrupted tokens in localStorage...");
+    
+    const token = localStorage.getItem(TOKEN_KEY);
+    if (token) {
+      const validation = validateTokenFormat(token);
+      if (!validation.isValid) {
+        console.warn("⚠️ [F] Found corrupted token, removing:", validation.error);
+        localStorage.removeItem(TOKEN_KEY);
+        localStorage.removeItem(USER_ID_KEY);
+        localStorage.removeItem('anonToken');
+        localStorage.removeItem('browser_uuid');
+        console.log("✅ [F] Corrupted tokens cleaned up");
+      } else {
+        console.log("✅ [F] Token validation passed, type:", validation.type);
+      }
+    } else {
+      console.log("🔍 [F] No token found in localStorage");
+    }
+  } catch (error) {
+    console.error("❌ [F] Error during token cleanup:", error);
+    // If there's any error, clear all auth-related data to be safe
+    localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(USER_ID_KEY);
+    localStorage.removeItem('anonToken');
+    localStorage.removeItem('browser_uuid');
   }
 }; 

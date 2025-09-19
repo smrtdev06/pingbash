@@ -861,8 +861,12 @@ const ChatsContent: React.FC = () => {
       if (token && !token.includes('anonuser')) {
         console.log("🔍 [W] Attempting to restore user session");
         try {
-          const { restoreUserSession } = await import('../resource/utils/auth');
-          const sessionRestored = await restoreUserSession();
+                // First, cleanup any corrupted tokens
+      const { cleanupCorruptedTokens, restoreUserSession } = await import('../resource/utils/auth');
+      cleanupCorruptedTokens();
+      
+      // Try to restore user session first
+      const sessionRestored = await restoreUserSession();
           
           if (sessionRestored) {
             console.log("🔍 [W] Session restored - user remains logged in");

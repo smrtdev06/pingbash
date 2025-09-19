@@ -110,11 +110,46 @@ module.exports = async (http) => {
     // Function to verify user token and extract user ID
     const verifyUser = (token) => {
         try {
+            // Check if token exists and is not empty
+            if (!token || token.trim() === '') {
+                console.error("❌ Token verification failed: Token is null, undefined, or empty");
+                throw new Error("Token is missing");
+            }
+
+            // Check if token is an anonymous token
+            if (typeof token === 'string' && token.startsWith('anon')) {
+                console.log("🔍 Anonymous token detected:", token.substring(0, 10) + "...");
+                // Extract user ID from anonymous token (format: "anonUSER_ID")
+                const anonUserId = token.replace('anon', '');
+                if (anonUserId && !isNaN(anonUserId)) {
+                    return parseInt(anonUserId);
+                } else {
+                    console.error("❌ Invalid anonymous token format:", token);
+                    throw new Error("Invalid anonymous token");
+                }
+            }
+
+            // Check if token looks like a JWT (has 3 parts separated by dots)
+            if (typeof token === 'string' && token.split('.').length !== 3) {
+                console.error("❌ Token verification failed: Token is not a valid JWT format");
+                console.error("❌ Token received:", token.substring(0, 50) + "...");
+                throw new Error("Malformed JWT token");
+            }
+
+            // Verify JWT token
             const { id } = jwt.verify(token, process.env.JWT_SECRET);
+            console.log("✅ JWT token verified successfully for user:", id);
             return id;
         } catch (error) {
-            console.error("Failed to verify user token:", error);
-            throw new Error("Invalid token");
+            if (error.name === 'JsonWebTokenError') {
+                console.error("❌ JWT Error:", error.message);
+                console.error("❌ Token that failed:", token ? token.substring(0, 50) + "..." : "null/undefined");
+            } else if (error.name === 'TokenExpiredError') {
+                console.error("❌ JWT Token expired:", error.message);
+            } else {
+                console.error("❌ Token verification error:", error.message);
+            }
+            throw new Error("Invalid token: " + error.message);
         }
     };
 
@@ -456,14 +491,19 @@ module.exports = async (http) => {
 
         // Event handler to fetch group messages
         socket.on(chatCode.GET_GROUP_MSG, async (data) => {
+            console.log("🔍 GET_GROUP_MSG received - Token exists:", !!data.token, "Group ID:", data.groupId);
+            
             if (!data.token || !data.groupId) {
+                console.error("❌ GET_GROUP_MSG: Missing token or groupId");
                 socket.emit(chatCode.FORBIDDEN, httpCode.FORBIDDEN);
             } else {
                 const res = isExpired(socket, data, chatCode.GET_GROUP_MSG);
                 if (!res.expired) {
                     try {
+                        console.log("🔍 Attempting to verify token for GET_GROUP_MSG...");
                         // Verify user token and extract user ID first
                         const loggedId = verifyUser(data.token);
+                        console.log("✅ Token verified successfully, user ID:", loggedId);
 
                         // Get user's IP address using improved detection
                         const clientIp = getClientIpAddress(socket);

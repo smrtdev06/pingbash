@@ -2,6 +2,7 @@ import { SERVER_URL } from "../const/const";
 import io from "socket.io-client";
 import ChatConst from "../const/chat_const";
 import { makeTextSafe } from "./helpers";
+import { validateTokenFormat } from "./auth";
 
 export const socket = io(SERVER_URL);
 
@@ -112,6 +113,27 @@ export const getMessages = (token: string | null, target: number | null | undefi
 }
 
 export const getGroupMessages = (token: string | null, groupId: number | null | undefined) => {
+  console.log("🔍 [F] getGroupMessages called - Group:", groupId, "Token exists:", !!token);
+  
+  if (!token) {
+    console.error("❌ [F] Cannot get group messages: Token is null or undefined");
+    return;
+  }
+  
+  if (!groupId) {
+    console.error("❌ [F] Cannot get group messages: Group ID is null or undefined");
+    return;
+  }
+
+  // Validate token format before sending
+  const validation = validateTokenFormat(token);
+  if (!validation.isValid) {
+    console.error("❌ [F] Invalid token format detected:", validation.error);
+    return;
+  }
+  console.log("✅ [F] Token validation passed, type:", validation.type);
+  
+  console.log("🔍 [F] Emitting GET_GROUP_MSG for group:", groupId, "with token:", token.substring(0, 20) + "...");
   socket.emit(ChatConst.GET_GROUP_MSG, { token, groupId })
 }
 
