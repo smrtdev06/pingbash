@@ -61,9 +61,13 @@ socket.on('reconnect_failed', () => {
   console.error('🔍 [W] Socket reconnection failed - max attempts reached');
 });
 
-// Log all socket events for debugging
+// Log important socket events for debugging (reduced for CPU optimization)
 socket.onAny((eventName, ...args) => {
-  console.log('🔍 [W] Socket received event:', eventName, args);
+  // Only log important events to reduce console spam and CPU usage
+  const importantEvents = ['connect', 'disconnect', 'connect_error', 'reconnect', 'forbidden'];
+  if (importantEvents.includes(eventName)) {
+    console.log('🔍 [W] Socket event:', eventName, args);
+  }
 });
 
 export const userLoggedIn = (token: string | null) => {
