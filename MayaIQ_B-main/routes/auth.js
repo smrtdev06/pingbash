@@ -3,6 +3,7 @@
  const jwt = require('jsonwebtoken');
  const { registerValidation, loginValidation, confirmValidation, newPassValidation, resendEmailVailidation } = require('../libs/validations.js');
  const { errorHandler } = require("../libs/handlers.js");
+ const authenticateUser = require('./verifyToken.js');
  
  const httpCode = require('../libs/httpCode.js');
  const { PG_query } = require('../db/index.js');
