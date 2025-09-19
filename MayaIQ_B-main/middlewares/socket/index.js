@@ -129,6 +129,19 @@ module.exports = async (http) => {
     // Socket.IO event handlers
     io.on('connection', (socket) => {
         console.log("A user connected");
+        
+        // Check if connection is from iframe
+        const isEmbedded = socket.handshake.query.embedded === 'true';
+        const userAgent = socket.handshake.query.userAgent || 'unknown';
+        
+        if (isEmbedded) {
+            console.log("🔍 [BACKEND] Iframe connection detected:", {
+                socketId: socket.id,
+                userAgent: userAgent.substring(0, 50) + '...',
+                origin: socket.handshake.headers.origin,
+                referer: socket.handshake.headers.referer
+            });
+        }
 
         // Emit REFRESH event to the connected socket
         socket.emit(chatCode.REFRESH);

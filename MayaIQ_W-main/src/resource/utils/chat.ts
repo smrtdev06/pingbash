@@ -3,7 +3,38 @@ import io from "socket.io-client";
 import ChatConst from "../const/chat_const";
 import { makeTextSafe } from "./helpers";
 
-export const socket = io(SERVER_URL);
+// Enhanced socket configuration for iframe embedding
+export const socket = io(SERVER_URL, {
+  // Enable cross-origin requests for iframe embedding
+  withCredentials: false,
+  
+  // Transport options for better iframe compatibility
+  transports: ['websocket', 'polling'],
+  
+  // Upgrade transport for better performance
+  upgrade: true,
+  
+  // Timeout configurations
+  timeout: 20000,
+  
+  // Reconnection settings for iframe stability
+  reconnection: true,
+  reconnectionAttempts: 10,
+  reconnectionDelay: 1000,
+  reconnectionDelayMax: 5000,
+  
+  // Force new connection for iframe
+  forceNew: false,
+  
+  // Additional options for iframe embedding
+  autoConnect: true,
+  
+  // Query parameters to help with iframe detection
+  query: {
+    embedded: typeof window !== 'undefined' && window.self !== window.top ? 'true' : 'false',
+    userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : 'unknown'
+  }
+});
 
 // Add socket connection debugging
 socket.on('connect', () => {

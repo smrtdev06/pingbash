@@ -229,6 +229,29 @@ const ChatsContent: React.FC = () => {
   //   }
   // }, [group?.id, adConfig]);
 
+  // Enhanced message polling for iframe embedding
+  useEffect(() => {
+    const isInIframe = window.self !== window.top;
+    
+    if (isInIframe && group?.id && socketConnected) {
+      console.log("🔍 [W] Setting up iframe message polling for group:", group.id);
+      
+      // More frequent polling for iframes since visibility detection is unreliable
+      const pollInterval = setInterval(() => {
+        const token = localStorage.getItem(TOKEN_KEY);
+        if (token && socket.connected) {
+          console.log("🔍 [W] Iframe polling - requesting latest messages");
+          socket.emit(ChatConst.GET_GROUP_MSG, { token, groupId: group.id });
+        }
+      }, 5000); // Poll every 5 seconds for iframes
+      
+      return () => {
+        console.log("🔍 [W] Cleaning up iframe polling");
+        clearInterval(pollInterval);
+      };
+    }
+  }, [group?.id, socketConnected]);
+
   // Debug group changes
   useEffect(() => {
     console.log("🔍 [W] group changed to:", group?.id, group?.name);
@@ -1613,9 +1636,41 @@ const ChatsContent: React.FC = () => {
 
     // Track page visibility for real-time messages
     const handleVisibilityChange = () => {
-      const isVisible = !document.hidden;
+      // Enhanced visibility detection for iframe embedding
+      let isVisible = true;
+      
+      // Check if we're in an iframe
+      const isInIframe = window.self !== window.top;
+      
+      if (isInIframe) {
+        // For iframes, use multiple detection methods
+        console.log("🔍 [W] Iframe detected - using enhanced visibility detection");
+        
+        // Method 1: Document visibility (may not work in iframe)
+        const documentVisible = !document.hidden;
+        
+        // Method 2: Window focus state
+        const windowFocused = document.hasFocus();
+        
+        // Method 3: Assume visible in iframe (since visibility API is unreliable)
+        const assumeVisible = true;
+        
+        // For iframes, be more permissive with visibility
+        isVisible = documentVisible || windowFocused || assumeVisible;
+        
+        console.log("🔍 [W] Iframe visibility check:", {
+          documentVisible,
+          windowFocused,
+          assumeVisible,
+          finalResult: isVisible
+        });
+      } else {
+        // Standard visibility detection for non-iframe
+        isVisible = !document.hidden;
+      }
+      
       setPageVisible(isVisible);
-      console.log("🔍 [W] Page visibility changed:", isVisible ? 'visible' : 'hidden');
+      console.log("🔍 [W] Page visibility changed:", isVisible ? 'visible' : 'hidden', isInIframe ? "(iframe)" : "(direct)");
       
       if (isVisible) {
         console.log("🔍 [W] Window reactivated - polling for new messages");
@@ -1662,6 +1717,31 @@ const ChatsContent: React.FC = () => {
 
     // Listen for page visibility changes
     document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    // Additional event listeners for iframe compatibility
+    const isInIframe = window.self !== window.top;
+    if (isInIframe) {
+      console.log("🔍 [W] Adding iframe-specific event listeners");
+      
+      // Focus/blur events work better in iframes than visibility API
+      window.addEventListener('focus', () => {
+        console.log("🔍 [W] Iframe window focused");
+        handleVisibilityChange();
+      });
+      
+      window.addEventListener('blur', () => {
+        console.log("🔍 [W] Iframe window blurred");
+        setPageVisible(false);
+      });
+      
+      // Message events from parent window (if needed)
+      window.addEventListener('message', (event) => {
+        if (event.data && event.data.type === 'iframe-visibility-change') {
+          console.log("🔍 [W] Received visibility message from parent:", event.data.visible);
+          setPageVisible(event.data.visible);
+        }
+      });
+    }
 
     socket.on('connect', handleConnect);
     socket.on('disconnect', handleDisconnect);
@@ -1717,6 +1797,13 @@ const ChatsContent: React.FC = () => {
     // Cleanup listeners on unmount
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
+      
+      // Cleanup iframe-specific event listeners
+      if (window.self !== window.top) {
+        window.removeEventListener('focus', handleVisibilityChange);
+        window.removeEventListener('blur', () => setPageVisible(false));
+        // Note: message event listener cleanup is handled automatically
+      }
       
       // Clear any pending reload timeout
       if (reloadTimeoutRef.current) {
