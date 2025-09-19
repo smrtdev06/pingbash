@@ -281,19 +281,42 @@ module.exports = (socket, users) => {
             // Retrieve message list for the user
             const msgList = await Controller.getGroupMsg(groupId);
             
-            console.log("======receiverIds =======", receiverIds);
-            console.log("======= users ==========", users.length);
-            console.log("======= receiverSocketIds =======", receiverSocketIds);
+            console.log("🔍 [BROADCAST] Group:", groupId, "Sender:", senderId);
+            console.log("🔍 [BROADCAST] Total receiverIds:", receiverIds?.length, receiverIds);
+            console.log("🔍 [BROADCAST] Total users tracked:", users.length);
+            console.log("🔍 [BROADCAST] Matched receiveUsers:", receiveUsers?.length, receiveUsers?.map(u => ({ ID: u.ID, Socket: u.Socket })));
+            console.log("🔍 [BROADCAST] Valid receiverSockets:", receiverSockets?.length);
             
-            // Send message to all receivers
+            // Enhanced broadcasting: Try to reach all group members
+            let successfulBroadcasts = 0;
+            
             if (receiverSockets && receiverSockets.length > 0) {
-                receiverSockets.forEach(receiverSocket => {
+                receiverSockets.forEach((receiverSocket, index) => {
                     if (receiverSocket && typeof receiverSocket.emit === 'function') {
-                        receiverSocket.emit(chatCode.SEND_GROUP_MSG, msgList);
-                        receiverSocket.emit(chatCode.GET_GROUP_ONLINE_USERS, receiveUsers?.map(u => u.ID));
+                        try {
+                            receiverSocket.emit(chatCode.SEND_GROUP_MSG, msgList);
+                            receiverSocket.emit(chatCode.GET_GROUP_ONLINE_USERS, receiveUsers?.map(u => u.ID));
+                            successfulBroadcasts++;
+                            console.log(`🔍 [BROADCAST] ✅ Message sent to socket ${index + 1}/${receiverSockets.length}`);
+                        } catch (error) {
+                            console.log(`🔍 [BROADCAST] ❌ Failed to send to socket ${index + 1}:`, error.message);
+                        }
+                    } else {
+                        console.log(`🔍 [BROADCAST] ❌ Invalid socket ${index + 1}: socket is null or missing emit function`);
                     }
                 });
             }
+            
+            // Additional broadcast attempt: Use socket.io rooms for better reliability
+            try {
+                // Broadcast to all sockets in the group room (if implemented)
+                socket.to(`group_${groupId}`).emit(chatCode.SEND_GROUP_MSG, msgList);
+                console.log(`🔍 [BROADCAST] 📡 Room broadcast sent to group_${groupId}`);
+            } catch (error) {
+                console.log(`🔍 [BROADCAST] ❌ Room broadcast failed:`, error.message);
+            }
+            
+            console.log(`🔍 [BROADCAST] Summary: ${successfulBroadcasts}/${receiverSockets?.length || 0} direct broadcasts successful`);
             
             // Send message back to sender
             socket.emit(chatCode.SEND_GROUP_MSG, msgList);
@@ -1492,6 +1515,14 @@ module.exports = (socket, users) => {
                 users.push({ ID: anonId, Socket: socket.id });
                 sockets[socket.id] = socket;
             }
+            
+            // Join socket room for better message broadcasting
+            try {
+                socket.join(`group_${groupId}`);
+                console.log(`🔗 Anonymous user ${anonId} joined socket room: group_${groupId}`);
+            } catch (error) {
+                console.log(`🔗 Failed to join socket room for anonymous user ${anonId}:`, error.message);
+            }
 
             // Get group info
             const group = await Controller.getGroup(groupId);
@@ -1607,6 +1638,14 @@ module.exports = (socket, users) => {
                     sockets[socket.id] = socket;
                 }
             }
+            
+            // Join socket room for better message broadcasting
+            try {
+                socket.join(`group_${groupId}`);
+                console.log(`🔗 User ${userId} joined socket room: group_${groupId}`);
+            } catch (error) {
+                console.log(`🔗 Failed to join socket room for user ${userId}:`, error.message);
+            }
 
             // Save message to the database
             await Controller.joinToGroup(groupId, userId);
@@ -1638,4 +1677,33 @@ module.exports = (socket, users) => {
             socket.emit(chatCode.SERVER_ERROR, httpCode.SERVER_ERROR);
         }
     });
+    
+    // Periodic cleanup of stale socket connections (run once per socket handler setup)
+    if (!global.socketCleanupStarted) {
+        global.socketCleanupStarted = true;
+        setInterval(() => {
+            const beforeCount = users.length;
+            const validUsers = [];
+            
+            users.forEach(user => {
+                const socket = sockets[user.Socket];
+                if (socket && socket.connected) {
+                    validUsers.push(user);
+                } else {
+                    // Remove stale socket
+                    delete sockets[user.Socket];
+                    console.log(`🧹 Cleaned up stale socket for user ${user.ID}`);
+                }
+            });
+            
+            users.length = 0;
+            users.push(...validUsers);
+            
+            if (beforeCount !== users.length) {
+                console.log(`🧹 Socket cleanup: ${beforeCount} -> ${users.length} active connections`);
+            }
+        }, 30000); // Clean up every 30 seconds
+        
+        console.log("🧹 Socket cleanup service started");
+    }
 };
