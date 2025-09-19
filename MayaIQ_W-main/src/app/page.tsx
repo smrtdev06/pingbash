@@ -200,11 +200,6 @@ const ChatsContent: React.FC = () => {
   }, [socketConnected]);
   const [pageVisible, setPageVisible] = useState(true);
   const reloadTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  
-  // CPU optimization states for iframe polling
-  const [iframePollingEnabled, setIframePollingEnabled] = useState(true);
-  const pollCountRef = useRef(0);
-  const lastPollResetRef = useRef(Date.now());
 
   // Debug pageVisible changes
   useEffect(() => {
@@ -233,104 +228,6 @@ const ChatsContent: React.FC = () => {
   //     trackAdImpression('chatbox-top', adConfig.adSlot);
   //   }
   // }, [group?.id, adConfig]);
-
-  // Enhanced message polling for iframe embedding with CPU optimization
-  useEffect(() => {
-    const isInIframe = window.self !== window.top;
-    
-    // Allow disabling iframe polling via localStorage for emergency CPU relief
-    const pollingDisabled = localStorage.getItem('DISABLE_IFRAME_POLLING') === 'true';
-    if (pollingDisabled) {
-      console.log("🔍 [W] Iframe polling disabled via localStorage");
-      return;
-    }
-    
-    if (isInIframe && group?.id && socketConnected) {
-      console.log("🔍 [W] Setting up optimized iframe message polling for group:", group.id);
-      
-      let isPolling = false;
-      let lastPollTime = 0;
-      let consecutiveEmptyPolls = 0;
-      const MIN_POLL_INTERVAL = 10000; // Minimum 10 seconds between polls
-      const MAX_POLL_INTERVAL = 30000; // Maximum 30 seconds when inactive
-      
-      // Adaptive polling based on activity with CPU monitoring
-      const adaptivePoll = () => {
-        const now = Date.now();
-        const timeSinceLastPoll = now - lastPollTime;
-        
-        // CPU usage monitoring - reset count every minute
-        if (now - lastPollResetRef.current > 60000) {
-          pollCountRef.current = 0;
-          lastPollResetRef.current = now;
-          if (!iframePollingEnabled) {
-            console.log("🔍 [W] Re-enabling iframe polling after cooldown");
-            setIframePollingEnabled(true);
-          }
-        }
-        
-        // Disable polling if too many requests in the last minute
-        if (pollCountRef.current > 10) { // Max 10 polls per minute
-          if (iframePollingEnabled) {
-            console.warn("🔍 [W] Disabling iframe polling - too many requests (CPU protection)");
-            setIframePollingEnabled(false);
-          }
-          return;
-        }
-        
-        // Skip if polling is disabled, already polling, or too soon since last poll
-        if (!iframePollingEnabled || isPolling || timeSinceLastPoll < MIN_POLL_INTERVAL) {
-          return;
-        }
-        
-        const token = localStorage.getItem(TOKEN_KEY);
-        if (!token || !socket.connected || socket.disconnected) {
-          return;
-        }
-        
-        isPolling = true;
-        lastPollTime = now;
-        pollCountRef.current++;
-        
-        console.log("🔍 [W] Iframe adaptive poll", pollCountRef.current, "- requesting latest messages (interval:", timeSinceLastPoll, "ms)");
-        
-        // Listen for response to track polling efficiency
-        const responseHandler = (messages: any) => {
-          isPolling = false;
-          if (!messages || (Array.isArray(messages) && messages.length === 0)) {
-            consecutiveEmptyPolls++;
-          } else {
-            consecutiveEmptyPolls = 0; // Reset on activity
-          }
-        };
-        
-        // Set up one-time listener for this poll
-        socket.once(ChatConst.GET_GROUP_MSG, responseHandler);
-        
-        // Timeout handler in case no response
-        setTimeout(() => {
-          socket.off(ChatConst.GET_GROUP_MSG, responseHandler);
-          isPolling = false;
-        }, 5000);
-        
-        socket.emit(ChatConst.GET_GROUP_MSG, { token, groupId: group.id });
-      };
-      
-      // Start with longer interval and adjust based on activity
-      const baseInterval = consecutiveEmptyPolls > 3 ? MAX_POLL_INTERVAL : MIN_POLL_INTERVAL;
-      const pollInterval = setInterval(adaptivePoll, baseInterval);
-      
-      // Initial poll after a short delay
-      const initialPollTimeout = setTimeout(adaptivePoll, 2000);
-      
-      return () => {
-        console.log("🔍 [W] Cleaning up optimized iframe polling");
-        clearInterval(pollInterval);
-        clearTimeout(initialPollTimeout);
-        isPolling = false;
-      };
-    }
-  }, [group?.id, socketConnected]);
 
   // Debug group changes
   useEffect(() => {
@@ -1716,44 +1613,12 @@ const ChatsContent: React.FC = () => {
 
     // Track page visibility for real-time messages
     const handleVisibilityChange = () => {
-      // Enhanced visibility detection for iframe embedding
-      let isVisible = true;
-      
-      // Check if we're in an iframe
-      const isInIframe = window.self !== window.top;
-      
-      if (isInIframe) {
-        // For iframes, use multiple detection methods
-        console.log("🔍 [W] Iframe detected - using enhanced visibility detection");
-        
-        // Method 1: Document visibility (may not work in iframe)
-        const documentVisible = !document.hidden;
-        
-        // Method 2: Window focus state
-        const windowFocused = document.hasFocus();
-        
-        // Method 3: Assume visible in iframe (since visibility API is unreliable)
-        const assumeVisible = true;
-        
-        // For iframes, be more permissive with visibility
-        isVisible = documentVisible || windowFocused || assumeVisible;
-        
-        console.log("🔍 [W] Iframe visibility check:", {
-          documentVisible,
-          windowFocused,
-          assumeVisible,
-          finalResult: isVisible
-        });
-      } else {
-        // Standard visibility detection for non-iframe
-        isVisible = !document.hidden;
-      }
-      
+      const isVisible = !document.hidden;
       setPageVisible(isVisible);
-      console.log("🔍 [W] Page visibility changed:", isVisible ? 'visible' : 'hidden', isInIframe ? "(iframe)" : "(direct)");
+      console.log("🔍 [W] Page visibility changed:", isVisible ? 'visible' : 'hidden');
       
       if (isVisible) {
-        console.log("🔍 [W] Window reactivated - processing pending messages");
+        console.log("🔍 [W] Window reactivated - polling for new messages");
         
         // Clear any existing timeout
         if (reloadTimeoutRef.current) {
@@ -1773,22 +1638,17 @@ const ChatsContent: React.FC = () => {
           return []; // Clear pending messages
         });
         
-        // For iframes, skip visibility-triggered polling since adaptive polling handles it
-        if (isInIframe) {
-          console.log("🔍 [W] Skipping visibility poll for iframe - adaptive polling active");
-          return;
-        }
-        
-        // Debounce polling to prevent rapid successive calls (only for non-iframe)
+        // Debounce polling to prevent rapid successive calls
         reloadTimeoutRef.current = setTimeout(() => {
           // Get current values directly from localStorage to avoid stale closure
           const token = localStorage.getItem(TOKEN_KEY);
           const selectedGroupId = localStorage.getItem(SELECTED_GROUP_ID);
           
-          console.log("🔍 [W] Visibility-triggered poll - Token:", !!token, "Group ID:", selectedGroupId);
+          console.log("🔍 [W] Polling for new messages - Token:", !!token, "Group ID:", selectedGroupId);
           
           if (token && selectedGroupId && socket.connected) {
-            console.log("🔍 [W] Emitting GET_GROUP_MSG for visibility change");
+            console.log("🔍 [W] Emitting GET_GROUP_MSG to poll for new messages");
+            // Use socket to poll for messages, just like when sending a new message
             socket.emit(ChatConst.GET_GROUP_MSG, {
               token: token,
               groupId: parseInt(selectedGroupId)
@@ -1802,31 +1662,6 @@ const ChatsContent: React.FC = () => {
 
     // Listen for page visibility changes
     document.addEventListener('visibilitychange', handleVisibilityChange);
-    
-    // Additional event listeners for iframe compatibility
-    const isInIframe = window.self !== window.top;
-    if (isInIframe) {
-      console.log("🔍 [W] Adding iframe-specific event listeners");
-      
-      // Focus/blur events work better in iframes than visibility API
-      window.addEventListener('focus', () => {
-        console.log("🔍 [W] Iframe window focused");
-        handleVisibilityChange();
-      });
-      
-      window.addEventListener('blur', () => {
-        console.log("🔍 [W] Iframe window blurred");
-        setPageVisible(false);
-      });
-      
-      // Message events from parent window (if needed)
-      window.addEventListener('message', (event) => {
-        if (event.data && event.data.type === 'iframe-visibility-change') {
-          console.log("🔍 [W] Received visibility message from parent:", event.data.visible);
-          setPageVisible(event.data.visible);
-        }
-      });
-    }
 
     socket.on('connect', handleConnect);
     socket.on('disconnect', handleDisconnect);
@@ -1882,13 +1717,6 @@ const ChatsContent: React.FC = () => {
     // Cleanup listeners on unmount
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
-      
-      // Cleanup iframe-specific event listeners
-      if (window.self !== window.top) {
-        window.removeEventListener('focus', handleVisibilityChange);
-        window.removeEventListener('blur', () => setPageVisible(false));
-        // Note: message event listener cleanup is handled automatically
-      }
       
       // Clear any pending reload timeout
       if (reloadTimeoutRef.current) {

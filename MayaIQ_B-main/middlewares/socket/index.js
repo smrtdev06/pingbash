@@ -14,16 +14,8 @@ const Controller = require("./controller.js");
 const chatSocket = require("./chat");
 const { users, sockets } = require("../../libs/global.js");
 
-// Global variable to track if socket server is already initialized
-let socketServerInitialized = false;
-
 // Export the function responsible for setting up the chat server
 module.exports = async (http) => {
-    // Prevent multiple socket server initializations
-    if (socketServerInitialized) {
-        console.log("⚠️ Socket server already initialized, skipping duplicate initialization");
-        return;
-    }
     // Helper function to extract real client IP address
     const getClientIpAddress = (socket) => {
         // Try different methods to get the real client IP
@@ -133,36 +125,10 @@ module.exports = async (http) => {
             methods: ['GET', 'POST']
         }
     });
-    
-    // Mark socket server as initialized
-    socketServerInitialized = true;
-    console.log("✅ Socket.IO server initialized successfully");
 
     // Socket.IO event handlers
     io.on('connection', (socket) => {
-        console.log("A user connected - Socket ID:", socket.id);
-        
-        // Check if connection is from iframe
-        const isEmbedded = socket.handshake.query.embedded === 'true';
-        const userAgent = socket.handshake.query.userAgent || 'unknown';
-        
-        if (isEmbedded) {
-            console.log("🔍 [BACKEND] Iframe connection detected:", {
-                socketId: socket.id,
-                userAgent: userAgent.substring(0, 50) + '...',
-                origin: socket.handshake.headers.origin,
-                referer: socket.handshake.headers.referer
-            });
-        }
-        
-        // Add error handling for socket connection
-        socket.on('error', (error) => {
-            console.error("Socket error for", socket.id, ":", error);
-        });
-        
-        socket.on('disconnect', (reason) => {
-            console.log("User disconnected - Socket ID:", socket.id, "Reason:", reason);
-        });
+        console.log("A user connected");
 
         // Emit REFRESH event to the connected socket
         socket.emit(chatCode.REFRESH);

@@ -3,71 +3,24 @@ import io from "socket.io-client";
 import ChatConst from "../const/chat_const";
 import { makeTextSafe } from "./helpers";
 
-// Enhanced socket configuration for iframe embedding
-export const socket = io(SERVER_URL, {
-  // Enable cross-origin requests for iframe embedding
-  withCredentials: false,
-  
-  // Transport options for better iframe compatibility
-  transports: ['websocket', 'polling'],
-  
-  // Upgrade transport for better performance
-  upgrade: true,
-  
-  // Timeout configurations
-  timeout: 20000,
-  
-  // Reconnection settings for iframe stability
-  reconnection: true,
-  reconnectionAttempts: 10,
-  reconnectionDelay: 1000,
-  reconnectionDelayMax: 5000,
-  
-  // Force new connection for iframe
-  forceNew: false,
-  
-  // Additional options for iframe embedding
-  autoConnect: true,
-  
-  // Query parameters to help with iframe detection
-  query: {
-    embedded: typeof window !== 'undefined' && window.self !== window.top ? 'true' : 'false',
-    userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : 'unknown'
-  }
-});
+export const socket = io(SERVER_URL);
 
 // Add socket connection debugging
 socket.on('connect', () => {
   console.log('🔍 [W] Socket connected successfully!', socket.id);
 });
 
-socket.on('disconnect', (reason) => {
-  console.log('🔍 [W] Socket disconnected:', reason);
+socket.on('disconnect', () => {
+  console.log('🔍 [W] Socket disconnected');
 });
 
 socket.on('connect_error', (error) => {
   console.error('🔍 [W] Socket connection error:', error);
 });
 
-socket.on('reconnect', (attemptNumber) => {
-  console.log('🔍 [W] Socket reconnected after', attemptNumber, 'attempts');
-});
-
-socket.on('reconnect_error', (error) => {
-  console.error('🔍 [W] Socket reconnection error:', error);
-});
-
-socket.on('reconnect_failed', () => {
-  console.error('🔍 [W] Socket reconnection failed - max attempts reached');
-});
-
-// Log important socket events for debugging (reduced for CPU optimization)
+// Log all socket events for debugging
 socket.onAny((eventName, ...args) => {
-  // Only log important events to reduce console spam and CPU usage
-  const importantEvents = ['connect', 'disconnect', 'connect_error', 'reconnect', 'forbidden'];
-  if (importantEvents.includes(eventName)) {
-    console.log('🔍 [W] Socket event:', eventName, args);
-  }
+  console.log('🔍 [W] Socket received event:', eventName, args);
 });
 
 export const userLoggedIn = (token: string | null) => {
