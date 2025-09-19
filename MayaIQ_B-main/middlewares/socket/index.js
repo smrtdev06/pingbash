@@ -462,8 +462,21 @@ module.exports = async (http) => {
                 const res = isExpired(socket, data, chatCode.GET_GROUP_MSG);
                 if (!res.expired) {
                     try {
-                        // Verify user token and extract user ID first
-                        const loggedId = verifyUser(data.token);
+                        // Handle anonymous vs authenticated users
+                        let loggedId;
+                        let isAnonymousUser = false;
+                        
+                        if (data.token && data.token.includes('anonuser')) {
+                            // Anonymous user - extract ID from token
+                            isAnonymousUser = true;
+                            const anonIdMatch = data.token.match(/anonuser.*?(\d+)/);
+                            loggedId = anonIdMatch ? parseInt(anonIdMatch[1]) : null;
+                            console.log(`📝 [GET_MSG] Anonymous user detected - ID: ${loggedId}`);
+                        } else {
+                            // Authenticated user - verify JWT token
+                            loggedId = verifyUser(data.token);
+                            console.log(`📝 [GET_MSG] Authenticated user detected - ID: ${loggedId}`);
+                        }
 
                         // Get user's IP address using improved detection
                         const clientIp = getClientIpAddress(socket);
@@ -487,7 +500,8 @@ module.exports = async (http) => {
 
                         // Check if user is timed out (for notification purposes, not blocking)
                         let timeoutStatus = null;
-                        if (!isGroupCreator) {
+                        if (!isGroupCreator && !isAnonymousUser) {
+                            // Only check timeout for authenticated users (anonymous users don't have timeout records)
                             const userTimeoutCheck = await Controller.checkUserTimeout(data.groupId, loggedId);
                             if (userTimeoutCheck.isTimedOut) {
                                 timeoutStatus = {
@@ -496,6 +510,17 @@ module.exports = async (http) => {
                                     timeoutMinutes: 15
                                 };
                                 console.log(`⏰ [GET_MSG] User ${loggedId} is timed out until ${userTimeoutCheck.expiresAt}`);
+                            }
+                        } else if (isAnonymousUser) {
+                            // For anonymous users, check IP timeout
+                            const ipTimeoutCheck = await Controller.checkIpTimeout(data.groupId, clientIp);
+                            if (ipTimeoutCheck.isTimedOut) {
+                                timeoutStatus = {
+                                    isTimedOut: true,
+                                    expiresAt: ipTimeoutCheck.expiresAt,
+                                    timeoutMinutes: 15
+                                };
+                                console.log(`⏰ [GET_MSG] Anonymous user IP ${clientIp} is timed out until ${ipTimeoutCheck.expiresAt}`);
                             }
                         }
 
