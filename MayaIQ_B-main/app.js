@@ -32,7 +32,7 @@ const logStream = fs.createWriteStream(path.join(__dirname, 'requests.txt'), { f
 
 // Setup the logger with custom format
 app.use(morgan(customFormat, { stream: logStream }));
-
+app.use(express.static(path.join(__dirname, 'widget')));
 const socketIO = require("socket.io")(http, {
    cors: {
       origin: "*"

@@ -26,5 +26,36 @@
          return res.status(httpCode.SERVER_ERROR).send({ error: "An error occurred while fetching the data." });
      }
  });
- 
- module.exports = router;
+
+// Router to get group by name for web component
+router.get("/group-by-name/:groupName", async (req, res) => {
+    try {
+        const { groupName } = req.params;
+        console.log('🔍 Looking for group by name:', groupName);
+        
+        // Query to find group by name
+        const result = await PG_query(`
+            SELECT "Id" as id, "Name" as name, "Creator_Id" as creator_id
+            FROM "Groups" 
+            WHERE LOWER("Name") = LOWER($1)
+            LIMIT 1
+        `, [groupName]);
+        
+        if (result.rows.length === 0) {
+            console.log('❌ Group not found:', groupName);
+            return res.status(httpCode.NOT_FOUND).send({ error: "Group not found" });
+        }
+        
+        const group = result.rows[0];
+        console.log('✅ Found group:', group);
+        
+        // Send success response with group info
+        return res.status(httpCode.SUCCESS).send(group);
+    } catch (error) {
+        console.error('❌ Error fetching group by name:', error);
+        // Send error response
+        return res.status(httpCode.SERVER_ERROR).send({ error: "An error occurred while fetching the group." });
+    }
+});
+
+module.exports = router;

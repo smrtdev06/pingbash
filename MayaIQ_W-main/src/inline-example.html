@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pingbash Inline Chat - Example</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f5f5f5;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .header h1 {
+            margin: 0 0 10px 0;
+            color: #333;
+        }
+        
+        .header p {
+            margin: 0;
+            color: #666;
+        }
+        
+        .content-area {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .main-content {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .chat-sidebar {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .examples {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .code-block {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 15px 0;
+            overflow-x: auto;
+        }
+        
+        .code-block pre {
+            margin: 0;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 13px;
+        }
+        
+        .demo-section {
+            margin-bottom: 30px;
+        }
+        
+        .demo-section h3 {
+            color: #2596be;
+            margin-bottom: 15px;
+        }
+        
+        .controls {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        
+        .control-group {
+            margin: 10px 0;
+        }
+        
+        .control-group label {
+            display: inline-block;
+            width: 100px;
+            font-weight: 600;
+        }
+        
+        .control-group input, .control-group select {
+            padding: 5px 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-left: 10px;
+        }
+        
+        .control-group button {
+            background: #2596be;
+            color: white;
+            border: none;
+            padding: 5px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+        
+        .control-group button:hover {
+            background: #1e7ba8;
+        }
+        
+        .full-width-chat {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+        
+        @media (max-width: 768px) {
+            .content-area {
+                grid-template-columns: 1fr;
+            }
+            
+            .chat-sidebar {
+                order: -1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 Pingbash Inline Chat</h1>
+            <p>Direct integration into your page content - no floating widgets, no iframes!</p>
+        </div>
+        
+        <div class="content-area">
+            <div class="main-content">
+                <h2>Welcome to Our Website</h2>
+                <p>This is your regular website content. The chat is seamlessly integrated into the sidebar, not floating over your content.</p>
+                
+                <h3>Key Benefits</h3>
+                <ul>
+                    <li><strong>🎯 Direct Integration</strong> - Embeds directly into your page layout</li>
+                    <li><strong>🚫 No Iframes</strong> - Native DOM integration, no cross-origin issues</li>
+                    <li><strong>📱 Responsive</strong> - Adapts to your page design</li>
+                    <li><strong>🎨 Customizable</strong> - Matches your brand colors and theme</li>
+                    <li><strong>⚡ Lightweight</strong> - Single script include</li>
+                </ul>
+                
+                <h3>How It Works</h3>
+                <p>Simply include the script and create a chat instance in any container element. The chat becomes part of your page flow, not an overlay.</p>
+                
+                <p>You can place chat widgets in sidebars, content areas, modal dialogs, or anywhere else in your layout. They behave like regular page elements.</p>
+                
+                <h3>Your Content Continues</h3>
+                <p>This demonstrates how the chat integrates naturally with your existing content. It doesn't interfere with your page layout or user experience.</p>
+                
+                <p>Users can interact with both your content and the chat seamlessly, without any jarring popup or overlay behavior.</p>
+            </div>
+            
+            <div class="chat-sidebar">
+                <!-- Chat will be embedded here -->
+                <div id="sidebar-chat" data-pingbash-chat 
+                     data-group-name="testgroup3"
+                     data-api-url="https://pingbash.com"
+                     data-height="600px"
+                     data-theme="light">
+                </div>
+            </div>
+        </div>
+        
+        <div class="examples">
+            <h2>💻 Integration Examples</h2>
+            
+            <div class="demo-section">
+                <h3>1. Auto-Initialize with Data Attributes</h3>
+                <p>The simplest way - just add data attributes to any div:</p>
+                <div class="code-block">
+                    <pre>&lt;div data-pingbash-chat 
+     data-group-name="support"
+     data-api-url="https://api.pingbash.com"
+     data-height="500px"
+     data-theme="light"&gt;
+&lt;/div&gt;</pre>
+                </div>
+            </div>
+            
+            <div class="demo-section">
+                <h3>2. JavaScript API</h3>
+                <p>Create chat instances programmatically:</p>
+                <div class="code-block">
+                    <pre>// Include the script
+&lt;script src="/components/WebComponent/PingbashChatInline.js"&gt;&lt;/script&gt;
+
+// Create chat instance
+const chat = PingbashChat.create('#my-chat-container', {
+    groupName: 'support',
+    apiUrl: 'https://api.pingbash.com',
+    theme: 'dark',
+    height: '500px',
+    customColors: {
+        primary: '#ff6b6b',
+        secondary: '#4ecdc4'
+    }
+});</pre>
+                </div>
+            </div>
+            
+            <div class="demo-section">
+                <h3>3. Multiple Chat Rooms</h3>
+                <p>You can have multiple chat rooms on the same page:</p>
+                <div class="code-block">
+                    <pre>&lt;div class="support-chat" data-pingbash-chat data-group-name="support"&gt;&lt;/div&gt;
+&lt;div class="sales-chat" data-pingbash-chat data-group-name="sales"&gt;&lt;/div&gt;
+&lt;div class="general-chat" data-pingbash-chat data-group-name="general"&gt;&lt;/div&gt;</pre>
+                </div>
+            </div>
+            
+            <div class="controls">
+                <h3>🎮 Try Different Configurations</h3>
+                <div class="control-group">
+                    <label>Theme:</label>
+                    <select id="theme-select">
+                        <option value="light">Light</option>
+                        <option value="dark">Dark</option>
+                    </select>
+                    <button onclick="updateTheme()">Apply</button>
+                </div>
+                <div class="control-group">
+                    <label>Height:</label>
+                    <select id="height-select">
+                        <option value="400px">400px</option>
+                        <option value="500px">500px</option>
+                        <option value="600px" selected>600px</option>
+                        <option value="700px">700px</option>
+                    </select>
+                    <button onclick="updateHeight()">Apply</button>
+                </div>
+                <div class="control-group">
+                    <label>Primary Color:</label>
+                    <input type="color" id="color-picker" value="#2596be">
+                    <button onclick="updateColor()">Apply</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="full-width-chat">
+            <h3 style="padding: 20px; margin: 0; background: #f8f9fa; border-bottom: 1px solid #e9ecef;">
+                📱 Full Width Chat Example
+            </h3>
+            <div id="full-width-chat"></div>
+        </div>
+        
+        <div class="examples">
+            <h2>🔧 Configuration Options</h2>
+            <div class="code-block">
+                <pre>const config = {
+  groupName: 'my-group',        // Chat room name
+  apiUrl: 'https://api.com',    // Backend URL
+  theme: 'light',               // 'light' or 'dark'
+  height: '500px',              // Container height
+  width: '100%',                // Container width
+  showHeader: true,             // Show chat header
+  allowFullscreen: true,        // Enable fullscreen button
+  placeholder: 'Type here...',  // Input placeholder
+  maxLength: 500,               // Max message length
+  customColors: {               // Custom color scheme
+    primary: '#2596be',
+    secondary: '#ffffff'
+  }
+};</pre>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Load the Pingbash Inline Chat -->
+    <script src="./components/WebComponent/PingbashChatInline.js"></script>
+    
+    <script>
+        // Create the full-width chat manually
+        const fullWidthChat = PingbashChat.create('#full-width-chat', {
+            groupName: 'testgroup3',
+            apiUrl: 'https://pingbash.com',
+            height: '400px',
+            theme: 'light',
+            showHeader: false,
+            customColors: {
+                primary: '#28a745'
+            }
+        });
+        
+        // Demo functions
+        function updateTheme() {
+            const theme = document.getElementById('theme-select').value;
+            const chatContainer = document.querySelector('#sidebar-chat .pingbash-chat');
+            if (chatContainer) {
+                chatContainer.setAttribute('data-theme', theme);
+            }
+        }
+        
+        function updateHeight() {
+            const height = document.getElementById('height-select').value;
+            const chatContainer = document.getElementById('sidebar-chat');
+            if (chatContainer) {
+                chatContainer.style.height = height;
+            }
+        }
+        
+        function updateColor() {
+            const color = document.getElementById('color-picker').value;
+            const style = document.getElementById('pingbash-chat-styles');
+            if (style) {
+                // This would need more sophisticated color updating
+                console.log('Color update:', color);
+            }
+        }
+        
+        console.log('🎉 Pingbash Inline Chat demo loaded!');
+    </script>
+</body>
+</html> 

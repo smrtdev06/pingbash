@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pingbash Chat Widget - Self-Contained Demo</title>
+    <style>
+        /* 
+        ⚠️ IMPORTANT: These styles are ONLY for the demo page!
+        The Pingbash Chat Widget is completely self-contained and doesn't need any external CSS.
+        You can use the widget on any website by just including the JavaScript file.
+        */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+        
+        .demo-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            padding: 40px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        
+        .demo-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .demo-header h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        .demo-header .subtitle {
+            color: #666;
+            font-size: 18px;
+        }
+        
+        .important-note {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            color: #155724;
+        }
+        
+        .important-note h3 {
+            margin-top: 0;
+            color: #155724;
+        }
+        
+        .code-example {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .code-example h3 {
+            margin-top: 0;
+            color: #2596be;
+        }
+        
+        .code-block {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 13px;
+            line-height: 1.4;
+            margin: 10px 0;
+        }
+        
+        .demo-controls {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .demo-controls h3 {
+            margin-top: 0;
+            color: #856404;
+        }
+        
+        .control-group {
+            margin: 15px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .control-group label {
+            min-width: 120px;
+            font-weight: 600;
+        }
+        
+        .control-group input, .control-group select {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            flex: 1;
+            max-width: 200px;
+        }
+        
+        .control-group button {
+            background: #2596be;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        .control-group button:hover {
+            background: #1e7ba8;
+        }
+        
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+        
+        .feature {
+            background: #f9f9f9;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #2596be;
+        }
+        
+        .feature h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        
+        .highlight {
+            background: #fff3cd;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: monospace;
+            font-weight: bold;
+        }
+    </style>
+</head>
+ <body>
+    <div class="demo-container">
+        <div class="demo-header">
+            <h1>🚀 Pingbash Chat Widget</h1>
+            <p class="subtitle">Self-Contained Chat System - Just One JavaScript File!</p>
+        </div>
+        
+        <div class="important-note">
+            <h3>✨ Completely Self-Contained</h3>
+            <p><strong>This widget requires ZERO external dependencies!</strong></p>
+            <ul>
+                <li>✅ <strong>No CSS files needed</strong> - All styles are embedded in the JavaScript</li>
+                <li>✅ <strong>No external libraries</strong> - Only loads Socket.IO from CDN automatically</li>
+                <li>✅ <strong>No HTML markup required</strong> - Widget creates its own DOM elements</li>
+                <li>✅ <strong>Works on any website</strong> - Just include one JavaScript file</li>
+                <li>✅ <strong>CSS conflict protection</strong> - Uses CSS reset and !important declarations</li>
+            </ul>
+        </div>
+        
+        <div class="code-example">
+            <h3>🚀 Ultimate Simplicity</h3>
+            <p><strong>This is literally ALL you need on any website:</strong></p>
+            <div class="code-block">
+&lt;!-- Add this single line to any website --&gt;
+&lt;script src="https://your-domain.com/PingbashChatWidget.js"&gt;&lt;/script&gt;
+
+&lt;!-- That's it! Chat button appears automatically --&gt;
+            </div>
+            <p>The widget will automatically:</p>
+            <ul>
+                <li>🎨 Inject its own CSS styles (no conflicts with existing styles)</li>
+                <li>📡 Load Socket.IO from CDN</li>
+                <li>🔌 Connect to the chat server</li>
+                <li>💬 Display the chat button in the top-left corner</li>
+                <li>✨ Provide full chat functionality</li>
+            </ul>
+        </div>
+        
+        <div class="features-grid">
+            <div class="feature">
+                <h3>💬 Chat Button & Dialog</h3>
+                <p>Floating chat button that toggles a full-featured chat dialog with W version functionality</p>
+            </div>
+            <div class="feature">
+                <h3>😊 Emoji Support</h3>
+                <p>Built-in emoji picker with 100+ emojis - exact same as W version</p>
+            </div>
+            <div class="feature">
+                <h3>🔨 Admin Controls</h3>
+                <p>Ban and timeout users directly from message actions (hover over messages)</p>
+            </div>
+            <div class="feature">
+                <h3>⚡ Real-time</h3>
+                <p>Instant messaging with WebSocket - identical connection to W version</p>
+            </div>
+            <div class="feature">
+                <h3>🔔 Notifications</h3>
+                <p>Unread message badge on chat button with pulse animation</p>
+            </div>
+            <div class="feature">
+                <h3>🛡️ Conflict-Free</h3>
+                <p>CSS reset and maximum z-index prevent conflicts with existing site styles</p>
+            </div>
+        </div>
+        
+        <div class="code-example">
+            <h3>⚙️ Optional Configuration</h3>
+            <p>You can customize the widget using data attributes (completely optional):</p>
+            <div class="code-block">
+&lt;script src="https://your-domain.com/PingbashChatWidget.js"
+        data-group-name="support"
+        data-api-url="https://pingbash.com"
+        data-position="top-right"
+        data-theme="dark"
+        data-width="450px"
+        data-height="650px"
+        data-auto-open="false"
+        data-custom-colors='{"primary":"#ff6b6b"}'&gt;
+&lt;/script&gt;
+            </div>
+            <p><strong>But remember:</strong> Even without any configuration, the widget works perfectly with sensible defaults!</p>
+        </div>
+        
+        <div class="code-example">
+            <h3>💻 JavaScript API (Optional)</h3>
+            <p>The widget exposes a global API for advanced control:</p>
+            <div class="code-block">
+// Access the global widget instance
+const widget = window.pingbashWidget;
+
+// Control the dialog
+widget.openDialog();
+widget.closeDialog();
+widget.toggleDialog();
+
+// Admin functions (same as W version)
+widget.banUser(userId);
+widget.timeoutUser(userId);
+
+// Listen to events
+document.addEventListener('pingbash-opened', () => {
+    console.log('Chat opened!');
+});
+
+document.addEventListener('pingbash-closed', () => {
+    console.log('Chat closed!');
+});
+            </div>
+        </div>
+        
+        <div class="demo-controls">
+            <h3>🎮 Live Demo</h3>
+            <p>The widget is already loaded from <strong>just one JavaScript file</strong>! Look for the chat button in the <span class="highlight">top-left corner</span>.</p>
+            
+            <div class="control-group">
+                <label>Position:</label>
+                <select id="position-select">
+                    <option value="top-left" selected>Top Left</option>
+                    <option value="top-right">Top Right</option>
+                    <option value="bottom-left">Bottom Left</option>
+                    <option value="bottom-right">Bottom Right</option>
+                </select>
+                <button onclick="updatePosition()">Update</button>
+            </div>
+            
+            <div class="control-group">
+                <label>Actions:</label>
+                <button onclick="window.pingbashWidget.openDialog()">Open Chat</button>
+                <button onclick="window.pingbashWidget.closeDialog()">Close Chat</button>
+                <button onclick="window.pingbashWidget.toggleDialog()">Toggle Chat</button>
+            </div>
+        </div>
+        
+        <div class="important-note">
+            <h3>🎯 100% Feature Parity with W Version</h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 10px;">
+                <div>
+                    <strong>✅ Core Features:</strong>
+                    <ul>
+                        <li>Same socket connection</li>
+                        <li>Real-time messaging</li>
+                        <li>Anonymous user support</li>
+                        <li>Group management</li>
+                    </ul>
+                </div>
+                <div>
+                    <strong>✅ UI Features:</strong>
+                    <ul>
+                        <li>Emoji picker (100+ emojis)</li>
+                        <li>Message timestamps</li>
+                        <li>Connection status</li>
+                        <li>Unread notifications</li>
+                    </ul>
+                </div>
+                <div>
+                    <strong>✅ Admin Features:</strong>
+                    <ul>
+                        <li>Ban users (BAN button)</li>
+                        <li>Timeout users (TO button)</li>
+                        <li>Same moderation tools</li>
+                        <li>Same event handling</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <div class="code-example">
+            <h3>📋 Complete Configuration Reference</h3>
+            <div class="code-block">
+All Configuration Options (all optional with sensible defaults):
+
+├── data-group-name      → Chat group/room name (default: "testgroup3")
+├── data-api-url         → Backend server URL (default: "https://pingbash.com")  
+├── data-position        → Button position: "top-left", "top-right", "bottom-left", "bottom-right"
+├── data-theme           → UI theme: "light" or "dark" (default: "light")
+├── data-width           → Dialog width (default: "400px")
+├── data-height          → Dialog height (default: "600px")
+├── data-auto-open       → Auto-open dialog on load: "true" or "false" (default: "false")
+└── data-custom-colors   → JSON object: '{"primary":"#ff6b6b","secondary":"#4ecdc4"}'
+
+Remember: The widget works perfectly without ANY configuration!
+            </div>
+        </div>
+    </div>
+    
+    <!-- Load the Pingbash Chat Widget -->
+    <script src="/components/WebComponent/PingbashChatWidget.js"
+            data-group-name="testgroup3"
+            data-position="top-left"
+            data-theme="light">
+    </script>
+    
+    <script>
+        // Demo functions
+        function updatePosition() {
+            const position = document.getElementById('position-select').value;
+            const widget = window.pingbashWidget;
+            
+            if (widget && widget.widget) {
+                widget.widget.setAttribute('data-position', position);
+                widget.config.position = position;
+            }
+        }
+        
+        // Event listeners for demo
+        document.addEventListener('pingbash-opened', () => {
+            console.log('🎉 Chat dialog opened!');
+        });
+        
+        document.addEventListener('pingbash-closed', () => {
+            console.log('👋 Chat dialog closed!');
+        });
+        
+        console.log('🚀 Pingbash Chat Widget demo loaded!');
+        console.log('Widget instance:', window.pingbashWidget);
+    </script>
+</body>
+</html> 
