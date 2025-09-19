@@ -126,14 +126,21 @@ const getClientIpAddress = (socket) => {
 
 // Event handler for sending a message
 module.exports = (socket, users) => {
+    console.log(`🔌 [SOCKET] Registering private message handler for socket ${socket.id}`);
+    
     socket.on(chatCode.SEND_MSG, async (data) => {
+        console.log(`📨 [PRIVATE] Private message handler triggered`);
+        console.log(`📨 [PRIVATE] Data received:`, { to: data.to, msg: data.msg?.substring(0, 50), hasToken: !!data.token });
+        
         if (!data.to || !data.msg || !data.token) {
+            console.log(`📨 [PRIVATE] Missing required data - rejecting`);
             socket.emit(chatCode.FORBIDDEN, httpCode.FORBIDDEN);
             return;
         }
 
         const res = isExpired(socket, data, chatCode.SEND_MSG);
         if (res.expired) {
+            console.log(`📨 [PRIVATE] Token expired - rejecting`);
             socket.emit(chatCode.EXPIRED);
             return;
         }
@@ -142,6 +149,8 @@ module.exports = (socket, users) => {
             // Get sender ID from the token
             const senderId = verifyUser(data.token);
             const { msg: content, to: receiverId, parent_id } = data;
+            
+            console.log(`📨 [PRIVATE] Processing private message: sender=${senderId}, receiver=${receiverId}`);
 
             // Save message to the database
             await Controller.saveMsg(senderId, content, receiverId, parent_id);
@@ -150,17 +159,24 @@ module.exports = (socket, users) => {
             const receiver = users.find(user => user.ID === receiverId);
             const sender = users.find(user => user.ID === senderId);
 
+            console.log(`📨 [PRIVATE] Online users count: ${users.length}`);
+            console.log(`📨 [PRIVATE] Sender found: ${!!sender}, Receiver found: ${!!receiver}`);
+            console.log(`📨 [PRIVATE] Receiver details:`, receiver ? { ID: receiver.ID, Socket: receiver.Socket } : 'Not found');
+
             const senderSocketId = sender?.Socket;
             const receiverSocketId = receiver?.Socket;
 
             const senderSocket = sockets[senderSocketId];
             const receiverSocket = sockets[receiverSocketId];
 
+            console.log(`📨 [PRIVATE] Sender socket exists: ${!!senderSocket}, Receiver socket exists: ${!!receiverSocket}`);
+
             // Retrieve message list for the user
             const msgList = await Controller.getMsg(senderId, receiverId);
 
             if (senderSocket) {
                 senderSocket.emit(chatCode.SEND_MSG, msgList);
+                console.log(`📨 [PRIVATE] Message sent to sender socket`);
             }
 
             // Handle receiver notification
@@ -179,10 +195,11 @@ module.exports = (socket, users) => {
                 try {
                     await Controller.sendPrivateMessageEmailNotification(senderId, receiverId, content);
                 } catch (error) {
-                    console.error("Failed to send email notification:", error);
+                    console.error("📨 [PRIVATE] Failed to send email notification:", error);
                 }
             }
         } catch (error) {
+            console.error(`📨 [PRIVATE] Error in private message handler:`, error);
             socket.emit(chatCode.SERVER_ERROR, httpCode.SERVER_ERROR);
         }
     });
