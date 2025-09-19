@@ -26,7 +26,16 @@ const SideBar: React.FC = () => {
 
   const Logout = async () => {
     dispatch(setIsLoading(true))
+    
+    // Emit logout event and disconnect socket for immediate cleanup
     socket.emit(chat_const.USER_OUT, localStorage.getItem(TOKEN_KEY));
+    
+    // Small delay to ensure the logout event is sent before disconnecting
+    setTimeout(() => {
+      socket.disconnect();
+      console.log("🔍 [F] Socket disconnected on logout");
+    }, 100);
+    
     await localStorage.removeItem(TOKEN_KEY)
     router.push("/")
     dispatch(setIsLoading(false))

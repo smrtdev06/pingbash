@@ -532,6 +532,30 @@ module.exports = async (http) => {
             }
         });
 
+        // Event handler for user logout
+        socket.on(chatCode.USER_OUT, (data) => {
+            try {
+                console.log('User logged out:', data);
+
+                // Find and remove user from the users array
+                const loggedOutUserPos = users.findIndex(user => user.Socket === socket.id);
+
+                if (loggedOutUserPos !== -1) {
+                    const ID = users[loggedOutUserPos].ID;
+                    users.splice(loggedOutUserPos, 1);
+
+                    // Remove socket from the sockets object
+                    delete sockets[socket.id];
+
+                    // Broadcast USER_OUT event with logged out user's ID
+                    socket.broadcast.emit(chatCode.USER_OUT, { ID });
+                    console.log(`📤 User ${ID} logged out and removed from online users`);
+                }
+            } catch (error) {
+                console.error('Error handling user logout:', error);
+            }
+        });
+
         // Event handler for socket disconnection
         socket.on(chatCode.DISCONNECT, () => {
             try {
@@ -549,9 +573,10 @@ module.exports = async (http) => {
 
                     // Broadcast USER_OUT event with disconnected user's ID
                     socket.broadcast.emit(chatCode.USER_OUT, { ID });
+                    console.log(`📤 User ${ID} disconnected and removed from online users`);
                 }
             } catch (error) {
-                console.error(error);
+                console.error('Error handling socket disconnect:', error);
             }
         });
     });
