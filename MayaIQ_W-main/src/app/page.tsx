@@ -1936,10 +1936,16 @@ const ChatsContent: React.FC = () => {
     }
     const memInfo = group?.members?.find(user => user.id == getCurrentUserId());
     console.log("🔍 [W] Member info for sending:", memInfo);
-    const toTime = isTimedout(memInfo?.to_time ?? "")
-    if (toTime != "" && group?.creater_id != getCurrentUserId()) {
-      toast.error("You can't send message now. You are timed out. You can send message " + toTime + " later.");
-      return
+    
+    // Check if user is currently timed out (check both server data and localStorage)
+    const isCurrentlyTimedOut = memInfo?.is_timed_out || checkPersistedTimeout(group?.id || 0);
+    
+    if (isCurrentlyTimedOut && group?.creater_id != getCurrentUserId()) {
+      const toTime = isTimedout(memInfo?.to_time ?? "");
+      const timeoutMessage = toTime ? `You can send message ${toTime} later.` : "You are temporarily restricted from sending messages.";
+      toast.error("You can't send message now. You are timed out. " + timeoutMessage);
+      console.log("🔍 [W] Message sending blocked - user is timed out");
+      return;
     }
     let receiverid = null
     if (filterMode == 2) {

@@ -502,6 +502,13 @@ module.exports = async (http) => {
                         // Retrieve group messages
                         const groupMessages = await Controller.getGroupMsg(data.groupId);
 
+                        // Also send updated group data to ensure timeout status is current
+                        const updatedGroup = await Controller.getGroup(data.groupId);
+                        if (updatedGroup) {
+                            socket.emit(chatCode.GROUP_UPDATED, updatedGroup);
+                            console.log(`🔄 [GET_MSG] Updated group data sent to user ${loggedId} for group ${data.groupId}`);
+                        }
+
                         // Emit GET_GROUP_MSG event with messages list to the socket
                         socket.emit(chatCode.GET_GROUP_MSG, groupMessages);
                         
