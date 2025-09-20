@@ -13,14 +13,18 @@ async function logAllBannedRecords() {
   try {
     // Get all banned users from group_users table
 
-    const bannedUsers = await pool.query(`
-      SELECT * FROM public.Users
-    `);
-    console.log('🚫 Banned users in group_users:', bannedUsers.rows);
-
+    
     // Get all active IP bans from ip_bans table
     const ipBans = await pool.query(`
-      SELECT * FROM ip_bans WHERE is_active = true
+      UPDATE groups
+      SET show_chat_rules = true, chat_rules = 'Test Chat Rules
+1. Be respectful to all members
+2. No spam or excessive posting
+3. Stay on topic
+4. No harassment or bullying
+5. Follow community guidelines'
+      WHERE name = 'gsx'
+      RETURNING *;
     `);
     console.log('🚫 Active IP bans in ip_bans:', ipBans.rows);
   } catch (error) {

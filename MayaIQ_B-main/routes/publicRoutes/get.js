@@ -35,11 +35,11 @@ router.get("/group-by-name/:groupName", async (req, res) => {
         
         // Query to find group by name
         const result = await PG_query(`
-            SELECT "Id" as id, "Name" as name, "Creator_Id" as creator_id
-            FROM "Groups" 
-            WHERE LOWER("Name") = LOWER($1)
+            SELECT id, name, creater_id as creator_id
+            FROM groups 
+            WHERE LOWER(name) = LOWER('${groupName}')
             LIMIT 1
-        `, [groupName]);
+        `);
         
         if (result.rows.length === 0) {
             console.log('❌ Group not found:', groupName);

@@ -48,6 +48,10 @@ class PingbashChatWidget {
         this.pendingMessages = [];
         this.reloadTimeoutRef = null;
 
+        // Chat rules state
+        this.chatRules = '';
+        this.isCreator = false;
+
         // UI Elements
         this.widget = null;
         this.button = null;
@@ -140,8 +144,8 @@ class PingbashChatWidget {
               </svg>
             </button>
             <div class="pingbash-hamburger-dropdown" style="display: none;">
-              <div class="pingbash-menu-item" data-action="group-info">
-                <svg viewBox="0 0 24 24" width="16" height="16">
+              <div class="pingbash-menu-item" data-action="group-info">   
+                <svg viewBox="0 0 24 24" width="16" height="16">   
                   <path fill="currentColor" d="M11,9H13V7H11M12,20C7.59,20 4,16.41 4,12C4,7.59 7.59,4 12,4C16.41,4 20,7.59 20,12C20,16.41 16.41,20 12,20M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M11,17H13V11H11V17Z"/>
                 </svg>
                 Group Info
@@ -163,6 +167,12 @@ class PingbashChatWidget {
                   <path fill="currentColor" d="M4,1C2.89,1 2,1.89 2,3V7C2,8.11 2.89,9 4,9H1V11H13V9H10C11.11,9 12,8.11 12,7V3C12,1.89 11.11,1 10,1H4M4,3H10V7H4V3M3,13V18L3,19H21V18V13H3M5,15H19V17H5V15Z"/>
                 </svg>
                 IP Bans
+              </div>
+              <div class="pingbash-menu-item" data-action="chat-rules">
+                <svg viewBox="0 0 24 24" width="16" height="16">
+                  <path fill="currentColor" d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>
+                </svg>
+                Chat Rules
               </div>
               <div class="pingbash-menu-divider"></div>
               <div class="pingbash-menu-item" data-action="settings">
@@ -300,6 +310,45 @@ class PingbashChatWidget {
           </div>
           <div class="pingbash-popup-footer">
             <button class="pingbash-sound-ok-btn">OK</button>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Chat Rules Popup -->
+      <div class="pingbash-chat-rules-popup" style="display: none;">
+        <div class="pingbash-popup-overlay"></div>
+        <div class="pingbash-popup-content pingbash-chat-rules-content">
+          <div class="pingbash-popup-header">
+            <h3>Chat Rules - <span class="pingbash-group-name-display"></span></h3>
+            <button class="pingbash-popup-close">×</button>
+          </div>
+          <div class="pingbash-popup-body">
+            <div class="pingbash-chat-rules-view">
+              <div class="pingbash-rules-display">
+                <pre class="pingbash-rules-text"></pre>
+                <p class="pingbash-no-rules-text" style="display: none;">No rules have been set for this group.</p>
+              </div>
+              <div class="pingbash-rules-edit" style="display: none;">
+                <textarea class="pingbash-rules-textarea" placeholder="Enter the chat rules for this group...
+
+Example:
+1. Be respectful to all members
+2. No spam or excessive posting
+3. Stay on topic
+4. No harassment or bullying
+5. Follow community guidelines"></textarea>
+              </div>
+            </div>
+          </div>
+          <div class="pingbash-popup-footer">
+            <div class="pingbash-rules-view-footer">
+              <button class="pingbash-rules-edit-btn" style="display: none;">Edit Rules</button>
+              <button class="pingbash-rules-close-btn">Close</button>
+            </div>
+            <div class="pingbash-rules-edit-footer" style="display: none;">
+              <button class="pingbash-rules-cancel-btn">Cancel</button>
+              <button class="pingbash-rules-save-btn">Save</button>
+            </div>
           </div>
         </div>
       </div>
@@ -1154,6 +1203,147 @@ class PingbashChatWidget {
         background: #1e7ba8;
       }
       
+      /* Chat Rules Popup */
+      .pingbash-chat-rules-popup {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 2147483648;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      
+      .pingbash-chat-rules-content {
+        width: 90%;
+        max-width: 600px;
+        max-height: 80vh;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+      }
+      
+      .pingbash-chat-rules-popup .pingbash-popup-body {
+        flex: 1;
+        overflow-y: auto;
+        max-height: 60vh;
+      }
+      
+      .pingbash-rules-display {
+        width: 100%;
+      }
+      
+      .pingbash-rules-text {
+        width: 100%;
+        min-height: 200px;
+        padding: 12px;
+        border: 1px solid #e0e0e0;
+        border-radius: 6px;
+        background: #f8f9fa;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        font-size: 14px;
+        line-height: 1.5;
+        color: #333;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+        overflow-y: auto;
+        resize: none;
+        margin: 0;
+      }
+      
+      .pingbash-no-rules-text {
+        width: 100%;
+        min-height: 200px;
+        padding: 12px;
+        border: 1px solid #e0e0e0;
+        border-radius: 6px;
+        background: #f8f9fa;
+        font-style: italic;
+        color: #666;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        margin: 0;
+      }
+      
+      .pingbash-rules-edit {
+        width: 100%;
+      }
+      
+      .pingbash-rules-textarea {
+        width: 100%;
+        min-height: 200px;
+        padding: 12px;
+        border: 1px solid #e0e0e0;
+        border-radius: 6px;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        font-size: 14px;
+        line-height: 1.5;
+        color: #333;
+        resize: vertical;
+        outline: none;
+        box-sizing: border-box;
+      }
+      
+      .pingbash-rules-textarea:focus {
+        border-color: #2596be;
+        box-shadow: 0 0 0 2px rgba(37, 150, 190, 0.2);
+      }
+      
+      .pingbash-rules-view-footer,
+      .pingbash-rules-edit-footer {
+        display: flex;
+        gap: 10px;
+        justify-content: flex-end;
+      }
+      
+      .pingbash-rules-edit-btn,
+      .pingbash-rules-close-btn,
+      .pingbash-rules-cancel-btn,
+      .pingbash-rules-save-btn {
+        padding: 8px 16px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+        transition: all 0.2s ease;
+      }
+      
+      .pingbash-rules-edit-btn {
+        background: #2596be;
+        color: white;
+      }
+      
+      .pingbash-rules-edit-btn:hover {
+        background: #1e7ba8;
+      }
+      
+      .pingbash-rules-close-btn,
+      .pingbash-rules-cancel-btn {
+        background: #6c757d;
+        color: white;
+      }
+      
+      .pingbash-rules-close-btn:hover,
+      .pingbash-rules-cancel-btn:hover {
+        background: #5a6268;
+      }
+      
+      .pingbash-rules-save-btn {
+        background: #28a745;
+        color: white;
+      }
+      
+      .pingbash-rules-save-btn:hover {
+        background: #218838;
+      }
+      
       /* Sign In Form */
       .pingbash-signin-modal {
         position: fixed;
@@ -1444,6 +1634,22 @@ class PingbashChatWidget {
         continueAnonBtn?.addEventListener('click', () => this.continueAsAnonymous());
         signinOverlay?.addEventListener('click', () => this.hideSigninModal());
 
+        // Chat rules popup
+        const chatRulesPopup = this.dialog.querySelector('.pingbash-chat-rules-popup');
+        const chatRulesCloseBtn = chatRulesPopup?.querySelector('.pingbash-popup-close');
+        const chatRulesCloseBtnFooter = this.dialog.querySelector('.pingbash-rules-close-btn');
+        const chatRulesEditBtn = this.dialog.querySelector('.pingbash-rules-edit-btn');
+        const chatRulesCancelBtn = this.dialog.querySelector('.pingbash-rules-cancel-btn');
+        const chatRulesSaveBtn = this.dialog.querySelector('.pingbash-rules-save-btn');
+        const chatRulesOverlay = chatRulesPopup?.querySelector('.pingbash-popup-overlay');
+
+        chatRulesCloseBtn?.addEventListener('click', () => this.hideChatRules());
+        chatRulesCloseBtnFooter?.addEventListener('click', () => this.hideChatRules());
+        chatRulesEditBtn?.addEventListener('click', () => this.editChatRules());
+        chatRulesCancelBtn?.addEventListener('click', () => this.cancelEditChatRules());
+        chatRulesSaveBtn?.addEventListener('click', () => this.saveChatRules());
+        chatRulesOverlay?.addEventListener('click', () => this.hideChatRules());
+
         // Emoji picker
         const emojiPicker = this.dialog.querySelector('.pingbash-emoji-picker');
 
@@ -1562,16 +1768,46 @@ class PingbashChatWidget {
 
         this.socket.on('join to group anon', (response) => {
             console.log('🔍 [Widget] join to group anon response:', response);
+            
+            // Check if the response contains group information that can help us resolve the real ID
+            if (response && response.groupId && response.groupId !== this.groupId) {
+                console.log('✅ [Widget] Join response contains different group ID:', response.groupId, 'vs current:', this.groupId);
+                // This might happen if the backend resolved the hash to a real ID
+                this.groupId = response.groupId;
+            }
         });
 
         this.socket.on('join to group', (response) => {
             console.log('🔍 [Widget] join to group response:', response);
+            
+            // Check if the response contains group information that can help us resolve the real ID
+            if (response && response.groupId && response.groupId !== this.groupId) {
+                console.log('✅ [Widget] Join response contains different group ID:', response.groupId, 'vs current:', this.groupId);
+                // This might happen if the backend resolved the hash to a real ID
+                this.groupId = response.groupId;
+            }
         });
 
         this.socket.on('group updated', (group) => {
             console.log('🔍 [Widget] group updated:', group);
             this.group = group;
             this.groupMembers = group?.members || [];
+            
+            // Check if this group update contains the correct ID for our group name
+            if (group && group.name && group.id && 
+                group.name.toLowerCase() === this.config.groupName.toLowerCase() && 
+                group.id !== this.groupId) {
+                
+                console.log('✅ [Widget] Group updated event contains correct ID:', group.id, 'for', this.config.groupName);
+                console.log('🔄 [Widget] Updating from hash-based ID:', this.groupId, 'to real ID:', group.id);
+                
+                const oldGroupId = this.groupId;
+                this.groupId = group.id;
+                
+                // Rejoin with the correct ID to ensure proper message sync
+                console.log('🔄 [Widget] Rejoining group with correct ID for better message sync...');
+                this.rejoinGroupWithCorrectId();
+            }
         });
 
         this.socket.on('refresh', (data) => {
@@ -1580,6 +1816,29 @@ class PingbashChatWidget {
 
         this.socket.on('get fav groups', (groups) => {
             console.log('🔍 [Widget] get fav groups response:', groups?.length, 'groups');
+            if (groups && groups.length > 0) {
+                console.log('🔍 [Widget] Fav groups:', groups.map(g => `${g.name} (ID: ${g.id})`).join(', '));
+            }
+            this.handleGroupsReceived(groups);
+        });
+
+        this.socket.on('get my groups', (groups) => {
+            console.log('🔍 [Widget] get my groups response:', groups?.length, 'groups');
+            if (groups && groups.length > 0) {
+                console.log('🔍 [Widget] My groups:', groups.map(g => `${g.name} (ID: ${g.id})`).join(', '));
+            }
+            this.handleGroupsReceived(groups);
+        });
+
+        // Chat rules listeners
+        this.socket.on('get chat rules', (data) => {
+            console.log('🔍 [Widget] [Chat Rules] Received get chat rules:', data);
+            this.handleGetChatRules(data);
+        });
+
+        this.socket.on('update chat rules', (data) => {
+            console.log('🔍 [Widget] [Chat Rules] Received update chat rules:', data);
+            this.handleUpdateChatRules(data);
         });
     }
 
@@ -1596,6 +1855,15 @@ class PingbashChatWidget {
                 // Join as authenticated user
                 console.log('🔐 [Widget] Joining as authenticated user');
                 this.userId = this.authenticatedToken;
+
+                // First, register as logged in user (same as F version)
+                console.log('🔍 [Widget] Registering as logged in user...');
+                this.socket.emit('user logged', { token: this.authenticatedToken });
+
+                // Request user's groups to get correct group IDs (this will trigger handleGroupsReceived)
+                console.log('🔍 [Widget] Requesting user groups to verify group ID...');
+                this.socket.emit('get my groups', { token: this.authenticatedToken });
+                this.socket.emit('get fav groups', { token: this.authenticatedToken });
 
                 // Join the group as authenticated user (same as W version)
                 console.log('🔍 [Widget] Emitting join to group with:', {
@@ -1653,6 +1921,15 @@ class PingbashChatWidget {
                     token: this.userId,
                     groupId: parseInt(this.groupId)
                 });
+
+                // For anonymous users, try comprehensive group resolution after a short delay
+                // This gives time for socket events to potentially provide the correct ID
+                setTimeout(async () => {
+                    if (this.groupId === this.hashCode(this.config.groupName)) {
+                        console.log('🔍 [Widget] Still using hash ID after 3 seconds, trying comprehensive resolution...');
+                        await this.tryComprehensiveGroupResolution();
+                    }
+                }, 3000);
             }
 
             if (!this.socket.connected) {
@@ -1666,23 +1943,74 @@ class PingbashChatWidget {
     }
 
     async getGroupIdFromName() {
-        // For known groups, use specific IDs
-        const knownGroups = {
-            'testgroup3': 56,
-            'support': 1,
-            'general': 2,
-            'sales': 3
-        };
+        console.log('🔍 [Widget] Resolving group ID for:', this.config.groupName);
+        
+        // Try multiple approaches to get the real group ID
+        let realGroupId = null;
+        
+        // Approach 1: Try the public API (if it works)
+        try {
+            console.log('🔍 [Widget] Trying public API approach...');
+            const response = await fetch(`${this.config.apiUrl}/api/public/get/group-by-name/${encodeURIComponent(this.config.groupName)}`, {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                }
+            });
 
-        if (knownGroups[this.config.groupName]) {
-            console.log('🔍 [Widget] Using known group ID:', knownGroups[this.config.groupName], 'for', this.config.groupName);
-            return knownGroups[this.config.groupName];
+            if (response.ok) {
+                const groupData = await response.json();
+                console.log('✅ [Widget] Public API resolved group:', groupData);
+                realGroupId = groupData.id;
+            } else {
+                console.log('❌ [Widget] Public API failed:', response.status, response.statusText);
+            }
+        } catch (error) {
+            console.log('❌ [Widget] Public API error:', error.message);
         }
+        
+        // Approach 2: If authenticated, try private API
+        if (!realGroupId && this.isAuthenticated && this.authenticatedToken) {
+            try {
+                console.log('🔍 [Widget] Trying private API approach...');
+                const response = await fetch(`${this.config.apiUrl}/api/private/get/groups/getGroup`, {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                        'Authorization': this.authenticatedToken
+                    },
+                    body: JSON.stringify({
+                        groupName: this.config.groupName,
+                        userId: parseInt(this.currentUserId)
+                    })
+                });
 
-        // Fallback to hash
-        const hashId = this.hashCode(this.config.groupName);
-        console.log('🔍 [Widget] Using hash-based ID:', hashId, 'for', this.config.groupName);
-        return hashId;
+                if (response.ok) {
+                    const result = await response.json();
+                    if (result.group && result.group.id) {
+                        console.log('✅ [Widget] Private API resolved group:', result.group);
+                        realGroupId = result.group.id;
+                    }
+                } else {
+                    console.log('❌ [Widget] Private API failed:', response.status, response.statusText);
+                }
+            } catch (error) {
+                console.log('❌ [Widget] Private API error:', error.message);
+            }
+        }
+        
+        // If we found the real ID, use it; otherwise fall back to hash
+        if (realGroupId) {
+            console.log('✅ [Widget] Using real group ID:', realGroupId, 'for', this.config.groupName);
+            return realGroupId;
+        } else {
+            const hashId = this.hashCode(this.config.groupName);
+            console.log('🔍 [Widget] Using hash-based ID as fallback:', hashId, 'for', this.config.groupName);
+            console.log('🔍 [Widget] Real group ID will be resolved later via socket events if possible');
+            return hashId;
+        }
     }
 
     hashCode(str) {
@@ -2141,6 +2469,21 @@ class PingbashChatWidget {
         this.dispatchEvent('pingbash-closed');
     }
 
+    updatePosition(position) {
+        // Update the position configuration
+        this.config.position = position;
+        
+        // Remove all position classes
+        this.button.classList.remove('top-left', 'top-right', 'bottom-left', 'bottom-right');
+        this.dialog.classList.remove('top-left', 'top-right', 'bottom-left', 'bottom-right');
+        
+        // Add the new position class
+        this.button.classList.add(position);
+        this.dialog.classList.add(position);
+        
+        console.log('🔄 [Widget] Position updated to:', position);
+    }
+
     minimizeDialog() {
         this.closeDialog();
     }
@@ -2171,6 +2514,9 @@ class PingbashChatWidget {
                 break;
             case 'ip-bans':
                 this.showIpBans();
+                break;
+            case 'chat-rules':
+                this.showChatRules();
                 break;
             case 'settings':
                 this.showSettings();
@@ -2416,6 +2762,9 @@ class PingbashChatWidget {
             case 'ip-bans':
                 this.showIpBans();
                 break;
+            case 'chat-rules':
+                this.showChatRules();
+                break;
             case 'settings':
                 this.showSettings();
                 break;
@@ -2630,6 +2979,45 @@ class PingbashChatWidget {
         });
     }
 
+    // Chat rules functions (same as W version)
+    getChatRules() {
+        if (!this.socket || !this.isConnected) return;
+
+        console.log('🔍 [Widget] [Chat Rules] getChatRules called with groupId:', this.groupId, 'token:', this.isAuthenticated ? 'Available' : 'Missing');
+        
+        if (this.isAuthenticated && this.authenticatedToken && this.groupId) {
+            this.socket.emit('get chat rules', { 
+                token: this.authenticatedToken, 
+                groupId: parseInt(this.groupId) 
+            });
+            console.log('🔍 [Widget] [Chat Rules] Emitted get chat rules event');
+        } else {
+            console.log('🔍 [Widget] [Chat Rules] Cannot emit get chat rules - missing token or groupId');
+        }
+    }
+
+    updateChatRules(chatRules, showChatRules = true) {
+        if (!this.socket || !this.isConnected) return;
+
+        console.log('🔍 [Widget] [Chat Rules] updateChatRules called with:', { 
+            groupId: this.groupId, 
+            chatRules: chatRules?.length, 
+            showChatRules 
+        });
+        
+        if (this.isAuthenticated && this.authenticatedToken && this.groupId) {
+            this.socket.emit('update chat rules', { 
+                token: this.authenticatedToken, 
+                groupId: parseInt(this.groupId), 
+                chatRules, 
+                showChatRules 
+            });
+            console.log('🔍 [Widget] [Chat Rules] Emitted update chat rules event');
+        } else {
+            console.log('🔍 [Widget] [Chat Rules] Cannot emit update chat rules - missing token or groupId');
+        }
+    }
+
     dispatchEvent(eventName, detail = {}) {
         const event = new CustomEvent(eventName, { detail });
         document.dispatchEvent(event);
@@ -2648,6 +3036,402 @@ class PingbashChatWidget {
         const styles = document.getElementById('pingbash-widget-styles');
         if (styles) {
             styles.remove();
+        }
+    }
+
+    // Chat rules popup functions
+    showChatRules() {
+        console.log('📋 [Widget] [Chat Rules] Showing chat rules');
+        
+        // Set group name in popup
+        const groupNameDisplay = this.dialog.querySelector('.pingbash-group-name-display');
+        if (groupNameDisplay) {
+            groupNameDisplay.textContent = this.config.groupName || 'Group';
+        }
+
+        // Check if user is creator (same logic as W version)
+        this.isCreator = this.currentUserId && this.group && (this.currentUserId == this.group.creater_id);
+        
+        // Show/hide edit button based on creator status
+        const editBtn = this.dialog.querySelector('.pingbash-rules-edit-btn');
+        if (editBtn) {
+            editBtn.style.display = this.isCreator ? 'block' : 'none';
+        }
+
+        // Load current rules if authenticated
+        if (this.isAuthenticated) {
+            this.getChatRules();
+        } else {
+            // Show default message for anonymous users
+            this.displayChatRules('');
+        }
+
+        // Show the popup
+        const popup = this.dialog.querySelector('.pingbash-chat-rules-popup');
+        popup.style.display = 'flex';
+    }
+
+    hideChatRules() {
+        const popup = this.dialog.querySelector('.pingbash-chat-rules-popup');
+        popup.style.display = 'none';
+    }
+
+    displayChatRules(rules) {
+        console.log('📋 [Widget] [Chat Rules] Displaying rules:', rules?.length || 0, 'characters');
+        
+        this.chatRules = rules || '';
+        
+        const rulesText = this.dialog.querySelector('.pingbash-rules-text');
+        const noRulesText = this.dialog.querySelector('.pingbash-no-rules-text');
+        const rulesTextarea = this.dialog.querySelector('.pingbash-rules-textarea');
+        
+        if (this.chatRules.trim()) {
+            rulesText.textContent = this.chatRules;
+            rulesText.style.display = 'block';
+            noRulesText.style.display = 'none';
+        } else {
+            rulesText.style.display = 'none';
+            noRulesText.style.display = 'flex';
+        }
+        
+        // Update textarea with current rules
+        if (rulesTextarea) {
+            rulesTextarea.value = this.chatRules;
+        }
+    }
+
+    editChatRules() {
+        console.log('📋 [Widget] [Chat Rules] Entering edit mode');
+        
+        const rulesDisplay = this.dialog.querySelector('.pingbash-rules-display');
+        const rulesEdit = this.dialog.querySelector('.pingbash-rules-edit');
+        const viewFooter = this.dialog.querySelector('.pingbash-rules-view-footer');
+        const editFooter = this.dialog.querySelector('.pingbash-rules-edit-footer');
+        
+        rulesDisplay.style.display = 'none';
+        rulesEdit.style.display = 'block';
+        viewFooter.style.display = 'none';
+        editFooter.style.display = 'flex';
+        
+        // Focus the textarea
+        const textarea = this.dialog.querySelector('.pingbash-rules-textarea');
+        if (textarea) {
+            textarea.focus();
+        }
+    }
+
+    cancelEditChatRules() {
+        console.log('📋 [Widget] [Chat Rules] Cancelling edit mode');
+        
+        const rulesDisplay = this.dialog.querySelector('.pingbash-rules-display');
+        const rulesEdit = this.dialog.querySelector('.pingbash-rules-edit');
+        const viewFooter = this.dialog.querySelector('.pingbash-rules-view-footer');
+        const editFooter = this.dialog.querySelector('.pingbash-rules-edit-footer');
+        const textarea = this.dialog.querySelector('.pingbash-rules-textarea');
+        
+        // Reset textarea to original value
+        if (textarea) {
+            textarea.value = this.chatRules;
+        }
+        
+        rulesDisplay.style.display = 'block';
+        rulesEdit.style.display = 'none';
+        viewFooter.style.display = 'flex';
+        editFooter.style.display = 'none';
+    }
+
+    saveChatRules() {
+        console.log('📋 [Widget] [Chat Rules] Saving chat rules');
+        
+        const textarea = this.dialog.querySelector('.pingbash-rules-textarea');
+        if (!textarea) return;
+        
+        const newRules = textarea.value.trim();
+        
+        // Update chat rules via socket
+        this.updateChatRules(newRules, true);
+        
+        // Update local state
+        this.chatRules = newRules;
+        this.displayChatRules(newRules);
+        
+        // Exit edit mode
+        this.cancelEditChatRules();
+    }
+
+    // Socket event handlers for chat rules
+    handleGetChatRules(data) {
+        console.log('📋 [Widget] [Chat Rules] Received chat rules data:', data);
+        
+        const rules = data.chatRules || '';
+        this.displayChatRules(rules);
+    }
+
+    handleUpdateChatRules(data) {
+        console.log('📋 [Widget] [Chat Rules] Chat rules updated:', data);
+        
+        // Refresh the rules display
+        if (this.isAuthenticated) {
+            this.getChatRules();
+        }
+    }
+
+    // Handle groups received from socket events
+    handleGroupsReceived(groups) {
+        if (!groups || !Array.isArray(groups)) {
+            console.log('🔍 [Widget] No groups received or invalid format');
+            return;
+        }
+        
+        console.log('🔍 [Widget] Processing', groups.length, 'groups to find correct ID for:', this.config.groupName);
+        console.log('🔍 [Widget] Available groups:', groups.map(g => `${g.name} (ID: ${g.id})`).join(', '));
+        
+        // Find the group that matches our group name (case-insensitive)
+        const matchingGroup = groups.find(group => 
+            group.name && group.name.toLowerCase() === this.config.groupName.toLowerCase()
+        );
+        
+        if (matchingGroup) {
+            console.log('✅ [Widget] Found matching group:', matchingGroup.name, 'with ID:', matchingGroup.id);
+            
+            if (matchingGroup.id !== this.groupId) {
+                console.log('🔄 [Widget] Updating from hash-based ID:', this.groupId, 'to real ID:', matchingGroup.id);
+                
+                const oldGroupId = this.groupId;
+                this.groupId = matchingGroup.id;
+                
+                // Rejoin with the correct ID to ensure proper message sync
+                console.log('🔄 [Widget] Rejoining group with correct ID...');
+                this.rejoinGroupWithCorrectId();
+            } else {
+                console.log('✅ [Widget] Group ID already correct:', this.groupId);
+            }
+        } else {
+            console.log('❌ [Widget] Group not found in user\'s group list:', this.config.groupName);
+            console.log('🔍 [Widget] Available groups:', groups.map(g => g.name).join(', '));
+            
+            // For anonymous users or groups not in user's list, try the API as fallback
+            if (!this.isAuthenticated) {
+                console.log('🔍 [Widget] Anonymous user - trying API fallback for group resolution...');
+                this.tryApiGroupResolution();
+            }
+        }
+    }
+
+    // Try socket-based group resolution for anonymous users
+    async trySocketGroupResolution() {
+        return new Promise((resolve) => {
+            console.log('🔍 [Widget] Trying socket-based group resolution for:', this.config.groupName);
+            
+            // Set up a one-time listener for group resolution
+            const timeout = setTimeout(() => {
+                console.log('❌ [Widget] Socket group resolution timed out');
+                resolve(false);
+            }, 5000);
+            
+            // Try to get group info via socket (this might trigger group updated events)
+            if (this.socket && this.socket.connected) {
+                // For anonymous users, we can try joining with hash ID and see if we get group info back
+                console.log('🔍 [Widget] Attempting to get group info via socket events...');
+                
+                // The join events might return group information
+                const originalGroupId = this.groupId;
+                
+                // Listen for group updated event that might contain the real ID
+                const groupUpdatedHandler = (group) => {
+                    if (group && group.name && group.id && 
+                        group.name.toLowerCase() === this.config.groupName.toLowerCase() && 
+                        group.id !== originalGroupId) {
+                        
+                        console.log('✅ [Widget] Socket resolved group via group updated:', group);
+                        clearTimeout(timeout);
+                        this.socket.off('group updated', groupUpdatedHandler);
+                        
+                        this.groupId = group.id;
+                        this.rejoinGroupWithCorrectId();
+                        resolve(true);
+                    }
+                };
+                
+                this.socket.on('group updated', groupUpdatedHandler);
+                
+                // Clean up after timeout
+                setTimeout(() => {
+                    this.socket.off('group updated', groupUpdatedHandler);
+                    resolve(false);
+                }, 4500);
+                
+            } else {
+                console.log('❌ [Widget] Socket not connected for group resolution');
+                clearTimeout(timeout);
+                resolve(false);
+            }
+        });
+    }
+
+    // Try comprehensive group resolution using multiple approaches
+    async tryComprehensiveGroupResolution() {
+        console.log('🔍 [Widget] Starting comprehensive group resolution for:', this.config.groupName);
+        
+        // Approach 1: Public API (fixed backend)
+        let resolved = await this.tryPublicApiResolution();
+        if (resolved) return;
+        
+        // Approach 2: Socket-based resolution
+        resolved = await this.trySocketGroupResolution();
+        if (resolved) return;
+        
+        // Approach 3: If authenticated, try private API
+        if (this.isAuthenticated && this.authenticatedToken) {
+            resolved = await this.tryPrivateApiResolution();
+            if (resolved) return;
+        }
+        
+        console.log('❌ [Widget] All group resolution approaches failed, staying with hash ID:', this.groupId);
+    }
+
+    // Try public API resolution
+    async tryPublicApiResolution() {
+        try {
+            console.log('🔍 [Widget] Trying public API resolution...');
+            const response = await fetch(`${this.config.apiUrl}/api/public/get/group-by-name/${encodeURIComponent(this.config.groupName)}`, {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (response.ok) {
+                const groupData = await response.json();
+                console.log('✅ [Widget] Public API resolved group:', groupData);
+                
+                if (groupData.id && groupData.id !== this.groupId) {
+                    console.log('🔄 [Widget] Updating from hash-based ID:', this.groupId, 'to public API ID:', groupData.id);
+                    this.groupId = groupData.id;
+                    this.rejoinGroupWithCorrectId();
+                    return true;
+                }
+            } else {
+                console.log('❌ [Widget] Public API failed:', response.status, response.statusText);
+            }
+        } catch (error) {
+            console.log('❌ [Widget] Public API error:', error.message);
+        }
+        return false;
+    }
+
+    // Try private API resolution
+    async tryPrivateApiResolution() {
+        try {
+            console.log('🔍 [Widget] Trying private API resolution...');
+            const response = await fetch(`${this.config.apiUrl}/api/private/get/groups/getGroup`, {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                    'Authorization': this.authenticatedToken
+                },
+                body: JSON.stringify({
+                    groupName: this.config.groupName,
+                    userId: parseInt(this.currentUserId)
+                })
+            });
+
+            if (response.ok) {
+                const result = await response.json();
+                if (result.group && result.group.id) {
+                    console.log('✅ [Widget] Private API resolved group:', result.group);
+                    
+                    if (result.group.id !== this.groupId) {
+                        console.log('🔄 [Widget] Updating from hash-based ID:', this.groupId, 'to private API ID:', result.group.id);
+                        this.groupId = result.group.id;
+                        this.rejoinGroupWithCorrectId();
+                        return true;
+                    }
+                }
+            } else {
+                console.log('❌ [Widget] Private API failed:', response.status, response.statusText);
+            }
+        } catch (error) {
+            console.log('❌ [Widget] Private API error:', error.message);
+        }
+        return false;
+    }
+
+    // Try API-based group resolution as fallback
+    async tryApiGroupResolution() {
+        try {
+            console.log('🔍 [Widget] Trying API-based group resolution for:', this.config.groupName);
+            
+            const response = await fetch(`${this.config.apiUrl}/api/public/get/group-by-name/${encodeURIComponent(this.config.groupName)}`, {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (response.ok) {
+                const groupData = await response.json();
+                console.log('✅ [Widget] API resolved group:', groupData);
+                
+                if (groupData.id && groupData.id !== this.groupId) {
+                    console.log('🔄 [Widget] Updating from hash-based ID:', this.groupId, 'to API-resolved ID:', groupData.id);
+                    this.groupId = groupData.id;
+                    this.rejoinGroupWithCorrectId();
+                }
+            } else {
+                console.log('❌ [Widget] API group resolution failed:', response.status, response.statusText);
+                
+                // If API fails, try socket-based resolution
+                if (!this.isAuthenticated) {
+                    console.log('🔍 [Widget] Trying socket-based resolution as final fallback...');
+                    await this.trySocketGroupResolution();
+                }
+            }
+        } catch (error) {
+            console.log('❌ [Widget] API group resolution error:', error.message);
+            
+            // If API fails, try socket-based resolution
+            if (!this.isAuthenticated) {
+                console.log('🔍 [Widget] Trying socket-based resolution as final fallback...');
+                await this.trySocketGroupResolution();
+            }
+        }
+    }
+
+    // Rejoin group with the correct ID
+    async rejoinGroupWithCorrectId() {
+        try {
+            console.log('🔄 [Widget] Rejoining group with correct ID:', this.groupId);
+            
+            if (this.connectAsAuthenticated && this.authenticatedToken) {
+                // Join as authenticated user
+                console.log('🔐 [Widget] Rejoining as authenticated user');
+                this.socket.emit('join to group', {
+                    token: this.authenticatedToken,
+                    groupId: parseInt(this.groupId),
+                    userId: parseInt(this.currentUserId)
+                });
+            } else {
+                // Join as anonymous user
+                console.log('👤 [Widget] Rejoining as anonymous user');
+                this.socket.emit('join to group anon', {
+                    groupId: parseInt(this.groupId),
+                    anonId: this.anonId
+                });
+            }
+
+            // Get messages with correct group ID
+            const token = this.connectAsAuthenticated ? this.authenticatedToken : `anonuser${this.config.groupName}${this.anonId}`;
+            this.socket.emit('get group msg', {
+                token: token,
+                groupId: parseInt(this.groupId)
+            });
+            
+        } catch (error) {
+            console.error('❌ [Widget] Error rejoining group with correct ID:', error);
         }
     }
 }

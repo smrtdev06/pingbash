@@ -31399,3 +31399,10 @@
 2025-09-19T18:57:41.808Z GET / 304 - - 0.569 ms
 2025-09-19T18:57:41.819Z GET /widget.js 200 98374 - 0.743 ms
 2025-09-19T18:57:45.116Z GET /.well-known/appspecific/com.chrome.devtools.json 404 187 - 1.463 ms
+2025-09-20T12:54:56.248Z GET /api/public/get/group-by-name/memine 500 55 - 637.543 ms
+2025-09-20T12:55:49.285Z GET /api/public/get/group-by-name/memine 500 55 - 645.861 ms
+2025-09-20T12:55:49.911Z GET /api/public/get/group-by-name/nonexistent 500 55 - 621.401 ms
+2025-09-20T12:57:12.385Z GET /api/public/get/group-by-name/memine 500 55 - 621.421 ms
+2025-09-20T12:57:13.009Z GET /api/public/get/group-by-name/nonexistent 500 55 - 620.188 ms
+2025-09-20T12:58:33.385Z GET /api/public/get/group-by-name/memine 200 42 - 636.032 ms
+2025-09-20T12:58:33.448Z GET /favicon.ico 404 150 - 2.517 ms
