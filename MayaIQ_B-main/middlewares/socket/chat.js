@@ -1338,31 +1338,42 @@ module.exports = (socket, users) => {
     });
 
     socket.on(chatCode.GET_GROUP_ONLINE_USERS, async (data) => {        
-        if (!data.token) {
-            socket.emit(chatCode.FORBIDDEN, httpCode.FORBIDDEN);
+        // Make this endpoint public - no token requirement
+        if (!data.groupId) {
+            socket.emit(chatCode.FORBIDDEN, "Group ID is required");
             return;
         }
 
-        const res = isExpired(socket, data, chatCode.GET_GROUP_ONLINE_USERS);
-        if (res.expired) {
-            socket.emit(chatCode.EXPIRED);
-            return;
-        }
         try {
-            // Get sender ID from the token
-            const senderId = verifyUser(data.token);
-            const { 
-                groupId
-            } = data;
-            // Save message to the database
-            const receiverIds = await Controller.getReceiverIdsOfGroup(groupId);
-            // Find the receiver's and sender's socket IDs
-            const receiveUsers = users.filter(user => receiverIds.find(recId => recId == user.ID));
+            const { groupId } = data;
             
-            console.log("======= users ==========", receiveUsers)
-            socket.emit(chatCode.GET_GROUP_ONLINE_USERS, receiveUsers?.map(u => u.ID))
+            // Get all group member IDs from database
+            const receiverIds = await Controller.getReceiverIdsOfGroup(groupId);
+            
+            // Find all online users (both authenticated and anonymous) for this group
+            // This includes:
+            // 1. Authenticated users who are group members
+            // 2. Anonymous users currently in the group
+            const onlineUsers = users.filter(user => {
+                // Include authenticated users who are group members
+                if (user.ID < 100000 && receiverIds.find(recId => recId == user.ID)) {
+                    return true;
+                }
+                // Include anonymous users (ID > 100000) - they are already filtered by group when added
+                if (user.ID > 100000) {
+                    return true;
+                }
+                return false;
+            });
+            
+            console.log("======= Group", groupId, "online users ==========", onlineUsers.length);
+            console.log("Authenticated members:", onlineUsers.filter(u => u.ID < 100000).map(u => u.ID));
+            console.log("Anonymous users:", onlineUsers.filter(u => u.ID > 100000).map(u => u.ID));
+            
+            // Return all online user IDs (both authenticated and anonymous)
+            socket.emit(chatCode.GET_GROUP_ONLINE_USERS, onlineUsers?.map(u => u.ID))
         } catch (error) {
-            console.error("Error sending message:", error);
+            console.error("Error getting group online users:", error);
             socket.emit(chatCode.SERVER_ERROR, httpCode.SERVER_ERROR);
         }
     });
