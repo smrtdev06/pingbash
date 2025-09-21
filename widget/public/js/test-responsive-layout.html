@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Responsive Layout</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #f5f5f5;
+        }
+        .test-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        .test-section h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        .test-results {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 10px;
+            font-family: monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+        }
+        .pass { color: #28a745; }
+        .fail { color: #dc3545; }
+        .info { color: #17a2b8; }
+        .warning { color: #ffc107; }
+        .instructions {
+            background: #e7f3ff;
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 4px solid #007bff;
+            margin-bottom: 20px;
+        }
+        .test-button {
+            padding: 10px 20px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .test-button:hover {
+            background: #0056b3;
+        }
+        .test-button.success {
+            background: #28a745;
+        }
+        .test-button.warning {
+            background: #ffc107;
+            color: #212529;
+        }
+        .width-controls {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .width-slider {
+            width: 100%;
+            margin: 10px 0;
+        }
+        .current-width {
+            font-weight: bold;
+            color: #007bff;
+            font-size: 18px;
+        }
+        .breakpoint-indicator {
+            padding: 8px 12px;
+            border-radius: 4px;
+            margin: 5px 0;
+            font-weight: bold;
+        }
+        .breakpoint-mobile {
+            background: #ffebee;
+            color: #c62828;
+        }
+        .breakpoint-tablet {
+            background: #fff3e0;
+            color: #ef6c00;
+        }
+        .breakpoint-desktop {
+            background: #e8f5e8;
+            color: #2e7d32;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>📱 Responsive Layout Test</h1>
+        <p>Testing responsive behavior of the group creation dialog at different screen widths.</p>
+
+        <div class="instructions">
+            <h4>📋 Test Instructions:</h4>
+            <ol>
+                <li><strong>Open Modal:</strong> Click "Open Group Creation Modal" to open the dialog</li>
+                <li><strong>Test Widths:</strong> Use the width slider to simulate different screen sizes</li>
+                <li><strong>Check Breakpoints:</strong> Verify behavior at < 700px (mobile) and 700-900px (tablet)</li>
+                <li><strong>Verify Hiding:</strong> Confirm preview panel hides at < 700px width</li>
+                <li><strong>Test Responsiveness:</strong> Check that settings panel adapts properly</li>
+            </ol>
+        </div>
+
+        <div class="width-controls">
+            <h4>🖥️ Viewport Width Control</h4>
+            <div>Current Width: <span class="current-width" id="current-width">1200px</span></div>
+            <input type="range" class="width-slider" id="width-slider" min="320" max="1400" value="1200" />
+            <div class="breakpoint-indicator" id="breakpoint-indicator">Desktop (> 900px)</div>
+            
+            <div style="margin-top: 15px;">
+                <button class="test-button" onclick="setWidth(320)">📱 Mobile (320px)</button>
+                <button class="test-button" onclick="setWidth(600)">📱 Mobile (600px)</button>
+                <button class="test-button" onclick="setWidth(800)">📟 Tablet (800px)</button>
+                <button class="test-button" onclick="setWidth(1200)">🖥️ Desktop (1200px)</button>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>🧪 Responsive Tests</h3>
+            <div>
+                <button class="test-button" onclick="openModalAndTest()">🔍 Open Group Creation Modal</button>
+                <button class="test-button" onclick="testCurrentResponsiveness()">📐 Test Current Responsiveness</button>
+                <button class="test-button success" onclick="testAllBreakpoints()">🎯 Test All Breakpoints</button>
+                <button class="test-button warning" onclick="closeModal()">❌ Close Modal</button>
+            </div>
+            
+            <div class="test-results" id="responsive-results">
+                Click buttons above to start responsive testing...
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>📊 Breakpoint Analysis</h3>
+            <div class="test-results" id="breakpoint-analysis">
+                Use width controls to see breakpoint analysis...
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>🎯 Widget Integration</h3>
+            <div id="widget-container"></div>
+        </div>
+    </div>
+
+    <!-- Load the split widget -->
+    <script src="widget-split.js" 
+            data-group-name="memine"
+            data-api-url="https://pingbash.com"
+            data-position="bottom-right"
+            data-theme="light"
+            data-width="500px"
+            data-height="600px"
+            data-auto-open="false">
+    </script>
+
+    <script>
+        let currentModal = null;
+
+        function log(message, target = 'responsive-results') {
+            const output = document.getElementById(target);
+            output.textContent += new Date().toLocaleTimeString() + ': ' + message + '\n';
+        }
+
+        function clearLog(target = 'responsive-results') {
+            document.getElementById(target).textContent = '';
+        }
+
+        function setWidth(width) {
+            document.body.style.width = width + 'px';
+            document.body.style.maxWidth = width + 'px';
+            document.body.style.overflow = 'hidden';
+            
+            // Update slider
+            document.getElementById('width-slider').value = width;
+            updateWidthDisplay(width);
+            
+            // Test responsiveness if modal is open
+            if (currentModal) {
+                setTimeout(() => {
+                    testCurrentResponsiveness();
+                }, 100);
+            }
+        }
+
+        function updateWidthDisplay(width) {
+            document.getElementById('current-width').textContent = width + 'px';
+            
+            const indicator = document.getElementById('breakpoint-indicator');
+            if (width <= 700) {
+                indicator.textContent = 'Mobile (≤ 700px) - Preview Hidden';
+                indicator.className = 'breakpoint-indicator breakpoint-mobile';
+            } else if (width <= 900) {
+                indicator.textContent = 'Tablet (701-900px) - Compact Layout';
+                indicator.className = 'breakpoint-indicator breakpoint-tablet';
+            } else {
+                indicator.textContent = 'Desktop (> 900px) - Full Layout';
+                indicator.className = 'breakpoint-indicator breakpoint-desktop';
+            }
+        }
+
+        function openModalAndTest() {
+            log('🔍 Opening group creation modal...');
+            
+            const logo = document.querySelector('.pingbash-logo');
+            if (logo) {
+                logo.click();
+                log('✅ Logo clicked');
+                
+                setTimeout(() => {
+                    currentModal = document.querySelector('.pingbash-group-creation-modal-body');
+                    if (currentModal) {
+                        log('✅ Modal opened successfully');
+                        testCurrentResponsiveness();
+                    } else {
+                        log('❌ Modal not found after clicking logo');
+                    }
+                }, 1000);
+            } else {
+                log('❌ Logo not found - is widget loaded?');
+            }
+        }
+
+        function testCurrentResponsiveness() {
+            if (!currentModal) {
+                log('❌ Modal not open - open it first');
+                return;
+            }
+
+            const currentWidth = parseInt(document.body.style.width) || window.innerWidth;
+            log(`📐 Testing responsiveness at ${currentWidth}px...`);
+
+            const popupContent = currentModal.querySelector('.pingbash-popup-content');
+            const configContainer = currentModal.querySelector('.pingbash-config-container');
+            const configPanel = currentModal.querySelector('.pingbash-config-panel');
+            const chatPreview = currentModal.querySelector('.pingbash-chat-preview');
+
+            if (!popupContent || !configContainer || !configPanel) {
+                log('❌ Required elements not found');
+                return;
+            }
+
+            // Check popup content responsiveness
+            const popupStyles = window.getComputedStyle(popupContent);
+            log(`📊 Popup Content: ${popupStyles.width} (max: ${popupStyles.maxWidth})`);
+
+            // Check container layout
+            const containerStyles = window.getComputedStyle(configContainer);
+            const isHorizontal = containerStyles.flexDirection === 'row';
+            log(`📊 Container Layout: ${isHorizontal ? 'Horizontal' : 'Vertical'} (flex-direction: ${containerStyles.flexDirection})`);
+
+            // Check preview visibility
+            const previewStyles = chatPreview ? window.getComputedStyle(chatPreview) : null;
+            const previewVisible = previewStyles && previewStyles.display !== 'none';
+            log(`📊 Preview Panel: ${previewVisible ? 'Visible' : 'Hidden'} ${previewStyles ? `(display: ${previewStyles.display})` : ''}`);
+
+            // Check panel dimensions
+            const panelRect = configPanel.getBoundingClientRect();
+            log(`📊 Settings Panel: ${panelRect.width.toFixed(0)}px × ${panelRect.height.toFixed(0)}px`);
+
+            if (chatPreview && previewVisible) {
+                const previewRect = chatPreview.getBoundingClientRect();
+                log(`📊 Preview Panel: ${previewRect.width.toFixed(0)}px × ${previewRect.height.toFixed(0)}px`);
+            }
+
+            // Validate expected behavior
+            log('🎯 Validation:');
+            if (currentWidth <= 700) {
+                if (!previewVisible) {
+                    log('✅ Preview correctly hidden at mobile width');
+                } else {
+                    log('❌ Preview should be hidden at mobile width');
+                }
+                
+                if (!isHorizontal) {
+                    log('✅ Layout correctly switched to vertical at mobile width');
+                } else {
+                    log('❌ Layout should be vertical at mobile width');
+                }
+            } else {
+                if (previewVisible) {
+                    log('✅ Preview correctly visible at desktop/tablet width');
+                } else {
+                    log('❌ Preview should be visible at desktop/tablet width');
+                }
+                
+                if (isHorizontal) {
+                    log('✅ Layout correctly horizontal at desktop/tablet width');
+                } else {
+                    log('❌ Layout should be horizontal at desktop/tablet width');
+                }
+            }
+        }
+
+        function testAllBreakpoints() {
+            log('🎯 Testing all breakpoints...');
+            clearLog();
+            
+            const breakpoints = [
+                { width: 320, name: 'Mobile Small' },
+                { width: 600, name: 'Mobile Large' },
+                { width: 700, name: 'Mobile/Tablet Boundary' },
+                { width: 800, name: 'Tablet' },
+                { width: 900, name: 'Tablet/Desktop Boundary' },
+                { width: 1200, name: 'Desktop' }
+            ];
+
+            let currentIndex = 0;
+
+            function testNextBreakpoint() {
+                if (currentIndex >= breakpoints.length) {
+                    log('🎉 All breakpoint tests completed!');
+                    return;
+                }
+
+                const bp = breakpoints[currentIndex];
+                log(`\n📱 Testing ${bp.name} (${bp.width}px):`);
+                
+                setWidth(bp.width);
+                
+                setTimeout(() => {
+                    testCurrentResponsiveness();
+                    currentIndex++;
+                    setTimeout(testNextBreakpoint, 500);
+                }, 300);
+            }
+
+            if (!currentModal) {
+                openModalAndTest();
+                setTimeout(() => {
+                    testNextBreakpoint();
+                }, 1500);
+            } else {
+                testNextBreakpoint();
+            }
+        }
+
+        function closeModal() {
+            const closeBtn = document.querySelector('.pingbash-popup-close');
+            if (closeBtn) {
+                closeBtn.click();
+                currentModal = null;
+                log('✅ Modal closed');
+            } else {
+                log('❌ Close button not found');
+            }
+        }
+
+        // Width slider event
+        document.getElementById('width-slider').addEventListener('input', function() {
+            const width = parseInt(this.value);
+            setWidth(width);
+        });
+
+        // Update breakpoint analysis
+        function updateBreakpointAnalysis() {
+            const currentWidth = parseInt(document.body.style.width) || window.innerWidth;
+            const analysis = document.getElementById('breakpoint-analysis');
+            
+            let content = `Current Width: ${currentWidth}px\n\n`;
+            content += `Breakpoint Rules:\n`;
+            content += `• ≤ 700px: Mobile - Preview hidden, vertical layout, compact spacing\n`;
+            content += `• 701-900px: Tablet - Preview visible, horizontal layout, smaller settings panel\n`;
+            content += `• > 900px: Desktop - Preview visible, horizontal layout, full-size settings panel\n\n`;
+            
+            content += `Current State:\n`;
+            if (currentWidth <= 700) {
+                content += `• Mode: Mobile\n`;
+                content += `• Preview: Hidden\n`;
+                content += `• Layout: Vertical\n`;
+                content += `• Settings Panel: Full width\n`;
+            } else if (currentWidth <= 900) {
+                content += `• Mode: Tablet\n`;
+                content += `• Preview: Visible\n`;
+                content += `• Layout: Horizontal\n`;
+                content += `• Settings Panel: 280px width\n`;
+            } else {
+                content += `• Mode: Desktop\n`;
+                content += `• Preview: Visible\n`;
+                content += `• Layout: Horizontal\n`;
+                content += `• Settings Panel: 320px width\n`;
+            }
+            
+            analysis.textContent = content;
+        }
+
+        // Initialize
+        updateWidthDisplay(1200);
+        updateBreakpointAnalysis();
+
+        // Update analysis when width changes
+        document.getElementById('width-slider').addEventListener('input', updateBreakpointAnalysis);
+
+        log('📱 Responsive Layout Test loaded - ready to test breakpoints');
+    </script>
+</body>
+</html> 

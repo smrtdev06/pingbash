@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Group Creation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #f5f5f5;
+        }
+        .test-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        .test-section h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        .test-results {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 10px;
+            font-family: monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+        }
+        .pass { color: #28a745; }
+        .fail { color: #dc3545; }
+        .info { color: #17a2b8; }
+        .warning { color: #ffc107; }
+        .test-button {
+            padding: 10px 20px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .test-button:hover {
+            background: #0056b3;
+        }
+        .test-button.success {
+            background: #28a745;
+        }
+        .test-button.danger {
+            background: #dc3545;
+        }
+        .test-input {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin: 5px;
+            width: 200px;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🏗️ Group Creation Test</h1>
+        <p>Testing group creation functionality (same as W version).</p>
+
+        <div class="test-section">
+            <h3>🧪 Group Creation Tests</h3>
+            <div>
+                <button class="test-button" onclick="openChatAndTest()">💬 Open Chat</button>
+                <button class="test-button" onclick="clickLogoToCreateGroup()">🎯 Click Logo (Create Group)</button>
+                <button class="test-button success" onclick="testGroupCreationModal()">🏗️ Test Modal Elements</button>
+                <button class="test-button" onclick="testFormValidation()">✅ Test Form Validation</button>
+                <button class="test-button danger" onclick="testGroupCreation()">🚀 Test Actual Creation</button>
+            </div>
+            
+            <div class="test-results" id="group-test-results">
+                Click buttons above to start group creation testing...
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>📝 Manual Test</h3>
+            <p>Manually test group creation with custom values:</p>
+            <div>
+                <input type="text" class="test-input" id="test-group-name" placeholder="Group Name" value="Test Group 123">
+                <button class="test-button success" onclick="fillAndCreateGroup()">📝 Fill Form & Create</button>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>📊 Modal Analysis</h3>
+            <div class="test-results" id="modal-analysis">
+                Open group creation modal to see analysis...
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>🎯 Widget Integration</h3>
+            <div id="widget-container"></div>
+        </div>
+    </div>
+
+    <!-- Load the split widget -->
+    <script src="widget-split.js" 
+            data-group-name="memine"
+            data-api-url="https://pingbash.com"
+            data-position="bottom-right"
+            data-theme="light"
+            data-width="500px"
+            data-height="600px"
+            data-auto-open="false">
+    </script>
+
+    <script>
+        function log(message, target = 'group-test-results') {
+            const output = document.getElementById(target);
+            output.textContent += new Date().toLocaleTimeString() + ': ' + message + '\n';
+        }
+
+        function clearLog(target = 'group-test-results') {
+            document.getElementById(target).textContent = '';
+        }
+
+        function openChatAndTest() {
+            log('💬 Opening chat...');
+            
+            const chatButton = document.querySelector('.pingbash-chat-button');
+            if (chatButton) {
+                chatButton.click();
+                log('✅ Chat button clicked');
+                
+                setTimeout(() => {
+                    analyzeWidget();
+                }, 1000);
+            } else {
+                log('❌ Chat button not found - is widget loaded?');
+            }
+        }
+
+        function clickLogoToCreateGroup() {
+            log('🎯 Clicking logo to open group creation...');
+            
+            const logo = document.querySelector('.pingbash-logo');
+            if (logo) {
+                logo.click();
+                log('✅ Logo clicked');
+                
+                setTimeout(() => {
+                    testGroupCreationModal();
+                }, 500);
+            } else {
+                log('❌ Logo not found - open chat first');
+            }
+        }
+
+        function testGroupCreationModal() {
+            log('🏗️ Testing group creation modal...');
+            
+            // Check if modal exists in body
+            const bodyModal = document.body.querySelector('.pingbash-group-creation-modal-body');
+            if (bodyModal) {
+                log('✅ Body modal found');
+                
+                // Test form elements
+                const groupNameInput = bodyModal.querySelector('#group-name-input-body');
+                const createBtn = bodyModal.querySelector('.pingbash-create-group-btn');
+                const closeBtn = bodyModal.querySelector('.pingbash-popup-close');
+                
+                log(`📝 Group name input: ${groupNameInput ? '✅ Found' : '❌ Missing'}`);
+                log(`🚀 Create button: ${createBtn ? '✅ Found' : '❌ Missing'}`);
+                log(`❌ Close button: ${closeBtn ? '✅ Found' : '❌ Missing'}`);
+                
+                if (groupNameInput) {
+                    log(`📊 Input value: "${groupNameInput.value}"`);
+                    log(`📊 Input placeholder: "${groupNameInput.placeholder}"`);
+                }
+                
+                if (createBtn) {
+                    log(`📊 Create button text: "${createBtn.textContent}"`);
+                    log(`📊 Create button disabled: ${createBtn.disabled}`);
+                }
+                
+                // Test other form elements
+                testFormElements(bodyModal);
+                
+                updateModalAnalysis();
+            } else {
+                log('❌ Body modal not found - click logo first');
+            }
+        }
+
+        function testFormElements(modal) {
+            log('\n🔍 Testing form elements...');
+            
+            const elements = [
+                { selector: '#bg-color-body', name: 'Background Color' },
+                { selector: '#title-color-body', name: 'Title Color' },
+                { selector: '#msg-bg-color-body', name: 'Message Background' },
+                { selector: '#msg-text-color-body', name: 'Message Text' },
+                { selector: '#input-bg-color-body', name: 'Input Background' },
+                { selector: '#show-avatars-body', name: 'Show Avatars' },
+                { selector: '#custom-font-size-body', name: 'Custom Font Size' },
+                { selector: '#round-corners-body', name: 'Round Corners' },
+                { selector: '#font-size-slider-body', name: 'Font Size Slider' },
+                { selector: '#corner-radius-slider-body', name: 'Corner Radius Slider' },
+                { selector: 'input[name="size-mode-body"]', name: 'Size Mode Radio' },
+                { selector: '#width-input-body', name: 'Width Input' },
+                { selector: '#height-input-body', name: 'Height Input' }
+            ];
+            
+            elements.forEach(element => {
+                const el = modal.querySelector(element.selector);
+                if (el) {
+                    let value = '';
+                    if (el.type === 'checkbox' || el.type === 'radio') {
+                        value = el.checked ? 'checked' : 'unchecked';
+                    } else {
+                        value = el.value || 'empty';
+                    }
+                    log(`  ✅ ${element.name}: ${value}`);
+                } else {
+                    log(`  ❌ ${element.name}: Missing`);
+                }
+            });
+        }
+
+        function testFormValidation() {
+            log('✅ Testing form validation...');
+            
+            const bodyModal = document.body.querySelector('.pingbash-group-creation-modal-body');
+            if (!bodyModal) {
+                log('❌ Modal not found - open it first');
+                return;
+            }
+            
+            const groupNameInput = bodyModal.querySelector('#group-name-input-body');
+            const createBtn = bodyModal.querySelector('.pingbash-create-group-btn');
+            
+            if (!groupNameInput || !createBtn) {
+                log('❌ Form elements not found');
+                return;
+            }
+            
+            // Test empty name
+            log('🧪 Testing empty group name...');
+            groupNameInput.value = '';
+            groupNameInput.dispatchEvent(new Event('input', { bubbles: true }));
+            
+            setTimeout(() => {
+                log(`📊 Create button disabled with empty name: ${createBtn.disabled}`);
+                
+                // Test with valid name
+                log('🧪 Testing valid group name...');
+                groupNameInput.value = 'Test Group';
+                groupNameInput.dispatchEvent(new Event('input', { bubbles: true }));
+                
+                setTimeout(() => {
+                    log(`📊 Create button enabled with valid name: ${!createBtn.disabled}`);
+                }, 100);
+            }, 100);
+        }
+
+        function testGroupCreation() {
+            log('🚀 Testing actual group creation...');
+            
+            const bodyModal = document.body.querySelector('.pingbash-group-creation-modal-body');
+            if (!bodyModal) {
+                log('❌ Modal not found - open it first');
+                return;
+            }
+            
+            const groupNameInput = bodyModal.querySelector('#group-name-input-body');
+            const createBtn = bodyModal.querySelector('.pingbash-create-group-btn');
+            
+            if (!groupNameInput || !createBtn) {
+                log('❌ Form elements not found');
+                return;
+            }
+            
+            // Fill in test data
+            groupNameInput.value = 'Test Group ' + Date.now();
+            groupNameInput.dispatchEvent(new Event('input', { bubbles: true }));
+            
+            log(`📝 Set group name: "${groupNameInput.value}"`);
+            
+            // Check widget authentication
+            if (window.pingbashWidget) {
+                log(`🔐 Widget authenticated: ${window.pingbashWidget.isAuthenticated}`);
+                log(`🔐 Has token: ${!!window.pingbashWidget.authenticatedToken}`);
+                log(`👤 User ID: ${window.pingbashWidget.currentUserId}`);
+            }
+            
+            // Click create button
+            log('🚀 Clicking create button...');
+            createBtn.click();
+            
+            // Monitor for success/error
+            setTimeout(() => {
+                if (bodyModal.style.display === 'none' || !document.body.contains(bodyModal)) {
+                    log('✅ Modal closed - group creation likely succeeded');
+                } else {
+                    log('⚠️ Modal still open - check for errors');
+                }
+            }, 3000);
+        }
+
+        function fillAndCreateGroup() {
+            const testGroupName = document.getElementById('test-group-name').value;
+            log(`📝 Manual test with group name: "${testGroupName}"`);
+            
+            const bodyModal = document.body.querySelector('.pingbash-group-creation-modal-body');
+            if (!bodyModal) {
+                log('❌ Modal not found - click logo first');
+                return;
+            }
+            
+            const groupNameInput = bodyModal.querySelector('#group-name-input-body');
+            if (groupNameInput) {
+                groupNameInput.value = testGroupName;
+                groupNameInput.dispatchEvent(new Event('input', { bubbles: true }));
+                log('✅ Group name filled');
+                
+                setTimeout(() => {
+                    testGroupCreation();
+                }, 500);
+            } else {
+                log('❌ Group name input not found');
+            }
+        }
+
+        function analyzeWidget() {
+            log('🔍 Analyzing widget state...');
+            
+            if (window.pingbashWidget) {
+                log('✅ Widget instance found');
+                log(`📊 Config: ${JSON.stringify(window.pingbashWidget.config, null, 2)}`);
+                log(`🔐 Authenticated: ${window.pingbashWidget.isAuthenticated}`);
+                log(`👤 User ID: ${window.pingbashWidget.currentUserId}`);
+                
+                // Check methods
+                const methods = [
+                    'showGroupCreationModal',
+                    'createNewGroup',
+                    'getCurrentConfigFromBodyModal',
+                    'getDefaultConfig'
+                ];
+                
+                methods.forEach(method => {
+                    if (typeof window.pingbashWidget[method] === 'function') {
+                        log(`✅ Method ${method}: Available`);
+                    } else {
+                        log(`❌ Method ${method}: Missing`);
+                    }
+                });
+            } else {
+                log('❌ Widget instance not found');
+            }
+        }
+
+        function updateModalAnalysis() {
+            const analysis = document.getElementById('modal-analysis');
+            const bodyModal = document.body.querySelector('.pingbash-group-creation-modal-body');
+            
+            let content = `Group Creation Modal Analysis:\n\n`;
+            
+            if (bodyModal) {
+                content += `✅ Modal Status: Open\n`;
+                content += `📊 Modal Class: ${bodyModal.className}\n`;
+                content += `🎨 Modal Display: ${bodyModal.style.display || 'default'}\n`;
+                content += `📏 Modal Z-Index: ${bodyModal.style.zIndex || 'default'}\n\n`;
+                
+                // Form elements analysis
+                const groupNameInput = bodyModal.querySelector('#group-name-input-body');
+                const createBtn = bodyModal.querySelector('.pingbash-create-group-btn');
+                
+                if (groupNameInput) {
+                    content += `📝 Group Name Input:\n`;
+                    content += `  Value: "${groupNameInput.value}"\n`;
+                    content += `  Placeholder: "${groupNameInput.placeholder}"\n`;
+                    content += `  Disabled: ${groupNameInput.disabled}\n\n`;
+                }
+                
+                if (createBtn) {
+                    content += `🚀 Create Button:\n`;
+                    content += `  Text: "${createBtn.textContent}"\n`;
+                    content += `  Disabled: ${createBtn.disabled}\n`;
+                    content += `  Class: ${createBtn.className}\n\n`;
+                }
+                
+                // Count form elements
+                const inputs = bodyModal.querySelectorAll('input');
+                const buttons = bodyModal.querySelectorAll('button');
+                const selects = bodyModal.querySelectorAll('select');
+                
+                content += `📊 Form Elements:\n`;
+                content += `  Inputs: ${inputs.length}\n`;
+                content += `  Buttons: ${buttons.length}\n`;
+                content += `  Selects: ${selects.length}\n`;
+            } else {
+                content += `❌ Modal Status: Not Found\n`;
+                content += `💡 Click logo to open group creation modal\n`;
+            }
+            
+            analysis.textContent = content;
+        }
+
+        // Auto-update analysis when modal changes
+        setInterval(() => {
+            const bodyModal = document.body.querySelector('.pingbash-group-creation-modal-body');
+            if (bodyModal) {
+                updateModalAnalysis();
+            }
+        }, 2000);
+
+        log('🏗️ Group Creation Test loaded - ready to test group creation');
+    </script>
+</body>
+</html> 

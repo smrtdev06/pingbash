@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Horizontal Layout</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #f5f5f5;
+        }
+        .debug-info {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .debug-button {
+            padding: 10px 20px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .debug-results {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 10px;
+            font-family: monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="debug-info">
+        <h1>🐛 Debug Horizontal Layout</h1>
+        <p>This page will help debug why the panels are still stacked vertically.</p>
+        
+        <button class="debug-button" onclick="openModalAndDebug()">🔍 Open Modal & Debug</button>
+        <button class="debug-button" onclick="debugCurrentLayout()">📐 Debug Current Layout</button>
+        <button class="debug-button" onclick="forceHorizontalLayout()">🔧 Force Horizontal Layout</button>
+        
+        <div class="debug-results" id="debug-output">
+            Click buttons above to start debugging...
+        </div>
+    </div>
+
+    <!-- Load the split widget -->
+    <script src="widget-split.js" 
+            data-group-name="memine"
+            data-api-url="https://pingbash.com"
+            data-position="bottom-right"
+            data-theme="light"
+            data-width="500px"
+            data-height="600px"
+            data-auto-open="false">
+    </script>
+
+    <script>
+        function log(message) {
+            const output = document.getElementById('debug-output');
+            output.textContent += new Date().toLocaleTimeString() + ': ' + message + '\n';
+        }
+
+        function openModalAndDebug() {
+            log('🔍 Opening group creation modal...');
+            
+            // Click the logo to open modal
+            const logo = document.querySelector('.pingbash-logo');
+            if (logo) {
+                logo.click();
+                log('✅ Logo clicked');
+                
+                // Wait for modal to open then debug
+                setTimeout(() => {
+                    debugCurrentLayout();
+                }, 1000);
+            } else {
+                log('❌ Logo not found - is widget loaded?');
+            }
+        }
+
+        function debugCurrentLayout() {
+            log('📐 Debugging current layout...');
+            
+            const modal = document.querySelector('.pingbash-group-creation-modal-body');
+            if (!modal) {
+                log('❌ Modal not found - open it first');
+                return;
+            }
+
+            const popupContent = modal.querySelector('.pingbash-popup-content');
+            const configWidget = modal.querySelector('.pingbash-group-config-widget');
+            const configContainer = modal.querySelector('.pingbash-config-container');
+            const configPanel = modal.querySelector('.pingbash-config-panel');
+            const chatPreview = modal.querySelector('.pingbash-chat-preview');
+
+            log('🔍 Element existence check:');
+            log(`  Modal: ${modal ? '✅' : '❌'}`);
+            log(`  Popup Content: ${popupContent ? '✅' : '❌'}`);
+            log(`  Config Widget: ${configWidget ? '✅' : '❌'}`);
+            log(`  Config Container: ${configContainer ? '✅' : '❌'}`);
+            log(`  Config Panel: ${configPanel ? '✅' : '❌'}`);
+            log(`  Chat Preview: ${chatPreview ? '✅' : '❌'}`);
+
+            if (popupContent) {
+                const popupStyles = window.getComputedStyle(popupContent);
+                log('📊 Popup Content Styles:');
+                log(`  display: ${popupStyles.display}`);
+                log(`  flex-direction: ${popupStyles.flexDirection}`);
+                log(`  width: ${popupStyles.width}`);
+                log(`  height: ${popupStyles.height}`);
+            }
+
+            if (configContainer) {
+                const containerStyles = window.getComputedStyle(configContainer);
+                log('📊 Config Container Styles:');
+                log(`  display: ${containerStyles.display}`);
+                log(`  flex-direction: ${containerStyles.flexDirection}`);
+                log(`  gap: ${containerStyles.gap}`);
+                log(`  width: ${containerStyles.width}`);
+                log(`  height: ${containerStyles.height}`);
+                log(`  flex: ${containerStyles.flex}`);
+                
+                const rect = configContainer.getBoundingClientRect();
+                log(`  Dimensions: ${rect.width}x${rect.height}`);
+                log(`  Position: ${rect.left}, ${rect.top}`);
+            }
+
+            if (configPanel && chatPreview) {
+                const panelRect = configPanel.getBoundingClientRect();
+                const previewRect = chatPreview.getBoundingClientRect();
+                
+                log('📊 Panel Positions:');
+                log(`  Config Panel: ${panelRect.left}, ${panelRect.top} (${panelRect.width}x${panelRect.height})`);
+                log(`  Chat Preview: ${previewRect.left}, ${previewRect.top} (${previewRect.width}x${previewRect.height})`);
+                
+                const isHorizontal = panelRect.left < previewRect.left && Math.abs(panelRect.top - previewRect.top) < 50;
+                log(`🎯 Layout: ${isHorizontal ? 'HORIZONTAL ✅' : 'VERTICAL ❌'}`);
+                
+                if (!isHorizontal) {
+                    log('🔧 Panels are stacked vertically - investigating...');
+                    
+                    // Check if container is too narrow
+                    const containerRect = configContainer.getBoundingClientRect();
+                    const minRequiredWidth = 320 + 300 + 20; // panel + preview + gap
+                    
+                    if (containerRect.width < minRequiredWidth) {
+                        log(`⚠️ Container too narrow: ${containerRect.width}px < ${minRequiredWidth}px required`);
+                    }
+                    
+                    // Check flex properties
+                    const panelStyles = window.getComputedStyle(configPanel);
+                    const previewStyles = window.getComputedStyle(chatPreview);
+                    
+                    log('🔍 Flex Properties:');
+                    log(`  Config Panel flex: ${panelStyles.flex}`);
+                    log(`  Chat Preview flex: ${previewStyles.flex}`);
+                    log(`  Config Panel width: ${panelStyles.width}`);
+                    log(`  Chat Preview width: ${previewStyles.width}`);
+                }
+            }
+        }
+
+        function forceHorizontalLayout() {
+            log('🔧 Forcing horizontal layout...');
+            
+            const modal = document.querySelector('.pingbash-group-creation-modal-body');
+            if (!modal) {
+                log('❌ Modal not found');
+                return;
+            }
+
+            // Apply inline styles to force horizontal layout
+            const configContainer = modal.querySelector('.pingbash-config-container');
+            if (configContainer) {
+                configContainer.style.cssText = `
+                    display: flex !important;
+                    flex-direction: row !important;
+                    gap: 20px !important;
+                    width: 100% !important;
+                    height: 100% !important;
+                    align-items: stretch !important;
+                    flex-wrap: nowrap !important;
+                `;
+                log('✅ Applied container styles');
+            }
+
+            const configPanel = modal.querySelector('.pingbash-config-panel');
+            if (configPanel) {
+                configPanel.style.cssText = `
+                    width: 320px !important;
+                    min-width: 320px !important;
+                    max-width: 320px !important;
+                    flex: 0 0 320px !important;
+                    height: 100% !important;
+                    overflow-y: auto !important;
+                `;
+                log('✅ Applied panel styles');
+            }
+
+            const chatPreview = modal.querySelector('.pingbash-chat-preview');
+            if (chatPreview) {
+                chatPreview.style.cssText = `
+                    flex: 1 !important;
+                    min-width: 300px !important;
+                    height: 100% !important;
+                    display: flex !important;
+                    flex-direction: column !important;
+                `;
+                log('✅ Applied preview styles');
+            }
+
+            // Check result
+            setTimeout(() => {
+                log('🔍 Checking forced layout...');
+                debugCurrentLayout();
+            }, 100);
+        }
+
+        // Auto-debug when modal opens
+        setInterval(() => {
+            const modal = document.querySelector('.pingbash-group-creation-modal-body');
+            if (modal && !window.debuggedOnce) {
+                window.debuggedOnce = true;
+                log('🎯 Modal detected - auto-debugging...');
+                setTimeout(debugCurrentLayout, 500);
+            }
+        }, 1000);
+
+        log('🐛 Debug page loaded - ready to debug horizontal layout');
+    </script>
+</body>
+</html> 

@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test F Version Group Creation Format</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #f5f5f5;
+        }
+        .test-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        .test-section h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        .test-results {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 10px;
+            font-family: monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+        }
+        .pass { color: #28a745; }
+        .fail { color: #dc3545; }
+        .info { color: #17a2b8; }
+        .warning { color: #ffc107; }
+        .test-button {
+            padding: 10px 20px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .test-button:hover {
+            background: #0056b3;
+        }
+        .test-button.success {
+            background: #28a745;
+        }
+        .test-button.danger {
+            background: #dc3545;
+        }
+        .json-display {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            overflow-x: auto;
+            white-space: pre;
+        }
+        .format-comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .format-box {
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background: #f8f9fa;
+        }
+        .format-box h4 {
+            margin-top: 0;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>📱 F Version Group Creation Test</h1>
+        <p>Testing group creation using the exact F version format (strings and booleans).</p>
+
+        <div class="test-section">
+            <h3>🧪 F Version Format Tests</h3>
+            <div>
+                <button class="test-button" onclick="openChatAndTest()">💬 Open Chat</button>
+                <button class="test-button success" onclick="testFVersionSimpleFormat()">📱 Test F Simple Format</button>
+                <button class="test-button success" onclick="testFVersionFullFormat()">📱 Test F Full Format</button>
+                <button class="test-button danger" onclick="testWidgetFormat()">🔧 Test Widget Format</button>
+            </div>
+            
+            <div class="test-results" id="f-version-test-results">
+                Click buttons above to start F version format testing...
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>📊 F Version Format Analysis</h3>
+            <div class="format-comparison">
+                <div class="format-box">
+                    <h4>📱 F Simple Format (Groups Page)</h4>
+                    <div class="json-display" id="f-simple-format">
+                        Click "Test F Simple Format" to see...
+                    </div>
+                </div>
+                <div class="format-box">
+                    <h4>📱 F Full Format (Group Chat Page)</h4>
+                    <div class="json-display" id="f-full-format">
+                        Click "Test F Full Format" to see...
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>📡 API Test Results</h3>
+            <div class="json-display" id="api-results">
+                Test results will appear here...
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>🎯 Widget Integration</h3>
+            <div id="widget-container"></div>
+        </div>
+    </div>
+
+    <!-- Load the split widget -->
+    <script src="widget-split.js" 
+            data-group-name="memine"
+            data-api-url="https://pingbash.com"
+            data-position="bottom-right"
+            data-theme="light"
+            data-width="500px"
+            data-height="600px"
+            data-auto-open="false">
+    </script>
+
+    <script>
+        function log(message, target = 'f-version-test-results') {
+            const output = document.getElementById(target);
+            output.textContent += new Date().toLocaleTimeString() + ': ' + message + '\n';
+        }
+
+        function clearLog(target = 'f-version-test-results') {
+            document.getElementById(target).textContent = '';
+        }
+
+        function displayJSON(data, target) {
+            const output = document.getElementById(target);
+            output.textContent = JSON.stringify(data, null, 2);
+        }
+
+        function openChatAndTest() {
+            log('💬 Opening chat...');
+            
+            const chatButton = document.querySelector('.pingbash-chat-button');
+            if (chatButton) {
+                chatButton.click();
+                log('✅ Chat button clicked');
+                
+                setTimeout(() => {
+                    checkWidgetState();
+                }, 1000);
+            } else {
+                log('❌ Chat button not found - is widget loaded?');
+            }
+        }
+
+        function checkWidgetState() {
+            if (window.pingbashWidget) {
+                log(`✅ Widget authenticated: ${window.pingbashWidget.isAuthenticated}`);
+                log(`👤 User ID: ${window.pingbashWidget.currentUserId}`);
+                log(`🌐 API URL: ${window.pingbashWidget.config?.apiUrl}`);
+            } else {
+                log('❌ Widget not found');
+            }
+        }
+
+        function getFVersionSimpleFormat() {
+            // F Version simple format (from /groups/page.tsx)
+            return {
+                groupName: 'F Simple Test ' + Date.now(),
+                createrId: parseInt(window.pingbashWidget?.currentUserId || 108)
+                // Only 2 fields - backend should use defaults for the rest
+            };
+        }
+
+        function getFVersionFullFormat() {
+            // F Version full format (from /groupChat/page.tsx)
+            return {
+                groupName: 'F Full Test ' + Date.now(),
+                createrId: parseInt(window.pingbashWidget?.currentUserId || 108),
+                size_mode: 'responsive',        // STRING: 'fixed' or 'responsive'
+                frame_width: 500,
+                frame_height: 600,
+                bg_color: '#FFFFFF',
+                title_color: '#333333',
+                msg_bg_color: '#F5F5F5',
+                msg_txt_color: '#333333',
+                reply_msg_color: '#666666',     // Separate color field
+                msg_date_color: '#999999',      // Separate color field
+                input_bg_color: '#FFFFFF',
+                show_user_img: true,            // BOOLEAN: true/false
+                custom_font_size: false,        // BOOLEAN: true/false
+                font_size: 14,
+                round_corners: true,            // BOOLEAN: true/false
+                corner_radius: 12,
+                chat_rules: '',
+                show_chat_rules: false          // BOOLEAN: true/false
+            };
+        }
+
+        function getWidgetCurrentFormat() {
+            // Current widget format (should match F full format now)
+            if (!window.pingbashWidget) return null;
+            
+            // Open group creation modal to get config
+            const logo = document.querySelector('.pingbash-logo');
+            if (logo) {
+                logo.click();
+                
+                setTimeout(() => {
+                    if (typeof window.pingbashWidget.getCurrentConfigFromBodyModal === 'function') {
+                        const config = window.pingbashWidget.getCurrentConfigFromBodyModal();
+                        
+                        return {
+                            groupName: 'Widget Test ' + Date.now(),
+                            createrId: parseInt(window.pingbashWidget.currentUserId),
+                            size_mode: config.sizeMode,
+                            frame_width: config.width,
+                            frame_height: config.height,
+                            bg_color: config.colors.background,
+                            title_color: config.colors.title,
+                            msg_bg_color: config.colors.msgBg,
+                            msg_txt_color: config.colors.msgText,
+                            reply_msg_color: config.colors.replyText || config.colors.msgText,
+                            msg_date_color: config.colors.dateText || config.colors.msgText,
+                            input_bg_color: config.colors.inputBg,
+                            show_user_img: config.settings.userImages,
+                            custom_font_size: config.settings.customFontSize,
+                            font_size: config.settings.fontSize,
+                            round_corners: config.settings.roundCorners,
+                            corner_radius: config.settings.cornerRadius,
+                            chat_rules: '',
+                            show_chat_rules: config.settings.showChatRules
+                        };
+                    }
+                }, 500);
+            }
+            
+            return null;
+        }
+
+        function testFVersionSimpleFormat() {
+            log('📱 Testing F version simple format...');
+            
+            const fSimpleFormat = getFVersionSimpleFormat();
+            displayJSON(fSimpleFormat, 'f-simple-format');
+            
+            log('📊 F simple format generated');
+            log('📋 Key characteristics:');
+            log('  - Only groupName and createrId');
+            log('  - Backend uses defaults for other fields');
+            log('  - Used in F version /groups page');
+        }
+
+        function testFVersionFullFormat() {
+            log('📱 Testing F version full format...');
+            
+            const fFullFormat = getFVersionFullFormat();
+            displayJSON(fFullFormat, 'f-full-format');
+            
+            log('📊 F full format generated');
+            log('📋 Key characteristics:');
+            log('  - size_mode: STRING (fixed/responsive)');
+            log('  - Booleans as BOOLEANS (true/false)');
+            log('  - reply_msg_color: separate color');
+            log('  - msg_date_color: separate color');
+            log('  - Used in F version /groupChat page');
+        }
+
+        async function testWidgetFormat() {
+            log('🔧 Testing current widget format...');
+            
+            if (!window.pingbashWidget?.isAuthenticated) {
+                log('❌ Widget not authenticated - please sign in first');
+                return;
+            }
+
+            // Test the actual widget group creation
+            log('🚀 Testing widget group creation...');
+            
+            try {
+                // Use the F full format for testing
+                const testData = getFVersionFullFormat();
+                const result = await testAPICall(testData, 'Widget F Format');
+                
+                displayJSON({
+                    testData: testData,
+                    result: result
+                }, 'api-results');
+                
+                if (result.success) {
+                    log('✅ Widget format (F version) works!');
+                } else {
+                    log(`❌ Widget format failed: ${result.data?.error || result.statusText}`);
+                }
+                
+            } catch (error) {
+                log(`❌ Widget format error: ${error.message}`);
+            }
+        }
+
+        async function testAPICall(groupData, formatName) {
+            log(`📤 Testing ${formatName}...`);
+            
+            try {
+                const response = await fetch(`${window.pingbashWidget.config.apiUrl}/api/private/add/groups/create`, {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                        'Authorization': window.pingbashWidget.authenticatedToken
+                    },
+                    body: JSON.stringify(groupData)
+                });
+
+                const responseText = await response.text();
+                let responseData;
+                
+                try {
+                    responseData = JSON.parse(responseText);
+                } catch (parseError) {
+                    responseData = { error: 'Invalid JSON', rawText: responseText };
+                }
+
+                const result = {
+                    format: formatName,
+                    success: response.ok,
+                    status: response.status,
+                    statusText: response.statusText,
+                    data: responseData,
+                    sentData: groupData
+                };
+
+                log(`📡 ${formatName}: ${response.status} ${response.statusText}`);
+                
+                if (response.ok) {
+                    log(`✅ ${formatName}: SUCCESS`);
+                } else {
+                    log(`❌ ${formatName}: FAILED - ${responseData.error || responseText}`);
+                }
+
+                return result;
+
+            } catch (error) {
+                log(`❌ ${formatName}: Network error - ${error.message}`);
+                return {
+                    format: formatName,
+                    success: false,
+                    error: error.message,
+                    sentData: groupData
+                };
+            }
+        }
+
+        // Initialize
+        log('📱 F Version Group Creation Test loaded');
+        log('💡 Testing F version format (strings and booleans)');
+        log('💡 F version has 2 approaches:');
+        log('   - Simple: only groupName + createrId (groups page)');
+        log('   - Full: all configuration fields (groupChat page)');
+    </script>
+</body>
+</html> 
