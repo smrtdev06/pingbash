@@ -330,7 +330,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
         .pingbash-messages-list {
           flex: 1;
           overflow-y: auto;
-          padding: 16px;
+          padding: 2px;
           scroll-behavior: smooth;
         }
         
@@ -342,7 +342,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
         }
         
         .pingbash-message {
-          margin-bottom: 16px;
+          margin-bottom: 2px;
           opacity: 1;
         }
         
@@ -354,7 +354,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
         .pingbash-message-content {
           display: flex;
           align-items: flex-start;
-          gap: 8px;
+          gap: 2px;
           max-width: 100%;
           word-wrap: break-word;
         }
@@ -366,30 +366,30 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
         }
 
         .pingbash-avatar-image {
-          width: 40px;
-          height: 40px;
+          width: 32px;
+          height: 32px;
           border-radius: 50%;
           object-fit: cover;
           display: block;
         }
 
         .pingbash-avatar-fallback {
-          width: 40px;
-          height: 40px;
+          width: 32px;
+          height: 32px;
           border-radius: 50%;
           display: flex;
           align-items: center;
           justify-content: center;
           color: white;
           font-weight: bold;
-          font-size: 16px;
+          font-size: 14px;
           text-transform: uppercase;
         }
 
         .pingbash-message-body {
           flex: 1;
           min-width: 0;
-          padding: 10px 14px;
+          padding: 4px 8px;
           border-radius: 18px;
           position: relative;
         }
@@ -428,7 +428,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
           display: flex;
           justify-content: space-between;
           align-items: center;
-          margin-bottom: 4px;
+          margin-bottom: 1px;
           opacity: 0.7;
           font-size: 11px;
         }
@@ -457,7 +457,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
           max-width: 200px !important;
           max-height: 200px !important;
           border-radius: 8px !important;
-          margin: 4px 0 !important;
+          margin: 1px 0 !important;
           display: block !important;
         }
         
