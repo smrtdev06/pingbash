@@ -871,24 +871,42 @@ const banGroupUserWithIp = async (groupId, userId, ipAddress, bannedBy) => {
             console.log(`➕ Created new IP ban for ${ipAddress}`);
         }
         
-        console.log(`🚫 IP BAN ADDED: User ${userId}, IP ${ipAddress} banned from group ${groupId} by ${bannedBy}`);
+        console.log(`🚫 [IP-BAN-DB] IP BAN ADDED: User ${userId}, IP ${ipAddress} banned from group ${groupId} by ${bannedBy}`);
     } catch (error) {
-        console.log("Error banning user with IP:", error);
+        console.log("🔍 [IP-BAN-DB] Error banning user with IP:", error);
     }
 }
 
 const checkIpBan = async (groupId, ipAddress) => {
     try {
+        console.log(`🔍 [IP-BAN-DB] Checking database for IP: '${ipAddress}' (length: ${ipAddress?.length}), group: ${groupId}`);
+        
         const result = await PG_query(`SELECT * FROM ip_bans 
             WHERE group_id = ${groupId} 
             AND ip_address = '${ipAddress}' 
             AND is_active = true;`);
         
         const isBanned = result.rows.length > 0;
-        console.log(`🔍 IP ban check: IP ${ipAddress} in group ${groupId} - ${isBanned ? 'BANNED' : 'NOT BANNED'} (${result.rows.length} active bans)`);
+        console.log(`🔍 [IP-BAN-DB] IP ${ipAddress} in group ${groupId} - ${isBanned ? 'BANNED' : 'NOT BANNED'} (${result.rows.length} active bans)`);
         
         if (result.rows.length > 0) {
-            console.log(`🔍 Active IP ban details:`, result.rows[0]);
+            console.log(`🔍 [IP-BAN-DB] Active IP ban details:`, result.rows[0]);
+        } else {
+            // Debug: Show all IP bans for this group to see if there's a mismatch
+            const allBans = await PG_query(`SELECT * FROM ip_bans WHERE group_id = ${groupId} AND is_active = true;`);
+            console.log(`🔍 [IP-BAN-DB] All active IP bans for group ${groupId} (${allBans.rows.length} total):`, allBans.rows.map(row => ({
+                ip: `'${row.ip_address}' (len: ${row.ip_address?.length})`,
+                user_id: row.user_id,
+                banned_by: row.banned_by,
+                banned_at: row.banned_at
+            })));
+            
+            // Check for exact match issues
+            if (allBans.rows.length > 0) {
+                const exactMatches = allBans.rows.filter(row => row.ip_address === ipAddress);
+                const trimMatches = allBans.rows.filter(row => row.ip_address?.trim() === ipAddress?.trim());
+                console.log(`🔍 [IP-BAN-DB] Exact matches: ${exactMatches.length}, Trim matches: ${trimMatches.length}`);
+            }
         }
         
         return isBanned;

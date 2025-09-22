@@ -231,7 +231,10 @@ module.exports = (socket, users) => {
 
             // Check if IP is banned from this group (but skip for group creators)
             if (!isGroupCreator) {
+                console.log(`🔍 [IP-BAN-CHECK] [AUTH] Checking IP ban for user ${senderId}, IP: ${clientIp}, group: ${groupId}`);
                 const isIpBanned = await Controller.checkIpBan(groupId, clientIp);
+                console.log(`🔍 [IP-BAN-CHECK] [AUTH] Result: ${isIpBanned ? 'BANNED' : 'NOT BANNED'}`);
+                
                 if (isIpBanned) {
                     console.log(`🚫 IP BAN BLOCKING MESSAGE: IP ${clientIp} is banned from group ${groupId}`);
                     console.log(`🚫 User trying to send message: ${senderId}`);
@@ -345,10 +348,14 @@ module.exports = (socket, users) => {
             const clientIp = getClientIpAddress(socket);
             console.log(`🔍 Anonymous user ${anonId} sending message from IP ${clientIp} to group ${groupId}`);
 
-            // Check if IP is banned from this group
-            const isIpBanned = await Controller.checkIpBan(groupId, clientIp);
-            if (isIpBanned) {
+                    // Check if IP is banned from this group
+        console.log(`🔍 [IP-BAN-CHECK] [ANON] Checking IP ban for anonymous user ${anonId}, IP: ${clientIp}, group: ${groupId}`);
+        const isIpBanned = await Controller.checkIpBan(groupId, clientIp);
+        console.log(`🔍 [IP-BAN-CHECK] [ANON] Result: ${isIpBanned ? 'BANNED' : 'NOT BANNED'}`);
+        
+        if (isIpBanned) {
                 console.log(`🚫 IP BAN BLOCKING ANON MESSAGE: IP ${clientIp} is banned from group ${groupId}`);
+            console.log(`🚫 Anonymous user trying to send message: ${anonId}`);
                 console.log(`🚫 Anonymous user trying to send message: ${anonId}`);
                 socket.emit(chatCode.FORBIDDEN, "You are banned from this group");
                 return;
@@ -541,6 +548,7 @@ module.exports = (socket, users) => {
                 if (bannedSocket) {
                     // Try multiple methods to get the real client IP
                     bannedUserIp = getClientIpAddress(bannedSocket);
+                    console.log(`🔍 [BAN] Extracted IP for user ${targetUserId}: ${bannedUserIp}`);
                 }
             }
 
@@ -1523,14 +1531,17 @@ module.exports = (socket, users) => {
         try {
             const { anonId, groupId } = data;
 
-            // Check if IP is banned from this group (anonymous users only need IP check)
-            const clientIp = getClientIpAddress(socket);
-            const ipBanCheck = await Controller.checkIpBan(groupId, clientIp);
-            if (ipBanCheck) {
-                console.log(`Anonymous join attempt blocked: IP ${clientIp} is banned from group ${groupId}`);
-                socket.emit(chatCode.FORBIDDEN, "Your IP address is banned from this group");
-                return;
-            }
+                    // Check if IP is banned from this group (anonymous users only need IP check)
+        const clientIp = getClientIpAddress(socket);
+        console.log(`🔍 [IP-BAN-CHECK] [ANON-JOIN] Checking IP ban for anonymous join: IP ${clientIp}, group: ${groupId}`);
+        const ipBanCheck = await Controller.checkIpBan(groupId, clientIp);
+        console.log(`🔍 [IP-BAN-CHECK] [ANON-JOIN] Result: ${ipBanCheck ? 'BANNED' : 'NOT BANNED'}`);
+        
+        if (ipBanCheck) {
+            console.log(`🚫 Anonymous join attempt blocked: IP ${clientIp} is banned from group ${groupId}`);
+            socket.emit(chatCode.FORBIDDEN, "Your IP address is banned from this group");
+            return;
+        }
 
             console.log(`✅ Anonymous user ${anonId} authorized to join group ${groupId} (IP: ${clientIp})`);
 
