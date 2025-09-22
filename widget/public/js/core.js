@@ -37,6 +37,13 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
                 console.log('🔐 [Widget] Found saved token, auto-signing in...');
                 this.initializeSocket();
 
+                // Check for persisted timeout state
+                setTimeout(() => {
+                    if (this.groupId) {
+                        this.checkPersistedTimeout(this.groupId);
+                    }
+                }, 1000);
+
                 // Trigger chat rules for auto-signed in users (same as W version)
                 setTimeout(() => {
                     console.log('🔍 [Widget] [Chat Rules] Triggering chat rules for auto-signed in user');
@@ -59,6 +66,13 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
                 this.userId = savedAnonToken;
 
                 this.initializeSocket();
+
+                // Check for persisted timeout state
+                setTimeout(() => {
+                    if (this.groupId) {
+                        this.checkPersistedTimeout(this.groupId);
+                    }
+                }, 1000);
 
                 // Register as anonymous user after socket connection (same as W version)
                 setTimeout(() => {

@@ -114,10 +114,16 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
 
   // EXACT COPY from widget.js - displayMessages method
     displayMessages(messages) {
-      const newMessages = messages || [];
+      const allMessages = messages || [];
       const messagesList = this.dialog.querySelector('#pingbash-messages');
   
-      console.log('🔍 [Widget] displayMessages called with', newMessages.length, 'messages');
+      console.log('🔍 [Widget] displayMessages called with', allMessages.length, 'messages');
+      
+      // Apply Chat Mode filter (same as F version)
+      const filteredMessages = this.applyFilterMode(allMessages);
+      console.log('🔍 [Widget] After filter mode:', filteredMessages.length, 'messages (mode:', this.filterMode || 0, ')');
+      
+      const newMessages = filteredMessages;
   
       if (!newMessages.length) {
         messagesList.innerHTML = `
@@ -317,11 +323,15 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
             ${message.parent_id ? this.renderReplyIndicator(message.parent_id) : ''}
             <div class="pingbash-message-header">
               <span class="pingbash-message-sender">${senderName}</span>
+              ${this.getFilterModeText(message)}
               <span class="pingbash-message-time">${time}</span>
               <div class="pingbash-message-buttons">
                 ${!isOwn ? `
                   <button class="pingbash-message-action ban" onclick="window.pingbashWidget.banUser(${message.Sender_Id})" title="Ban User">🚫</button>
                   <button class="pingbash-message-action timeout" onclick="window.pingbashWidget.timeoutUser(${message.Sender_Id})" title="Timeout User">⏰</button>
+                ` : ''}
+                ${this.canPinMessages() ? `
+                  <button class="pingbash-message-action pin" onclick="window.pingbashWidget.${this.isPinnedMessage(message.Id) ? 'unpinMessage' : 'pinMessage'}(${message.Id})" title="${this.isPinnedMessage(message.Id) ? 'Unpin Message' : 'Pin Message'}">${this.isPinnedMessage(message.Id) ? '📌' : '📍'}</button>
                 ` : ''}
                 <button class="pingbash-message-reply" onclick="window.pingbashWidget.replyToMessage(${message.Id}, '${senderName.replace(/'/g, "\\'")}', '${escapedContent}')" title="Reply">↩️</button>
               </div>
@@ -437,6 +447,51 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
       const div = document.createElement('div');
       div.textContent = text;
       return div.innerHTML;
+    },
+
+    // CENSORED CONTENT FILTERING - Same as F version
+    getCensoredWordArray(censoredStr) {
+      if (!censoredStr || typeof censoredStr !== 'string') {
+        return [];
+      }
+      return censoredStr.split(',').map(item => item.trim()).filter(item => item.length > 0);
+    },
+
+    getCensoredMessage(message, unallowedWords) {
+      if (!message || !unallowedWords || unallowedWords.length === 0) {
+        return message;
+      }
+
+      // Create a regex pattern to match any of the unallowed words (case-insensitive, word-boundary-safe)
+      const pattern = new RegExp(`\\b(${unallowedWords.join('|')})\\b`, 'gi');
+
+      // Replace matched word with asterisks of same length
+      return message.replace(pattern, (match) => '*'.repeat(match.length));
+    },
+
+    applyCensoringToMessage(message) {
+      if (!message || !this.group?.censored_words) {
+        return message;
+      }
+
+      console.log('🔍 [Widget] Applying censoring to message');
+      const censoredWords = this.getCensoredWordArray(this.group.censored_words);
+      
+      if (censoredWords.length === 0) {
+        return message;
+      }
+
+      const censoredMessage = this.getCensoredMessage(message, censoredWords);
+      
+      if (censoredMessage !== message) {
+        console.log('🔍 [Widget] Message censored:', { 
+          original: message, 
+          censored: censoredMessage,
+          censoredWords: censoredWords 
+        });
+      }
+
+      return censoredMessage;
     },
 
   // EXACT COPY from widget.js - getReplyContentPreview method
@@ -777,6 +832,14 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
             : `<a className="inline-block text-cyan-300 hover:underline w-8/12 relative rounded-e-md" href=${this.config.apiUrl}/uploads/chats/files/${uploadResult}>File Name : ${uploadResult}</a>`;
     
           console.log('📤 [Widget] Sending file message:', messageContent);
+
+          // Validate message against chat limitations
+          const validation = this.validateMessageBeforeSending(messageContent);
+          if (!validation.valid) {
+            alert(validation.error);
+            this.hideUploadProgress();
+            return;
+          }
     
           // Use the same socket event format as regular messages (exact same as F version)
           const safeMessage = this.makeTextSafe(messageContent);
@@ -825,6 +888,9 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
           }
     
           this.hideUploadProgress();
+
+          // Update last message time for slow mode tracking
+          this.updateLastMessageTime();
     
           // Force refresh messages after file upload to ensure it appears
           setTimeout(() => {
@@ -855,6 +921,533 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
             messageEl.style.backgroundColor = '';
           }, 2000);
         }
+      },
+
+      // Chat Mode Filter Logic (same as F version)
+      applyFilterMode(messages) {
+        if (!messages || !Array.isArray(messages)) {
+          return [];
+        }
+
+        const filterMode = this.filterMode || 0;
+        const currentUserId = this.getCurrentUserId();
+        
+        console.log('🔍 [Widget] Applying filter mode:', filterMode, 'for user:', currentUserId);
+
+        switch (filterMode) {
+          case 0: // Public Mode - show public messages (receiver_id = null)
+            return messages.filter(msg => {
+              const isPublic = msg.Receiver_Id == null;
+              const isOwnMessage = msg.Sender_Id == currentUserId;
+              return isPublic || isOwnMessage;
+            });
+
+          case 1: // 1 on 1 Mode - show messages to/from selected user
+            if (!this.filteredUser) {
+              console.log('🔍 [Widget] 1-on-1 mode but no user selected');
+              return [];
+            }
+            
+            const selectedUserId = this.filteredUser.id;
+            console.log('🔍 [Widget] 1-on-1 mode with user:', selectedUserId);
+            
+            return messages.filter(msg => {
+              const isToSelectedUser = msg.Receiver_Id == selectedUserId;
+              const isFromSelectedUser = msg.Sender_Id == selectedUserId;
+              const isOwnMessage = msg.Sender_Id == currentUserId;
+              const isToCurrentUser = msg.Receiver_Id == currentUserId;
+              
+              // Show messages between current user and selected user
+              return (isToSelectedUser && isOwnMessage) || 
+                     (isFromSelectedUser && (isToCurrentUser || msg.Receiver_Id == null)) ||
+                     (isFromSelectedUser && isOwnMessage);
+            });
+
+          case 2: // Mods Mode - show messages to moderators (receiver_id = 1)
+            // Only available for moderators/admins (same as F version)
+            if (!this.isModeratorOrAdmin()) {
+              console.log('🔍 [Widget] Mods mode not available for regular user');
+              return messages.filter(msg => {
+                const isPublic = msg.Receiver_Id == null;
+                const isOwnMessage = msg.Sender_Id == currentUserId;
+                return isPublic || isOwnMessage;
+              });
+            }
+            
+            return messages.filter(msg => {
+              const isToMods = msg.Receiver_Id == 1;
+              const isOwnMessage = msg.Sender_Id == currentUserId;
+              const isPublic = msg.Receiver_Id == null;
+              return isToMods || isOwnMessage || isPublic;
+            });
+
+          default:
+            return messages;
+        }
+      },
+
+      isModeratorOrAdmin() {
+        // Check if current user is moderator or admin (same as F version)
+        return this.currentUserRole === 1 || this.currentUserRole === 2 || this.isGroupCreator;
+      },
+
+      getCurrentUserId() {
+        if (this.isAuthenticated && this.currentUserId) {
+          return parseInt(this.currentUserId);
+        } else if (this.anonId) {
+          return parseInt(this.anonId);
+        }
+        return null;
+      },
+
+      getFilterModeText(message) {
+        // Display filter mode text on messages (same as F version)
+        if (!message.Receiver_Id) {
+          return ''; // Public message - no text needed
+        }
+
+        const currentUserId = this.getCurrentUserId();
+
+        if (message.Receiver_Id == 1) {
+          return '<span class="pingbash-filter-mode-text">Mods</span>';
+        } else if (message.Receiver_Id > 1) {
+          if (message.Receiver_Id == currentUserId) {
+            return '<span class="pingbash-filter-mode-text">1 on 1</span>';
+          } else {
+            // Find receiver name from group members
+            const receiverName = this.getReceiverName(message.Receiver_Id);
+            return `<span class="pingbash-filter-mode-text">1 on 1: ${receiverName}</span>`;
+          }
+        }
+
+        return '';
+      },
+
+      getReceiverName(receiverId) {
+        // Get receiver name from group members (same as F version)
+        if (this.group && this.group.members) {
+          const receiver = this.group.members.find(member => member.id == receiverId);
+          return receiver ? receiver.name : `User ${receiverId}`;
+        }
+        return `User ${receiverId}`;
+      },
+
+      // BAN and TIMEOUT functionality (same as W version)
+      banUser(userId) {
+        
+        console.log('🚫 [Widget] Ban user clicked:', userId);
+        
+        // RULE 1: User cannot ban himself
+        const currentUserId = this.getCurrentUserId();
+        if (userId === currentUserId) {
+          alert("You cannot ban yourself");
+          return;
+        }
+        
+        // RULE 2: Only Group Master can ban users
+        console.log('🚫 [Widget] Permission check:', {
+          groupCreatorId: this.group?.creater_id,
+          currentUserId: currentUserId,
+          isCreator: this.group?.creater_id === currentUserId,
+          groupExists: !!this.group
+        });
+        
+        if (this.group?.creater_id !== currentUserId) {
+          alert("Only the group creator can ban users");
+          return;
+        }
+        
+        // Show confirmation dialog
+        const confirmed = confirm(`Are you sure you want to ban this user?`);
+        if (!confirmed) return;
+        
+        if (!this.socket || !this.socket.connected) {
+          alert("Not connected to server");
+          return;
+        }
+        
+        if (!this.isAuthenticated || !this.authenticatedToken) {
+          alert("Please log in to ban users");
+          this.showSigninModal();
+          return;
+        }
+        
+        console.log(`🚫 [Widget] Group Master ${currentUserId} attempting to ban user ${userId}`);
+        
+        // Clean and validate token
+        const cleanToken = this.authenticatedToken?.trim();
+        
+        // Debug token information
+        console.log('🚫 [Widget] Token debug info:', {
+          isAuthenticated: this.isAuthenticated,
+          hasToken: !!this.authenticatedToken,
+          tokenLength: this.authenticatedToken?.length,
+          tokenStart: this.authenticatedToken?.substring(0, 20) + '...',
+          tokenType: typeof this.authenticatedToken,
+          cleanTokenLength: cleanToken?.length,
+          tokenEquals: this.authenticatedToken === cleanToken
+        });
+        
+        // Emit ban event (same as W version)
+        this.socket.emit('ban group user', {
+          token: cleanToken,
+          groupId: parseInt(this.groupId),
+          userId: parseInt(userId)
+        });
+      },
+
+      timeoutUser(userId) {
+        console.log('⏰ [Widget] Timeout user clicked:', userId);
+        
+        // RULE 1: User cannot timeout himself
+        const currentUserId = this.getCurrentUserId();
+        if (userId === currentUserId) {
+          alert("You cannot timeout yourself");
+          return;
+        }
+        
+        // RULE 2: Only Group Master can timeout users
+        console.log('⏰ [Widget] Permission check:', {
+          groupCreatorId: this.group?.creater_id,
+          currentUserId: currentUserId,
+          isCreator: this.group?.creater_id === currentUserId,
+          groupExists: !!this.group
+        });
+        
+        if (this.group?.creater_id !== currentUserId) {
+          alert("Only the group creator can timeout users");
+          return;
+        }
+        
+        // Show confirmation dialog
+        const confirmed = confirm(`Are you sure you want to timeout this user for 15 minutes?`);
+        if (!confirmed) return;
+        
+        if (!this.socket || !this.socket.connected) {
+          alert("Not connected to server");
+          return;
+        }
+        
+        if (!this.isAuthenticated || !this.authenticatedToken) {
+          alert("Please log in to timeout users");
+          this.showSigninModal();
+          return;
+        }
+        
+        console.log(`⏰ [Widget] Group Master ${currentUserId} attempting to timeout user ${userId}`);
+        
+        // Clean and validate token
+        const cleanToken = this.authenticatedToken?.trim();
+        
+        // Debug token information
+        console.log('⏰ [Widget] Token debug info:', {
+          isAuthenticated: this.isAuthenticated,
+          hasToken: !!this.authenticatedToken,
+          tokenLength: this.authenticatedToken?.length,
+          tokenStart: this.authenticatedToken?.substring(0, 20) + '...',
+          tokenType: typeof this.authenticatedToken,
+          cleanTokenLength: cleanToken?.length,
+          tokenEquals: this.authenticatedToken === cleanToken
+        });
+        
+        // Emit timeout event (backend expects 'timout user' - note the typo)
+        this.socket.emit('timout user', {
+          token: cleanToken,
+          groupId: parseInt(this.groupId),
+          userId: parseInt(userId)
+        });
+      },
+
+      getCurrentUserId() {
+        if (this.isAuthenticated && this.currentUserId) {
+          return parseInt(this.currentUserId);
+        }
+        if (this.anonId) {
+          return parseInt(this.anonId);
+        }
+        return null;
+      },
+
+      // Unban user functionality (same as W version)
+      unbanUser(userId) {
+        console.log('✅ [Widget] Unban user clicked:', userId);
+        
+        // Check permissions (only group creator can unban)
+        const currentUserId = this.getCurrentUserId();
+        if (this.group?.creater_id !== currentUserId) {
+          alert("Only the group creator can unban users");
+          return;
+        }
+        
+        // Show confirmation dialog
+        const confirmed = confirm(`Are you sure you want to unban this user?`);
+        if (!confirmed) return;
+        
+        if (!this.socket || !this.socket.connected) {
+          alert("Not connected to server");
+          return;
+        }
+        
+        if (!this.isAuthenticated || !this.authenticatedToken) {
+          alert("Please log in to unban users");
+          this.showSigninModal();
+          return;
+        }
+        
+        console.log(`✅ [Widget] Group Master ${currentUserId} attempting to unban user ${userId}`);
+        
+        // Emit unban event (same as W version)
+        this.socket.emit('unban group users', {
+          token: this.authenticatedToken,
+          groupId: parseInt(this.groupId),
+          userIds: [parseInt(userId)]
+        });
+      },
+
+      // Unban all users functionality
+      unbanAllUsers() {
+        console.log('✅ [Widget] Unban all users clicked');
+        
+        // Check permissions (only group creator can unban)
+        const currentUserId = this.getCurrentUserId();
+        if (this.group?.creater_id !== currentUserId) {
+          alert("Only the group creator can unban users");
+          return;
+        }
+        
+        // Get all banned user IDs
+        const bannedUserIds = this.bannedUsers ? this.bannedUsers.map(user => user.id) : [];
+        
+        if (bannedUserIds.length === 0) {
+          alert("No banned users to unban");
+          return;
+        }
+        
+        // Show confirmation dialog
+        const confirmed = confirm(`Are you sure you want to unban all ${bannedUserIds.length} users?`);
+        if (!confirmed) return;
+        
+        if (!this.socket || !this.socket.connected) {
+          alert("Not connected to server");
+          return;
+        }
+        
+        if (!this.isAuthenticated || !this.authenticatedToken) {
+          alert("Please log in to unban users");
+          this.showSigninModal();
+          return;
+        }
+        
+        console.log(`✅ [Widget] Group Master ${currentUserId} attempting to unban all users:`, bannedUserIds);
+        
+        // Emit unban event for all users
+        this.socket.emit('unban group users', {
+          token: this.authenticatedToken,
+          groupId: parseInt(this.groupId),
+          userIds: bannedUserIds
+        });
+      },
+
+      // Toggle user selection for batch operations
+      toggleUserSelection(userId, isSelected) {
+        if (!this.selectedUsers) {
+          this.selectedUsers = new Set();
+        }
+        
+        if (isSelected) {
+          this.selectedUsers.add(userId);
+        } else {
+          this.selectedUsers.delete(userId);
+        }
+        
+        // Update unban selected button
+        this.updateUnbanSelectedButton();
+      },
+
+      // Toggle all users selection
+      toggleAllUsers(selectAll) {
+        if (!this.selectedUsers) {
+          this.selectedUsers = new Set();
+        }
+        
+        const checkboxes = document.querySelectorAll('.pingbash-banned-users-modal input[type="checkbox"]:not(#select-all-users)');
+        checkboxes.forEach(checkbox => {
+          checkbox.checked = selectAll;
+          const userId = parseInt(checkbox.id.replace('user-', ''));
+          if (selectAll) {
+            this.selectedUsers.add(userId);
+          } else {
+            this.selectedUsers.delete(userId);
+          }
+        });
+        
+        this.updateUnbanSelectedButton();
+      },
+
+      // Update unban selected button state
+      updateUnbanSelectedButton() {
+        const button = document.getElementById('unban-selected-btn');
+        if (button && this.selectedUsers) {
+          const count = this.selectedUsers.size;
+          button.textContent = `Unban Selected (${count})`;
+          button.disabled = count === 0;
+          button.style.opacity = count === 0 ? '0.5' : '1';
+        }
+      },
+
+      // Unban selected users
+      unbanSelectedUsers() {
+        if (!this.selectedUsers || this.selectedUsers.size === 0) {
+          alert("No users selected");
+          return;
+        }
+        
+        // Check permissions (only group creator can unban)
+        const currentUserId = this.getCurrentUserId();
+        if (this.group?.creater_id !== currentUserId) {
+          alert("Only the group creator can unban users");
+          return;
+        }
+        
+        const selectedUserIds = Array.from(this.selectedUsers);
+        
+        // Show confirmation dialog
+        const confirmed = confirm(`Are you sure you want to unban ${selectedUserIds.length} selected users?`);
+        if (!confirmed) return;
+        
+        if (!this.socket || !this.socket.connected) {
+          alert("Not connected to server");
+          return;
+        }
+        
+        if (!this.isAuthenticated || !this.authenticatedToken) {
+          alert("Please log in to unban users");
+          this.showSigninModal();
+          return;
+        }
+        
+        console.log(`✅ [Widget] Group Master ${currentUserId} attempting to unban selected users:`, selectedUserIds);
+        
+        // Emit unban event for selected users
+        this.socket.emit('unban group users', {
+          token: this.authenticatedToken,
+          groupId: parseInt(this.groupId),
+          userIds: selectedUserIds
+        });
+        
+        // Clear selection
+        this.selectedUsers.clear();
+      },
+
+      // Refresh banned users list
+      refreshBannedUsers() {
+        console.log('🔄 [Widget] Refreshing banned users list');
+        
+        if (!this.socket || !this.socket.connected) {
+          alert("Not connected to server");
+          return;
+        }
+        
+        if (!this.isAuthenticated || !this.authenticatedToken) {
+          alert("Please log in to refresh banned users");
+          this.showSigninModal();
+          return;
+        }
+        
+        // Re-emit the get banned users request
+        this.socket.emit('get banned users', {
+          groupId: parseInt(this.groupId),
+          token: this.authenticatedToken
+        });
+      },
+
+      // Pin/Unpin message functionality (same as W version)
+      canPinMessages() {
+        // Check if user is moderator or admin (role_id 1 or 2) or group creator
+        const currentUserId = this.getCurrentUserId();
+        if (!currentUserId || !this.group) return false;
+        
+        // Group creator can always pin
+        if (this.group.creater_id === currentUserId) return true;
+        
+        // Check if user is mod/admin in group members
+        const userMember = this.group.members?.find(member => member.id === currentUserId);
+        return userMember && (userMember.role_id === 1 || userMember.role_id === 2);
+      },
+
+      isPinnedMessage(messageId) {
+        return this.pinnedMessageIds && this.pinnedMessageIds.includes(messageId);
+      },
+
+      pinMessage(messageId) {
+        console.log('📌 [Widget] Pin message clicked:', messageId);
+        
+        if (!this.canPinMessages()) {
+          alert("Only moderators and admins can pin messages");
+          return;
+        }
+        
+        if (!this.socket || !this.socket.connected) {
+          alert("Not connected to server");
+          return;
+        }
+        
+        if (!this.isAuthenticated || !this.authenticatedToken) {
+          alert("Please log in to pin messages");
+          this.showSigninModal();
+          return;
+        }
+        
+        console.log(`📌 [Widget] Pinning message ${messageId} in group ${this.groupId}`);
+        
+        // Emit pin message event (same as W version)
+        this.socket.emit('pin message', {
+          token: this.authenticatedToken?.trim(),
+          groupId: parseInt(this.groupId),
+          msgId: parseInt(messageId)
+        });
+      },
+
+      unpinMessage(messageId) {
+        console.log('📌 [Widget] Unpin message clicked:', messageId);
+        
+        if (!this.canPinMessages()) {
+          alert("Only moderators and admins can unpin messages");
+          return;
+        }
+        
+        if (!this.socket || !this.socket.connected) {
+          alert("Not connected to server");
+          return;
+        }
+        
+        if (!this.isAuthenticated || !this.authenticatedToken) {
+          alert("Please log in to unpin messages");
+          this.showSigninModal();
+          return;
+        }
+        
+        console.log(`📌 [Widget] Unpinning message ${messageId} in group ${this.groupId}`);
+        
+        // Emit unpin message event (same as W version)
+        this.socket.emit('unpin message', {
+          token: this.authenticatedToken?.trim(),
+          groupId: parseInt(this.groupId),
+          msgId: parseInt(messageId)
+        });
+      },
+
+      getPinnedMessages() {
+        if (!this.socket || !this.socket.connected) return;
+        if (!this.isAuthenticated || !this.authenticatedToken) return;
+        
+        console.log('📌 [Widget] Requesting pinned messages for group:', this.groupId);
+        
+        // Request pinned messages (same as W version)
+        this.socket.emit('get pinned messages', {
+          token: this.authenticatedToken?.trim(),
+          groupId: parseInt(this.groupId)
+        });
       },
 
   });

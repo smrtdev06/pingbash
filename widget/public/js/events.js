@@ -4,14 +4,56 @@
  */
 
 // Add events methods to the prototype
-if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
-  if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
+if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
     Object.assign(window.PingbashChatWidget.prototype, {
 
       // EXACT COPY from widget.js - attachEventListeners method
       attachEventListeners() {
         // Chat button click
         this.button.addEventListener('click', () => this.toggleDialog());
+
+        // Filter dropdown (same as F version)
+        const filterIcon = this.dialog.querySelector('.pingbash-filter-icon');
+        const filterDropdown = this.dialog.querySelector('.pingbash-filter-dropdown');
+        
+        if (filterIcon && filterDropdown) {
+          filterIcon.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const isVisible = filterDropdown.style.display !== 'none';
+            filterDropdown.style.display = isVisible ? 'none' : 'block';
+            
+            // Close hamburger dropdown if open
+            const hamburgerDropdown = this.dialog.querySelector('.pingbash-hamburger-dropdown');
+            if (hamburgerDropdown) {
+              hamburgerDropdown.style.display = 'none';
+            }
+          });
+
+          // Filter mode radio buttons (same as F version)
+          const filterRadios = this.dialog.querySelectorAll('input[name="filter-mode"]');
+          filterRadios.forEach(radio => {
+            radio.addEventListener('change', (e) => {
+              const filterMode = parseInt(e.target.value);
+              this.handleFilterModeChange(filterMode);
+            });
+          });
+
+          // User search for 1-on-1 mode (same as F version)
+          const userSearchInput = this.dialog.querySelector('.pingbash-user-search-input');
+          const userDropdown = this.dialog.querySelector('.pingbash-user-dropdown');
+          
+          if (userSearchInput && userDropdown) {
+            userSearchInput.addEventListener('input', (e) => {
+              this.handleUserSearch(e.target.value);
+            });
+            
+            userSearchInput.addEventListener('focus', () => {
+              if (userSearchInput.value) {
+                userDropdown.style.display = 'block';
+              }
+            });
+          }
+        }
 
         // Hamburger menu
         const hamburgerBtn = this.dialog.querySelector('.pingbash-hamburger-btn');
@@ -20,6 +62,11 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
         hamburgerBtn?.addEventListener('click', (e) => {
           e.stopPropagation();
           this.toggleHamburgerMenu();
+          
+          // Close filter dropdown if open
+          if (filterDropdown) {
+            filterDropdown.style.display = 'none';
+          }
         });
 
         // Hamburger menu items
@@ -32,10 +79,21 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
           });
         });
 
-        // Close hamburger menu when clicking outside
+        // Close dropdowns when clicking outside
         document.addEventListener('click', (e) => {
           if (!hamburgerBtn?.contains(e.target) && !hamburgerDropdown?.contains(e.target)) {
             this.hideHamburgerMenu();
+          }
+          if (!e.target.closest('.pingbash-filter-container')) {
+            if (filterDropdown) {
+              filterDropdown.style.display = 'none';
+            }
+          }
+          if (!e.target.closest('.pingbash-user-search')) {
+            const userDropdown = this.dialog.querySelector('.pingbash-user-dropdown');
+            if (userDropdown) {
+              userDropdown.style.display = 'none';
+            }
           }
         });
 
@@ -221,6 +279,230 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
         chatRulesSaveBtn?.addEventListener('click', () => this.saveChatRules());
         chatRulesOverlay?.addEventListener('click', () => this.hideChatRules());
 
+        // Chat limitations popup
+        const chatLimitationsPopup = this.dialog.querySelector('.pingbash-chat-limitations-popup');
+        const chatLimitationsCloseBtn = chatLimitationsPopup?.querySelector('.pingbash-popup-close');
+        const chatLimitationsCancelBtn = this.dialog.querySelector('.pingbash-limitations-cancel-btn');
+        const chatLimitationsOkBtn = this.dialog.querySelector('.pingbash-limitations-ok-btn');
+        const chatLimitationsOverlay = chatLimitationsPopup?.querySelector('.pingbash-popup-overlay');
+        const slowModeCheckbox = this.dialog.querySelector('#slow-mode-checkbox');
+        const speedRadios = this.dialog.querySelectorAll('input[name="slow-speed"]');
+
+        chatLimitationsCloseBtn?.addEventListener('click', () => this.hideChatLimitations());
+        chatLimitationsCancelBtn?.addEventListener('click', () => this.hideChatLimitations());
+        chatLimitationsOkBtn?.addEventListener('click', () => this.updateChatLimitations());
+        chatLimitationsOverlay?.addEventListener('click', () => this.hideChatLimitations());
+
+        // Slow mode checkbox toggle
+        slowModeCheckbox?.addEventListener('change', (e) => {
+          this.toggleSlowModeOptions(e.target.checked);
+        });
+
+        // Speed radio buttons - show/hide custom input
+        speedRadios.forEach(radio => {
+          radio.addEventListener('change', (e) => {
+            const customSecondsDiv = this.dialog.querySelector('.pingbash-custom-seconds');
+            if (customSecondsDiv) {
+              customSecondsDiv.style.display = e.target.value === 'custom' ? 'flex' : 'none';
+            }
+          });
+        });
+
+        // Manage Chat popup
+        const manageChatPopup = this.dialog.querySelector('.pingbash-manage-chat-popup');
+        const manageChatCloseBtn = manageChatPopup?.querySelector('.pingbash-popup-close');
+        const manageChatOverlay = manageChatPopup?.querySelector('.pingbash-popup-overlay');
+        const manageChatOptions = this.dialog.querySelectorAll('.pingbash-manage-chat-option');
+        const manageChatBackBtn = this.dialog.querySelector('.pingbash-back-to-menu');
+        const clearChatBtn = this.dialog.querySelector('.pingbash-clear-chat-btn');
+
+        manageChatCloseBtn?.addEventListener('click', () => this.hideManageChat());
+        manageChatOverlay?.addEventListener('click', () => this.hideManageChat());
+        
+        // Manage chat menu options
+        manageChatOptions.forEach(option => {
+          option.addEventListener('click', () => {
+            const action = option.dataset.action;
+            console.log('🔧 [Widget] Manage chat option clicked:', action);
+            if (action === 'pinned-messages') {
+              this.showPinnedMessagesView();
+            } else if (action === 'clear-chat') {
+              console.log('🧹 [Widget] Clear chat option selected, calling clearChat()');
+              this.clearChat();
+            }
+          });
+        });
+
+        // Back button in pinned messages view
+        manageChatBackBtn?.addEventListener('click', () => {
+          this.showManageChatMenu();
+        });
+
+        // Clear chat button
+        clearChatBtn?.addEventListener('click', () => {
+          this.clearChat();
+        });
+
+        // Unpin buttons (delegated event handling since they're dynamically created)
+        manageChatPopup?.addEventListener('click', (e) => {
+          if (e.target.classList.contains('pingbash-unpin-btn')) {
+            const messageId = e.target.dataset.messageId;
+            this.unpinMessage(messageId);
+          }
+        });
+
+        // Moderator Management popup
+        const moderatorMgmtPopup = this.dialog.querySelector('.pingbash-moderator-management-popup');
+        const moderatorMgmtCloseBtn = moderatorMgmtPopup?.querySelector('.pingbash-popup-close');
+        const moderatorMgmtOverlay = moderatorMgmtPopup?.querySelector('.pingbash-popup-overlay');
+        const moderatorsCancelBtn = this.dialog.querySelector('.pingbash-moderators-cancel-btn');
+        const moderatorsSaveBtn = this.dialog.querySelector('.pingbash-moderators-save-btn');
+
+        moderatorMgmtCloseBtn?.addEventListener('click', () => this.hideModeratorManagement());
+        moderatorMgmtOverlay?.addEventListener('click', () => this.hideModeratorManagement());
+        moderatorsCancelBtn?.addEventListener('click', () => this.hideModeratorManagement());
+        moderatorsSaveBtn?.addEventListener('click', () => this.saveModerators());
+
+        // Moderator Permissions popup
+        const modPermissionsPopup = this.dialog.querySelector('.pingbash-mod-permissions-popup');
+        const modPermissionsCloseBtn = modPermissionsPopup?.querySelector('.pingbash-mod-permissions-close');
+        const modPermissionsOverlay = modPermissionsPopup?.querySelector('.pingbash-mod-permissions-overlay');
+        const modPermissionsCancelBtn = modPermissionsPopup?.querySelector('.pingbash-mod-permissions-cancel');
+        const modPermissionsSaveBtn = modPermissionsPopup?.querySelector('.pingbash-mod-permissions-save');
+
+        modPermissionsCloseBtn?.addEventListener('click', () => this.hideModeratorPermissionsPopup());
+        modPermissionsOverlay?.addEventListener('click', () => this.hideModeratorPermissionsPopup());
+        modPermissionsCancelBtn?.addEventListener('click', () => this.hideModeratorPermissionsPopup());
+        modPermissionsSaveBtn?.addEventListener('click', () => this.saveModeratorPermissions());
+
+        // Add checkbox event listeners for debugging and ensuring they work
+        modPermissionsPopup?.addEventListener('change', (e) => {
+          if (e.target.matches('input[data-permission]')) {
+            const permission = e.target.dataset.permission;
+            const isChecked = e.target.checked;
+            console.log('👥 [Widget] Permission checkbox changed:', permission, 'checked:', isChecked);
+          }
+        });
+
+        // Add click event listener for permission items to ensure they're clickable
+        modPermissionsPopup?.addEventListener('click', (e) => {
+          if (e.target.closest('.pingbash-permission-item')) {
+            const permissionItem = e.target.closest('.pingbash-permission-item');
+            const checkbox = permissionItem.querySelector('input[data-permission]');
+            
+            // If clicked on label or description, toggle checkbox
+            if (checkbox && !e.target.matches('input[data-permission]')) {
+              checkbox.checked = !checkbox.checked;
+              const permission = checkbox.dataset.permission;
+              console.log('👥 [Widget] Permission toggled via click:', permission, 'checked:', checkbox.checked);
+              
+              // Trigger change event
+              checkbox.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+          }
+        });
+
+        // Member search for adding moderators
+        const memberSearchInput = this.dialog.querySelector('.pingbash-member-search-input');
+        const memberSearchResults = this.dialog.querySelector('.pingbash-member-search-results');
+
+        memberSearchInput?.addEventListener('input', (e) => {
+          this.searchMembers(e.target.value);
+        });
+
+        // Hide search results when clicking outside
+        document.addEventListener('click', (e) => {
+          if (!memberSearchInput?.contains(e.target) && !memberSearchResults?.contains(e.target)) {
+            if (memberSearchResults) {
+              memberSearchResults.style.display = 'none';
+            }
+          }
+        });
+
+        // Member result selection (delegated event handling)
+        memberSearchResults?.addEventListener('click', (e) => {
+          const memberItem = e.target.closest('.pingbash-member-result-item');
+          if (memberItem) {
+            const memberId = memberItem.dataset.memberId;
+            this.addModerator(memberId);
+          }
+        });
+
+        // Moderator actions (delegated event handling since they're dynamically created)
+        moderatorMgmtPopup?.addEventListener('click', (e) => {
+          if (e.target.classList.contains('pingbash-moderator-edit-btn')) {
+            const moderatorId = e.target.dataset.moderatorId;
+            this.editModeratorPermissions(moderatorId);
+          } else if (e.target.classList.contains('pingbash-moderator-remove-btn')) {
+            const moderatorId = e.target.dataset.moderatorId;
+            this.removeModerator(moderatorId);
+          }
+        });
+
+        // Censored Content popup event listeners
+        const censoredContentPopup = this.dialog.querySelector('.pingbash-censored-content-popup');
+        
+        // Close button
+        censoredContentPopup?.querySelector('.pingbash-popup-close')?.addEventListener('click', () => {
+          this.hideCensoredContent();
+        });
+
+        // Close/Cancel button
+        censoredContentPopup?.querySelector('.pingbash-censored-close-btn')?.addEventListener('click', () => {
+          this.hideCensoredContent();
+        });
+
+        // Save button
+        censoredContentPopup?.querySelector('.pingbash-censored-save-btn')?.addEventListener('click', () => {
+          this.saveCensoredWords();
+        });
+
+        // Add word button
+        censoredContentPopup?.querySelector('.pingbash-add-word-btn')?.addEventListener('click', () => {
+          this.addCensoredWord();
+        });
+
+        // Enter key in input field
+        censoredContentPopup?.querySelector('.pingbash-censored-word-input')?.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            this.addCensoredWord();
+          }
+        });
+
+        // Overlay click to close
+        censoredContentPopup?.querySelector('.pingbash-popup-overlay')?.addEventListener('click', () => {
+          this.hideCensoredContent();
+        });
+
+        // Delegated event handling for dynamically created word items
+        const censoredWordsList = this.dialog.querySelector('.pingbash-censored-words-list');
+        censoredWordsList?.addEventListener('click', (e) => {
+          const index = e.target.dataset.index;
+          
+          if (e.target.classList.contains('pingbash-edit-word-btn')) {
+            this.editCensoredWord(parseInt(index));
+          } else if (e.target.classList.contains('pingbash-delete-word-btn')) {
+            this.deleteCensoredWord(parseInt(index));
+          } else if (e.target.classList.contains('pingbash-save-edit-btn')) {
+            this.saveEditCensoredWord(parseInt(index));
+          } else if (e.target.classList.contains('pingbash-cancel-edit-btn')) {
+            this.cancelEditCensoredWord();
+          }
+        });
+
+        // Handle Enter key in edit input
+        censoredWordsList?.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' && e.target.classList.contains('pingbash-edit-word-input')) {
+            e.preventDefault();
+            const index = e.target.closest('.pingbash-censored-word-item').dataset.index;
+            this.saveEditCensoredWord(parseInt(index));
+          } else if (e.key === 'Escape' && e.target.classList.contains('pingbash-edit-word-input')) {
+            e.preventDefault();
+            this.cancelEditCensoredWord();
+          }
+        });
+
         // Group creation modal (body-attached modal will be set up when created)
         // Event listeners for body modal are set up in setupBodyModalEventListeners()
 
@@ -280,6 +562,9 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
         this.unreadCount = 0;
         this.updateUnreadBadge();
 
+        // Update chat limitation UI when dialog opens
+        this.onGroupDataUpdated();
+
         // Focus input
         const input = this.dialog.querySelector('.pingbash-message-input');
         if (input && !input.disabled) {
@@ -328,6 +613,18 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
             break;
           case 'chat-rules':
             this.showChatRules();
+            break;
+          case 'chat-limitations':
+            this.showChatLimitations();
+            break;
+          case 'manage-chat':
+            this.showManageChat();
+            break;
+          case 'moderator-management':
+            this.showModeratorManagement();
+            break;
+          case 'censored-content':
+            this.showCensoredContent();
             break;
           case 'settings':
             this.showSettings();
@@ -515,6 +812,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
 
         // Get online users (mock data for now - in real app would come from socket)
         const onlineUsers = this.getOnlineUsers();
+        console.log('👥 [Widget] Online users:', onlineUsers);
         const filteredUsers = onlineUsers.filter(user =>
           user.name.toLowerCase().includes(searchTerm.toLowerCase())
         );
@@ -692,30 +990,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
         });
       },
 
-      // EXACT COPY from widget.js - banUser method
-      banUser(userId) {
-        if (!this.socket || !this.isConnected) return;
 
-        console.log('🔍 [Widget] Banning user:', userId);
-        this.socket.emit('ban group user', {
-          groupId: this.groupId,
-          userId: userId,
-          token: `anonuser${this.config.groupName}${this.userId}`
-        });
-      },
-
-      // EXACT COPY from widget.js - timeoutUser method
-      timeoutUser(userId) {
-        if (!this.socket || !this.isConnected) return;
-
-        console.log('🔍 [Widget] Timing out user:', userId);
-        this.socket.emit('timeout user', {
-          groupId: this.groupId,
-          userId: userId,
-          token: `anonuser${this.config.groupName}${this.userId}`,
-          timeoutMinutes: 15
-        });
-      },
 
       // NEW METHOD - Set up event listeners for body-attached group creation modal
       setupBodyModalEventListeners() {
@@ -1272,7 +1547,158 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
         console.log('🔍 [Widget] Current configuration extracted:', config);
         
         return config;
+            },
+
+      // Chat Mode Filter Methods (same as F version)
+      handleFilterModeChange(filterMode) {
+        console.log('🔍 [Widget] Filter mode changed to:', filterMode);
+        
+        // Store current filter mode
+        this.filterMode = filterMode;
+        this.filteredUser = null;
+        
+        // Show/hide user search for 1-on-1 mode
+        const userSearch = this.dialog.querySelector('.pingbash-user-search');
+        const modsOption = this.dialog.querySelector('.pingbash-mods-option');
+        
+        if (userSearch) {
+          userSearch.style.display = filterMode === 1 ? 'block' : 'none';
+        }
+        
+        // Show mods option only for moderators/admins (same as F version)
+        if (modsOption && this.currentUserRole) {
+          const isModOrAdmin = this.currentUserRole === 1 || this.currentUserRole === 2 || this.isGroupCreator;
+          modsOption.style.display = isModOrAdmin ? 'block' : 'none';
+        }
+        
+        // Clear user search
+        const userSearchInput = this.dialog.querySelector('.pingbash-user-search-input');
+        if (userSearchInput) {
+          userSearchInput.value = '';
+          userSearchInput.placeholder = 'Search user...';
+        }
+        
+        // Hide user dropdown
+        const userDropdown = this.dialog.querySelector('.pingbash-user-dropdown');
+        if (userDropdown) {
+          userDropdown.style.display = 'none';
+        }
+        
+        // Re-filter messages
+        this.applyMessageFilter();
       },
 
-    });
-  }
+      handleUserSearch(searchTerm) {
+        console.log('🔍 [Widget] User search:', searchTerm);
+        
+        const userDropdown = this.dialog.querySelector('.pingbash-user-dropdown');
+        if (!userDropdown) return;
+        
+        if (!searchTerm.trim()) {
+          userDropdown.style.display = 'none';
+          return;
+        }
+        
+        // Get online users (same as F version)
+        const onlineUsers = this.getOnlineUsers();
+        const filteredUsers = onlineUsers.filter(user => 
+          user.name && user.name.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+        
+        // Populate dropdown
+        userDropdown.innerHTML = '';
+        
+        if (filteredUsers.length === 0) {
+          userDropdown.innerHTML = '<div class="pingbash-user-dropdown-item">No users found</div>';
+        } else {
+          filteredUsers.forEach(user => {
+            const item = document.createElement('div');
+            item.className = 'pingbash-user-dropdown-item';
+            item.textContent = user.name;
+            item.addEventListener('click', () => {
+              this.selectUser(user);
+            });
+            userDropdown.appendChild(item);
+          });
+        }
+        
+        userDropdown.style.display = 'block';
+      },
+
+      selectUser(user) {
+        console.log('🔍 [Widget] User selected:', user);
+        
+        this.filteredUser = user;
+        
+        // Update search input
+        const userSearchInput = this.dialog.querySelector('.pingbash-user-search-input');
+        if (userSearchInput) {
+          userSearchInput.value = user.name;
+        }
+        
+        // Hide dropdown
+        const userDropdown = this.dialog.querySelector('.pingbash-user-dropdown');
+        if (userDropdown) {
+          userDropdown.style.display = 'none';
+        }
+        
+        // Re-filter messages
+        this.applyMessageFilter();
+      },
+
+      getOnlineUsers() {
+        // Get real online users from socket data mapped to group members (same as widget.js)
+        let onlineUsers = [];
+
+        // First, try to map online user IDs to actual member names
+        if (this.onlineUserIds && this.onlineUserIds.length > 0 && this.groupMembers && this.groupMembers.length > 0) {
+          console.log('👥 [Widget] Mapping online user IDs to names:', this.onlineUserIds);
+          console.log('👥 [Widget] Available group members:', this.groupMembers.length);
+
+          onlineUsers = this.onlineUserIds
+            .map(userId => {
+              // Find member info from group members
+              const member = this.groupMembers.find(m => m.id === userId);
+              if (member) {
+                return { id: member.id, name: member.name };
+              } else {
+                const last3Digits = String(userId).slice(-3);
+                return { id: userId, name: `anon${last3Digits}` };
+              }
+            })
+            .filter(user => user.name !== `User ${user.id}`); // Remove fallback names if possible
+        }
+
+        // If no online users mapped, use all group members as fallback
+        if (onlineUsers.length === 0 && this.groupMembers && this.groupMembers.length > 0) {
+          console.log('👥 [Widget] Using all group members as fallback');
+          onlineUsers = this.groupMembers.map(member => ({
+            id: member.id,
+            name: member.name
+          }));
+        }
+
+        // Final fallback - create mock users from online IDs
+        if (onlineUsers.length === 0 && this.onlineUserIds && this.onlineUserIds.length > 0) {
+          console.log('👥 [Widget] Creating mock users from online IDs');
+          onlineUsers = this.onlineUserIds.map(userId => {
+            const last3Digits = String(userId).slice(-3);
+            return { id: userId, name: `anon${last3Digits}` };
+          });
+        }
+
+        console.log('👥 [Widget] Final online users list:', onlineUsers);
+        return onlineUsers;
+      },
+
+      applyMessageFilter() {
+        console.log('🔍 [Widget] Applying message filter - mode:', this.filterMode, 'user:', this.filteredUser);
+        
+        // Re-display messages with current filter
+        if (this.allMessages) {
+          this.displayMessages(this.allMessages);
+        }
+      },
+
+  });
+}

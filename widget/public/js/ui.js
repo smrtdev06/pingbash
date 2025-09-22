@@ -68,6 +68,33 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
                 <span class="pingbash-online-count-badge">0</span>
               </div>
             </div>
+            <div class="pingbash-filter-container">
+              <div class="pingbash-filter-icon" title="Chat Mode">
+                <svg viewBox="0 0 24 24" width="20" height="20">
+                  <path fill="currentColor" d="M6,13H18V11H6M3,6V8H21V6M10,18H14V16H10V18Z"/>
+                </svg>
+              </div>
+              <div class="pingbash-filter-dropdown" style="display: none;">
+                <div class="pingbash-filter-widget">
+                  <div class="pingbash-filter-option">
+                    <input type="radio" id="filter-public" name="filter-mode" value="0" checked>
+                    <label for="filter-public">Public Mode</label>
+                  </div>
+                  <div class="pingbash-filter-option">
+                    <input type="radio" id="filter-oneone" name="filter-mode" value="1">
+                    <label for="filter-oneone">1 on 1 Mode</label>
+                    <div class="pingbash-user-search" style="display: none;">
+                      <input type="text" class="pingbash-user-search-input" placeholder="Search user...">
+                      <div class="pingbash-user-dropdown" style="display: none;"></div>
+                    </div>
+                  </div>
+                  <div class="pingbash-filter-option pingbash-mods-option" style="display: none;">
+                    <input type="radio" id="filter-mods" name="filter-mode" value="2">
+                    <label for="filter-mods">Mods Mode</label>
+                  </div>
+                </div>
+              </div>
+            </div>
             <div class="pingbash-hamburger-container">
               <button class="pingbash-hamburger-btn" title="Menu">
                 <svg viewBox="0 0 24 24" width="22" height="22">
@@ -104,6 +131,30 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
                     <path fill="currentColor" d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>
                   </svg>
                   Chat Rules
+                </div>
+                <div class="pingbash-menu-item" data-action="chat-limitations" style="display: none;">
+                  <svg viewBox="0 0 24 24" width="16" height="16">
+                    <path fill="currentColor" d="M12,1L3,5V11C3,16.55 6.84,21.74 12,23C17.16,21.74 21,16.55 21,11V5L12,1M12,7C13.4,7 14.8,8.6 14.8,10V11.5C15.4,11.5 16,12.4 16,13V16C16,17.4 15.4,18 14.8,18H9.2C8.6,18 8,17.4 8,16V13C8,12.4 8.6,11.5 9.2,11.5V10C9.2,8.6 10.6,7 12,7M12,8.2C11.2,8.2 10.5,8.7 10.5,10V11.5H13.5V10C13.5,8.7 12.8,8.2 12,8.2Z"/>
+                  </svg>
+                  Chat Limitations
+                </div>
+                <div class="pingbash-menu-item" data-action="manage-chat" style="display: none;">
+                  <svg viewBox="0 0 24 24" width="16" height="16">
+                    <path fill="currentColor" d="M12,15.5A3.5,3.5 0 0,1 8.5,12A3.5,3.5 0 0,1 12,8.5A3.5,3.5 0 0,1 15.5,12A3.5,3.5 0 0,1 12,15.5M19.43,12.97C19.47,12.65 19.5,12.33 19.5,12C19.5,11.67 19.47,11.34 19.43,11L21.54,9.37C21.73,9.22 21.78,8.95 21.66,8.73L19.66,5.27C19.54,5.05 19.27,4.96 19.05,5.05L16.56,6.05C16.04,5.66 15.5,5.32 14.87,5.07L14.5,2.42C14.46,2.18 14.25,2 14,2H10C9.75,2 9.54,2.18 9.5,2.42L9.13,5.07C8.5,5.32 7.96,5.66 7.44,6.05L4.95,5.05C4.73,4.96 4.46,5.05 4.34,5.27L2.34,8.73C2.22,8.95 2.27,9.22 2.46,9.37L4.57,11C4.53,11.34 4.5,11.67 4.5,12C4.5,12.33 4.53,12.65 4.57,12.97L2.46,14.63C2.27,14.78 2.22,15.05 2.34,15.27L4.34,18.73C4.46,18.95 4.73,19.03 4.95,18.95L7.44,17.94C7.96,18.34 8.5,18.68 9.13,18.93L9.5,21.58C9.54,21.82 9.75,22 10,22H14C14.25,22 14.46,21.82 14.5,21.58L14.87,18.93C15.5,18.68 16.04,18.34 16.56,17.94L19.05,18.95C19.27,19.03 19.54,18.95 19.66,18.73L21.66,15.27C21.78,15.05 21.73,14.78 21.54,14.63L19.43,12.97Z"/>
+                  </svg>
+                  Manage Chat
+                </div>
+                <div class="pingbash-menu-item" data-action="moderator-management" style="display: none;">
+                  <svg viewBox="0 0 24 24" width="16" height="16">
+                    <path fill="currentColor" d="M12,5.5A3.5,3.5 0 0,1 15.5,9A3.5,3.5 0 0,1 12,12.5A3.5,3.5 0 0,1 8.5,9A3.5,3.5 0 0,1 12,5.5M5,8C5.56,8 6.08,8.15 6.53,8.42C6.38,9.85 6.8,11.27 7.66,12.38C7.16,13.34 6.16,14 5,14A3,3 0 0,1 2,11A3,3 0 0,1 5,8M19,8A3,3 0 0,1 22,11A3,3 0 0,1 19,14C17.84,14 16.84,13.34 16.34,12.38C17.2,11.27 17.62,9.85 17.47,8.42C17.92,8.15 18.44,8 19,8M5.5,18.25C5.5,16.18 8.41,14.5 12,14.5C15.59,14.5 18.5,16.18 18.5,18.25V20H5.5V18.25M0,20V18.5C0,17.11 1.89,15.94 4.45,15.6C3.86,16.28 3.5,17.22 3.5,18.25V20H0M24,20H20.5V18.25C20.5,17.22 20.14,16.28 19.55,15.6C22.11,15.94 24,17.11 24,18.5V20Z"/>
+                  </svg>
+                  Moderator Management
+                </div>
+                <div class="pingbash-menu-item" data-action="censored-content" style="display: none;">
+                  <svg viewBox="0 0 24 24" width="16" height="16">
+                    <path fill="currentColor" d="M11,7H13A1,1 0 0,1 14,8V16A1,1 0 0,1 13,17H11A1,1 0 0,1 10,16V8A1,1 0 0,1 11,7M11,2A1,1 0 0,1 12,1A1,1 0 0,1 13,2V5H11V2M17.5,7A4.5,4.5 0 0,1 22,11.5A4.5,4.5 0 0,1 17.5,16H16V14H17.5A2.5,2.5 0 0,0 20,11.5A2.5,2.5 0 0,0 17.5,9H16V7H17.5M8,7V9H6.5A2.5,2.5 0 0,0 4,11.5A2.5,2.5 0 0,0 6.5,14H8V16H6.5A4.5,4.5 0 0,1 2,11.5A4.5,4.5 0 0,1 6.5,7H8Z"/>
+                  </svg>
+                  Censored Content
                 </div>
                 <div class="pingbash-menu-divider"></div>
                 <div class="pingbash-menu-item" data-action="settings">
@@ -254,7 +305,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
           </div>
         </div>
         
-        <!-- Chat Rules Popup -->
+                <!-- Chat Rules Popup -->
         <div class="pingbash-chat-rules-popup" style="display: none;">
           <div class="pingbash-popup-overlay"></div>
           <div class="pingbash-popup-content pingbash-chat-rules-content">
@@ -270,13 +321,13 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
                 </div>
                 <div class="pingbash-rules-edit" style="display: none;">
                   <textarea class="pingbash-rules-textarea" placeholder="Enter the chat rules for this group...
-  
-  Example:
-  1. Be respectful to all members
-  2. No spam or excessive posting
-  3. Stay on topic
-  4. No harassment or bullying
-  5. Follow community guidelines"></textarea>
+
+Example:
+1. Be respectful to all members
+2. No spam or excessive posting
+3. Stay on topic
+4. No harassment or bullying
+5. Follow community guidelines"></textarea>
                 </div>
               </div>
             </div>
@@ -289,6 +340,276 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
                 <button class="pingbash-rules-cancel-btn">Cancel</button>
                 <button class="pingbash-rules-save-btn">Save</button>
               </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Chat Limitations Popup -->
+        <div class="pingbash-chat-limitations-popup" style="display: none;">
+          <div class="pingbash-popup-overlay"></div>
+          <div class="pingbash-popup-content">
+            <div class="pingbash-popup-header">
+              <h3>Chat Limitations</h3>
+              <button class="pingbash-popup-close">×</button>
+            </div>
+            <div class="pingbash-popup-body">
+              <div class="pingbash-limitations-content">
+                
+                <!-- Section 1: Who Can Post -->
+                <div class="pingbash-limitation-section">
+                  <h4>Who Can Post</h4>
+                  <div class="pingbash-radio-group">
+                    <label class="pingbash-radio-option">
+                      <input type="radio" name="post-level" value="0" checked>
+                      <span class="pingbash-radio-dot"></span>
+                      <span>Anyone</span>
+                    </label>
+                    <label class="pingbash-radio-option">
+                      <input type="radio" name="post-level" value="1">
+                      <span class="pingbash-radio-dot"></span>
+                      <span>Verified Users</span>
+                    </label>
+                    <label class="pingbash-radio-option">
+                      <input type="radio" name="post-level" value="2">
+                      <span class="pingbash-radio-dot"></span>
+                      <span>Admin & Mods</span>
+                    </label>
+                  </div>
+                </div>
+
+                <!-- Divider -->
+                <div class="pingbash-limitation-divider"></div>
+
+                <!-- Section 2: Who Can Post URLs -->
+                <div class="pingbash-limitation-section">
+                  <h4>Who can post URLs</h4>
+                  <div class="pingbash-radio-group">
+                    <label class="pingbash-radio-option">
+                      <input type="radio" name="url-level" value="0" checked>
+                      <span class="pingbash-radio-dot"></span>
+                      <span>Everyone</span>
+                    </label>
+                    <label class="pingbash-radio-option">
+                      <input type="radio" name="url-level" value="1">
+                      <span class="pingbash-radio-dot"></span>
+                      <span>Admin & Mods</span>
+                    </label>
+                  </div>
+                </div>
+
+                <!-- Divider -->
+                <div class="pingbash-limitation-divider"></div>
+
+                <!-- Section 3: Slow Mode -->
+                <div class="pingbash-limitation-section">
+                  <label class="pingbash-checkbox-option">
+                    <input type="checkbox" id="slow-mode-checkbox">
+                    <span class="pingbash-checkbox-mark"></span>
+                    <span>Turn on Slow Mode</span>
+                  </label>
+
+                  <!-- Slow Mode Options (hidden by default) -->
+                  <div class="pingbash-slow-mode-options" style="display: none;">
+                    <div class="pingbash-radio-group">
+                      <label class="pingbash-radio-option">
+                        <input type="radio" name="slow-speed" value="5" checked>
+                        <span class="pingbash-radio-dot"></span>
+                        <span>Every 5 seconds</span>
+                      </label>
+                      <label class="pingbash-radio-option">
+                        <input type="radio" name="slow-speed" value="10">
+                        <span class="pingbash-radio-dot"></span>
+                        <span>Every 10 Seconds</span>
+                      </label>
+                      <label class="pingbash-radio-option">
+                        <input type="radio" name="slow-speed" value="15">
+                        <span class="pingbash-radio-dot"></span>
+                        <span>Every 15 Seconds</span>
+                      </label>
+                      <label class="pingbash-radio-option">
+                        <input type="radio" name="slow-speed" value="custom">
+                        <span class="pingbash-radio-dot"></span>
+                        <span>Custom</span>
+                      </label>
+                    </div>
+
+                    <!-- Custom Seconds Input (hidden by default) -->
+                    <div class="pingbash-custom-seconds" style="display: none;">
+                      <div class="pingbash-form-group">
+                        <input type="number" id="custom-seconds" class="pingbash-form-input" min="1" placeholder="Seconds">
+                        <span>seconds</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+              </div>
+            </div>
+            <div class="pingbash-popup-footer">
+              <button class="pingbash-limitations-cancel-btn">Cancel</button>
+              <button class="pingbash-limitations-ok-btn">OK</button>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Manage Chat Popup -->
+        <div class="pingbash-manage-chat-popup" style="display: none;">
+          <div class="pingbash-popup-overlay"></div>
+          <div class="pingbash-popup-content">
+            <div class="pingbash-popup-header">
+              <h3>Manage Chat</h3>
+              <button class="pingbash-popup-close">×</button>
+            </div>
+            <div class="pingbash-popup-body">
+              <div class="pingbash-manage-chat-content">
+                
+                <!-- Main Menu View -->
+                <div class="pingbash-manage-chat-menu">
+                  <div class="pingbash-manage-chat-options">
+                    <button class="pingbash-manage-chat-option" data-action="pinned-messages">
+                      📌 Pinned Messages
+                    </button>
+                    <button class="pingbash-manage-chat-option" data-action="clear-chat">
+                      🧹 Clear Chat
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Pinned Messages View -->
+                <div class="pingbash-pinned-messages-view" style="display: none;">
+                  <div class="pingbash-pinned-messages-header">
+                    <h4>Pinned Messages</h4>
+                    <button class="pingbash-back-to-menu" title="Back to menu">←</button>
+                  </div>
+                  <div class="pingbash-pinned-messages-list">
+                    <!-- Pinned messages will be populated here -->
+                    <div class="pingbash-no-pinned-messages">
+                      No pinned messages found.
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Moderator Management Popup -->
+        <div class="pingbash-moderator-management-popup" style="display: none;">
+          <div class="pingbash-popup-overlay"></div>
+          <div class="pingbash-popup-content">
+            <div class="pingbash-popup-header">
+              <h3>Moderator Management</h3>
+              <button class="pingbash-popup-close">×</button>
+            </div>
+            <div class="pingbash-popup-body">
+              <div class="pingbash-moderator-management-content">
+                
+                <!-- Current Moderators Section -->
+                <div class="pingbash-moderators-section">
+                  <h4>Current Moderators</h4>
+                  <div class="pingbash-moderators-list">
+                    <!-- Moderators will be populated here -->
+                  </div>
+                </div>
+
+                <!-- Add Moderator Section -->
+                <div class="pingbash-add-moderator-section">
+                  <h4>Add Moderator</h4>
+                  <div class="pingbash-member-search">
+                    <input type="text" class="pingbash-member-search-input" placeholder="Search members to add as moderator...">
+                    <div class="pingbash-member-search-results" style="display: none;">
+                      <!-- Search results will be populated here -->
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Moderator Permissions Popup (shown when editing a moderator) -->
+                <div class="pingbash-mod-permissions-popup" style="display: none;">
+                  <div class="pingbash-mod-permissions-overlay"></div>
+                  <div class="pingbash-mod-permissions-content" style="height:500px">
+                    <div class="pingbash-mod-permissions-header">
+                      <h4>Edit Moderator Permissions</h4>
+                      <button class="pingbash-mod-permissions-close">×</button>
+                    </div>
+                    <div class="pingbash-mod-permissions-body">
+                      <div class="pingbash-moderator-info">
+                        <div class="pingbash-moderator-avatar"></div>
+                        <div class="pingbash-moderator-name"></div>
+                      </div>
+                      <div class="pingbash-permissions-list">
+                        <label class="pingbash-permission-item">
+                          <input type="checkbox" class="pingbash-permission-checkbox" data-permission="chat_limit">
+                          <span class="pingbash-permission-label">Chat Limitations</span>
+                          <small class="pingbash-permission-description">Can manage chat limitations (post level, URL level, slow mode)</small>
+                        </label>
+                        <label class="pingbash-permission-item">
+                          <input type="checkbox" class="pingbash-permission-checkbox" data-permission="manage_mods">
+                          <span class="pingbash-permission-label">Manage Moderators</span>
+                          <small class="pingbash-permission-description">Can add/remove moderators and edit their permissions</small>
+                        </label>
+                        <label class="pingbash-permission-item">
+                          <input type="checkbox" class="pingbash-permission-checkbox" data-permission="manage_chat">
+                          <span class="pingbash-permission-label">Manage Chat</span>
+                          <small class="pingbash-permission-description">Can clear chat and manage pinned messages</small>
+                        </label>
+                        <label class="pingbash-permission-item">
+                          <input type="checkbox" class="pingbash-permission-checkbox" data-permission="manage_censored">
+                          <span class="pingbash-permission-label">Manage Censored Content</span>
+                          <small class="pingbash-permission-description">Can manage censored words and content filtering</small>
+                        </label>
+                        <label class="pingbash-permission-item">
+                          <input type="checkbox" class="pingbash-permission-checkbox" data-permission="ban_user">
+                          <span class="pingbash-permission-label">Ban Users</span>
+                          <small class="pingbash-permission-description">Can ban and timeout users</small>
+                        </label>
+                      </div>
+                    </div>
+                    <div class="pingbash-mod-permissions-footer">
+                      <button class="pingbash-mod-permissions-cancel">Cancel</button>
+                      <button class="pingbash-mod-permissions-save">Save Permissions</button>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+            <div class="pingbash-popup-footer">
+              <button class="pingbash-moderators-cancel-btn">Cancel</button>
+              <button class="pingbash-moderators-save-btn">Save Changes</button>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Censored Content Popup -->
+        <div class="pingbash-censored-content-popup" style="display: none;">
+          <div class="pingbash-popup-overlay"></div>
+          <div class="pingbash-popup-content">
+            <div class="pingbash-popup-header">
+              <h3>Censored Content List</h3>
+              <button class="pingbash-popup-close">×</button>
+            </div>
+            <div class="pingbash-popup-body">
+              <div class="pingbash-censored-content-content">
+                
+                <!-- Censored Words List -->
+                <div class="pingbash-censored-words-list">
+                  <!-- Words will be populated here -->
+                </div>
+                
+                <!-- Add New Word Section -->
+                <div class="pingbash-add-word-section">
+                  <div class="pingbash-word-input-container">
+                    <input type="text" class="pingbash-censored-word-input" placeholder="Enter censored word" maxlength="50">
+                    <button class="pingbash-add-word-btn">Add</button>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+            <div class="pingbash-popup-footer">
+              <button class="pingbash-censored-close-btn">Close</button>
+              <button class="pingbash-censored-save-btn" style="display: none;">Save Changes</button>
             </div>
           </div>
         </div>

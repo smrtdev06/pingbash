@@ -256,10 +256,26 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
     
           // Set a flag to indicate we're connecting as authenticated user
           this.connectAsAuthenticated = true;
+          
+          // Debug token storage
+          console.log('🔐 [Widget] Storing authentication token:', {
+            tokenLength: result.token?.length,
+            tokenStart: result.token?.substring(0, 20) + '...',
+            tokenType: typeof result.token,
+            hasWhitespace: result.token !== result.token?.trim()
+          });
+          
           this.authenticatedToken = result.token;
     
           // Initialize socket (this will connect as authenticated user due to the flag)
           this.initializeSocket();
+    
+          // Update menu visibility after authentication
+          setTimeout(() => {
+            if (this.updateMenuVisibility) {
+              this.updateMenuVisibility();
+            }
+          }, 2000); // Delay to ensure group data is loaded
     
           // Trigger chat rules after successful login (same as W version)
           setTimeout(() => {

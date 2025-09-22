@@ -82,6 +82,33 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         console.log('🔍 [Widget] Received get group msg:', messages?.length);
         // Initial message load - replace all messages
         this.displayMessages(messages || []);
+        
+        // Update menu visibility when messages are loaded (group is ready)
+        setTimeout(() => {
+          if (this.updateMenuVisibility) {
+            console.log('🔍 [Debug] Calling updateMenuVisibility from get group msg');
+            this.updateMenuVisibility();
+          }
+          // Make debug function available globally
+          if (this.debugMenuPermissions) {
+            window.debugMenuPermissions = () => this.debugMenuPermissions();
+          }
+        }, 500);
+        
+        // Request pinned messages after messages are loaded
+        if (this.isAuthenticated && this.authenticatedToken && this.groupId) {
+          console.log('📌 [Widget] Messages loaded - requesting pinned messages');
+          setTimeout(() => {
+            // Call getPinnedMessages directly via socket emit
+            if (this.socket && this.socket.connected) {
+              console.log('📌 [Widget] Emitting get pinned messages request');
+              this.socket.emit('get pinned messages', {
+                token: this.authenticatedToken?.trim(),
+                groupId: parseInt(this.groupId)
+              });
+            }
+          }, 500);
+        }
       });
 
       this.socket.on('send group msg', (messages) => {
@@ -89,6 +116,9 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         console.log('🔍 [Widget] Raw message data:', messages);
         // Real-time message updates - merge with existing messages (same as W version)
         this.handleNewMessages(messages || []);
+        
+        // Update UI to reflect any slow mode timing changes
+        this.onGroupDataUpdated();
       });
 
       this.socket.on('forbidden', (message) => {
@@ -104,6 +134,22 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
       this.socket.on('expired', (data) => {
         console.error('🔍 [Widget] Token expired:', data);
         this.showError('Session expired. Please sign in again.');
+        // Hide any moderator loading states
+        this.hideModeratorLoading();
+      });
+
+      this.socket.on('forbidden', (data) => {
+        console.error('🔍 [Widget] Forbidden access:', data);
+        this.showError('Access denied. You may not have permission for this action.');
+        // Hide any moderator loading states  
+        this.hideModeratorLoading();
+      });
+
+      this.socket.on('server error', (data) => {
+        console.error('🔍 [Widget] Server error:', data);
+        this.showError('Server error occurred');
+        // Hide any moderator loading states
+        this.hideModeratorLoading();
       });
 
       this.socket.on('join to group anon', (response) => {
@@ -114,6 +160,22 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
           console.log('✅ [Widget] Join response contains different group ID:', response.groupId, 'vs current:', this.groupId);
           // This might happen if the backend resolved the hash to a real ID
           this.groupId = response.groupId;
+        }
+
+        // Request pinned messages after joining (anonymous users can view pinned messages)
+        if (response && response.success) {
+          console.log('📌 [Widget] Join anon success - requesting pinned messages', {
+            isAuthenticated: this.isAuthenticated,
+            hasToken: !!this.authenticatedToken,
+            groupId: this.groupId
+          });
+          setTimeout(() => {
+            if (this.getPinnedMessages) {
+              this.getPinnedMessages();
+            } else {
+              console.error('📌 [Widget] getPinnedMessages method not found');
+            }
+          }, 1000);
         }
       });
 
@@ -126,12 +188,117 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
           // This might happen if the backend resolved the hash to a real ID
           this.groupId = response.groupId;
         }
+
+        // Request pinned messages after joining
+        if (response && response.success && this.isAuthenticated) {
+          setTimeout(() => this.getPinnedMessages(), 1000);
+        }
       });
 
       this.socket.on('group updated', (group) => {
         console.log('🔍 [Widget] group updated:', group);
+        
+        // Check if moderators changed
+        const oldModerators = this.group?.members?.filter(m => m.role_id === 2) || [];
+        const newModerators = group?.members?.filter(m => m.role_id === 2) || [];
+        
+        console.log('👥 [Socket] 🔍 Checking moderator changes:', {
+          oldCount: oldModerators.length,
+          newCount: newModerators.length,
+          oldMods: oldModerators.map(m => m.id),
+          newMods: newModerators.map(m => m.id)
+        });
+        
+        // Check for any moderator management activities
+        const moderatorMgmtPopup = this.dialog.querySelector('.pingbash-moderator-management-popup');
+        const isModeratorPopupOpen = moderatorMgmtPopup && moderatorMgmtPopup.style.display === 'flex';
+        
+        // Hide any loading states when group is updated
+        if (isModeratorPopupOpen) {
+          this.hideModeratorLoading();
+          
+          // Clear any pending timeouts
+          if (this.removeModeratorTimeoutId) {
+            clearTimeout(this.removeModeratorTimeoutId);
+            this.removeModeratorTimeoutId = null;
+          }
+          
+          // Hide loading state on permissions save button if it exists
+          const saveBtn = this.dialog.querySelector('.pingbash-mod-permissions-save');
+          this.setButtonLoading(saveBtn, false);
+          
+          // Hide permissions popup if it's open
+          this.hideModeratorPermissionsPopup();
+        }
+
+        if (oldModerators.length !== newModerators.length) {
+          console.log('👥 [Socket] 🔍 Moderator count changed!');
+          
+          // Check if we have a pending add moderator operation
+          if (newModerators.length > oldModerators.length) {
+            console.log('👥 [Socket] ✅ Moderator added via group update!');
+            this.showSuccessToast('Success', 'Moderator added successfully!');
+          } else if (newModerators.length < oldModerators.length) {
+            console.log('👥 [Socket] ✅ Moderator removed via group update!');
+            this.showSuccessToast('Success', 'Moderator removed successfully!');
+          }
+        } else if (isModeratorPopupOpen) {
+          // Moderator count didn't change, but popup is open - might be permissions update
+          console.log('👥 [Socket] ✅ Moderator permissions updated via group update!');
+          this.showSuccessToast('Success', 'Moderator permissions updated successfully!');
+        }
+        
+        // Refresh moderators list if popup is open
+        if (isModeratorPopupOpen) {
+          setTimeout(() => this.loadModerators(), 100);
+        }
+        
         this.group = group;
         this.groupMembers = group?.members || [];
+
+        // Update chat limitation UI when group data changes
+        this.onGroupDataUpdated();
+        
+        // Update menu visibility based on permissions
+        if (this.updateMenuVisibility) {
+          this.updateMenuVisibility();
+        }
+
+        // Check if censored content was updated and handle response
+        if (this.censoredWordsTimeoutId) {
+          console.log('🔍 [Widget] Censored content updated successfully');
+          
+          // Clear timeout
+          clearTimeout(this.censoredWordsTimeoutId);
+          this.censoredWordsTimeoutId = null;
+
+          // Update local data
+          this.originalCensoredWords = [...this.censoredWords];
+
+          // Hide loading state
+          const saveBtn = this.dialog?.querySelector('.pingbash-censored-save-btn');
+          if (saveBtn) {
+            this.setButtonLoading(saveBtn, false);
+          }
+
+          // Show success toast
+          this.showSuccessToast('Success', 'Censored content updated successfully!');
+
+          // Update save button visibility
+          this.updateSaveButtonVisibility();
+        }
+        
+        // Request pinned messages after group is updated (if we have messages loaded)
+        if (this.isAuthenticated && this.authenticatedToken && this.groupId && this.messages?.length > 0) {
+          console.log('📌 [Widget] Group updated - requesting pinned messages');
+          setTimeout(() => {
+            if (this.getPinnedMessages) {
+              this.getPinnedMessages();
+            } else {
+              console.error('📌 [Widget] getPinnedMessages method not found');
+            }
+          }, 200);
+        }
 
         // Check if this group update contains the correct ID for our group name
         if (group && group.name && group.id &&
@@ -230,6 +397,14 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         this.handleUpdateChatRules(data);
       });
 
+      // Listen for chat limitations updates
+      this.socket.on('udpate group post level', (data) => {
+        console.log('🔒 [Widget] Chat limitations updated:', data);
+        // The group data should be updated automatically via 'group updated' event
+        // but we can trigger UI update here as well to be safe
+        this.onGroupDataUpdated();
+      });
+
       // Listen for join to group events (when users join/leave groups)
       this.socket.on('join to group', (response) => {
         console.log('👥 [Widget] Someone joined group:', response);
@@ -250,6 +425,539 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
           }, 500);
         }
       });
+
+      // Ban and Timeout event listeners (same as W version)
+      this.socket.on('ban group user', (userId) => {
+        console.log('🚫 [Widget] User banned:', userId);
+        // Refresh messages and group data after ban
+        setTimeout(() => {
+          this.socket.emit('get group msg', {
+            groupId: parseInt(this.groupId),
+            token: this.isAuthenticated ? this.authenticatedToken : `anonusermemine${this.anonId}`
+          });
+          this.requestOnlineUsers();
+        }, 500);
+      });
+
+      // Note: Backend doesn't emit 'timeout user' response, only 'group updated' and 'user timeout notification'
+
+      this.socket.on('user timeout notification', (data) => {
+        console.log('⏰ [Widget] Timeout notification received:', data);
+        this.handleTimeoutNotification(data);
+      });
+
+      // Banned users and IP bans event listeners
+      this.socket.on('get banned users', (bannedUsers) => {
+        console.log('🚫 [Widget] Banned users received:', bannedUsers?.length || 0, 'users');
+        this.handleBannedUsersReceived(bannedUsers);
+      });
+
+      this.socket.on('get ip bans', (ipBans) => {
+        console.log('🌐 [Widget] IP bans received:', ipBans?.length || 0, 'bans');
+        this.handleIpBansReceived(ipBans);
+      });
+
+      this.socket.on('unban group users', (userIds) => {
+        console.log('✅ [Widget] Users unbanned:', userIds);
+        // Refresh banned users list and messages
+        setTimeout(() => {
+          this.socket.emit('get group msg', {
+            groupId: parseInt(this.groupId),
+            token: this.isAuthenticated ? this.authenticatedToken : `anonusermemine${this.anonId}`
+          });
+          this.requestOnlineUsers();
+        }, 500);
+        
+        // Close banned users modal if open
+        const modal = document.querySelector('.pingbash-banned-users-modal');
+        if (modal) {
+          modal.remove();
+        }
+      });
+
+      // Pin message listeners (same as W version)
+      this.socket.on('get pinned messages', (pinnedMessageIds) => {
+        console.log('📌 [Widget] Pinned messages received:', pinnedMessageIds);
+        this.pinnedMessageIds = pinnedMessageIds || [];
+        
+        console.log('📌 [Widget] Current pinned message IDs:', this.pinnedMessageIds);
+        
+        // Update the UI to reflect pinned status
+        this.updatePinnedMessagesUI();
+        
+        // Update pinned messages widget with delay to ensure messages are loaded
+        setTimeout(() => {
+          this.updatePinnedMessagesWidget();
+        }, 100);
+      });
+
+      // Clear group chat socket response (correct backend event)
+      this.socket.on('clear group chat', (groupId) => {
+        console.log('🧹 [Widget] Clear group chat response received for group:', groupId);
+        
+        // Clear timeout
+        if (this.clearChatTimeout) {
+          clearTimeout(this.clearChatTimeout);
+          this.clearChatTimeout = null;
+        }
+        
+        // Check if this is for our current group
+        if (parseInt(groupId) === parseInt(this.groupId)) {
+          // Clear local messages
+          this.messages = [];
+          this.pinnedMessageIds = [];
+          
+          // Update UI
+          this.displayMessages([]);
+          this.updatePinnedMessagesWidget();
+          
+          console.log('🧹 [Widget] Chat cleared successfully for group:', groupId);
+        } else {
+          console.log('🧹 [Widget] Clear chat event for different group:', groupId, 'current:', this.groupId);
+        }
+      });
+
+
+
+      // Unpin message socket response
+      this.socket.on('unpin message', (response) => {
+        console.log('📌 [Widget] Unpin message response:', response);
+        if (response.success) {
+          // Update local pinned messages list
+          this.pinnedMessageIds = this.pinnedMessageIds.filter(id => id !== response.messageId);
+          
+          // Update UI
+          this.updatePinnedMessagesUI();
+          this.updatePinnedMessagesWidget();
+          
+          // Refresh pinned messages view if open
+          const pinnedView = this.dialog.querySelector('.pingbash-pinned-messages-view');
+          if (pinnedView && pinnedView.style.display !== 'none') {
+            this.loadPinnedMessages();
+          }
+          
+          console.log('📌 [Widget] Message unpinned successfully');
+        } else {
+          console.error('📌 [Widget] Failed to unpin message:', response.error);
+          alert('Failed to unpin message: ' + (response.error || 'Unknown error'));
+        }
+      });
+
+      // Moderator management socket events - using correct backend event names
+      console.log('👥 [Socket] Setting up moderator management listeners');
+      
+      // The backend doesn't send specific responses for moderator updates
+      // Instead, it sends 'group updated' events which we already handle above
+      
+      // Debug: Listen for ALL socket events to see what the server is sending
+      this.socket.onAny((eventName, ...args) => {
+        console.log(`👥 [Socket] 🔍 ALL EVENTS: Received '${eventName}' with args:`, args);
+        
+        // Special logging for moderator-related events
+        if (eventName.includes('moderator') || eventName.includes('mod') || eventName.includes('permission') || eventName.includes('group') || eventName.includes('forbidden') || eventName.includes('error')) {
+          console.log(`👥 [Socket] ⭐ IMPORTANT EVENT: '${eventName}':`, args);
+        }
+      });
+
+      // Group members request for search
+      this.socket.on('get group members', (response) => {
+        console.log('👥 [Socket] Get group members response:', response);
+        this.handleGroupMembersResponse(response);
+      });
+    },
+
+    // Note: Moderator management now relies on 'group updated' events
+    // The backend sends group updates instead of specific moderator responses
+
+    handleGroupMembersResponse(response) {
+      console.log('👥 [Socket] Group members response:', response);
+      
+      if (response.success && response.members) {
+        console.log('👥 [Socket] Received group members:', response.members.length);
+        
+        // Update group members data
+        if (this.group) {
+          this.group.members = response.members;
+        }
+
+        // If there's a pending search, perform it now
+        if (this.pendingSearchQuery && this.pendingSearchContainer) {
+          console.log('👥 [Socket] Performing pending search for:', this.pendingSearchQuery);
+          this.performMemberSearch(this.pendingSearchQuery, this.pendingSearchContainer);
+          
+          // Clear pending search
+          this.pendingSearchQuery = null;
+          this.pendingSearchContainer = null;
+        }
+      } else {
+        console.error('👥 [Socket] Failed to get group members:', response.error);
+        
+        // Show error in search results if there's a pending search
+        if (this.pendingSearchContainer) {
+          this.pendingSearchContainer.innerHTML = '<div class="pingbash-member-result-item">Failed to load members</div>';
+          this.pendingSearchQuery = null;
+          this.pendingSearchContainer = null;
+        }
+      }
+    },
+
+    // Update pinned messages UI (same as W version)
+    updatePinnedMessagesUI() {
+      // Update pin button states for all messages
+      console.log('📌 [Widget] Updating pin/unpin button states for messages');
+      
+      if (!this.pinnedMessageIds) {
+        console.log('📌 [Widget] No pinned message IDs available');
+        return;
+      }
+      
+      // Update each message's pin button
+      this.messages?.forEach(message => {
+        const messageElement = document.querySelector(`[data-message-id="${message.Id}"]`);
+        if (messageElement) {
+          const pinButton = messageElement.querySelector('.pingbash-message-action.pin');
+          if (pinButton) {
+            const isPinned = this.pinnedMessageIds.includes(message.Id);
+            
+            // Update button text and onclick
+            pinButton.textContent = isPinned ? '📌' : '📍';
+            pinButton.title = isPinned ? 'Unpin Message' : 'Pin Message';
+            pinButton.onclick = () => {
+              if (isPinned) {
+                window.pingbashWidget.unpinMessage(message.Id);
+              } else {
+                window.pingbashWidget.pinMessage(message.Id);
+              }
+            };
+            
+            console.log(`📌 [Widget] Updated pin button for message ${message.Id}: ${isPinned ? 'UNPIN' : 'PIN'}`);
+          }
+        }
+      });
+    },
+
+    updatePinnedMessagesWidget() {
+      console.log('📌 [Widget] Updating pinned messages widget', {
+        pinnedIds: this.pinnedMessageIds,
+        messagesCount: this.messages?.length || 0
+      });
+      
+      if (!this.pinnedMessageIds || this.pinnedMessageIds.length === 0) {
+        // Hide pinned messages widget if no pinned messages
+        const widget = document.querySelector('.pingbash-pinned-messages-widget');
+        if (widget) {
+          widget.style.setProperty('display', 'none', 'important');
+          console.log('📌 [Widget] Widget hidden (no pinned messages)');
+        }
+        return;
+      }
+
+      // Get pinned messages from current messages
+      const pinnedMessages = this.messages?.filter(msg => 
+        this.pinnedMessageIds.includes(msg.Id)
+      ) || [];
+
+      if (pinnedMessages.length > 0) {
+        this.showPinnedMessagesWidget(pinnedMessages);
+      }
+    },
+
+    showPinnedMessagesWidget(pinnedMessages) {
+      console.log('📌 [Widget] Showing pinned messages widget with', pinnedMessages.length, 'messages');
+      
+      let widget = document.querySelector('.pingbash-pinned-messages-widget');
+      
+      if (!widget) {
+        // Create pinned messages widget
+        widget = document.createElement('div');
+        widget.className = 'pingbash-pinned-messages-widget';
+        
+        // Insert after header, before messages area (same as W version)
+        const header = this.dialog.querySelector('.pingbash-header');
+        const messagesArea = this.dialog.querySelector('.pingbash-messages-area');
+        
+        console.log('📌 [Widget] DOM elements found:', {
+          header: !!header,
+          messagesArea: !!messagesArea,
+          dialog: !!this.dialog
+        });
+        
+        if (header && messagesArea) {
+          header.parentNode.insertBefore(widget, messagesArea);
+          console.log('📌 [Widget] Widget inserted into DOM');
+        } else {
+          console.error('📌 [Widget] Could not find header or messages area to insert widget');
+          return;
+        }
+      }
+
+      // Show widget and ensure it's visible (override CSS !important)
+      widget.style.setProperty('display', 'block', 'important');
+      widget.style.setProperty('visibility', 'visible', 'important');
+      widget.style.setProperty('opacity', '1', 'important');
+      
+      console.log('📌 [Widget] Widget display styles set');
+      console.log('📌 [Widget] Widget computed styles after setting:', {
+        display: getComputedStyle(widget).display,
+        visibility: getComputedStyle(widget).visibility,
+        opacity: getComputedStyle(widget).opacity,
+        height: getComputedStyle(widget).height,
+        width: getComputedStyle(widget).width
+      });
+      
+      // Initialize or update widget content
+      this.initializePinnedMessagesWidget(widget, pinnedMessages);
+    },
+
+    initializePinnedMessagesWidget(widget, pinnedMessages) {
+      console.log('📌 [Widget] Initializing pinned messages widget', {
+        pinnedMessages: pinnedMessages.length,
+        currentIndex: this.currentPinnedIndex
+      });
+      
+      if (!this.currentPinnedIndex) {
+        this.currentPinnedIndex = 0;
+      }
+      
+      // Ensure index is within bounds
+      if (this.currentPinnedIndex >= pinnedMessages.length) {
+        this.currentPinnedIndex = 0;
+      }
+
+      const currentMessage = pinnedMessages[this.currentPinnedIndex];
+      if (!currentMessage) {
+        console.error('📌 [Widget] No current message found at index', this.currentPinnedIndex);
+        return;
+      }
+      
+      console.log('📌 [Widget] Current message:', currentMessage);
+
+      // Get group colors for styling
+      const bgColor = this.group?.msg_bg_color || '#F5F5F5';
+      const titleColor = this.group?.title_color || '#333333';
+      const msgColor = this.group?.msg_txt_color || '#333333';
+      const fontSize = this.group?.font_size || 14;
+
+      widget.innerHTML = `
+        <div class="pingbash-pinned-container" style="background: ${bgColor};">
+          <div class="pingbash-pinned-navigation">
+            ${pinnedMessages.map((_, i) => `
+              <div class="pingbash-pinned-dot ${i === this.currentPinnedIndex ? 'active' : ''}" 
+                   onclick="window.pingbashWidget.setPinnedMessageIndex(${i})"></div>
+            `).join('')}
+          </div>
+          
+          <div class="pingbash-pinned-content" onclick="window.pingbashWidget.scrollToPinnedMessage(${currentMessage.Id})">
+            <div class="pingbash-pinned-header">
+              <span class="pingbash-pinned-sender" style="color: ${titleColor}; font-size: ${fontSize}px;">
+                ${this.getSenderName(currentMessage)}
+              </span>
+              <span class="pingbash-pinned-index" style="color: ${titleColor}; font-size: ${fontSize - 2}px;">
+                #${this.currentPinnedIndex + 1}
+              </span>
+            </div>
+            <div class="pingbash-pinned-text" style="color: ${msgColor}; font-size: ${fontSize}px;">
+              ${this.truncateText(currentMessage.Content, 100)}
+            </div>
+          </div>
+          
+          <div class="pingbash-pinned-controls">
+            <button class="pingbash-pinned-prev" onclick="window.pingbashWidget.previousPinnedMessage()" 
+                    ${pinnedMessages.length <= 1 ? 'disabled' : ''}>‹</button>
+            <button class="pingbash-pinned-next" onclick="window.pingbashWidget.nextPinnedMessage()" 
+                    ${pinnedMessages.length <= 1 ? 'disabled' : ''}>›</button>
+            <button class="pingbash-pinned-unpin" onclick="window.pingbashWidget.unpinCurrentMessage()" 
+                    title="Unpin this message">📌</button>
+          </div>
+        </div>
+      `;
+    },
+
+    setPinnedMessageIndex(index) {
+      this.currentPinnedIndex = index;
+      const pinnedMessages = this.messages?.filter(msg => 
+        this.pinnedMessageIds.includes(msg.Id)
+      ) || [];
+      this.initializePinnedMessagesWidget(
+        document.querySelector('.pingbash-pinned-messages-widget'), 
+        pinnedMessages
+      );
+      
+      // Scroll to the selected message with blinking effect
+      const currentMessage = pinnedMessages[index];
+      if (currentMessage) {
+        console.log('📌 [Widget] Navigating to pinned message:', currentMessage.Id);
+        this.scrollToPinnedMessage(currentMessage.Id);
+      }
+    },
+
+    nextPinnedMessage() {
+      const pinnedMessages = this.messages?.filter(msg => 
+        this.pinnedMessageIds.includes(msg.Id)
+      ) || [];
+      
+      if (pinnedMessages.length <= 1) return;
+      
+      this.currentPinnedIndex = (this.currentPinnedIndex + 1) % pinnedMessages.length;
+      this.initializePinnedMessagesWidget(
+        document.querySelector('.pingbash-pinned-messages-widget'), 
+        pinnedMessages
+      );
+      
+      // Scroll to the next message with blinking effect
+      const currentMessage = pinnedMessages[this.currentPinnedIndex];
+      if (currentMessage) {
+        console.log('📌 [Widget] Next pinned message:', currentMessage.Id);
+        this.scrollToPinnedMessage(currentMessage.Id);
+      }
+    },
+
+    previousPinnedMessage() {
+      const pinnedMessages = this.messages?.filter(msg => 
+        this.pinnedMessageIds.includes(msg.Id)
+      ) || [];
+      
+      if (pinnedMessages.length <= 1) return;
+      
+      this.currentPinnedIndex = this.currentPinnedIndex === 0 
+        ? pinnedMessages.length - 1 
+        : this.currentPinnedIndex - 1;
+      this.initializePinnedMessagesWidget(
+        document.querySelector('.pingbash-pinned-messages-widget'), 
+        pinnedMessages
+      );
+      
+      // Scroll to the previous message with blinking effect
+      const currentMessage = pinnedMessages[this.currentPinnedIndex];
+      if (currentMessage) {
+        console.log('📌 [Widget] Previous pinned message:', currentMessage.Id);
+        this.scrollToPinnedMessage(currentMessage.Id);
+      }
+    },
+
+    unpinCurrentMessage() {
+      console.log('📌 [Widget] Unpin current message clicked');
+      
+      const pinnedMessages = this.messages?.filter(msg => 
+        this.pinnedMessageIds.includes(msg.Id)
+      ) || [];
+      
+      if (pinnedMessages.length === 0) return;
+      
+      const currentMessage = pinnedMessages[this.currentPinnedIndex];
+      if (!currentMessage) return;
+      
+      // Check permissions
+      if (!this.canPinMessages()) {
+        alert("Only moderators and admins can unpin messages");
+        return;
+      }
+      
+      // Confirm unpin
+      const confirmed = confirm(`Are you sure you want to unpin this message?`);
+      if (!confirmed) return;
+      
+      console.log(`📌 [Widget] Unpinning message ${currentMessage.Id} from widget`);
+      
+      // Call the unpin method
+      this.unpinMessage(currentMessage.Id);
+    },
+
+    // Check if user can pin/unpin messages (same as chat.js)
+    canPinMessages() {
+      // Check if user is moderator or admin (role_id 1 or 2) or group creator
+      const currentUserId = this.getCurrentUserId();
+      if (!currentUserId || !this.group) return false;
+      
+      // Group creator can always pin
+      if (this.group.creater_id === currentUserId) return true;
+      
+      // Check if user is mod/admin in group members
+      const userMember = this.group.members?.find(member => member.id === currentUserId);
+      return userMember && (userMember.role_id === 1 || userMember.role_id === 2);
+    },
+
+    // Get current user ID (same as chat.js)
+    getCurrentUserId() {
+      if (this.isAuthenticated && this.currentUserId) {
+        return parseInt(this.currentUserId);
+      } else if (this.anonId) {
+        return parseInt(this.anonId);
+      }
+      return null;
+    },
+
+    scrollToPinnedMessage(messageId) {
+      console.log('📌 [Widget] Scrolling to pinned message:', messageId);
+      
+      // Scroll to the message
+      this.scrollToMessage(messageId);
+      
+      // Add blinking effect for 1 second
+      setTimeout(() => {
+        const messageElement = document.querySelector(`[data-message-id="${messageId}"]`);
+        if (messageElement) {
+          // Add blinking class
+          messageElement.classList.add('pingbash-message-highlight');
+          
+          // Remove blinking after 1 second
+          setTimeout(() => {
+            messageElement.classList.remove('pingbash-message-highlight');
+          }, 1000);
+        }
+      }, 100); // Small delay to ensure scroll completes first
+    },
+
+    truncateText(text, maxLength) {
+      if (!text) return '';
+      // Remove HTML tags for display
+      const plainText = text.replace(/<[^>]*>/g, '');
+      return plainText.length > maxLength 
+        ? plainText.substring(0, maxLength) + '...' 
+        : plainText;
+    },
+
+    getSenderName(message) {
+      if (!message) return 'Unknown';
+      
+      // Check if it's an anonymous user
+      if (message.Sender_Id && message.Sender_Id > 1000000) {
+        const anonId = message.Sender_Id;
+        const lastThreeDigits = String(anonId).slice(-3);
+        return `Anon${lastThreeDigits}`;
+      }
+      
+      // Check if we have sender name in the message
+      if (message.sender_name) {
+        return message.sender_name;
+      }
+      
+      // Try to get name from group members
+      if (this.group && this.group.members) {
+        const member = this.group.members.find(m => m.id === message.Sender_Id);
+        if (member && member.name) {
+          return member.name;
+        }
+      }
+      
+      // Fallback to User + ID
+      return `User ${message.Sender_Id}`;
+    },
+
+    // Debug method to manually trigger pinned messages widget
+    testPinnedMessagesWidget() {
+      console.log('📌 [Widget] Testing pinned messages widget manually');
+      console.log('📌 [Widget] Current state:', {
+        pinnedMessageIds: this.pinnedMessageIds,
+        messages: this.messages?.length || 0,
+        dialog: !!this.dialog
+      });
+      
+      if (this.pinnedMessageIds && this.pinnedMessageIds.length > 0) {
+        this.updatePinnedMessagesWidget();
+      } else {
+        console.log('📌 [Widget] No pinned messages to display');
+      }
     },
 
     // EXACT COPY from widget.js - hashCode method
@@ -493,14 +1201,24 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         const message = input.value.trim();
     
         if (!message || !this.socket || !this.isConnected) return;
+
+        // Validate message against chat limitations
+        const validation = this.validateMessageBeforeSending(message);
+        if (!validation.valid) {
+          alert(validation.error);
+          return;
+        }
+
+        // Apply censoring to the message (same as F version)
+        const censoredMessage = this.applyCensoringToMessage(message);
     
-        console.log('🔍 [Widget] Sending message:', message);
+        console.log('🔍 [Widget] Sending message:', censoredMessage);
         console.log('🔍 [Widget] Group ID:', this.groupId, 'User ID:', this.userId);
         console.log('🔍 [Widget] Authenticated:', this.isAuthenticated);
     
         if (this.isAuthenticated) {
           // Send as authenticated user (exact W version format)
-          const safeMessage = this.makeTextSafe(message);
+          const safeMessage = this.makeTextSafe(censoredMessage);
           const payload = {
             groupId: parseInt(this.groupId),  // Ensure groupId is a number
             msg: safeMessage,
@@ -522,7 +1240,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
           }, 2000);
         } else {
           // Send as anonymous user (exact W version format)
-          const safeMessage = this.makeTextSafe(message);
+          const safeMessage = this.makeTextSafe(censoredMessage);
           const payload = {
             groupId: parseInt(this.groupId),  // Ensure groupId is a number
             msg: safeMessage,
@@ -545,6 +1263,9 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         }
     
         input.value = '';
+
+        // Update last message time for slow mode tracking
+        this.updateLastMessageTime();
     
         // Clear reply state after sending
         if (this.replyingTo) {
@@ -838,6 +1559,316 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         } catch (error) {
           console.error('❌ [Widget] Error rejoining group with correct ID:', error);
         }
+      },
+
+      // Handle timeout notification (same as W version)
+      handleTimeoutNotification(data) {
+        console.log('⏰ [Widget] Timeout notification received:', data);
+        const { timeoutMinutes, expiresAt, message, groupId } = data;
+        
+        // Store timeout info in localStorage for persistence (same as W version)
+        const timeoutInfo = {
+          groupId: groupId,
+          expiresAt: expiresAt,
+          timeoutMinutes: timeoutMinutes
+        };
+        localStorage.setItem(`timeout_${groupId}`, JSON.stringify(timeoutInfo));
+        
+        // Show timeout notification
+        // alert(message || `You have been timed out for ${timeoutMinutes} minutes.`);
+        
+        // Disable input and send button during timeout
+        this.updateTimeoutUI(true, expiresAt);
+      },
+
+      // Update UI during timeout (disable input)
+      updateTimeoutUI(isTimedOut, expiresAt) {
+        const input = this.dialog.querySelector('.pingbash-message-input');
+        const sendBtn = this.dialog.querySelector('.pingbash-send-btn');
+        
+        if (input) {
+          input.disabled = isTimedOut;
+          if (isTimedOut) {
+            const expiry = new Date(expiresAt);
+            const now = new Date();
+            const minutesLeft = Math.ceil((expiry - now) / (1000 * 60));
+            input.placeholder = `You are timed out for ${minutesLeft} more minutes`;
+          } else {
+            input.placeholder = 'Type a message...';
+          }
+        }
+        
+        if (sendBtn) {
+          sendBtn.disabled = isTimedOut;
+        }
+      },
+
+      // Check for persisted timeout on page load
+      checkPersistedTimeout(groupId) {
+        try {
+          const timeoutKey = `timeout_${groupId}`;
+          const timeoutInfo = localStorage.getItem(timeoutKey);
+          
+          if (timeoutInfo) {
+            const parsed = JSON.parse(timeoutInfo);
+            const now = new Date().getTime();
+            const expiry = new Date(parsed.expiresAt).getTime();
+            
+            if (expiry > now) {
+              // Timeout is still active
+              console.log(`⏰ [Widget] Restored timeout state for group ${groupId}, expires at ${parsed.expiresAt}`);
+              this.updateTimeoutUI(true, parsed.expiresAt);
+              return true;
+            } else {
+              // Timeout has expired, clean up
+              console.log(`⏰ [Widget] Timeout expired for group ${groupId}, cleaning up`);
+              localStorage.removeItem(timeoutKey);
+              this.updateTimeoutUI(false);
+              return false;
+            }
+          }
+          return false;
+        } catch (error) {
+          console.error(`⏰ [Widget] Error checking persisted timeout:`, error);
+          return false;
+        }
+      },
+
+      // Handle banned users response
+      handleBannedUsersReceived(bannedUsers) {
+        console.log('🚫 [Widget] Processing banned users:', bannedUsers);
+        
+        if (!Array.isArray(bannedUsers)) {
+          console.warn('🚫 [Widget] Invalid banned users data received');
+          bannedUsers = [];
+        }
+        
+        // Store banned users data
+        this.bannedUsers = bannedUsers;
+        
+        // Show banned users modal/popup
+        this.showBannedUsersModal(bannedUsers);
+      },
+
+      // Handle IP bans response
+      handleIpBansReceived(ipBans) {
+        console.log('🌐 [Widget] Processing IP bans:', ipBans);
+        
+        if (!Array.isArray(ipBans)) {
+          console.warn('🌐 [Widget] Invalid IP bans data received');
+          ipBans = [];
+        }
+        
+        // Store IP bans data
+        this.ipBans = ipBans;
+        
+        // Show IP bans modal/popup
+        this.showIpBansModal(ipBans);
+      },
+
+      // Show banned users modal (enhanced version)
+      showBannedUsersModal(bannedUsers) {
+        console.log('🚫 [Widget] Showing banned users modal with', bannedUsers.length, 'users');
+        
+        // Create a simple modal to display banned users
+        const modalHtml = `
+          <div class="pingbash-banned-users-modal" style="
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2147483648;
+          ">
+            <div style="
+              background: white;
+              padding: 20px;
+              border-radius: 8px;
+              max-width: 500px;
+              max-height: 70vh;
+              overflow-y: auto;
+              width: 90%;
+            ">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h3 style="margin: 0;">🚫 Banned Users (${bannedUsers.length})</h3>
+                ${bannedUsers.length > 0 ? `
+                  <button onclick="window.pingbashWidget.unbanAllUsers()" style="
+                    background: #28a745;
+                    color: white;
+                    border: none;
+                    padding: 8px 16px;
+                    border-radius: 4px;
+                    cursor: pointer;
+                    font-weight: bold;
+                  ">Unban All</button>
+                ` : ''}
+              </div>
+              
+              <div class="banned-users-list">
+                ${bannedUsers.length > 0 ? 
+                  bannedUsers.map((user, index) => `
+                    <div style="
+                      padding: 12px;
+                      border: 1px solid #ddd;
+                      margin: 8px 0;
+                      border-radius: 6px;
+                      display: flex;
+                      justify-content: space-between;
+                      align-items: center;
+                      background: #f8f9fa;
+                    ">
+                      <div style="display: flex; align-items: center;">
+                        <input type="checkbox" id="user-${user.id}" style="margin-right: 10px;" onchange="window.pingbashWidget.toggleUserSelection(${user.id}, this.checked)">
+                        <label for="user-${user.id}" style="cursor: pointer;">
+                          <strong>${user.name || `User ${user.id}`}</strong>
+                          <br>
+                          <small style="color: #666;">ID: ${user.id} • Banned: ${user.banned_at ? new Date(user.banned_at).toLocaleDateString() : 'Unknown'}</small>
+                        </label>
+                      </div>
+                      <div>
+                        <button onclick="window.pingbashWidget.unbanUser(${user.id})" style="
+                          background: #28a745;
+                          color: white;
+                          border: none;
+                          padding: 6px 12px;
+                          border-radius: 4px;
+                          cursor: pointer;
+                          margin-left: 5px;
+                        ">Unban</button>
+                      </div>
+                    </div>
+                  `).join('') 
+                  : '<div style="text-align: center; padding: 40px; color: #666;"><p>🎉 No banned users found!</p><p>All users are currently allowed in this group.</p></div>'
+                }
+              </div>
+              
+              ${bannedUsers.length > 0 ? `
+                <div style="margin: 15px 0; padding: 10px; background: #e9ecef; border-radius: 4px;">
+                  <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                      <label style="cursor: pointer;">
+                        <input type="checkbox" id="select-all-users" onchange="window.pingbashWidget.toggleAllUsers(this.checked)" style="margin-right: 8px;">
+                        Select All Users
+                      </label>
+                    </div>
+                    <button onclick="window.pingbashWidget.unbanSelectedUsers()" style="
+                      background: #ffc107;
+                      color: #212529;
+                      border: none;
+                      padding: 6px 12px;
+                      border-radius: 4px;
+                      cursor: pointer;
+                      font-weight: bold;
+                    " disabled id="unban-selected-btn">Unban Selected (0)</button>
+                  </div>
+                </div>
+              ` : ''}
+              
+              <div style="text-align: right; margin-top: 15px; border-top: 1px solid #ddd; padding-top: 15px;">
+                <button onclick="window.pingbashWidget.refreshBannedUsers()" style="
+                  background: #17a2b8;
+                  color: white;
+                  border: none;
+                  padding: 8px 16px;
+                  border-radius: 4px;
+                  cursor: pointer;
+                  margin-right: 10px;
+                ">Refresh</button>
+                <button onclick="this.closest('.pingbash-banned-users-modal').remove()" style="
+                  background: #6c757d;
+                  color: white;
+                  border: none;
+                  padding: 8px 16px;
+                  border-radius: 4px;
+                  cursor: pointer;
+                ">Close</button>
+              </div>
+            </div>
+          </div>
+        `;
+        
+        // Remove any existing modal
+        const existingModal = document.querySelector('.pingbash-banned-users-modal');
+        if (existingModal) {
+          existingModal.remove();
+        }
+        
+        // Add modal to body
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+      },
+
+      // Show IP bans modal
+      showIpBansModal(ipBans) {
+        console.log('🌐 [Widget] Showing IP bans modal with', ipBans.length, 'bans');
+        
+        // Create a simple modal to display IP bans
+        const modalHtml = `
+          <div class="pingbash-ip-bans-modal" style="
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2147483648;
+          ">
+            <div style="
+              background: white;
+              padding: 20px;
+              border-radius: 8px;
+              max-width: 600px;
+              max-height: 70vh;
+              overflow-y: auto;
+              width: 90%;
+            ">
+              <h3>🌐 IP Bans (${ipBans.length})</h3>
+              <div class="ip-bans-list">
+                ${ipBans.length > 0 ? 
+                  ipBans.map(ban => `
+                    <div style="
+                      padding: 10px;
+                      border: 1px solid #ddd;
+                      margin: 5px 0;
+                      border-radius: 4px;
+                    ">
+                      <div><strong>IP:</strong> ${ban.ip_address}</div>
+                      <div><strong>User:</strong> ${ban.banned_user_name || `User ${ban.user_id}`}</div>
+                      <div><strong>Banned by:</strong> ${ban.banned_by_name || `User ${ban.banned_by}`}</div>
+                      <div><strong>Date:</strong> ${new Date(ban.banned_at).toLocaleString()}</div>
+                    </div>
+                  `).join('') 
+                  : '<p>No IP bans found.</p>'
+                }
+              </div>
+              <div style="text-align: right; margin-top: 15px;">
+                <button onclick="this.closest('.pingbash-ip-bans-modal').remove()" style="
+                  background: #6c757d;
+                  color: white;
+                  border: none;
+                  padding: 8px 16px;
+                  border-radius: 4px;
+                  cursor: pointer;
+                ">Close</button>
+              </div>
+            </div>
+          </div>
+        `;
+        
+        // Remove any existing modal
+        const existingModal = document.querySelector('.pingbash-ip-bans-modal');
+        if (existingModal) {
+          existingModal.remove();
+        }
+        
+        // Add modal to body
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
       },
 
   });
