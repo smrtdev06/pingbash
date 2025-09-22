@@ -120,8 +120,15 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
       console.log('🔍 [Widget] displayMessages called with', allMessages.length, 'messages');
       
       // Apply Chat Mode filter (same as F version)
-      const filteredMessages = this.applyFilterMode(allMessages);
+      let filteredMessages = this.applyFilterMode(allMessages);
       console.log('🔍 [Widget] After filter mode:', filteredMessages.length, 'messages (mode:', this.filterMode || 0, ')');
+      
+      // Filter out messages from blocked users
+      if (this.blockedUsers && this.blockedUsers.size > 0) {
+        const beforeBlockFilter = filteredMessages.length;
+        filteredMessages = filteredMessages.filter(message => !this.isMessageFromBlockedUser(message));
+        console.log('🚫 [Widget] After blocked user filter:', filteredMessages.length, 'messages (filtered out:', beforeBlockFilter - filteredMessages.length, ')');
+      }
       
       const newMessages = filteredMessages;
   
@@ -315,7 +322,9 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
       const escapedContent = this.escapeForAttribute(message.Content);
       // Generate avatar HTML (same as W version)
       const avatarHtml = this.generateAvatarHtml(message, senderName);
-      
+      console.log("******************************", message.Content);
+      console.log("******************************", escapedContent);
+      console.log("******************************", this.renderMessageContent(message.Content));
       messageEl.innerHTML = `
         <div class="pingbash-message-content">
           ${avatarHtml}
@@ -326,10 +335,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
               ${this.getFilterModeText(message)}
               <span class="pingbash-message-time">${time}</span>
               <div class="pingbash-message-buttons">
-                ${!isOwn ? `
-                  <button class="pingbash-message-action ban" onclick="window.pingbashWidget.banUser(${message.Sender_Id})" title="Ban User">🚫</button>
-                  <button class="pingbash-message-action timeout" onclick="window.pingbashWidget.timeoutUser(${message.Sender_Id})" title="Timeout User">⏰</button>
-                ` : ''}
+                ${this.getMessageActionButtons(message, isOwn)}
                 ${this.canPinMessages() ? `
                   <button class="pingbash-message-action pin" onclick="window.pingbashWidget.${this.isPinnedMessage(message.Id) ? 'unpinMessage' : 'pinMessage'}(${message.Id})" title="${this.isPinnedMessage(message.Id) ? 'Unpin Message' : 'Pin Message'}">${this.isPinnedMessage(message.Id) ? '📌' : '📍'}</button>
                 ` : ''}
@@ -494,6 +500,58 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
       return censoredMessage;
     },
 
+    // MESSAGE ACTION BUTTONS - Based on F version permission logic (CORRECTED)
+    getMessageActionButtons(message, isOwn) {
+      if (isOwn) {
+        return ''; // No action buttons for own messages
+      }
+
+      const currentUserId = this.getCurrentUserId();
+      const senderInfo = this.group?.members?.find(user => user.id === message.Sender_Id);
+      const myMemInfo = this.group?.members?.find(user => user.id === currentUserId);
+
+      // Don't show actions for messages from admins/mods
+      if (senderInfo?.role_id === 1 || senderInfo?.role_id === 2) {
+        return '';
+      }
+
+      let actions = [];
+
+      // ANONYMOUS USERS: No moderation actions at all
+      if (!this.isAuthenticated) {
+        console.log('🔍 [Widget] Anonymous user - hiding all moderation actions');
+        return '';
+      }
+
+      // AUTHENTICATED REGULAR USERS (not mods/admins)
+      // Block button: Show for regular users against other regular users (F version line 191-194)
+      if (myMemInfo?.role_id !== 1 && myMemInfo?.role_id !== 2 && senderInfo?.role_id !== 1 && senderInfo?.role_id !== 2 && senderInfo?.id !== currentUserId) {
+        actions.push(`<button class="pingbash-message-action block" onclick="window.pingbashWidget.blockUser(${message.Sender_Id})" title="Block User">🚫</button>`);
+      }
+
+      // TIMEOUT PERMISSION: Group creator OR moderators (role_id 1 or 2) - F version line 185
+      // But NOT against other mods/admins and NOT if target is already timed out
+      if ((myMemInfo?.role_id === 1 || this.group?.creater_id === currentUserId || myMemInfo?.role_id === 2) && senderInfo?.role_id !== 1 && senderInfo?.role_id !== 2 && !senderInfo?.is_timed_out) {
+        actions.push(`<button class="pingbash-message-action timeout" onclick="window.pingbashWidget.timeoutUser(${message.Sender_Id})" title="Timeout User">⏰</button>`);
+      }
+
+      // BAN PERMISSION: Group creator OR moderators with ban_user permission - F version line 198 + ban_user flag
+      if ((this.group?.creater_id === currentUserId || (myMemInfo?.role_id === 2 && myMemInfo?.ban_user === true)) && senderInfo?.role_id !== 1 && senderInfo?.role_id !== 2) {
+        actions.push(`<button class="pingbash-message-action ban" onclick="window.pingbashWidget.banUser(${message.Sender_Id})" title="Ban User">⛔</button>`);
+      }
+
+      console.log('🔍 [Widget] Message actions for user', message.Sender_Id, ':', {
+        isAuth: this.isAuthenticated,
+        myRole: myMemInfo?.role_id,
+        isCreator: this.group?.creater_id === currentUserId,
+        banPerm: myMemInfo?.ban_user,
+        senderRole: senderInfo?.role_id,
+        actions: actions.length
+      });
+      
+      return actions.join('');
+    },
+
   // EXACT COPY from widget.js - getReplyContentPreview method
     getReplyContentPreview(content) {
       if (!content) return '';
@@ -515,42 +573,67 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
 
   // EXACT COPY from widget.js - makeTextSafe method
     makeTextSafe(str) {
-      return str ? str.replace(/\\/g, '\\\\').replace(/'/g, "''") : "";
+      return str ? str.replace(/\\/g, '\\\\').replace(/'/g, "\\'") : "";
     },
 
   // EXACT COPY from widget.js - renderMessageContent method
     renderMessageContent(content) {
       if (!content) return '';
-  
+      
+      console.log('🖼️ [Widget] renderMessageContent called with:', {
+        content: content,
+        contentType: typeof content,
+        contentLength: content.length,
+        hasImg: content.includes('<img'),
+        hasLink: content.includes('<a'),
+        hasGif: content.includes('gif::'),
+        hasSticker: content.includes('sticker::'),
+        hasDirectGif: content.includes('.gif') && content.includes('https://') && !content.includes(' ')
+      });
+      console.log("******************************", content, content.includes('<img'), content.includes('<a'), content.includes('gif::'), content.includes('sticker::'), content.includes('.gif') && content.includes('https://') && !content.includes(' '));
       // Check if content contains HTML tags (images, links, etc.)
       if (content.includes('<img') || content.includes('<a') || content.includes('gif::') || content.includes('sticker::')) {
-        console.log('🖼️ [Widget] Rendering HTML content:', content.substring(0, 50) + '...');
-  
+        console.log('🖼️ [Widget] Detected HTML/special content, processing...');
+        
         // Handle different content types (same as W version)
         if (content.includes('<img')) {
+          console.log('🖼️ [Widget] Processing <img> tag content:', content);
           // Image content - render as HTML
           return content;
         } else if (content.includes('gif::https://')) {
+          console.log('🖼️ [Widget] Processing gif:: content');
           // GIF content
           const gifUrl = content.slice('gif::'.length);
-          return `<img src="${gifUrl}" style="width: 160px;" />`;
+          const result = `<img src="${gifUrl}" style="width: 160px;" />`;
+          console.log('🖼️ [Widget] Created gif HTML:', result);
+          return result;
         } else if (content.includes('sticker::')) {
+          console.log('🖼️ [Widget] Processing sticker:: content');
           // Sticker content (would need Lottie implementation)
-          return `<div>🎭 Sticker: ${content.slice('sticker::'.length)}</div>`;
+          const result = `<div>🎭 Sticker: ${content.slice('sticker::'.length)}</div>`;
+          console.log('🖼️ [Widget] Created sticker HTML:', result);
+          return result;
         } else if (content.includes('.gif') && content.includes('https://') && !content.includes(' ')) {
+          console.log('🖼️ [Widget] Processing direct GIF URL');
           // Direct GIF URL
-          return `<img src="${content}" style="width: 160px;" />`;
+          const result = `<img src="${content}" style="width: 160px;" />`;
+          console.log('🖼️ [Widget] Created direct GIF HTML:', result);
+          return result;
         } else {
+          console.log('🖼️ [Widget] Processing other HTML content');
           // Other HTML content
           return content;
         }
       } else {
+        console.log('🖼️ [Widget] Processing plain text content');
         // Plain text - escape HTML and convert URLs to links
         const escaped = this.escapeHtml(content);
-        return escaped.replace(
+        const result = escaped.replace(
           /(https?:\/\/[^\s]+)/g,
           '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>'
         );
+        console.log('🖼️ [Widget] Plain text result:', result);
+        return result;
       }
     },
 
@@ -828,8 +911,8 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
     
           // Send message with file reference (exact same format as W version)
           const messageContent = type === 'image'
-            ? `<img src='${this.config.apiUrl}/uploads/chats/images/${uploadResult}' alt="" />`
-            : `<a className="inline-block text-cyan-300 hover:underline w-8/12 relative rounded-e-md" href=${this.config.apiUrl}/uploads/chats/files/${uploadResult}>File Name : ${uploadResult}</a>`;
+            ? `<img src="${this.config.apiUrl}/uploads/chats/images/${uploadResult}" alt="" />`
+            : `<a className="inline-block text-cyan-300 hover:underline w-8/12 relative rounded-e-md" href="${this.config.apiUrl}/uploads/chats/files/${uploadResult}">File Name : ${uploadResult}</a>`;
     
           console.log('📤 [Widget] Sending file message:', messageContent);
 
@@ -843,6 +926,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
     
           // Use the same socket event format as regular messages (exact same as F version)
           const safeMessage = this.makeTextSafe(messageContent);
+          console.log("=========================", safeMessage);
     
           if (this.isAuthenticated && this.authenticatedToken) {
             console.log('📤 [Widget] Sending authenticated file message via socket');
@@ -1052,8 +1136,12 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
           groupExists: !!this.group
         });
         
-        if (this.group?.creater_id !== currentUserId) {
-          alert("Only the group creator can ban users");
+        // RULE 2: Group Master OR Moderators with ban_user permission can ban users
+        const myMemInfo = this.group?.members?.find(user => user.id === currentUserId);
+        const canBan = (this.group?.creater_id === currentUserId || (myMemInfo?.role_id === 2 && myMemInfo?.ban_user === true));
+        
+        if (!canBan) {
+          alert("You don't have permission to ban users");
           return;
         }
         
@@ -1106,16 +1194,21 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
           return;
         }
         
-        // RULE 2: Only Group Master can timeout users
+        // RULE 2: Group Master OR Moderators can timeout users (F version line 185)
+        const myMemInfo = this.group?.members?.find(user => user.id === currentUserId);
+        const canTimeout = (myMemInfo?.role_id === 1 || this.group?.creater_id === currentUserId || myMemInfo?.role_id === 2);
+        
         console.log('⏰ [Widget] Permission check:', {
           groupCreatorId: this.group?.creater_id,
           currentUserId: currentUserId,
           isCreator: this.group?.creater_id === currentUserId,
+          myRole: myMemInfo?.role_id,
+          canTimeout: canTimeout,
           groupExists: !!this.group
         });
         
-        if (this.group?.creater_id !== currentUserId) {
-          alert("Only the group creator can timeout users");
+        if (!canTimeout) {
+          alert("You don't have permission to timeout users");
           return;
         }
         
@@ -1202,6 +1295,98 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
           groupId: parseInt(this.groupId),
           userIds: [parseInt(userId)]
         });
+      },
+
+      // BLOCK USER FEATURE - Corrected based on backend implementation
+      blockUser(userId) {
+        console.log('🚫 [Widget] Blocking user:', userId);
+        
+        if (!this.isAuthenticated || !this.authenticatedToken) {
+          alert('You must be signed in to block users');
+          return;
+        }
+
+        // User cannot block themselves
+        const currentUserId = this.getCurrentUserId();
+        if (userId === currentUserId) {
+          alert("You cannot block yourself");
+          return;
+        }
+        
+        if (confirm('Are you sure you want to block this user? You will not see their messages.')) {
+          console.log('📤 [Widget] Sending block user request');
+          
+          if (!this.socket || !this.socket.connected) {
+            alert("Not connected to server");
+            return;
+          }
+
+          // Backend expects: { token, userId } - personal blocking (not group-specific)
+          console.log('📤 [Widget] Block user payload:', {
+            token: this.authenticatedToken.substring(0, 20) + '...',
+            userId: userId
+          });
+
+          // Backend expects personal blocking (user-to-user), not group blocking
+          // Based on controller.js line 1084-1094: blockUser(userId, blockId) - no groupId
+          this.socket.emit('block user', {
+            token: this.authenticatedToken,
+            userId: userId
+          });
+
+          console.log('🚫 [Widget] Block user request sent to server');
+          
+          // Add the user to blocked list immediately for better UX
+          // (will be corrected by server response if needed)
+          if (!this.blockedUsers || !(this.blockedUsers instanceof Set)) {
+            this.blockedUsers = new Set();
+          }
+          this.blockedUsers.add(userId);
+          console.log('🚫 [Widget] Optimistically added user to blocked list:', this.blockedUsers);
+          
+          // Hide messages from this user immediately
+          this.filterMessagesFromBlockedUsers();
+          
+          // Request updated blocked users list after blocking (backend should send it automatically, but let's be sure)
+          setTimeout(() => {
+            if (this.socket && this.socket.connected) {
+              console.log('🚫 [Widget] Requesting updated blocked users info after block');
+              this.socket.emit('get blocked users info', {
+                token: this.authenticatedToken
+              });
+            }
+          }, 500);
+        }
+      },
+
+      // Filter messages from all blocked users
+      filterMessagesFromBlockedUsers() {
+        if (!this.blockedUsers || this.blockedUsers.size === 0) return;
+        
+        const messagesList = this.dialog?.querySelector('.pingbash-messages-list');
+        if (!messagesList) return;
+
+        const messages = messagesList.querySelectorAll('.pingbash-message');
+        messages.forEach(messageEl => {
+          // Extract sender ID from message actions
+          const actionButton = messageEl.querySelector('[onclick*="User("]');
+          if (actionButton) {
+            const onclick = actionButton.getAttribute('onclick');
+            const userIdMatch = onclick.match(/User\((\d+)\)/);
+            if (userIdMatch) {
+              const senderId = parseInt(userIdMatch[1]);
+              if (this.blockedUsers.has(senderId)) {
+                messageEl.style.display = 'none';
+                console.log('🚫 [Widget] Hidden message from blocked user:', senderId);
+              }
+            }
+          }
+        });
+      },
+
+      // Also filter messages when displaying them (for new messages)
+      isMessageFromBlockedUser(message) {
+        return this.blockedUsers && this.blockedUsers.has(message.Sender_Id);
       },
 
       // Unban all users functionality
@@ -1429,12 +1614,31 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         
         console.log(`📌 [Widget] Unpinning message ${messageId} in group ${this.groupId}`);
         
-        // Emit unpin message event (same as W version)
-        this.socket.emit('unpin message', {
+        const payload = {
           token: this.authenticatedToken?.trim(),
           groupId: parseInt(this.groupId),
           msgId: parseInt(messageId)
+        };
+        
+        console.log('📌 [Widget] Unpin payload:', payload);
+        console.log('📌 [Widget] Token length:', payload.token?.length);
+        console.log('📌 [Widget] Socket connected:', this.socket.connected);
+        console.log('📌 [Widget] Current user ID:', this.getCurrentUserId());
+        console.log('📌 [Widget] Group creator ID:', this.group?.creater_id);
+        console.log('📌 [Widget] User role in group:', this.group?.members?.find(m => m.id === this.getCurrentUserId())?.role_id);
+        
+        // Add temporary error listeners
+        this.socket.once('forbidden', (error) => {
+          console.error('📌 [Widget] ❌ Forbidden error for unpin:', error);
+          alert('Access denied. You may not have permission for this action.');
         });
+        
+        this.socket.once('error', (error) => {
+          console.error('📌 [Widget] ❌ Socket error for unpin:', error);
+        });
+        
+        // Emit unpin message event (same as W version)
+        this.socket.emit('unpin message', payload);
       },
 
       getPinnedMessages() {

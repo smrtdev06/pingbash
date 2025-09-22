@@ -38,7 +38,7 @@
       this.isOpen = false;
       this.currentUser = null;
       this.groupMembers = [];
-      this.blockedUsers = [];
+      this.blockedUsers = new Set();
       this.pinnedMessages = [];
       this.unreadCount = 0;
 

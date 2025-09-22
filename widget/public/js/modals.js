@@ -66,16 +66,31 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
     getChatRules() {
       if (!this.socket || !this.isConnected) return;
   
-      console.log('🔍 [Widget] [Chat Rules] getChatRules called with groupId:', this.groupId, 'token:', this.isAuthenticated ? 'Available' : 'Missing');
+      console.log('🔍 [Widget] [Chat Rules] getChatRules called with groupId:', this.groupId, 'token:', this.isAuthenticated ? 'Authenticated' : 'Anonymous');
   
-      if (this.isAuthenticated && this.authenticatedToken && this.groupId) {
+      // Support both authenticated and anonymous users
+      let token = null;
+      if (this.isAuthenticated && this.authenticatedToken) {
+        token = this.authenticatedToken;
+      } else if (!this.isAuthenticated && this.userId) {
+        // Use anonymous token for anonymous users
+        token = this.userId;
+      }
+
+      if (token && this.groupId) {
         this.socket.emit('get chat rules', {
-          token: this.authenticatedToken,
+          token: token,
           groupId: parseInt(this.groupId)
         });
-        console.log('🔍 [Widget] [Chat Rules] Emitted get chat rules event');
+        console.log('🔍 [Widget] [Chat Rules] Emitted get chat rules event with token type:', this.isAuthenticated ? 'authenticated' : 'anonymous');
       } else {
-        console.log('🔍 [Widget] [Chat Rules] Cannot emit get chat rules - missing token or groupId');
+        console.log('🔍 [Widget] [Chat Rules] Cannot emit get chat rules - missing token or groupId:', {
+          hasToken: !!token,
+          groupId: this.groupId,
+          isAuthenticated: this.isAuthenticated,
+          hasAuthToken: !!this.authenticatedToken,
+          hasUserId: !!this.userId
+        });
       }
     },
 
@@ -2388,12 +2403,24 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
         return;
       }
 
+      if (!this.isAuthenticated || !this.authenticatedToken) {
+        console.error('📌 [Widget] Cannot unpin message - not authenticated');
+        alert('Please log in to unpin messages');
+        return;
+      }
+
+      // Use correct backend payload format (same as chat.js)
+      const payload = {
+        token: this.authenticatedToken?.trim(),
+        groupId: parseInt(this.groupId),
+        msgId: parseInt(messageId)
+      };
+
+      console.log('📌 [Widget] Unpin payload:', payload);
+      console.log('📌 [Widget] Token length:', payload.token?.length);
+
       // Emit unpin message event to server
-      this.socket.emit('unpin message', {
-        messageId: messageId,
-        groupId: this.groupId,
-        userId: this.userId
-      });
+      this.socket.emit('unpin message', payload);
 
       console.log('📌 [Widget] Unpin message request sent to server');
     },
@@ -2429,6 +2456,8 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
     },
 
     // Helper method to render message content (basic HTML rendering)
+
+    /*
     renderMessageContent(content) {
       if (!content) return '';
       
@@ -2444,7 +2473,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
       const urlRegex = /(https?:\/\/[^\s]+)/g;
       return escaped.replace(urlRegex, '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>');
     },
-
+    */
     // Helper method to format message time
     formatMessageTime(timestamp) {
       const date = new Date(timestamp);

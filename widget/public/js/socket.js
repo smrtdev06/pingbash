@@ -41,6 +41,25 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         this.updateConnectionStatus(true);
         this.joinGroup();
 
+        // For anonymous users, re-register on reconnection to ensure message reception
+        if (!this.isAuthenticated && this.anonId) {
+          console.log('🔌 [Widget] Re-registering anonymous user on connect:', this.anonId);
+          setTimeout(() => {
+            if (this.socket && this.socket.connected) {
+              this.socket.emit('user logged as annon', { userId: this.anonId });
+              
+              // Request messages again for anonymous users to catch any missed messages
+              setTimeout(() => {
+                console.log('🔌 [Widget] Requesting messages for anonymous user after connect');
+                this.socket.emit('get group msg', {
+                  token: this.userId,
+                  groupId: parseInt(this.groupId)
+                });
+              }, 500);
+            }
+          }, 500);
+        }
+
         // Request online users after connecting
         setTimeout(() => {
           this.requestOnlineUsers();
@@ -237,15 +256,12 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
           // Check if we have a pending add moderator operation
           if (newModerators.length > oldModerators.length) {
             console.log('👥 [Socket] ✅ Moderator added via group update!');
-            this.showSuccessToast('Success', 'Moderator added successfully!');
           } else if (newModerators.length < oldModerators.length) {
             console.log('👥 [Socket] ✅ Moderator removed via group update!');
-            this.showSuccessToast('Success', 'Moderator removed successfully!');
           }
         } else if (isModeratorPopupOpen) {
           // Moderator count didn't change, but popup is open - might be permissions update
           console.log('👥 [Socket] ✅ Moderator permissions updated via group update!');
-          this.showSuccessToast('Success', 'Moderator permissions updated successfully!');
         }
         
         // Refresh moderators list if popup is open
@@ -314,6 +330,14 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
           // Rejoin with the correct ID to ensure proper message sync
           console.log('🔄 [Widget] Rejoining group with correct ID for better message sync...');
           this.rejoinGroupWithCorrectId();
+        }
+
+        // Trigger chat rules for anonymous users if they exist
+        if (!this.isAuthenticated && group && group.rules && group.rules.trim()) {
+          console.log('🔍 [Socket] Anonymous user - triggering chat rules from group updated');
+          setTimeout(() => {
+            this.triggerChatRulesAfterLogin(this.userId, 'anonymous');
+          }, 1000);
         }
 
         // Request online users after getting group data
@@ -564,6 +588,61 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         console.log('👥 [Socket] Get group members response:', response);
         this.handleGroupMembersResponse(response);
       });
+
+      // Block user socket events - based on backend implementation
+      this.socket.on('get blocked users info', (blockedUsers) => {
+        console.log('🚫 [Socket] Blocked users info received:', blockedUsers);
+        console.log('🚫 [Socket] Blocked users detailed info:', {
+          isArray: Array.isArray(blockedUsers),
+          length: blockedUsers?.length,
+          firstItem: blockedUsers?.[0],
+          rawData: JSON.stringify(blockedUsers),
+          fullArray: blockedUsers,
+          type: typeof blockedUsers
+        });
+        
+        // Debug each item in the array
+        if (Array.isArray(blockedUsers) && blockedUsers.length > 0) {
+          blockedUsers.forEach((item, index) => {
+            console.log(`🚫 [Socket] Blocked user item ${index}:`, item, typeof item, JSON.stringify(item));
+          });
+        }
+        
+        // Store blocked users list for message filtering
+        if (Array.isArray(blockedUsers)) {
+          // Backend returns users with Opposite_Id field (line 1119 in controller.js)
+          const userIds = blockedUsers.map(user => {
+            const id = user.Opposite_Id || user.id || user.block_id;
+            console.log('🚫 [Socket] Mapping blocked user:', { user, mappedId: id });
+            return id;
+          }).filter(id => id !== undefined);
+          
+          this.blockedUsers = new Set(userIds);
+          console.log('🚫 [Socket] Updated blocked users list:', this.blockedUsers);
+          
+          // Hide messages from newly blocked users
+          this.filterMessagesFromBlockedUsers();
+          
+          // Always show success message since backend is responding (even if list is empty)
+          console.log('🚫 [Socket] User successfully blocked on server');
+          alert('User blocked successfully. You will no longer see their messages.');
+          
+          // Log if no blocked users returned for debugging
+          if (blockedUsers.length === 0) {
+            console.log('🚫 [Socket] Block operation completed but no blocked users returned');
+            console.log('🚫 [Socket] This could indicate:');
+            console.log('  1. Backend blockUser succeeded but getBlockedUsersInfo query failed');
+            console.log('  2. Race condition between insert and select');
+            console.log('  3. Query parameter mismatch');
+            console.log('  4. Database transaction not committed yet');
+            console.log('🚫 [Socket] Using optimistic UI update (user should be blocked)');
+          }
+        } else {
+          console.error('🚫 [Socket] Invalid blocked users response - not an array:', typeof blockedUsers);
+        }
+      });
+
+
     },
 
     // Note: Moderator management now relies on 'group updated' events
@@ -1060,6 +1139,10 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
               token: this.authenticatedToken,
               groupId: parseInt(this.groupId)
             });
+
+            // Request blocked users list for authenticated users (no specific socket event needed, backend sends on block)
+            // The backend automatically sends 'get blocked users info' when a user blocks someone
+            console.log('🚫 [Widget] Authenticated user - blocked users will be loaded when blocking occurs');
     
                       // Keep the authenticated flag for future rejoins
     
@@ -1085,17 +1168,31 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
             this.socket.emit('user logged as annon', { userId: this.anonId });
     
             // Join the group as anonymous user (same event name as W version)
+            // Backend automatically sends 'group updated' event with group data for anonymous users
             this.socket.emit('join to group anon', {
               groupId: parseInt(this.groupId),
               anonId: this.anonId
             });
+
+            console.log('🔍 [Widget] Anonymous user join request sent - backend will send group data via "group updated" event');
     
-            // Get messages with anonymous token
+            // Get messages with anonymous token - add retry mechanism for better reliability
             console.log('🔍 [Widget] Emitting GET_GROUP_MSG for group:', this.groupId, 'with token:', anonToken.substring(0, 20) + '...');
             this.socket.emit('get group msg', {
               token: anonToken,
               groupId: parseInt(this.groupId)
             });
+
+            // Add polling for anonymous users to ensure message reception
+            setTimeout(() => {
+              if (!this.isAuthenticated && this.socket && this.socket.connected) {
+                console.log('🔍 [Widget] Anonymous user message polling - requesting messages again');
+                this.socket.emit('get group msg', {
+                  token: anonToken,
+                  groupId: parseInt(this.groupId)
+                });
+              }
+            }, 2000);
     
             // Trigger chat rules after anonymous user setup (same as W version)
             setTimeout(() => {
