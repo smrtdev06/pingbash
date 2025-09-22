@@ -525,7 +525,15 @@ module.exports = (socket, users) => {
             }
 
             // Find the banned user's socket to get their IP address
-            const bannedUserSocket = users.find(user => user.ID == userId);
+            // Fix: Ensure userId is parsed as integer for proper comparison
+    const targetUserId = parseInt(userId);
+    console.log(`🔍 [BAN] Looking for user ${targetUserId} (type: ${typeof targetUserId}) in ${users.length} users`);
+    
+    const bannedUserSocket = users.find(user => {
+      const userIdInt = parseInt(user.ID);
+      console.log(`🔍 [BAN] Comparing ${userIdInt} (${typeof userIdInt}) with ${targetUserId} (${typeof targetUserId})`);
+      return userIdInt === targetUserId;
+    });
             let bannedUserIp = null;
             
             if (bannedUserSocket) {
@@ -536,13 +544,13 @@ module.exports = (socket, users) => {
                 }
             }
 
-            console.log(`Ban request: User ${senderId} banning user ${userId} (IP: ${bannedUserIp}) in group ${groupId}`);
+            console.log(`Ban request: User ${senderId} banning user ${targetUserId} (IP: ${bannedUserIp}) in group ${groupId}`);
 
             // RULE 2 & 3: Both verified and anonymous users should be banned by IP
             // Anonymous users especially need IP bans since they don't have persistent accounts
             if (bannedUserIp) {
-                console.log(`Banning user ${userId} and IP ${bannedUserIp}`);
-                await Controller.banGroupUserWithIp(groupId, userId, bannedUserIp, senderId);
+                console.log(`Banning user ${targetUserId} and IP ${bannedUserIp}`);
+                await Controller.banGroupUserWithIp(groupId, targetUserId, bannedUserIp, senderId);
             } else {
                 // Fallback: ban only user ID if IP is not available
                 console.log(`Banning user ${userId} only (IP not available)`);
@@ -682,7 +690,8 @@ module.exports = (socket, users) => {
         }
     });
 
-    socket.on(chatCode.TIMEOUT_USER, async (data) => {        
+    socket.on(chatCode.TIMEOUT_USER, async (data) => {
+        console.log("🔍 [TIMEOUT] Socket received timeout user data:", data);        
         if (!data.groupId || !data.token || !data.userId) {
             socket.emit(chatCode.FORBIDDEN, httpCode.FORBIDDEN);
             return;
@@ -700,9 +709,13 @@ module.exports = (socket, users) => {
             // Check if sender is group creator
             const groupInfo = await Controller.getGroup(groupId);
             if (!groupInfo || groupInfo.creater_id !== senderId) {
-                socket.emit(chatCode.FORBIDDEN, "Only the group creator can timeout users");
-                return;
-            }
+                            socket.emit(chatCode.FORBIDDEN, "Only the group creator can timeout users");
+            return;
+        }
+
+        // Fix: Ensure userId is parsed as integer for proper comparison
+        const targetUserId = parseInt(userId);
+        console.log(`🔍 [TIMEOUT] Processing timeout for user ${targetUserId} (type: ${typeof targetUserId})`);
 
             if (!users.find(user => user.ID == senderId)) {
                 users.push({ ID: senderId, Socket: socket.id });
@@ -720,7 +733,7 @@ module.exports = (socket, users) => {
                     if (timeoutSocket) {
                         const clientIp = getClientIpAddress(timeoutSocket);
                         await Controller.timeoutIpAddress(groupId, clientIp, senderId);
-                        console.log(`⏰ Anonymous user ${userId} (IP: ${clientIp}) timed out in group ${groupId} by ${senderId} for ${chatCode.TIMEOUT_MINS} minutes`);
+                        console.log(`⏰ Anonymous user ${targetUserId} (IP: ${clientIp}) timed out in group ${groupId} by ${senderId} for ${chatCode.TIMEOUT_MINS} minutes`);
                         
                         // Send notification to the timed out anonymous user
                         timeoutSocket.emit(chatCode.USER_TIMEOUT_NOTIFICATION, { 
@@ -734,8 +747,8 @@ module.exports = (socket, users) => {
                 }
             } else {
                 // For verified users, apply user-based timeout
-                await Controller.timeoutUser(groupId, userId);
-                console.log(`⏰ User ${userId} timed out in group ${groupId} by ${senderId} for ${chatCode.TIMEOUT_MINS} minutes`);
+                await Controller.timeoutUser(groupId, targetUserId);
+                console.log(`⏰ User ${targetUserId} timed out in group ${groupId} by ${senderId} for ${chatCode.TIMEOUT_MINS} minutes`);
                 
                 // Send notification to the timed out user
                 const timeoutUser = users.find(user => user.ID == userId);

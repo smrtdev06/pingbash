@@ -158,14 +158,22 @@ export const deleteGroupMsg = (token: string | null, msgId: number, groupId: num
 }
 
 export const banGroupUser = (token: string | null, groupId: number | null | undefined, userId: number | null | undefined) => {
-  if (token && groupId && groupId) {
-    socket.emit(ChatConst.BAN_GROUP_USER, { token, groupId, userId })
+  if (token && groupId && userId) {
+    // Fix: Ensure userId is properly parsed for anonymous users
+    const targetUserId = parseInt(String(userId));
+    console.log(`🚫 [F] Banning user ${targetUserId} (original: ${userId}, type: ${typeof userId})`);
+    
+    socket.emit(ChatConst.BAN_GROUP_USER, { token, groupId, userId: targetUserId })
   }
 }
 
 export const unbanGroupUser = (token: string | null, groupId: number | null | undefined, userId: number | null | undefined) => {
-  if (token && groupId && groupId) {
-    socket.emit(ChatConst.UNBAN_GROUP_USER, { token, groupId, userId })
+  if (token && groupId && userId) {
+    // Fix: Ensure userId is properly parsed for anonymous users
+    const targetUserId = parseInt(String(userId));
+    console.log(`✅ [F] Unbanning user ${targetUserId} (original: ${userId}, type: ${typeof userId})`);
+    
+    socket.emit(ChatConst.UNBAN_GROUP_USER, { token, groupId, userId: targetUserId })
   }
 }
 
@@ -325,7 +333,11 @@ export const anonJoinToGroup = (groupId: number | null | undefined, anonId: numb
 
 export const timeoutGroupUser = (token: string | null, groupId: number | null | undefined, userId: number | null) => {
   if (token && groupId && userId) {
-    socket.emit(ChatConst.TIMEOUT_USER, { token, groupId, userId })
+    // Fix: Ensure userId is properly parsed for anonymous users
+    const targetUserId = parseInt(String(userId));
+    console.log(`⏰ [F] Timing out user ${targetUserId} (original: ${userId}, type: ${typeof userId})`);
+    
+    socket.emit(ChatConst.TIMEOUT_USER, { token, groupId, userId: targetUserId })
   }
 }
 

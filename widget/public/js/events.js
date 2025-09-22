@@ -22,6 +22,20 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
             const isVisible = filterDropdown.style.display !== 'none';
             filterDropdown.style.display = isVisible ? 'none' : 'block';
             
+            // Update mods option visibility when opening dropdown
+            if (!isVisible) { // Opening the dropdown
+              const modsOption = this.dialog.querySelector('.pingbash-mods-option');
+              if (modsOption) {
+                if (this.isAuthenticated) {
+                  modsOption.style.display = 'block';
+                  console.log('🔍 [Widget] Showing mods option in filter dropdown');
+                } else {
+                  modsOption.style.display = 'none';
+                  console.log('🔍 [Widget] Hiding mods option for anonymous user');
+                }
+              }
+            }
+            
             // Close hamburger dropdown if open
             const hamburgerDropdown = this.dialog.querySelector('.pingbash-hamburger-dropdown');
             if (hamburgerDropdown) {
@@ -1565,10 +1579,15 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
           userSearch.style.display = filterMode === 1 ? 'block' : 'none';
         }
         
-        // Show mods option only for moderators/admins (same as F version)
-        if (modsOption && this.currentUserRole) {
-          const isModOrAdmin = this.currentUserRole === 1 || this.currentUserRole === 2 || this.isGroupCreator;
-          modsOption.style.display = isModOrAdmin ? 'block' : 'none';
+        // Show mods option for all authenticated users (same as F version)
+        if (modsOption) {
+          if (this.isAuthenticated) {
+            modsOption.style.display = 'block';
+            console.log('🔍 [Widget] Showing mods mode for authenticated user');
+          } else {
+            modsOption.style.display = 'none';
+            console.log('🔍 [Widget] Hiding mods mode for anonymous user');
+          }
         }
         
         // Clear user search
@@ -1586,6 +1605,9 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         
         // Re-filter messages
         this.applyMessageFilter();
+        
+        // Show mode status feedback (same as F version)
+        this.showModeStatus(filterMode);
       },
 
       handleUserSearch(searchTerm) {
@@ -1644,6 +1666,11 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         
         // Re-filter messages
         this.applyMessageFilter();
+        
+        // Update placeholder if in 1-on-1 mode
+        if (this.filterMode === 1) {
+          this.updateInputPlaceholder(1);
+        }
       },
 
       getOnlineUsers() {
@@ -1697,6 +1724,45 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         // Re-display messages with current filter
         if (this.allMessages) {
           this.displayMessages(this.allMessages);
+        }
+      },
+
+      showModeStatus(filterMode) {
+        // Show temporary status message for mode changes (same as F version)
+        const modes = {
+          0: 'Public Mode - All users can see your messages',
+          1: '1-on-1 Mode - Private messages with selected user + public messages',
+          2: 'Mods Mode - Send messages to moderators for help/reports'
+        };
+        
+        const statusMessage = modes[filterMode] || 'Unknown mode';
+        console.log('🔍 [Widget] Chat mode:', statusMessage);
+        
+        // Update input placeholder to show current mode
+        this.updateInputPlaceholder(filterMode);
+        
+        // You could add a temporary toast notification here if desired
+        // For now, just log the mode change
+      },
+
+      updateInputPlaceholder(filterMode) {
+        // Update input placeholder based on current mode (same as F version)
+        const messageInput = this.dialog.querySelector('.pingbash-message-input');
+        if (!messageInput) return;
+        
+        switch (filterMode) {
+          case 0:
+            messageInput.placeholder = 'Type a public message...';
+            break;
+          case 1:
+            const selectedUser = this.filteredUser?.name || 'a user';
+            messageInput.placeholder = `Private message to ${selectedUser}...`;
+            break;
+          case 2:
+            messageInput.placeholder = 'Report to moderators or ask for help...';
+            break;
+          default:
+            messageInput.placeholder = 'Type a message...';
         }
       },
 

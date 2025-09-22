@@ -470,6 +470,58 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         this.handleTimeoutNotification(data);
       });
 
+      // Listen for timeout success (via group updated or direct response)
+      this.socket.on('timeout success', (data) => {
+        console.log('✅ [Widget] Timeout successful:', data);
+        alert('User has been timed out for 15 minutes');
+      });
+
+      // Listen for timeout errors
+      this.socket.on('timeout error', (error) => {
+        console.error('❌ [Widget] Timeout failed:', error);
+        alert('Failed to timeout user: ' + (error.message || 'Unknown error'));
+      });
+
+      // Listen for ban success and errors
+      this.socket.on('ban success', (data) => {
+        console.log('✅ [Widget] Ban successful:', data);
+        alert('User has been banned successfully');
+      });
+
+      this.socket.on('ban error', (error) => {
+        console.error('❌ [Widget] Ban failed:', error);
+        alert('Failed to ban user: ' + (error.message || 'Unknown error'));
+      });
+
+      // Listen for the actual events the backend sends for ban/timeout
+      this.socket.on('ban group user', (userId) => {
+        console.log('✅ [Widget] Backend confirmed ban for user:', userId);
+        const isAnonymous = parseInt(userId) > 100000;
+        const userType = isAnonymous ? 'Anonymous user' : 'User';
+        alert(`${userType} ${userId} has been banned successfully`);
+      });
+
+      this.socket.on('unban group user', (userId) => {
+        console.log('✅ [Widget] Backend confirmed unban for user:', userId);
+        const isAnonymous = parseInt(userId) > 100000;
+        const userType = isAnonymous ? 'Anonymous user' : 'User';
+        alert(`${userType} ${userId} has been unbanned successfully`);
+      });
+
+      // Enhanced forbidden handler for ban/timeout errors
+      this.socket.on('forbidden', (message) => {
+        console.log('🔍 [Widget] Forbidden access:', message);
+        
+        // Check if this is a ban/timeout related forbidden error
+        if (typeof message === 'string') {
+          if (message.includes('ban') || message.includes('timeout')) {
+            alert('Access denied: ' + message);
+          } else if (message.includes('creator') || message.includes('permission')) {
+            alert('Permission denied: ' + message);
+          }
+        }
+      });
+
       // Banned users and IP bans event listeners
       this.socket.on('get banned users', (bannedUsers) => {
         console.log('🚫 [Widget] Banned users received:', bannedUsers?.length || 0, 'users');
@@ -1320,7 +1372,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
             groupId: parseInt(this.groupId),  // Ensure groupId is a number
             msg: safeMessage,
             token: this.userId,
-            receiverId: null,
+            receiverId: this.getCurrentReceiverId(),
             parent_id: this.replyingTo ? this.replyingTo.id : null
           };
           console.log('📤 [Widget] Sending as authenticated user');
@@ -1342,7 +1394,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
             groupId: parseInt(this.groupId),  // Ensure groupId is a number
             msg: safeMessage,
             anonId: this.anonId,
-            receiverId: null,
+            receiverId: this.getCurrentReceiverId(),
             parent_id: this.replyingTo ? this.replyingTo.id : null
           };
           console.log('📤 [Widget] Sending as anonymous user');

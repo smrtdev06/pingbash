@@ -68,7 +68,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
                 <span class="pingbash-online-count-badge">0</span>
               </div>
             </div>
-            <div class="pingbash-filter-container">
+            <div class="pingbash-filter-container" style="display: none;">
               <div class="pingbash-filter-icon" title="Chat Mode">
                 <svg viewBox="0 0 24 24" width="20" height="20">
                   <path fill="currentColor" d="M6,13H18V11H6M3,6V8H21V6M10,18H14V16H10V18Z"/>

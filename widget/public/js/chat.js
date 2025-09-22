@@ -529,9 +529,9 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         actions.push(`<button class="pingbash-message-action block" onclick="window.pingbashWidget.blockUser(${message.Sender_Id})" title="Block User">🚫</button>`);
       }
 
-      // TIMEOUT PERMISSION: Group creator OR moderators (role_id 1 or 2) - F version line 185
+      // TIMEOUT PERMISSION: Only Group creator can timeout users (backend restriction)
       // But NOT against other mods/admins and NOT if target is already timed out
-      if ((myMemInfo?.role_id === 1 || this.group?.creater_id === currentUserId || myMemInfo?.role_id === 2) && senderInfo?.role_id !== 1 && senderInfo?.role_id !== 2 && !senderInfo?.is_timed_out) {
+      if ((this.group?.creater_id === currentUserId) && senderInfo?.role_id !== 1 && senderInfo?.role_id !== 2 && !senderInfo?.is_timed_out) {
         actions.push(`<button class="pingbash-message-action timeout" onclick="window.pingbashWidget.timeoutUser(${message.Sender_Id})" title="Timeout User">⏰</button>`);
       }
 
@@ -941,7 +941,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
               groupId: parseInt(this.groupId),
               msg: safeMessage,
               token: this.authenticatedToken,
-              receiverId: null,
+              receiverId: this.getCurrentReceiverId(),
               parent_id: null
             });
     
@@ -966,7 +966,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
               groupId: parseInt(this.groupId),
               msg: safeMessage,
               anonId: this.anonId,
-              receiverId: null,
+              receiverId: this.getCurrentReceiverId(),
               parent_id: null
             });
           }
@@ -1019,32 +1019,51 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         console.log('🔍 [Widget] Applying filter mode:', filterMode, 'for user:', currentUserId);
 
         switch (filterMode) {
-          case 0: // Public Mode - show public messages (receiver_id = null)
+          case 0: // Public Mode - show public messages (receiver_id = null) + private messages to current user
             return messages.filter(msg => {
               const isPublic = msg.Receiver_Id == null;
               const isOwnMessage = msg.Sender_Id == currentUserId;
-              return isPublic || isOwnMessage;
+              const isToCurrentUser = msg.Receiver_Id == currentUserId;
+              
+              // Show public messages, own messages, and private messages addressed to current user
+              const shouldShow = isPublic || isOwnMessage || isToCurrentUser;
+              if (isToCurrentUser) {
+                console.log('🔍 [Widget] Private message to current user in public mode:', {
+                  msgId: msg.Id,
+                  from: msg.Sender_Id,
+                  to: msg.Receiver_Id,
+                  content: msg.Content?.substring(0, 50) + '...'
+                });
+              }
+              return shouldShow;
             });
 
-          case 1: // 1 on 1 Mode - show messages to/from selected user
+          case 1: // 1 on 1 Mode - show private messages with selected user + public messages
             if (!this.filteredUser) {
               console.log('🔍 [Widget] 1-on-1 mode but no user selected');
               return [];
             }
             
             const selectedUserId = this.filteredUser.id;
-            console.log('🔍 [Widget] 1-on-1 mode with user:', selectedUserId);
+            console.log('🔍 [Widget] 1-on-1 mode with user:', selectedUserId, 'current user:', currentUserId, '(includes public messages)');
             
             return messages.filter(msg => {
-              const isToSelectedUser = msg.Receiver_Id == selectedUserId;
-              const isFromSelectedUser = msg.Sender_Id == selectedUserId;
+              const isToSelectedUser = msg.Receiver_Id == selectedUserId && msg.Sender_Id == currentUserId;
+              const isFromSelectedUser = msg.Sender_Id == selectedUserId && msg.Receiver_Id == currentUserId;
+              const isPublicMessage = msg.Receiver_Id == null; // Include public messages (anonymous users)
               const isOwnMessage = msg.Sender_Id == currentUserId;
-              const isToCurrentUser = msg.Receiver_Id == currentUserId;
               
-              // Show messages between current user and selected user
-              return (isToSelectedUser && isOwnMessage) || 
-                     (isFromSelectedUser && (isToCurrentUser || msg.Receiver_Id == null)) ||
-                     (isFromSelectedUser && isOwnMessage);
+              // Show direct messages between users + public messages + own messages (same as F version)
+              const shouldShow = isToSelectedUser || isFromSelectedUser || isPublicMessage || isOwnMessage;
+              if (isToSelectedUser || isFromSelectedUser) {
+                console.log('🔍 [Widget] 1-on-1 private message:', {
+                  msgId: msg.Id,
+                  from: msg.Sender_Id,
+                  to: msg.Receiver_Id,
+                  content: msg.Content?.substring(0, 50) + '...'
+                });
+              }
+              return shouldShow;
             });
 
           case 2: // Mods Mode - show messages to moderators (receiver_id = 1)
@@ -1116,6 +1135,33 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         return `User ${receiverId}`;
       },
 
+      getCurrentReceiverId() {
+        // Determine receiver ID based on current filter mode (same as F version)
+        const filterMode = this.filterMode || 0;
+        
+        switch (filterMode) {
+          case 0: // Public Mode
+            return null;
+            
+          case 1: // 1 on 1 Mode  
+            if (this.filteredUser && this.filteredUser.id) {
+              const receiverId = parseInt(this.filteredUser.id);
+              console.log('🔍 [Widget] Sending 1-on-1 message to user:', receiverId, 'user name:', this.filteredUser.name);
+              return receiverId;
+            }
+            console.log('🔍 [Widget] 1-on-1 mode but no user selected, sending as public');
+            return null;
+            
+          case 2: // Mods Mode
+            // All authenticated users can send to mods (for reporting, questions, etc.)
+            console.log('🔍 [Widget] Sending message to moderators');
+            return 1; // receiver_id = 1 for moderators
+            
+          default:
+            return null;
+        }
+      },
+
       // BAN and TIMEOUT functionality (same as W version)
       banUser(userId) {
         
@@ -1162,6 +1208,16 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         
         console.log(`🚫 [Widget] Group Master ${currentUserId} attempting to ban user ${userId}`);
         
+        // Check if this is an anonymous user
+        const isAnonymousUser = userId > 100000;
+        console.log('🚫 [Widget] Target user info:', {
+          userId: userId,
+          userIdType: typeof userId,
+          isAnonymous: isAnonymousUser,
+          userIdString: String(userId),
+          userIdParsed: parseInt(userId)
+        });
+        
         // Clean and validate token
         const cleanToken = this.authenticatedToken?.trim();
         
@@ -1177,11 +1233,41 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         });
         
         // Emit ban event (same as W version)
-        this.socket.emit('ban group user', {
+        // For anonymous users (large IDs), ensure we don't lose precision
+        const parsedUserId = parseInt(userId);
+        const banPayload = {
           token: cleanToken,
           groupId: parseInt(this.groupId),
-          userId: parseInt(userId)
+          userId: parsedUserId
+        };
+        
+        // Verify no precision loss for large anonymous user IDs
+        if (String(parsedUserId) !== String(userId)) {
+          console.warn('🚫 [Widget] Potential precision loss in user ID:', {
+            original: userId,
+            parsed: parsedUserId,
+            originalStr: String(userId),
+            parsedStr: String(parsedUserId)
+          });
+          alert(`Warning: User ID precision loss detected. Original: ${userId}, Parsed: ${parsedUserId}`);
+        }
+        
+        console.log('🚫 [Widget] Ban payload:', banPayload);
+        console.log('🚫 [Widget] Payload types:', {
+          token: typeof banPayload.token,
+          groupId: typeof banPayload.groupId,
+          userId: typeof banPayload.userId,
+          tokenLength: banPayload.token?.length
         });
+        
+        this.socket.emit('ban group user', banPayload);
+        
+        console.log('🚫 [Widget] Ban request sent to server');
+        
+        // Add timeout for feedback
+        setTimeout(() => {
+          console.log('🚫 [Widget] Ban request should have been processed by now');
+        }, 3000);
       },
 
       timeoutUser(userId) {
@@ -1194,21 +1280,19 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
           return;
         }
         
-        // RULE 2: Group Master OR Moderators can timeout users (F version line 185)
-        const myMemInfo = this.group?.members?.find(user => user.id === currentUserId);
-        const canTimeout = (myMemInfo?.role_id === 1 || this.group?.creater_id === currentUserId || myMemInfo?.role_id === 2);
+        // RULE 2: Only Group Creator can timeout users (backend restriction)
+        const canTimeout = (this.group?.creater_id === currentUserId);
         
         console.log('⏰ [Widget] Permission check:', {
           groupCreatorId: this.group?.creater_id,
           currentUserId: currentUserId,
           isCreator: this.group?.creater_id === currentUserId,
-          myRole: myMemInfo?.role_id,
           canTimeout: canTimeout,
           groupExists: !!this.group
         });
         
         if (!canTimeout) {
-          alert("You don't have permission to timeout users");
+          alert("Only the group creator can timeout users");
           return;
         }
         
@@ -1229,6 +1313,16 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         
         console.log(`⏰ [Widget] Group Master ${currentUserId} attempting to timeout user ${userId}`);
         
+        // Check if this is an anonymous user
+        const isAnonymousUser = userId > 100000;
+        console.log('⏰ [Widget] Target user info:', {
+          userId: userId,
+          userIdType: typeof userId,
+          isAnonymous: isAnonymousUser,
+          userIdString: String(userId),
+          userIdParsed: parseInt(userId)
+        });
+        
         // Clean and validate token
         const cleanToken = this.authenticatedToken?.trim();
         
@@ -1244,11 +1338,41 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         });
         
         // Emit timeout event (backend expects 'timout user' - note the typo)
-        this.socket.emit('timout user', {
+        // For anonymous users (large IDs), ensure we don't lose precision
+        const parsedUserId = parseInt(userId);
+        const timeoutPayload = {
           token: cleanToken,
           groupId: parseInt(this.groupId),
-          userId: parseInt(userId)
+          userId: parsedUserId
+        };
+        
+        // Verify no precision loss for large anonymous user IDs
+        if (String(parsedUserId) !== String(userId)) {
+          console.warn('⏰ [Widget] Potential precision loss in user ID:', {
+            original: userId,
+            parsed: parsedUserId,
+            originalStr: String(userId),
+            parsedStr: String(parsedUserId)
+          });
+          alert(`Warning: User ID precision loss detected. Original: ${userId}, Parsed: ${parsedUserId}`);
+        }
+        
+        console.log('⏰ [Widget] Timeout payload:', timeoutPayload);
+        console.log('⏰ [Widget] Payload types:', {
+          token: typeof timeoutPayload.token,
+          groupId: typeof timeoutPayload.groupId,
+          userId: typeof timeoutPayload.userId,
+          tokenLength: timeoutPayload.token?.length
         });
+        
+        this.socket.emit('timout user', timeoutPayload);
+        
+        console.log('⏰ [Widget] Timeout request sent to server');
+        
+        // Add timeout for user feedback
+        setTimeout(() => {
+          console.log('⏰ [Widget] Timeout request should have been processed by now');
+        }, 3000);
       },
 
       getCurrentUserId() {

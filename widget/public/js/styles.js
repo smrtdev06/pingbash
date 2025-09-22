@@ -359,7 +359,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
         .pingbash-filter-mode-text {
           font-size: 11px;
           color: #666;
-          background: #f0f0f0;
+          background: #73dbf9;
           padding: 2px 6px;
           border-radius: 10px;
           margin: 0 4px;
@@ -2779,7 +2779,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
         .pingbash-filter-mode-text {
           font-size: 11px;
           color: #666;
-          background: #f0f0f0;
+          background: #73dbf9;
           padding: 2px 6px;
           border-radius: 10px;
           margin: 0 4px;

@@ -1228,6 +1228,33 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
         canManageCensoredContent
       });
       
+      // Debug mods option visibility
+      const modsOption = this.dialog.querySelector('.pingbash-mods-option');
+      console.log('🔍 [Debug] Mods option element:', {
+        found: !!modsOption,
+        display: modsOption?.style?.display,
+        isAuthenticated: this.isAuthenticated
+      });
+      
+      // Update Chat Mode filter container - only show for authenticated users
+      const filterContainer = this.dialog.querySelector('.pingbash-filter-container');
+      if (filterContainer) {
+        if (this.isAuthenticated) {
+          filterContainer.style.display = 'flex';
+          console.log('🔍 [Widget] Showing Chat Mode filter for authenticated user');
+          
+          // Also show mods option for authenticated users
+          const modsOption = this.dialog.querySelector('.pingbash-mods-option');
+          if (modsOption) {
+            modsOption.style.display = 'block';
+            console.log('🔍 [Widget] Enabling mods option for authenticated user');
+          }
+        } else {
+          filterContainer.style.display = 'none';
+          console.log('🔍 [Widget] Hiding Chat Mode filter for anonymous user');
+        }
+      }
+      
       // Update Moderator Management menu item
       const moderatorMgmtItem = this.dialog.querySelector('.pingbash-menu-item[data-action="moderator-management"]');
       if (moderatorMgmtItem) {
