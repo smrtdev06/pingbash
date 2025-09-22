@@ -336,30 +336,33 @@ module.exports = (socket, users) => {
     });
 
     socket.on(chatCode.SEND_GROUP_MSG_ANON, async (data) => {  
+        console.log(`🚨 [EMERGENCY-DEBUG] Anonymous message handler triggered! Data:`, data);
+        
         if (!data.groupId || !data.msg || !data.anonId) {
+            console.log(`🚨 [EMERGENCY-DEBUG] Missing required data in anonymous message`);
             socket.emit(chatCode.FORBIDDEN, httpCode.FORBIDDEN);
             return;
         }
+        
         try {
             const { anonId, msg: content, groupId, receiverId } = data;
             console.log("== Anon Id ===", anonId);
+            console.log(`🚨 [EMERGENCY-DEBUG] Processing message from anonymous user ${anonId} to group ${groupId}`);
             
-            // Get user's IP address using improved detection
+            // IMMEDIATE IP BAN CHECK - TOP PRIORITY
             const clientIp = getClientIpAddress(socket);
-            console.log(`🔍 Anonymous user ${anonId} sending message from IP ${clientIp} to group ${groupId}`);
-
-                    // Check if IP is banned from this group
-        console.log(`🔍 [IP-BAN-CHECK] [ANON] Checking IP ban for anonymous user ${anonId}, IP: ${clientIp}, group: ${groupId}`);
-        const isIpBanned = await Controller.checkIpBan(groupId, clientIp);
-        console.log(`🔍 [IP-BAN-CHECK] [ANON] Result: ${isIpBanned ? 'BANNED' : 'NOT BANNED'}`);
-        
-        if (isIpBanned) {
-                console.log(`🚫 IP BAN BLOCKING ANON MESSAGE: IP ${clientIp} is banned from group ${groupId}`);
-            console.log(`🚫 Anonymous user trying to send message: ${anonId}`);
-                console.log(`🚫 Anonymous user trying to send message: ${anonId}`);
+            console.log(`🚨 [EMERGENCY-DEBUG] Anonymous user IP: ${clientIp}`);
+            
+            const isIpBanned = await Controller.checkIpBan(groupId, clientIp);
+            console.log(`🚨 [EMERGENCY-DEBUG] IP Ban Result: ${isIpBanned ? 'BANNED - BLOCKING!' : 'NOT BANNED - ALLOWING'}`);
+            
+            if (isIpBanned) {
+                console.log(`🚨 [EMERGENCY-BLOCK] BLOCKING BANNED ANONYMOUS USER ${anonId} WITH IP ${clientIp}`);
                 socket.emit(chatCode.FORBIDDEN, "You are banned from this group");
                 return;
             }
+            
+            console.log(`🔍 Anonymous user ${anonId} sending message from IP ${clientIp} to group ${groupId}`);
 
             // Check if IP is timed out from this group
             const ipTimeoutCheck = await Controller.checkIpTimeout(groupId, clientIp);
