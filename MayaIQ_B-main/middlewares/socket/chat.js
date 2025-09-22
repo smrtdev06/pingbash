@@ -564,8 +564,8 @@ module.exports = (socket, users) => {
                 await Controller.banGroupUserWithIp(groupId, targetUserId, bannedUserIp, senderId);
             } else {
                 // Fallback: ban only user ID if IP is not available
-                console.log(`Banning user ${userId} only (IP not available)`);
-                await Controller.banGroupUser(groupId, userId);
+                console.log(`Banning user ${targetUserId} only (IP not available)`);
+                await Controller.banGroupUser(groupId, targetUserId);
             }
 
             const receivers = await Controller.getReceiverIdsOfGroup(groupId);

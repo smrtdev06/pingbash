@@ -845,35 +845,64 @@ const banGroupUser = async (groupId, userId) => {
 
 const banGroupUserWithIp = async (groupId, userId, ipAddress, bannedBy) => {
     try {
+        console.log(`🚨 [IP-BAN-DEBUG] Starting IP ban process for user ${userId}, IP: ${ipAddress}, group: ${groupId}, bannedBy: ${bannedBy}`);
+        
         // First, ban the user normally
+        console.log(`🚨 [IP-BAN-DEBUG] Step 1: Banning user normally...`);
         await banGroupUser(groupId, userId);
+        console.log(`🚨 [IP-BAN-DEBUG] Step 1 completed: User banned normally`);
         
         // Check if there's already an inactive ban for this IP
-        const existingBan = await PG_query(`SELECT id FROM ip_bans 
+        console.log(`🚨 [IP-BAN-DEBUG] Step 2: Checking for existing inactive bans...`);
+        const existingBanQuery = `SELECT id FROM ip_bans 
             WHERE group_id = ${groupId} AND ip_address = '${ipAddress}' AND is_active = false
-            ORDER BY banned_at DESC LIMIT 1;`);
+            ORDER BY banned_at DESC LIMIT 1;`;
+        console.log(`🚨 [IP-BAN-DEBUG] Existing ban query:`, existingBanQuery);
+        const existingBan = await PG_query(existingBanQuery);
+        console.log(`🚨 [IP-BAN-DEBUG] Existing ban result:`, existingBan.rows);
         
         if (existingBan.rows.length > 0) {
             // Reactivate existing ban
-            await PG_query(`UPDATE ip_bans 
+            console.log(`🚨 [IP-BAN-DEBUG] Step 3a: Reactivating existing ban...`);
+            const updateQuery = `UPDATE ip_bans 
                 SET is_active = true, user_id = ${userId}, banned_by = ${bannedBy}, banned_at = CURRENT_TIMESTAMP
-                WHERE id = ${existingBan.rows[0].id};`);
+                WHERE id = ${existingBan.rows[0].id};`;
+            console.log(`🚨 [IP-BAN-DEBUG] Update query:`, updateQuery);
+            const updateResult = await PG_query(updateQuery);
+            console.log(`🚨 [IP-BAN-DEBUG] Update result:`, updateResult);
             console.log(`🔄 Reactivated existing IP ban for ${ipAddress}`);
         } else {
             // Create new IP ban
-            await PG_query(`INSERT INTO ip_bans (group_id, user_id, ip_address, banned_by)
+            console.log(`🚨 [IP-BAN-DEBUG] Step 3b: Creating new IP ban...`);
+            const insertQuery = `INSERT INTO ip_bans (group_id, user_id, ip_address, banned_by)
                 VALUES (${groupId}, ${userId}, '${ipAddress}', ${bannedBy})
                 ON CONFLICT (group_id, ip_address, is_active) 
                 DO UPDATE SET 
                     user_id = ${userId},
                     banned_by = ${bannedBy},
-                    banned_at = CURRENT_TIMESTAMP;`);
+                    banned_at = CURRENT_TIMESTAMP;`;
+            console.log(`🚨 [IP-BAN-DEBUG] Insert query:`, insertQuery);
+            const insertResult = await PG_query(insertQuery);
+            console.log(`🚨 [IP-BAN-DEBUG] Insert result:`, insertResult);
             console.log(`➕ Created new IP ban for ${ipAddress}`);
         }
         
         console.log(`🚫 [IP-BAN-DB] IP BAN ADDED: User ${userId}, IP ${ipAddress} banned from group ${groupId} by ${bannedBy}`);
+        
+        // Verify the ban was created
+        console.log(`🚨 [IP-BAN-DEBUG] Verifying IP ban creation...`);
+        const verifyResult = await PG_query(`SELECT * FROM ip_bans WHERE group_id = ${groupId} AND ip_address = '${ipAddress}' AND is_active = true;`);
+        console.log(`🚨 [IP-BAN-DEBUG] Verify result:`, verifyResult.rows);
+        
+        if (verifyResult.rows.length > 0) {
+            console.log(`✅ [IP-BAN-DEBUG] IP ban successfully created and verified!`);
+        } else {
+            console.error(`❌ [IP-BAN-DEBUG] IP ban verification FAILED - no active ban found!`);
+        }
+        
     } catch (error) {
         console.log("🔍 [IP-BAN-DB] Error banning user with IP:", error);
+        console.log("🔍 [IP-BAN-DB] Error stack:", error.stack);
     }
 }
 

@@ -52,7 +52,7 @@ const DB_query = (query) => new Promise((res, rej) => {
   DB_HANDLE.query(query, (err, result) => {
     if (err) rej(err)
 
-    console.log(`(${query}) implemented on DB`)
+    //console.log(`(${query}) implemented on DB`)
     res(result)
   })
 })
