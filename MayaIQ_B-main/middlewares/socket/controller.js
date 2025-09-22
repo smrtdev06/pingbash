@@ -852,35 +852,44 @@ const banGroupUserWithIp = async (groupId, userId, ipAddress, bannedBy) => {
         await banGroupUser(groupId, userId);
         console.log(`🚨 [IP-BAN-DEBUG] Step 1 completed: User banned normally`);
         
-        // Check if there's already an inactive ban for this IP
-        console.log(`🚨 [IP-BAN-DEBUG] Step 2: Checking for existing inactive bans...`);
-        const existingBanQuery = `SELECT id FROM ip_bans 
-            WHERE group_id = ${groupId} AND ip_address = '${ipAddress}' AND is_active = false
+        // Check if there's already ANY ban for this IP (active or inactive)
+        console.log(`🚨 [IP-BAN-DEBUG] Step 2: Checking for existing bans (any status)...`);
+        const existingBanQuery = `SELECT id, is_active FROM ip_bans 
+            WHERE group_id = ${groupId} AND ip_address = '${ipAddress}'
             ORDER BY banned_at DESC LIMIT 1;`;
         console.log(`🚨 [IP-BAN-DEBUG] Existing ban query:`, existingBanQuery);
         const existingBan = await PG_query(existingBanQuery);
         console.log(`🚨 [IP-BAN-DEBUG] Existing ban result:`, existingBan.rows);
         
         if (existingBan.rows.length > 0) {
-            // Reactivate existing ban
-            console.log(`🚨 [IP-BAN-DEBUG] Step 3a: Reactivating existing ban...`);
+            // Update existing ban (whether active or inactive)
+            const existingRecord = existingBan.rows[0];
+            const wasActive = existingRecord.is_active;
+            console.log(`🚨 [IP-BAN-DEBUG] Step 3a: Updating existing ban (was ${wasActive ? 'active' : 'inactive'})...`);
+            
+            // For anonymous users (>100000000), use NULL for user_id to avoid foreign key constraint
+            const isAnonymousUser = userId > 100000000;
+            const dbUserId = isAnonymousUser ? 'NULL' : userId;
+            console.log(`🚨 [IP-BAN-DEBUG] User ${userId} is ${isAnonymousUser ? 'anonymous' : 'registered'}, using DB user_id: ${dbUserId}`);
+            
             const updateQuery = `UPDATE ip_bans 
-                SET is_active = true, user_id = ${userId}, banned_by = ${bannedBy}, banned_at = CURRENT_TIMESTAMP
-                WHERE id = ${existingBan.rows[0].id};`;
+                SET is_active = true, user_id = ${dbUserId}, banned_by = ${bannedBy}, banned_at = CURRENT_TIMESTAMP
+                WHERE id = ${existingRecord.id};`;
             console.log(`🚨 [IP-BAN-DEBUG] Update query:`, updateQuery);
             const updateResult = await PG_query(updateQuery);
             console.log(`🚨 [IP-BAN-DEBUG] Update result:`, updateResult);
-            console.log(`🔄 Reactivated existing IP ban for ${ipAddress}`);
+            console.log(`🔄 ${wasActive ? 'Updated' : 'Reactivated'} existing IP ban for ${ipAddress}`);
         } else {
             // Create new IP ban
-            console.log(`🚨 [IP-BAN-DEBUG] Step 3b: Creating new IP ban...`);
-            const insertQuery = `INSERT INTO ip_bans (group_id, user_id, ip_address, banned_by)
-                VALUES (${groupId}, ${userId}, '${ipAddress}', ${bannedBy})
-                ON CONFLICT (group_id, ip_address, is_active) 
-                DO UPDATE SET 
-                    user_id = ${userId},
-                    banned_by = ${bannedBy},
-                    banned_at = CURRENT_TIMESTAMP;`;
+            console.log(`🚨 [IP-BAN-DEBUG] Step 3b: Creating new IP ban (no existing record found)...`);
+            
+            // For anonymous users (>100000000), use NULL for user_id to avoid foreign key constraint
+            const isAnonymousUser = userId > 100000000;
+            const dbUserId = isAnonymousUser ? 'NULL' : userId;
+            console.log(`🚨 [IP-BAN-DEBUG] User ${userId} is ${isAnonymousUser ? 'anonymous' : 'registered'}, using DB user_id: ${dbUserId}`);
+            
+            const insertQuery = `INSERT INTO ip_bans (group_id, user_id, ip_address, banned_by, is_active, banned_at)
+                VALUES (${groupId}, ${dbUserId}, '${ipAddress}', ${bannedBy}, true, CURRENT_TIMESTAMP);`;
             console.log(`🚨 [IP-BAN-DEBUG] Insert query:`, insertQuery);
             const insertResult = await PG_query(insertQuery);
             console.log(`🚨 [IP-BAN-DEBUG] Insert result:`, insertResult);
@@ -895,6 +904,8 @@ const banGroupUserWithIp = async (groupId, userId, ipAddress, bannedBy) => {
         console.log(`🚨 [IP-BAN-DEBUG] Verify result:`, verifyResult.rows);
         
         if (verifyResult.rows.length > 0) {
+            const ban = verifyResult.rows[0];
+            console.log(`🚨 [IP-BAN-DEBUG] Ban details: ID=${ban.id}, user_id=${ban.user_id}, ip_address=${ban.ip_address}, banned_by=${ban.banned_by}`);
             console.log(`✅ [IP-BAN-DEBUG] IP ban successfully created and verified!`);
         } else {
             console.error(`❌ [IP-BAN-DEBUG] IP ban verification FAILED - no active ban found!`);
