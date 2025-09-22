@@ -873,7 +873,7 @@ const banGroupUserWithIp = async (groupId, userId, ipAddress, bannedBy) => {
             console.log(`🚨 [IP-BAN-DEBUG] User ${userId} is ${isAnonymousUser ? 'anonymous' : 'registered'}, using DB user_id: ${dbUserId}`);
             
             const updateQuery = `UPDATE ip_bans 
-                SET is_active = true, user_id = ${dbUserId}, banned_by = ${bannedBy}, banned_at = CURRENT_TIMESTAMP
+                SET is_active = true, user_id = ${userId}, banned_by = ${bannedBy}, banned_at = CURRENT_TIMESTAMP
                 WHERE id = ${existingRecord.id};`;
             console.log(`🚨 [IP-BAN-DEBUG] Update query:`, updateQuery);
             const updateResult = await PG_query(updateQuery);
@@ -1162,13 +1162,13 @@ const unblockUser = async (userId, blockId) => {
 
 const getBlockedUsers = async (userId) => {
     try {
-        const userIds = await PG_query(`SELECT array_agg(block_id) AS blocked_ids
+        const userIds = await PG_query(`SELECT COALESCE(array_agg(block_id), ARRAY[]::integer[]) AS blocked_ids
             FROM block_users
             WHERE user_id = ${userId};`);
-        return userIds.rows[0].blocked_ids;
+        return userIds.rows[0].blocked_ids || [];
     } catch (error) {
         console.log(error);
-        return new array();
+        return [];
     }
 }
 
@@ -1402,27 +1402,29 @@ const readGroupMSG = async (groupId) => {
 const getReceiverIdsOfGroup = async (groupId) => {
     try {
         let userIds = []
-        userIds = await PG_query(`SELECT array_agg(user_id)
+        userIds = await PG_query(`SELECT COALESCE(array_agg(user_id), ARRAY[]::integer[]) as user_ids
             FROM group_users
             WHERE group_id = ${groupId};`);
-        return userIds.rows[0].array_agg;
+        return userIds.rows[0].user_ids || [];
     } catch (error) {
         console.log("ERRR====");
         console.log(error);
+        return [];
     }
 }
 
 const getReceiverEmailsOfGroup = async (groupId) => {
     try {
         let userIds = []
-        userIds = await PG_query(`SELECT array_agg(u."Email") AS emails
+        userIds = await PG_query(`SELECT COALESCE(array_agg(u."Email"), ARRAY[]::text[]) AS emails
             FROM group_users gu
             JOIN "Users" u ON u."Id" = gu.user_id
             WHERE gu.group_id = ${groupId}`);
-        return userIds.rows[0].emails;
+        return userIds.rows[0].emails || [];
     } catch (error) {
         console.log("ERRR====");
         console.log(error);
+        return [];
     }
 }
 
