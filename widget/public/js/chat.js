@@ -579,7 +579,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
   // EXACT COPY from widget.js - renderMessageContent method
     renderMessageContent(content) {
       if (!content) return '';
-      
+  
       console.log('🖼️ [Widget] renderMessageContent called with:', {
         content: content,
         contentType: typeof content,
@@ -594,7 +594,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
       // Check if content contains HTML tags (images, links, etc.)
       if (content.includes('<img') || content.includes('<a') || content.includes('gif::') || content.includes('sticker::')) {
         console.log('🖼️ [Widget] Detected HTML/special content, processing...');
-        
+  
         // Handle different content types (same as W version)
         if (content.includes('<img')) {
           console.log('🖼️ [Widget] Processing <img> tag content:', content);
@@ -1191,8 +1191,8 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
           return;
         }
         
-        // Show confirmation dialog
-        const confirmed = confirm(`Are you sure you want to ban this user?`);
+        // 🆕 Show confirmation dialog with unified ban info
+        const confirmed = confirm(`Are you sure you want to ban this user? This will ban both the user and their IP address.`);
         if (!confirmed) return;
         
         if (!this.socket || !this.socket.connected) {
@@ -1206,7 +1206,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
           return;
         }
         
-        console.log(`🚫 [Widget] Group Master ${currentUserId} attempting to ban user ${userId}`);
+        console.log(`🚫 [Widget-UNIFIED-BAN] Group Master ${currentUserId} attempting unified ban (user + IP) for user ${userId}`);
         
         // Check if this is an anonymous user
         const isAnonymousUser = userId > 100000;

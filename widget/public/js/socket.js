@@ -1225,7 +1225,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
               groupId: parseInt(this.groupId),
               anonId: this.anonId
             });
-
+    
             console.log('🔍 [Widget] Anonymous user join request sent - backend will send group data via "group updated" event');
     
             // Get messages with anonymous token - add retry mechanism for better reliability
@@ -1350,7 +1350,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         const message = input.value.trim();
     
         if (!message || !this.socket || !this.isConnected) return;
-
+    
         // Validate message against chat limitations
         const validation = this.validateMessageBeforeSending(message);
         if (!validation.valid) {

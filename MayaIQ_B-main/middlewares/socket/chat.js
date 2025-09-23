@@ -555,16 +555,15 @@ module.exports = (socket, users) => {
                 }
             }
 
-            console.log(`Ban request: User ${senderId} banning user ${targetUserId} (IP: ${bannedUserIp}) in group ${groupId}`);
+            console.log(`🚫 [BAN-REQUEST] User ${senderId} banning user ${targetUserId} (IP: ${bannedUserIp}) in group ${groupId}`);
 
-            // RULE 2 & 3: Both verified and anonymous users should be banned by IP
-            // Anonymous users especially need IP bans since they don't have persistent accounts
+            // 🆕 Use unified ban system (Rule 1 & 2: Admin/Mod can ban any user, always ban IP)
             if (bannedUserIp) {
-                console.log(`Banning user ${targetUserId} and IP ${bannedUserIp}`);
-                await Controller.banGroupUserWithIp(groupId, targetUserId, bannedUserIp, senderId);
+                console.log(`🚫 [UNIFIED-BAN] Banning user ${targetUserId} and IP ${bannedUserIp} using unified system`);
+                await Controller.unifiedBanUser(groupId, targetUserId, bannedUserIp, senderId);
             } else {
-                // Fallback: ban only user ID if IP is not available
-                console.log(`Banning user ${targetUserId} only (IP not available)`);
+                // Fallback: ban only user ID if IP is not available (for registered users)
+                console.log(`🚫 [FALLBACK-BAN] Banning user ${targetUserId} only (IP not available)`);
                 await Controller.banGroupUser(groupId, targetUserId);
             }
 
@@ -616,15 +615,31 @@ module.exports = (socket, users) => {
                 return;
             }
 
-            console.log(`Unban request: Group Master ${senderId} unbanning user ${userId} in group ${groupId}`);
+            console.log(`✅ [UNIFIED-UNBAN] Group Master ${senderId} unbanning user ${userId} from group ${groupId}`);
 
             if (!users.find(user => user.ID == senderId)) {
                 users.push({ ID: senderId, Socket: socket.id });
                 sockets[socket.id] = socket;
             }
             
-            // Unban user (includes both group_users and ip_bans tables)
-            await Controller.unbanGroupUser(groupId, userId);
+            // Get the user's IP for unified unban (if available)
+            const targetUserSocket = users.find(user => user.ID == userId);
+            let targetUserIp = null;
+            if (targetUserSocket) {
+                const userSocket = sockets[targetUserSocket.Socket];
+                if (userSocket) {
+                    targetUserIp = getClientIpAddress(userSocket);
+                }
+            }
+            
+            // 🆕 Use unified unban system
+            if (targetUserIp) {
+                console.log(`✅ [UNIFIED-UNBAN] Unbanning user ${userId} and IP ${targetUserIp} using unified system`);
+                await Controller.unifiedUnbanUser(groupId, userId, targetUserIp);
+            } else {
+                console.log(`✅ [FALLBACK-UNBAN] Unbanning user ${userId} only (IP not available)`);
+                await Controller.unbanGroupUser(groupId, userId);
+            }
             
             const receivers = await Controller.getReceiverIdsOfGroup(groupId);
             const receiveUsers = users.filter(user => receivers?.find(receiverId => receiverId == user.ID));

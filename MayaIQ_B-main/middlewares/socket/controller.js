@@ -914,8 +914,109 @@ const banGroupUserWithIp = async (groupId, userId, ipAddress, bannedBy) => {
     } catch (error) {
         console.log("🔍 [IP-BAN-DB] Error banning user with IP:", error);
         console.log("🔍 [IP-BAN-DB] Error stack:", error.stack);
+        throw error;
     }
 }
+
+// 🆕 UNIFIED BAN SYSTEM - Simplifies all ban operations
+// Rule 1: Admin/Moderator can ban any user
+// Rule 2: Always ban IP for anonymous users, and also for verified users
+const unifiedBanUser = async (groupId, targetUserId, targetIpAddress, bannedByUserId) => {
+    try {
+        console.log(`🚫 [UNIFIED-BAN] Starting unified ban: User ${targetUserId}, IP: ${targetIpAddress}, Group: ${groupId}, By: ${bannedByUserId}`);
+        
+        const isAnonymousUser = targetUserId > 100000000;
+        
+        // Step 1: Ban the user (if registered)
+        if (!isAnonymousUser) {
+            console.log(`🚫 [UNIFIED-BAN] Banning registered user ${targetUserId}`);
+            await banGroupUser(groupId, targetUserId);
+        } else {
+            console.log(`🚫 [UNIFIED-BAN] Anonymous user ${targetUserId} - skipping user ban`);
+        }
+        
+        // Step 2: Always ban the IP address (Rule 2)
+        console.log(`🚫 [UNIFIED-BAN] Banning IP address ${targetIpAddress}`);
+        await banIpAddress(groupId, targetUserId, targetIpAddress, bannedByUserId);
+        
+        console.log(`✅ [UNIFIED-BAN] Successfully banned ${isAnonymousUser ? 'anonymous' : 'registered'} user ${targetUserId} and IP ${targetIpAddress}`);
+        return true;
+        
+    } catch (error) {
+        console.log("❌ [UNIFIED-BAN] Error in unified ban:", error);
+        throw error;
+    }
+};
+
+// 🆕 UNIFIED UNBAN SYSTEM - Unbans both user and IP
+const unifiedUnbanUser = async (groupId, targetUserId, targetIpAddress) => {
+    try {
+        console.log(`✅ [UNIFIED-UNBAN] Starting unified unban: User ${targetUserId}, IP: ${targetIpAddress}, Group: ${groupId}`);
+        
+        const isAnonymousUser = targetUserId > 100000000;
+        
+        // Step 1: Unban the user (if registered)
+        if (!isAnonymousUser) {
+            console.log(`✅ [UNIFIED-UNBAN] Unbanning registered user ${targetUserId}`);
+            await unbanGroupUser(groupId, targetUserId);
+        } else {
+            console.log(`✅ [UNIFIED-UNBAN] Anonymous user ${targetUserId} - skipping user unban`);
+        }
+        
+        // Step 2: Always unban the IP address
+        console.log(`✅ [UNIFIED-UNBAN] Unbanning IP address ${targetIpAddress}`);
+        await unbanIpAddress(groupId, targetIpAddress);
+        
+        console.log(`✅ [UNIFIED-UNBAN] Successfully unbanned ${isAnonymousUser ? 'anonymous' : 'registered'} user ${targetUserId} and IP ${targetIpAddress}`);
+        return true;
+        
+    } catch (error) {
+        console.log("❌ [UNIFIED-UNBAN] Error in unified unban:", error);
+        throw error;
+    }
+};
+
+// Helper function to ban IP address
+const banIpAddress = async (groupId, userId, ipAddress, bannedBy) => {
+    try {
+        const isAnonymousUser = userId > 100000000;
+        const dbUserId = isAnonymousUser ? 'NULL' : userId;
+        
+        // Check for existing IP ban
+        const existingBan = await PG_query(`SELECT id, is_active FROM ip_bans 
+            WHERE group_id = ${groupId} AND ip_address = '${ipAddress}'
+            ORDER BY banned_at DESC LIMIT 1;`);
+        
+        if (existingBan.rows.length > 0) {
+            // Update existing ban
+            await PG_query(`UPDATE ip_bans 
+                SET is_active = true, user_id = ${dbUserId}, banned_by = ${bannedBy}, banned_at = CURRENT_TIMESTAMP
+                WHERE id = ${existingBan.rows[0].id};`);
+            console.log(`🔄 [IP-BAN] Reactivated IP ban for ${ipAddress}`);
+        } else {
+            // Create new IP ban
+            await PG_query(`INSERT INTO ip_bans (group_id, user_id, ip_address, banned_by, is_active, banned_at)
+                VALUES (${groupId}, ${dbUserId}, '${ipAddress}', ${bannedBy}, true, CURRENT_TIMESTAMP);`);
+            console.log(`➕ [IP-BAN] Created IP ban for ${ipAddress}`);
+        }
+    } catch (error) {
+        console.log("❌ [IP-BAN] Error banning IP:", error);
+        throw error;
+    }
+};
+
+// Helper function to unban IP address
+const unbanIpAddress = async (groupId, ipAddress) => {
+    try {
+        await PG_query(`UPDATE ip_bans 
+            SET is_active = false, unbanned_at = CURRENT_TIMESTAMP
+            WHERE group_id = ${groupId} AND ip_address = '${ipAddress}' AND is_active = true;`);
+        console.log(`✅ [IP-BAN] Unbanned IP address ${ipAddress}`);
+    } catch (error) {
+        console.log("❌ [IP-BAN] Error unbanning IP:", error);
+        throw error;
+    }
+};
 
 const checkIpBan = async (groupId, ipAddress) => {
     try {
@@ -1486,6 +1587,57 @@ const updateChatRules = async (groupId, chatRules, showChatRules, userId) => {
     }
 }
 
+// 🆕 UNIFIED TIMEOUT SYSTEM
+const unifiedTimeoutUser = async (groupId, targetUserId, targetIpAddress, timeoutDurationSeconds, timeoutByUserId) => {
+    try {
+        console.log(`⏰ [UNIFIED-TIMEOUT] Starting unified timeout: User ${targetUserId}, IP: ${targetIpAddress}, Duration: ${timeoutDurationSeconds}s, Group: ${groupId}, By: ${timeoutByUserId}`);
+        
+        const isAnonymousUser = targetUserId > 100000000;
+        
+        // Step 1: Timeout the user (if registered)
+        if (!isAnonymousUser) {
+            console.log(`⏰ [UNIFIED-TIMEOUT] Timing out registered user ${targetUserId}`);
+            await timeoutUser(groupId, targetUserId, timeoutDurationSeconds);
+        } else {
+            console.log(`⏰ [UNIFIED-TIMEOUT] Anonymous user ${targetUserId} - skipping user timeout`);
+        }
+        
+        // Step 2: Always timeout the IP address
+        console.log(`⏰ [UNIFIED-TIMEOUT] Timing out IP address ${targetIpAddress}`);
+        await timeoutIpAddressHelper(groupId, targetUserId, targetIpAddress, timeoutDurationSeconds, timeoutByUserId);
+        
+        console.log(`✅ [UNIFIED-TIMEOUT] Successfully timed out ${isAnonymousUser ? 'anonymous' : 'registered'} user ${targetUserId} and IP ${targetIpAddress}`);
+        return true;
+        
+    } catch (error) {
+        console.log("❌ [UNIFIED-TIMEOUT] Error in unified timeout:", error);
+        throw error;
+    }
+};
+
+// Helper function to timeout IP address (separate from existing timeoutIpAddress)
+const timeoutIpAddressHelper = async (groupId, userId, ipAddress, durationSeconds, timeoutBy) => {
+    try {
+        const isAnonymousUser = userId > 100000000;
+        const dbUserId = isAnonymousUser ? 'NULL' : userId;
+        const expiresAt = new Date(Date.now() + (durationSeconds * 1000)).toISOString();
+        
+        // Deactivate any existing timeouts
+        await PG_query(`UPDATE ip_timeouts 
+            SET is_active = false 
+            WHERE group_id = ${groupId} AND ip_address = '${ipAddress}' AND is_active = true;`);
+        
+        // Create new timeout
+        await PG_query(`INSERT INTO ip_timeouts (group_id, user_id, ip_address, timeout_by, expires_at, is_active, created_at)
+            VALUES (${groupId}, ${dbUserId}, '${ipAddress}', ${timeoutBy}, '${expiresAt}', true, CURRENT_TIMESTAMP);`);
+        
+        console.log(`⏰ [IP-TIMEOUT] Created IP timeout for ${ipAddress} until ${expiresAt}`);
+    } catch (error) {
+        console.log("❌ [IP-TIMEOUT] Error timing out IP:", error);
+        throw error;
+    }
+};
+
 module.exports = {
     sendNotificationEamil,
     sendPrivateMessageEmailNotification,
@@ -1544,5 +1696,12 @@ module.exports = {
     checkUserBan,
     getIpBans,
     unbanGroupIps,
-    debugIpBanStatus
+    debugIpBanStatus,
+    // 🆕 Unified ban/timeout system
+    unifiedBanUser,
+    unifiedUnbanUser,
+    unifiedTimeoutUser,
+    banIpAddress,
+    unbanIpAddress,
+    timeoutIpAddressHelper
 }

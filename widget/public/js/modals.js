@@ -980,7 +980,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
       const popup = this.dialog.querySelector('.pingbash-chat-limitations-popup');
       if (popup) {
         console.log('🔒 [Widget] Found popup element, setting display to flex');
-        popup.style.display = 'flex';
+      popup.style.display = 'flex';
         
         console.log('🔒 [Widget] Chat limitations popup displayed');
         console.log('🔒 [Widget] Popup computed styles:', {
@@ -997,7 +997,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
     hideChatLimitations() {
       const popup = this.dialog.querySelector('.pingbash-chat-limitations-popup');
       if (popup) {
-        popup.style.display = 'none';
+      popup.style.display = 'none';
       }
     },
 
