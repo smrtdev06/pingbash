@@ -1621,11 +1621,14 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
           return;
         }
         
-        // Get online users (same as F version)
-        const onlineUsers = this.getOnlineUsers();
-        const filteredUsers = onlineUsers.filter(user => 
+        // Get all group members (not just online users) for 1-on-1 messaging
+        const allGroupMembers = this.getGroupMembers();
+        const filteredUsers = allGroupMembers.filter(user => 
           user.name && user.name.toLowerCase().includes(searchTerm.toLowerCase())
         );
+        
+        // Get online user IDs for status indicators
+        const onlineUserIds = this.onlineUserIds || [];
         
         // Populate dropdown
         userDropdown.innerHTML = '';
@@ -1636,7 +1639,14 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
           filteredUsers.forEach(user => {
             const item = document.createElement('div');
             item.className = 'pingbash-user-dropdown-item';
-            item.textContent = user.name;
+            
+            // Check if user is online
+            const isOnline = onlineUserIds.includes(user.id);
+            const statusIndicator = isOnline ? 
+              '<span style="color: #4CAF50; margin-right: 5px;">●</span>' : 
+              '<span style="color: #999; margin-right: 5px;">●</span>';
+            
+            item.innerHTML = `${statusIndicator}${user.name}${isOnline ? '' : ' (offline)'}`;
             item.addEventListener('click', () => {
               this.selectUser(user);
             });
@@ -1716,6 +1726,36 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
 
         console.log('👥 [Widget] Final online users list:', onlineUsers);
         return onlineUsers;
+      },
+
+      getGroupMembers() {
+        // Get all group members for 1-on-1 messaging (not just online users)
+        console.log('👥 [Widget] Getting all group members for 1-on-1 search');
+        
+        const currentUserId = this.getCurrentUserId();
+        let allMembers = [];
+        
+        // Use group.members if available, otherwise fall back to groupMembers
+        const membersSource = this.group?.members || this.groupMembers || [];
+        
+        if (membersSource.length > 0) {
+          // Convert to consistent format and exclude current user
+          allMembers = membersSource
+            .filter(member => member.id !== currentUserId) // Don't include self in 1-on-1 search
+            .map(member => ({
+              id: member.id,
+              name: member.name || `User ${member.id}`,
+              avatar: member.avatar,
+              email: member.email
+            }));
+          
+          console.log('👥 [Widget] Available group members for 1-on-1 search:', allMembers.length);
+          console.log('👥 [Widget] Group members:', allMembers.map(m => ({ id: m.id, name: m.name })));
+        } else {
+          console.log('👥 [Widget] No group members available for search');
+        }
+        
+        return allMembers;
       },
 
       applyMessageFilter() {
