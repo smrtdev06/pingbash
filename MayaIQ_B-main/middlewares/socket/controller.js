@@ -63,27 +63,42 @@ const sendPrivateMessageEmailNotification = async (senderId, receiverId, message
     try {
         console.log(`📧 [EMAIL] Attempting to send email notification: sender=${senderId}, receiver=${receiverId}`);
 
-        // Get sender and receiver information
-        const senderResult = await PG_query(`SELECT "Name", "Email" FROM "Users" WHERE "Id" = ${senderId}`);
+        // Get receiver information (always required)
         const receiverResult = await PG_query(`SELECT "Name", "Email" FROM "Users" WHERE "Id" = ${receiverId}`);
-
-        console.log(`📧 [EMAIL] Sender query result: ${senderResult.rows.length} rows`);
+        
         console.log(`📧 [EMAIL] Receiver query result: ${receiverResult.rows.length} rows`);
-
-        if (senderResult.rows.length === 0) {
-            console.log(`❌ [EMAIL] Sender with ID ${senderId} not found in database`);
-            return;
-        }
 
         if (receiverResult.rows.length === 0) {
             console.log(`❌ [EMAIL] Receiver with ID ${receiverId} not found in database`);
             return;
         }
 
-        const sender = senderResult.rows[0];
         const receiver = receiverResult.rows[0];
+        
+        // Handle sender information (could be authenticated user or anonymous)
+        let sender = { Name: null, Email: null };
+        const isAnonymousSender = senderId > 100000000; // Anonymous users have high IDs
+        
+        if (isAnonymousSender) {
+            // Anonymous sender
+            const last3Digits = String(senderId).slice(-3);
+            sender.Name = `Anonymous User #${last3Digits}`;
+            sender.Email = null;
+            console.log(`📧 [EMAIL] Anonymous sender: ${sender.Name} (ID: ${senderId})`);
+        } else {
+            // Authenticated sender - lookup in database
+            const senderResult = await PG_query(`SELECT "Name", "Email" FROM "Users" WHERE "Id" = ${senderId}`);
+            console.log(`📧 [EMAIL] Sender query result: ${senderResult.rows.length} rows`);
+            
+            if (senderResult.rows.length === 0) {
+                console.log(`❌ [EMAIL] Authenticated sender with ID ${senderId} not found in database`);
+                return;
+            }
+            
+            sender = senderResult.rows[0];
+            console.log(`📧 [EMAIL] Authenticated sender: ${sender.Name} (${sender.Email})`);
+        }
 
-        console.log(`📧 [EMAIL] Sender: ${sender.Name} (${sender.Email})`);
         console.log(`📧 [EMAIL] Receiver: ${receiver.Name} (${receiver.Email})`);
 
         if (!receiver.Email) {

@@ -293,6 +293,36 @@ module.exports = (socket, users) => {
             } else {
                 // Regular message (public or 1-on-1)
                 await Controller.saveGroupMsg(senderId, content, groupId, receiverId, data.parent_id);
+                
+                // Send email notification for 1-on-1 messages to offline users
+                if (receiverId && receiverId !== -1) {
+                    console.log(`📧 [EMAIL-CHECK] Checking if user ${receiverId} is online for email notification`);
+                    
+                    // Check if the target user is online
+                    const targetUserSocket = users.find(user => user.ID == receiverId);
+                    const isTargetUserOnline = targetUserSocket && sockets[targetUserSocket.Socket] && sockets[targetUserSocket.Socket].connected;
+                    
+                    console.log(`📧 [EMAIL-CHECK] Target user ${receiverId} online status:`, {
+                        hasSocket: !!targetUserSocket,
+                        socketId: targetUserSocket?.Socket,
+                        isConnected: isTargetUserOnline
+                    });
+                    
+                    if (!isTargetUserOnline) {
+                        console.log(`📧 [EMAIL-NOTIFICATION] User ${receiverId} is offline, sending email notification for message from ${senderId}`);
+                        
+                        // Send email notification asynchronously (don't block message sending)
+                        setImmediate(async () => {
+                            try {
+                                await Controller.sendPrivateMessageEmailNotification(senderId, receiverId, content);
+                            } catch (error) {
+                                console.error(`❌ [EMAIL-NOTIFICATION] Failed to send email notification:`, error);
+                            }
+                        });
+                    } else {
+                        console.log(`📧 [EMAIL-CHECK] User ${receiverId} is online, skipping email notification`);
+                    }
+                }
             }
             const receiverIds = await Controller.getReceiverIdsOfGroup(groupId);
             
@@ -431,6 +461,37 @@ module.exports = (socket, users) => {
             } else {
                 // Regular message (public or 1-on-1)
                 await Controller.saveGroupMsg(anonId, content, groupId, receiverId, data.parent_id);
+                
+                // Send email notification for 1-on-1 messages to offline users from anonymous senders
+                if (receiverId && receiverId !== -1) {
+                    console.log(`📧 [ANON-EMAIL-CHECK] Checking if user ${receiverId} is online for email notification`);
+                    
+                    // Check if the target user is online
+                    const targetUserSocket = users.find(user => user.ID == receiverId);
+                    const isTargetUserOnline = targetUserSocket && sockets[targetUserSocket.Socket] && sockets[targetUserSocket.Socket].connected;
+                    
+                    console.log(`📧 [ANON-EMAIL-CHECK] Target user ${receiverId} online status:`, {
+                        hasSocket: !!targetUserSocket,
+                        socketId: targetUserSocket?.Socket,
+                        isConnected: isTargetUserOnline
+                    });
+                    
+                    if (!isTargetUserOnline) {
+                        console.log(`📧 [ANON-EMAIL-NOTIFICATION] User ${receiverId} is offline, sending email notification for message from anonymous user ${anonId}`);
+                        
+                        // Send email notification asynchronously (don't block message sending)
+                        // Note: For anonymous senders, we use anonId as senderId but the email template should handle this gracefully
+                        setImmediate(async () => {
+                            try {
+                                await Controller.sendPrivateMessageEmailNotification(anonId, receiverId, content);
+                            } catch (error) {
+                                console.error(`❌ [ANON-EMAIL-NOTIFICATION] Failed to send email notification:`, error);
+                            }
+                        });
+                    } else {
+                        console.log(`📧 [ANON-EMAIL-CHECK] User ${receiverId} is online, skipping email notification`);
+                    }
+                }
             }
             console.log(`✅ [ANON-MSG] Message saved to database`);
             
