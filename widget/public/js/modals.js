@@ -45,7 +45,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
       console.log('✅ [Widget] Unbanning IP address:', ipAddress);
       
       if (!this.canManageCensoredContent()) {
-        alert('You do not have permission to unban IP addresses');
+        //alert('You do not have permission to unban IP addresses');
         return;
       }
 
@@ -794,7 +794,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
       
       if (!groupNameInput) {
         console.error('🏗️ [Widget] Group name input not found');
-        alert('Group name input not found');
+        //alert('Group name input not found');
         return;
       }
       
@@ -802,12 +802,12 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
       console.log('🏗️ [Widget] Group name from input:', groupName);
       
       if (!groupName) {
-        alert('Please enter a group name');
+        //alert('Please enter a group name');
         return;
       }
       
       if (!this.isAuthenticated || !this.authenticatedToken) {
-        alert('Please log in to create a group');
+        //alert('Please log in to create a group');
         this.showSigninModal();
         return;
       }
@@ -875,7 +875,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
         
         if (response.ok && result.success) {
           console.log('🏗️ [Widget] Group created successfully:', result);
-          alert(`Group "${groupName}" created successfully!`);
+          //alert(`Group "${groupName}" created successfully!`);
           this.hideGroupCreationModal();
           
           // Optionally switch to the new group
@@ -885,11 +885,11 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
           }
         } else {
           console.error('🏗️ [Widget] Group creation failed:', result);
-          alert(result.message || 'Failed to create group. Please try again.');
+          //alert(result.message || 'Failed to create group. Please try again.');
         }
       } catch (error) {
         console.error('🏗️ [Widget] Group creation error:', error);
-        alert('Failed to create group. Please check your connection and try again.');
+        //alert('Failed to create group. Please check your connection and try again.');
       } finally {
         // Re-enable create button
         const createBtn = bodyModal ? 
@@ -991,7 +991,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
       if (!this.canManageChatLimitations()) {
         // Temporarily bypass for testing
         console.warn('🔒 [Widget] Permission check failed, but showing dialog anyway for testing');
-        // alert('You do not have permission to manage chat limitations');
+        // //alert('You do not have permission to manage chat limitations');
         // return;
       }
       
@@ -1028,7 +1028,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
 
       // Check permissions - only group creator or mods can access
       if (!this.canManageChatLimitations()) {
-        alert('You do not have permission to manage chat');
+        //alert('You do not have permission to manage chat');
         return;
       }
 
@@ -1073,7 +1073,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
       if (!hasPermission) {
         console.warn('👥 [Widget] No permission to manage moderators, but proceeding for debugging');
         // Temporarily allow for debugging - uncomment next line to enforce
-        // alert('You do not have permission to manage moderators'); return;
+        // //alert('You do not have permission to manage moderators'); return;
       }
 
       // Show the popup
@@ -2317,7 +2317,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
     saveModerators() {
       console.log('👥 [Widget] Save moderators');
       // TODO: Implement saving moderator changes
-      alert('Save moderators functionality coming soon!');
+      //alert('Save moderators functionality coming soon!');
       this.hideModeratorManagement();
     },
 
@@ -2403,7 +2403,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
         // Set up a timeout in case server doesn't respond
         const clearChatTimeout = setTimeout(() => {
           console.warn('🧹 [Widget] Clear chat request timed out - no response from server');
-          alert('Clear chat request timed out. The server may not support this feature or there was a network issue.');
+          //alert('Clear chat request timed out. The server may not support this feature or there was a network issue.');
         }, 10000); // 10 second timeout
 
         // Store timeout so we can clear it if we get a response
@@ -2439,7 +2439,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
           socket: !!this.socket,
           isConnected: this.isConnected
         });
-        alert('Cannot clear chat - not connected to server');
+        //alert('Cannot clear chat - not connected to server');
       }
     },
 
@@ -2448,13 +2448,13 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
       
       if (!this.socket || !this.isConnected) {
         console.error('📌 [Widget] Cannot unpin message - socket not connected');
-        alert('Cannot unpin message - not connected to server');
+        //alert('Cannot unpin message - not connected to server');
         return;
       }
 
       if (!this.isAuthenticated || !this.authenticatedToken) {
         console.error('📌 [Widget] Cannot unpin message - not authenticated');
-        alert('Please log in to unpin messages');
+        //alert('Please log in to unpin messages');
         return;
       }
 
@@ -2653,7 +2653,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
         this.hideChatLimitations();
       } else {
         console.error('🔒 [Widget] Cannot update chat limitations - missing authentication or group ID');
-        alert('Please sign in to update chat limitations');
+        //alert('Please sign in to update chat limitations');
       }
     },
 

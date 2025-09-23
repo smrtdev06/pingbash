@@ -473,24 +473,24 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
       // Listen for timeout success (via group updated or direct response)
       this.socket.on('timeout success', (data) => {
         console.log('✅ [Widget] Timeout successful:', data);
-        alert('User has been timed out for 15 minutes');
+        //alert('User has been timed out for 15 minutes');
       });
 
       // Listen for timeout errors
       this.socket.on('timeout error', (error) => {
         console.error('❌ [Widget] Timeout failed:', error);
-        alert('Failed to timeout user: ' + (error.message || 'Unknown error'));
+        //alert('Failed to timeout user: ' + (error.message || 'Unknown error'));
       });
 
       // Listen for ban success and errors
       this.socket.on('ban success', (data) => {
         console.log('✅ [Widget] Ban successful:', data);
-        alert('User has been banned successfully');
+        //alert('User has been banned successfully');
       });
 
       this.socket.on('ban error', (error) => {
         console.error('❌ [Widget] Ban failed:', error);
-        alert('Failed to ban user: ' + (error.message || 'Unknown error'));
+        //alert('Failed to ban user: ' + (error.message || 'Unknown error'));
       });
 
       // Listen for the actual events the backend sends for ban/timeout
@@ -498,14 +498,14 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         console.log('✅ [Widget] Backend confirmed ban for user:', userId);
         const isAnonymous = parseInt(userId) > 100000;
         const userType = isAnonymous ? 'Anonymous user' : 'User';
-        alert(`${userType} ${userId} has been banned successfully`);
+        //alert(`${userType} ${userId} has been banned successfully`);
       });
 
       this.socket.on('unban group user', (userId) => {
         console.log('✅ [Widget] Backend confirmed unban for user:', userId);
         const isAnonymous = parseInt(userId) > 100000;
         const userType = isAnonymous ? 'Anonymous user' : 'User';
-        alert(`${userType} ${userId} has been unbanned successfully`);
+        //alert(`${userType} ${userId} has been unbanned successfully`);
       });
 
       // Enhanced forbidden handler for ban/timeout errors
@@ -515,9 +515,9 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         // Check if this is a ban/timeout related forbidden error
         if (typeof message === 'string') {
           if (message.includes('ban') || message.includes('timeout')) {
-            alert('Access denied: ' + message);
+            //alert('Access denied: ' + message);
           } else if (message.includes('creator') || message.includes('permission')) {
-            alert('Permission denied: ' + message);
+            //alert('Permission denied: ' + message);
           }
         }
       });
@@ -536,7 +536,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
       // 🆕 IP unban response listeners
       this.socket.on('ip unban success', (data) => {
         console.log('✅ [Socket] IP unban success:', data);
-        alert(`Successfully unbanned IP address: ${data.ipAddress}`);
+        //alert(`Successfully unbanned IP address: ${data.ipAddress}`);
         
         // Only refresh IP bans modal if it's open (banned users modal doesn't contain IP bans)
         const ipBansModal = document.querySelector('.pingbash-ip-bans-modal');
@@ -551,7 +551,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
 
       this.socket.on('ip unban error', (data) => {
         console.log('❌ [Socket] IP unban error:', data);
-        alert(`Failed to unban IP address: ${data.message || 'Unknown error'}`);
+        //alert(`Failed to unban IP address: ${data.message || 'Unknown error'}`);
       });
 
       this.socket.on('unban group users', (userIds) => {
@@ -636,7 +636,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
           console.log('📌 [Widget] Message unpinned successfully');
         } else {
           console.error('📌 [Widget] Failed to unpin message:', response.error);
-          alert('Failed to unpin message: ' + (response.error || 'Unknown error'));
+          //alert('Failed to unpin message: ' + (response.error || 'Unknown error'));
         }
       });
 
@@ -698,7 +698,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
           
           // Always show success message since backend is responding (even if list is empty)
           console.log('🚫 [Socket] User successfully blocked on server');
-          alert('User blocked successfully. You will no longer see their messages.');
+          //alert('User blocked successfully. You will no longer see their messages.');
           
           // Log if no blocked users returned for debugging
           if (blockedUsers.length === 0) {
@@ -1001,7 +1001,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
       
       // Check permissions
       if (!this.canPinMessages()) {
-        alert("Only moderators and admins can unpin messages");
+        //alert("Only moderators and admins can unpin messages");
         return;
       }
       
@@ -1375,7 +1375,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         // Validate message against chat limitations
         const validation = this.validateMessageBeforeSending(message);
         if (!validation.valid) {
-          alert(validation.error);
+          //alert(validation.error);
           return;
         }
 
@@ -1745,7 +1745,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         localStorage.setItem(`timeout_${groupId}`, JSON.stringify(timeoutInfo));
         
         // Show timeout notification
-        // alert(message || `You have been timed out for ${timeoutMinutes} minutes.`);
+        // //alert(message || `You have been timed out for ${timeoutMinutes} minutes.`);
         
         // Disable input and send button during timeout
         this.updateTimeoutUI(true, expiresAt);
@@ -1999,12 +1999,12 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         console.log('🔄 [Widget] Refreshing IP bans list');
         
         if (!this.socket || !this.socket.connected) {
-          alert("Not connected to server");
+          //alert("Not connected to server");
           return;
         }
 
         if (!this.isAuthenticated) {
-          alert("Please log in to refresh IP bans");
+          //alert("Please log in to refresh IP bans");
           return;
         }
 

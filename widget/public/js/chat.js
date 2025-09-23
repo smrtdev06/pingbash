@@ -919,7 +919,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
           // Validate message against chat limitations
           const validation = this.validateMessageBeforeSending(messageContent);
           if (!validation.valid) {
-            alert(validation.error);
+            ////alert(validation.error);
             this.hideUploadProgress();
             return;
           }
@@ -1170,7 +1170,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         // RULE 1: User cannot ban himself
         const currentUserId = this.getCurrentUserId();
         if (userId === currentUserId) {
-          alert("You cannot ban yourself");
+          ////alert("You cannot ban yourself");
           return;
         }
         
@@ -1187,7 +1187,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         const canBan = (this.group?.creater_id === currentUserId || (myMemInfo?.role_id === 2 && myMemInfo?.ban_user === true));
         
         if (!canBan) {
-          alert("You don't have permission to ban users");
+          ////alert("You don't have permission to ban users");
           return;
         }
         
@@ -1196,12 +1196,12 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         if (!confirmed) return;
         
         if (!this.socket || !this.socket.connected) {
-          alert("Not connected to server");
+          ("Not connected to server");
           return;
         }
         
         if (!this.isAuthenticated || !this.authenticatedToken) {
-          alert("Please log in to ban users");
+          ////alert("Please log in to ban users");
           this.showSigninModal();
           return;
         }
@@ -1249,7 +1249,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
             originalStr: String(userId),
             parsedStr: String(parsedUserId)
           });
-          alert(`Warning: User ID precision loss detected. Original: ${userId}, Parsed: ${parsedUserId}`);
+          ////alert(`Warning: User ID precision loss detected. Original: ${userId}, Parsed: ${parsedUserId}`);
         }
         
         console.log('🚫 [Widget] Ban payload:', banPayload);
@@ -1276,7 +1276,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         // RULE 1: User cannot timeout himself
         const currentUserId = this.getCurrentUserId();
         if (userId === currentUserId) {
-          alert("You cannot timeout yourself");
+          ////alert("You cannot timeout yourself");
           return;
         }
         
@@ -1292,7 +1292,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         });
         
         if (!canTimeout) {
-          alert("Only the group creator can timeout users");
+          ////alert("Only the group creator can timeout users");
           return;
         }
         
@@ -1301,12 +1301,12 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         if (!confirmed) return;
         
         if (!this.socket || !this.socket.connected) {
-          alert("Not connected to server");
+          ////alert("Not connected to server");
           return;
         }
         
         if (!this.isAuthenticated || !this.authenticatedToken) {
-          alert("Please log in to timeout users");
+          ////alert("Please log in to timeout users");
           this.showSigninModal();
           return;
         }
@@ -1354,7 +1354,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
             originalStr: String(userId),
             parsedStr: String(parsedUserId)
           });
-          alert(`Warning: User ID precision loss detected. Original: ${userId}, Parsed: ${parsedUserId}`);
+          ////alert(`Warning: User ID precision loss detected. Original: ${userId}, Parsed: ${parsedUserId}`);
         }
         
         console.log('⏰ [Widget] Timeout payload:', timeoutPayload);
@@ -1392,7 +1392,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         // Check permissions (only group creator can unban)
         const currentUserId = this.getCurrentUserId();
         if (this.group?.creater_id !== currentUserId) {
-          alert("Only the group creator can unban users");
+          ////alert("Only the group creator can unban users");
           return;
         }
         
@@ -1401,12 +1401,12 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         if (!confirmed) return;
         
         if (!this.socket || !this.socket.connected) {
-          alert("Not connected to server");
+          ////alert("Not connected to server");
           return;
         }
         
         if (!this.isAuthenticated || !this.authenticatedToken) {
-          alert("Please log in to unban users");
+          ////alert("Please log in to unban users");
           this.showSigninModal();
           return;
         }
@@ -1426,14 +1426,14 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         console.log('🚫 [Widget] Blocking user:', userId);
         
         if (!this.isAuthenticated || !this.authenticatedToken) {
-          alert('You must be signed in to block users');
+          ////alert('You must be signed in to block users');
           return;
         }
 
         // User cannot block themselves
         const currentUserId = this.getCurrentUserId();
         if (userId === currentUserId) {
-          alert("You cannot block yourself");
+          ////alert("You cannot block yourself");
           return;
         }
         
@@ -1441,7 +1441,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
           console.log('📤 [Widget] Sending block user request');
           
           if (!this.socket || !this.socket.connected) {
-            alert("Not connected to server");
+            ////alert("Not connected to server");
             return;
           }
 
@@ -1520,7 +1520,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         // Check permissions (only group creator can unban)
         const currentUserId = this.getCurrentUserId();
         if (this.group?.creater_id !== currentUserId) {
-          alert("Only the group creator can unban users");
+          ////alert("Only the group creator can unban users");
           return;
         }
         
@@ -1528,7 +1528,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         const bannedUserIds = this.bannedUsers ? this.bannedUsers.map(user => user.id) : [];
         
         if (bannedUserIds.length === 0) {
-          alert("No banned users to unban");
+          ////alert("No banned users to unban");
           return;
         }
         
@@ -1537,12 +1537,12 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         if (!confirmed) return;
         
         if (!this.socket || !this.socket.connected) {
-          alert("Not connected to server");
+          //alert("Not connected to server");
           return;
         }
         
         if (!this.isAuthenticated || !this.authenticatedToken) {
-          alert("Please log in to unban users");
+          //alert("Please log in to unban users");
           this.showSigninModal();
           return;
         }
@@ -1607,14 +1607,14 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
       // Unban selected users
       unbanSelectedUsers() {
         if (!this.selectedUsers || this.selectedUsers.size === 0) {
-          alert("No users selected");
+          //alert("No users selected");
           return;
         }
         
         // Check permissions (only group creator can unban)
         const currentUserId = this.getCurrentUserId();
         if (this.group?.creater_id !== currentUserId) {
-          alert("Only the group creator can unban users");
+          //alert("Only the group creator can unban users");
           return;
         }
         
@@ -1625,12 +1625,12 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         if (!confirmed) return;
         
         if (!this.socket || !this.socket.connected) {
-          alert("Not connected to server");
+          //alert("Not connected to server");
           return;
         }
         
         if (!this.isAuthenticated || !this.authenticatedToken) {
-          alert("Please log in to unban users");
+          //alert("Please log in to unban users");
           this.showSigninModal();
           return;
         }
@@ -1653,12 +1653,12 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         console.log('🔄 [Widget] Refreshing banned users list');
         
         if (!this.socket || !this.socket.connected) {
-          alert("Not connected to server");
+          //alert("Not connected to server");
           return;
         }
         
         if (!this.isAuthenticated || !this.authenticatedToken) {
-          alert("Please log in to refresh banned users");
+          //alert("Please log in to refresh banned users");
           this.showSigninModal();
           return;
         }
@@ -1692,17 +1692,17 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         console.log('📌 [Widget] Pin message clicked:', messageId);
         
         if (!this.canPinMessages()) {
-          alert("Only moderators and admins can pin messages");
+          //alert("Only moderators and admins can pin messages");
           return;
         }
         
         if (!this.socket || !this.socket.connected) {
-          alert("Not connected to server");
+          //alert("Not connected to server");
           return;
         }
         
         if (!this.isAuthenticated || !this.authenticatedToken) {
-          alert("Please log in to pin messages");
+          //alert("Please log in to pin messages");
           this.showSigninModal();
           return;
         }
@@ -1721,17 +1721,17 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         console.log('📌 [Widget] Unpin message clicked:', messageId);
         
         if (!this.canPinMessages()) {
-          alert("Only moderators and admins can unpin messages");
+          //alert("Only moderators and admins can unpin messages");
           return;
         }
         
         if (!this.socket || !this.socket.connected) {
-          alert("Not connected to server");
+          //alert("Not connected to server");
           return;
         }
         
         if (!this.isAuthenticated || !this.authenticatedToken) {
-          alert("Please log in to unpin messages");
+          //alert("Please log in to unpin messages");
           this.showSigninModal();
           return;
         }
@@ -1754,7 +1754,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         // Add temporary error listeners
         this.socket.once('forbidden', (error) => {
           console.error('📌 [Widget] ❌ Forbidden error for unpin:', error);
-          alert('Access denied. You may not have permission for this action.');
+          //alert('Access denied. You may not have permission for this action.');
         });
         
         this.socket.once('error', (error) => {
