@@ -580,8 +580,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
         }
         
         .pingbash-message-text a {
-          color: #007bff !important;
-          text-decoration: underline !important;
+          color: var(--msg-text-color, #333);
         }
         
         .pingbash-message-buttons {
