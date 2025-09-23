@@ -1025,8 +1025,20 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
               const isOwnMessage = msg.Sender_Id == currentUserId;
               const isToCurrentUser = msg.Receiver_Id == currentUserId;
               
-              // Show public messages, own messages, and private messages addressed to current user
+              // 🔒 IMPORTANT: Even admins/mods should NOT see 1:1 messages between other users
+              // Only show: public messages, own messages, and private messages TO current user
               const shouldShow = isPublic || isOwnMessage || isToCurrentUser;
+              
+              // Debug: Log filtered out private messages between other users
+              if (msg.Receiver_Id && msg.Receiver_Id !== currentUserId && msg.Sender_Id !== currentUserId) {
+                console.log('🔒 [Widget] Hiding private message between other users (admin cannot see):', {
+                  msgId: msg.Id,
+                  from: msg.Sender_Id,
+                  to: msg.Receiver_Id,
+                  currentUser: currentUserId
+                });
+              }
+              
               if (isToCurrentUser) {
                 console.log('🔍 [Widget] Private message to current user in public mode:', {
                   msgId: msg.Id,
@@ -1081,7 +1093,23 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
               const isToMods = msg.Receiver_Id == 1;
               const isOwnMessage = msg.Sender_Id == currentUserId;
               const isPublic = msg.Receiver_Id == null;
-              return isToMods || isOwnMessage || isPublic;
+              const isToCurrentUser = msg.Receiver_Id == currentUserId;
+              
+              // 🔒 IMPORTANT: Even in mods mode, don't show 1:1 messages between other users
+              // Only show: messages to mods, own messages, public messages, and messages TO current user
+              const shouldShow = isToMods || isOwnMessage || isPublic || isToCurrentUser;
+              
+              // Debug: Log filtered out private messages between other users
+              if (msg.Receiver_Id && msg.Receiver_Id !== currentUserId && msg.Receiver_Id !== 1 && msg.Sender_Id !== currentUserId) {
+                console.log('🔒 [Widget] Hiding private message between other users in mods mode:', {
+                  msgId: msg.Id,
+                  from: msg.Sender_Id,
+                  to: msg.Receiver_Id,
+                  currentUser: currentUserId
+                });
+              }
+              
+              return shouldShow;
             });
 
           default:

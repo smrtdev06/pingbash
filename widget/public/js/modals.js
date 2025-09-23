@@ -2744,6 +2744,16 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
       const slowModeTime = this.getSlowModeTime() * 1000; // Convert to milliseconds
       
       if (this.isSlowModeActive()) {
+        // 🆕 Check if user is admin or moderator (exempt from slow mode)
+        const currentUserId = this.getCurrentUserId();
+        const isAdminOrMod = this.group?.creater_id === currentUserId || 
+          this.group?.members?.find(member => member.id === currentUserId && (member.role_id === 1 || member.role_id === 2));
+        
+        if (isAdminOrMod) {
+          console.log('⚡ [Widget] Admin/Moderator exempt from slow mode');
+          return { canSend: true };
+        }
+        
         const timeSinceLastMessage = now - this.lastMessageTime;
         if (timeSinceLastMessage < slowModeTime) {
           const remainingTime = Math.ceil((slowModeTime - timeSinceLastMessage) / 1000);
