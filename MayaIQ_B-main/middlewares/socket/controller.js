@@ -26,7 +26,7 @@ const transporter = nodemailer.createTransport({
 });
 
 // Test SMTP connection on startup
-transporter.verify(function(error, success) {
+transporter.verify(function (error, success) {
     if (error) {
         console.log('❌ SMTP connection failed:', error);
         console.log('📧 Email notifications will not work. Please check SMTP configuration in .env file');
@@ -36,72 +36,72 @@ transporter.verify(function(error, success) {
 });
 
 const sendNotificationEamil = async (emails, message) => {
- 
+
     // Send OTP to user's email
     const subject = 'Email Verification';
     const content = `<center>
             <h2>Group Notification</h2>
             <div style="font-size:30px;font-weight:bold">${message}</div>
             </center>`;
-    
-    emails.forEach( async (toEmail, index) => {
+
+    emails.forEach(async (toEmail, index) => {
         try {
-            await transporter.sendMail({ 
-                from: `${process.env.SMTP_FROM_NAME || 'Pingbash'} <${process.env.SMTP_FROM_EMAIL || process.env.SMTP_USER}>`, 
-                to: toEmail, 
-                subject, 
-                html: content 
+            await transporter.sendMail({
+                from: `${process.env.SMTP_FROM_NAME || 'Pingbash'} <${process.env.SMTP_FROM_EMAIL || process.env.SMTP_USER}>`,
+                to: toEmail,
+                subject,
+                html: content
             });
         } catch (err) {
             console.log(err)
         }
-        
+
     });
- };
+};
 
 const sendPrivateMessageEmailNotification = async (senderId, receiverId, messageContent) => {
     try {
         console.log(`📧 [EMAIL] Attempting to send email notification: sender=${senderId}, receiver=${receiverId}`);
-        
+
         // Get sender and receiver information
         const senderResult = await PG_query(`SELECT "Name", "Email" FROM "Users" WHERE "Id" = ${senderId}`);
         const receiverResult = await PG_query(`SELECT "Name", "Email" FROM "Users" WHERE "Id" = ${receiverId}`);
-        
+
         console.log(`📧 [EMAIL] Sender query result: ${senderResult.rows.length} rows`);
         console.log(`📧 [EMAIL] Receiver query result: ${receiverResult.rows.length} rows`);
-        
+
         if (senderResult.rows.length === 0) {
             console.log(`❌ [EMAIL] Sender with ID ${senderId} not found in database`);
             return;
         }
-        
+
         if (receiverResult.rows.length === 0) {
             console.log(`❌ [EMAIL] Receiver with ID ${receiverId} not found in database`);
             return;
         }
-        
+
         const sender = senderResult.rows[0];
         const receiver = receiverResult.rows[0];
-        
+
         console.log(`📧 [EMAIL] Sender: ${sender.Name} (${sender.Email})`);
         console.log(`📧 [EMAIL] Receiver: ${receiver.Name} (${receiver.Email})`);
-        
+
         if (!receiver.Email) {
             console.log(`❌ [EMAIL] Receiver ${receiver.Name} has no email address`);
             return;
         }
-        
+
         // Check SMTP configuration
         if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
             console.log(`❌ [EMAIL] SMTP configuration incomplete. Host: ${process.env.SMTP_HOST}, User: ${process.env.SMTP_USER}, Pass: ${process.env.SMTP_PASS ? '[SET]' : '[NOT SET]'}`);
             return;
         }
-        
+
         // Truncate message if too long
-        const truncatedMessage = messageContent.length > 100 
-            ? messageContent.substring(0, 100) + '...' 
+        const truncatedMessage = messageContent.length > 100
+            ? messageContent.substring(0, 100) + '...'
             : messageContent;
-        
+
         const subject = `New message from ${sender.Name}`;
         const content = `
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
@@ -122,27 +122,27 @@ const sendPrivateMessageEmailNotification = async (senderId, receiverId, message
                     <p>This is an automated notification from Pingbash Chat.</p>
                 </div>
             </div>`;
-        
+
         console.log(`📧 [EMAIL] Sending email to ${receiver.Email} with subject: ${subject}`);
-        
+
         const mailOptions = {
             from: `${process.env.SMTP_FROM_NAME || 'Pingbash'} <${process.env.SMTP_FROM_EMAIL || process.env.SMTP_USER}>`,
             to: receiver.Email,
             subject: subject,
             html: content
         };
-        
+
         console.log(`📧 [EMAIL] Mail options:`, {
             from: mailOptions.from,
             to: mailOptions.to,
             subject: mailOptions.subject
         });
-        
+
         const result = await transporter.sendMail(mailOptions);
-        
+
         console.log(`✅ [EMAIL] Email notification sent successfully to ${receiver.Email} for private message from ${sender.Name}`);
         console.log(`📧 [EMAIL] Message ID: ${result.messageId}`);
-        
+
     } catch (error) {
         console.error("❌ [EMAIL] Error sending private message email notification:", error);
         console.error("❌ [EMAIL] Error details:", {
@@ -323,7 +323,7 @@ const getSearchUsers = async (search) => {
             u."Name" as "Opposite_Name", u."Email" as "Opposite_Email", u.country, u.gender, u.birthday
             FROM "Users" u
             WHERE u."Name" ILIKE  '%${search}%'  
-                OR u."Email" ILIKE  '%${search}%';`); 
+                OR u."Email" ILIKE  '%${search}%';`);
         return users.rows
     } catch (error) {
         console.log(error)
@@ -374,7 +374,7 @@ const getGroup = async (groupId) => {
         WHERE 
             g.id = ${groupId}
         GROUP BY 
-            g.id, g.name, g.creater_id, creator."Name";`); 
+            g.id, g.name, g.creater_id, creator."Name";`);
         return initList.rows.length > 0 ? initList.rows[0] : null
     } catch (error) {
         console.log(error)
@@ -426,7 +426,7 @@ const getMyGroups = async (loggedId) => {
         GROUP BY 
             g.id, g.name, g.creater_id, creator."Name"
         ORDER BY 
-            (g.creater_id = ${loggedId}) DESC, g.id;`); 
+            (g.creater_id = ${loggedId}) DESC, g.id;`);
         console.log(initList.rows);
         return initList.rows
     } catch (error) {
@@ -480,7 +480,7 @@ const getFavGroups = async (loggedId) => {
         GROUP BY 
             g.id, g.name, g.creater_id, creator."Name"
         ORDER BY 
-            (g.creater_id = ${loggedId}) DESC, g.id;`); 
+            (g.creater_id = ${loggedId}) DESC, g.id;`);
         return initList.rows
     } catch (error) {
         console.log(error)
@@ -531,7 +531,7 @@ const getMsg = async (user, opposite) => {
                         WHERE (("Sender_Id" = ${user} AND "Receiver_Id" = ${opposite}) OR ("Sender_Id" = ${opposite} AND "Receiver_Id" = ${user}))
                     )
                     ORDER BY "Send_Time";`)
-        }        
+        }
         return msgList.rows
     } catch (error) {
         console.log(error)
@@ -707,29 +707,29 @@ const deleteGroupMsg = async (msgId) => {
 const timeoutUser = async (groupId, userId) => {
     try {
         console.log(`⏰ [TIMEOUT] Setting timeout for user ${userId} in group ${groupId} for ${TIMEOUT_MINS} minutes`);
-        
+
         // First ensure the user exists in group_users table
         const userExists = await PG_query(`SELECT * FROM group_users WHERE group_id = ${groupId} AND user_id = ${userId};`);
-        
+
         if (userExists.rows.length === 0) {
             console.log(`⏰ [TIMEOUT] User ${userId} not found in group ${groupId}, adding them first`);
             await PG_query(`INSERT INTO group_users (group_id, user_id, is_member, role_id, banned) 
                 VALUES (${groupId}, ${userId}, 1, 0, 0) 
                 ON CONFLICT (group_id, user_id) DO NOTHING;`);
         }
-        
+
         // Set timeout
         const result = await PG_query(`UPDATE group_users
             SET to_time = CURRENT_TIMESTAMP + INTERVAL '${TIMEOUT_MINS} minutes'
             WHERE group_id = ${groupId} AND user_id = ${userId}
             RETURNING to_time;`);
-            
+
         if (result.rows.length > 0) {
             console.log(`✅ [TIMEOUT] User ${userId} timed out until: ${result.rows[0].to_time}`);
         } else {
             console.log(`❌ [TIMEOUT] Failed to timeout user ${userId} in group ${groupId}`);
         }
-        
+
     } catch (error) {
         console.error(`❌ [TIMEOUT] Error timing out user ${userId} in group ${groupId}:`, error);
     }
@@ -741,11 +741,11 @@ const timeoutIpAddress = async (groupId, ipAddress, timeoutBy) => {
         await PG_query(`UPDATE ip_timeouts 
             SET is_active = false 
             WHERE is_active = true AND expires_at < CURRENT_TIMESTAMP;`);
-        
+
         // Check if there's already an active timeout for this IP
         const existingTimeout = await PG_query(`SELECT id FROM ip_timeouts 
             WHERE group_id = ${groupId} AND ip_address = '${ipAddress}' AND is_active = true;`);
-        
+
         if (existingTimeout.rows.length > 0) {
             // Extend existing timeout
             await PG_query(`UPDATE ip_timeouts 
@@ -768,14 +768,14 @@ const timeoutIpAddress = async (groupId, ipAddress, timeoutBy) => {
 const checkUserTimeout = async (groupId, userId) => {
     try {
         console.log(`⏰ [CHECK] Checking timeout for user ${userId} in group ${groupId}`);
-        
+
         // Check if user is timed out in the group_users table
         const result = await PG_query(`SELECT to_time FROM group_users 
             WHERE group_id = ${groupId} AND user_id = ${userId} 
             AND to_time IS NOT NULL AND to_time > CURRENT_TIMESTAMP;`);
-        
+
         console.log(`⏰ [CHECK] Timeout check result: ${result.rows.length} rows`);
-        
+
         if (result.rows.length > 0) {
             console.log(`⏰ [CHECK] User ${userId} is timed out until: ${result.rows[0].to_time}`);
             return {
@@ -783,7 +783,7 @@ const checkUserTimeout = async (groupId, userId) => {
                 expiresAt: result.rows[0].to_time
             };
         }
-        
+
         console.log(`⏰ [CHECK] User ${userId} is not timed out`);
         return { isTimedOut: false };
     } catch (error) {
@@ -798,18 +798,18 @@ const checkIpTimeout = async (groupId, ipAddress) => {
         await PG_query(`UPDATE ip_timeouts 
             SET is_active = false 
             WHERE is_active = true AND expires_at < CURRENT_TIMESTAMP;`);
-            
+
         const result = await PG_query(`SELECT expires_at FROM ip_timeouts 
             WHERE group_id = ${groupId} AND ip_address = '${ipAddress}' AND is_active = true 
             AND expires_at > CURRENT_TIMESTAMP;`);
-        
+
         if (result.rows.length > 0) {
             return {
                 isTimedOut: true,
                 expiresAt: result.rows[0].expires_at
             };
         }
-        
+
         return { isTimedOut: false };
     } catch (error) {
         console.log("Error checking IP timeout:", error);
@@ -824,9 +824,9 @@ const banGroupUser = async (groupId, userId) => {
             VALUES (${groupId}, ${userId}, 1, 0, 0)
             ON CONFLICT (group_id, user_id)
             DO UPDATE SET banned = 1, unban_request = 0;`)
-        
+
         console.log(`User ${userId} banned from group ${groupId} (added to group_users if not existed)`);
-        
+
         // Delete pinned messages from banned user
         await PG_query(`DELETE FROM pin_messages
             WHERE message_id IN (
@@ -834,7 +834,7 @@ const banGroupUser = async (groupId, userId) => {
                 FROM "Messages"
                 WHERE "Sender_Id" = ${userId} and group_id = ${groupId}
             );`)
-        
+
         // Delete messages from banned user
         await PG_query(`DELETE FROM "Messages"
             WHERE "Sender_Id" = ${userId} and group_id = ${groupId};`)
@@ -846,12 +846,12 @@ const banGroupUser = async (groupId, userId) => {
 const banGroupUserWithIp = async (groupId, userId, ipAddress, bannedBy) => {
     try {
         console.log(`🚨 [IP-BAN-DEBUG] Starting IP ban process for user ${userId}, IP: ${ipAddress}, group: ${groupId}, bannedBy: ${bannedBy}`);
-        
+
         // First, ban the user normally
         console.log(`🚨 [IP-BAN-DEBUG] Step 1: Banning user normally...`);
         await banGroupUser(groupId, userId);
         console.log(`🚨 [IP-BAN-DEBUG] Step 1 completed: User banned normally`);
-        
+
         // Check if there's already ANY ban for this IP (active or inactive)
         console.log(`🚨 [IP-BAN-DEBUG] Step 2: Checking for existing bans (any status)...`);
         const existingBanQuery = `SELECT id, is_active FROM ip_bans 
@@ -860,18 +860,18 @@ const banGroupUserWithIp = async (groupId, userId, ipAddress, bannedBy) => {
         console.log(`🚨 [IP-BAN-DEBUG] Existing ban query:`, existingBanQuery);
         const existingBan = await PG_query(existingBanQuery);
         console.log(`🚨 [IP-BAN-DEBUG] Existing ban result:`, existingBan.rows);
-        
+
         if (existingBan.rows.length > 0) {
             // Update existing ban (whether active or inactive)
             const existingRecord = existingBan.rows[0];
             const wasActive = existingRecord.is_active;
             console.log(`🚨 [IP-BAN-DEBUG] Step 3a: Updating existing ban (was ${wasActive ? 'active' : 'inactive'})...`);
-            
+
             // For anonymous users (>100000000), use NULL for user_id to avoid foreign key constraint
             const isAnonymousUser = userId > 100000000;
             const dbUserId = isAnonymousUser ? 'NULL' : userId;
             console.log(`🚨 [IP-BAN-DEBUG] User ${userId} is ${isAnonymousUser ? 'anonymous' : 'registered'}, using DB user_id: ${dbUserId}`);
-            
+
             const updateQuery = `UPDATE ip_bans 
                 SET is_active = true, user_id = ${userId}, banned_by = ${bannedBy}, banned_at = CURRENT_TIMESTAMP
                 WHERE id = ${existingRecord.id};`;
@@ -882,12 +882,12 @@ const banGroupUserWithIp = async (groupId, userId, ipAddress, bannedBy) => {
         } else {
             // Create new IP ban
             console.log(`🚨 [IP-BAN-DEBUG] Step 3b: Creating new IP ban (no existing record found)...`);
-            
+
             // For anonymous users (>100000000), use NULL for user_id to avoid foreign key constraint
             const isAnonymousUser = userId > 100000000;
             const dbUserId = isAnonymousUser ? 'NULL' : userId;
             console.log(`🚨 [IP-BAN-DEBUG] User ${userId} is ${isAnonymousUser ? 'anonymous' : 'registered'}, using DB user_id: ${dbUserId}`);
-            
+
             const insertQuery = `INSERT INTO ip_bans (group_id, user_id, ip_address, banned_by, is_active, banned_at)
                 VALUES (${groupId}, ${dbUserId}, '${ipAddress}', ${bannedBy}, true, CURRENT_TIMESTAMP);`;
             console.log(`🚨 [IP-BAN-DEBUG] Insert query:`, insertQuery);
@@ -895,14 +895,14 @@ const banGroupUserWithIp = async (groupId, userId, ipAddress, bannedBy) => {
             console.log(`🚨 [IP-BAN-DEBUG] Insert result:`, insertResult);
             console.log(`➕ Created new IP ban for ${ipAddress}`);
         }
-        
+
         console.log(`🚫 [IP-BAN-DB] IP BAN ADDED: User ${userId}, IP ${ipAddress} banned from group ${groupId} by ${bannedBy}`);
-        
+
         // Verify the ban was created
         console.log(`🚨 [IP-BAN-DEBUG] Verifying IP ban creation...`);
         const verifyResult = await PG_query(`SELECT * FROM ip_bans WHERE group_id = ${groupId} AND ip_address = '${ipAddress}' AND is_active = true;`);
         console.log(`🚨 [IP-BAN-DEBUG] Verify result:`, verifyResult.rows);
-        
+
         if (verifyResult.rows.length > 0) {
             const ban = verifyResult.rows[0];
             console.log(`🚨 [IP-BAN-DEBUG] Ban details: ID=${ban.id}, user_id=${ban.user_id}, ip_address=${ban.ip_address}, banned_by=${ban.banned_by}`);
@@ -910,7 +910,7 @@ const banGroupUserWithIp = async (groupId, userId, ipAddress, bannedBy) => {
         } else {
             console.error(`❌ [IP-BAN-DEBUG] IP ban verification FAILED - no active ban found!`);
         }
-        
+
     } catch (error) {
         console.log("🔍 [IP-BAN-DB] Error banning user with IP:", error);
         console.log("🔍 [IP-BAN-DB] Error stack:", error.stack);
@@ -924,9 +924,9 @@ const banGroupUserWithIp = async (groupId, userId, ipAddress, bannedBy) => {
 const unifiedBanUser = async (groupId, targetUserId, targetIpAddress, bannedByUserId) => {
     try {
         console.log(`🚫 [UNIFIED-BAN] Starting unified ban: User ${targetUserId}, IP: ${targetIpAddress}, Group: ${groupId}, By: ${bannedByUserId}`);
-        
+
         const isAnonymousUser = targetUserId > 100000000;
-        
+
         // Step 1: Ban the user (if registered)
         if (!isAnonymousUser) {
             console.log(`🚫 [UNIFIED-BAN] Banning registered user ${targetUserId}`);
@@ -934,14 +934,14 @@ const unifiedBanUser = async (groupId, targetUserId, targetIpAddress, bannedByUs
         } else {
             console.log(`🚫 [UNIFIED-BAN] Anonymous user ${targetUserId} - skipping user ban`);
         }
-        
+
         // Step 2: Always ban the IP address (Rule 2)
         console.log(`🚫 [UNIFIED-BAN] Banning IP address ${targetIpAddress}`);
         await banIpAddress(groupId, targetUserId, targetIpAddress, bannedByUserId);
-        
+
         console.log(`✅ [UNIFIED-BAN] Successfully banned ${isAnonymousUser ? 'anonymous' : 'registered'} user ${targetUserId} and IP ${targetIpAddress}`);
         return true;
-        
+
     } catch (error) {
         console.log("❌ [UNIFIED-BAN] Error in unified ban:", error);
         throw error;
@@ -952,9 +952,9 @@ const unifiedBanUser = async (groupId, targetUserId, targetIpAddress, bannedByUs
 const unifiedUnbanUser = async (groupId, targetUserId, targetIpAddress) => {
     try {
         console.log(`✅ [UNIFIED-UNBAN] Starting unified unban: User ${targetUserId}, IP: ${targetIpAddress}, Group: ${groupId}`);
-        
+
         const isAnonymousUser = targetUserId > 100000000;
-        
+
         // Step 1: Unban the user (if registered)
         if (!isAnonymousUser) {
             console.log(`✅ [UNIFIED-UNBAN] Unbanning registered user ${targetUserId}`);
@@ -962,14 +962,14 @@ const unifiedUnbanUser = async (groupId, targetUserId, targetIpAddress) => {
         } else {
             console.log(`✅ [UNIFIED-UNBAN] Anonymous user ${targetUserId} - skipping user unban`);
         }
-        
+
         // Step 2: Always unban the IP address (specific to this user and IP combination)
         console.log(`✅ [UNIFIED-UNBAN] Unbanning IP address ${targetIpAddress} for user ${targetUserId}`);
         await unbanUserIpAddress(groupId, targetUserId, targetIpAddress);
-        
+
         console.log(`✅ [UNIFIED-UNBAN] Successfully unbanned ${isAnonymousUser ? 'anonymous' : 'registered'} user ${targetUserId} and IP ${targetIpAddress}`);
         return true;
-        
+
     } catch (error) {
         console.log("❌ [UNIFIED-UNBAN] Error in unified unban:", error);
         throw error;
@@ -981,12 +981,12 @@ const banIpAddress = async (groupId, userId, ipAddress, bannedBy) => {
     try {
         const isAnonymousUser = userId > 100000000;
         const dbUserId = isAnonymousUser ? 'NULL' : userId;
-        
+
         // Check for existing IP ban
         const existingBan = await PG_query(`SELECT id, is_active FROM ip_bans 
             WHERE group_id = ${groupId} AND ip_address = '${ipAddress}'
             ORDER BY banned_at DESC LIMIT 1;`);
-        
+
         if (existingBan.rows.length > 0) {
             // Update existing ban
             await PG_query(`UPDATE ip_bans 
@@ -1021,7 +1021,7 @@ const unbanIpAddress = async (groupId, ipAddress) => {
 const unbanUserIpAddress = async (groupId, userId, ipAddress) => {
     try {
         const isAnonymousUser = userId > 100000000;
-        
+
         let result;
         if (isAnonymousUser) {
             // For anonymous users, find ban by IP only (since user_id might be NULL or the large ID)
@@ -1035,11 +1035,11 @@ const unbanUserIpAddress = async (groupId, userId, ipAddress) => {
                 WHERE group_id = ${groupId} AND user_id = ${userId} AND ip_address = '${ipAddress}' AND is_active = true`);
             console.log(`✅ [IP-BAN] Unbanned registered user ${userId} IP ${ipAddress} - ${result.rowCount || 0} records deleted`);
         }
-        
+
         if (result.rowCount === 0) {
             console.log(`⚠️ [IP-BAN] No active IP ban found for user ${userId} IP ${ipAddress} in group ${groupId}`);
         }
-        
+
         return result.rowCount > 0;
     } catch (error) {
         console.log("❌ [IP-BAN] Error unbanning user IP:", error);
@@ -1050,15 +1050,15 @@ const unbanUserIpAddress = async (groupId, userId, ipAddress) => {
 const checkIpBan = async (groupId, ipAddress) => {
     try {
         console.log(`🔍 [IP-BAN-DB] Checking database for IP: '${ipAddress}' (length: ${ipAddress?.length}), group: ${groupId}`);
-        
+
         const result = await PG_query(`SELECT * FROM ip_bans 
             WHERE group_id = ${groupId} 
             AND ip_address = '${ipAddress}' 
             AND is_active = true;`);
-        
+
         const isBanned = result.rows.length > 0;
         console.log(`🔍 [IP-BAN-DB] IP ${ipAddress} in group ${groupId} - ${isBanned ? 'BANNED' : 'NOT BANNED'} (${result.rows.length} active bans)`);
-        
+
         if (result.rows.length > 0) {
             console.log(`🔍 [IP-BAN-DB] Active IP ban details:`, result.rows[0]);
         } else {
@@ -1070,7 +1070,7 @@ const checkIpBan = async (groupId, ipAddress) => {
                 banned_by: row.banned_by,
                 banned_at: row.banned_at
             })));
-            
+
             // Check for exact match issues
             if (allBans.rows.length > 0) {
                 const exactMatches = allBans.rows.filter(row => row.ip_address === ipAddress);
@@ -1078,7 +1078,7 @@ const checkIpBan = async (groupId, ipAddress) => {
                 console.log(`🔍 [IP-BAN-DB] Exact matches: ${exactMatches.length}, Trim matches: ${trimMatches.length}`);
             }
         }
-        
+
         return isBanned;
     } catch (error) {
         console.log("Error checking IP ban:", error);
@@ -1092,10 +1092,10 @@ const checkUserBan = async (groupId, userId) => {
             WHERE group_id = ${groupId} 
             AND user_id = ${userId} 
             AND banned = 1;`);
-        
+
         const isBanned = result.rows.length > 0;
         console.log(`🔍 User ban check: User ${userId} in group ${groupId} - ${isBanned ? 'BANNED' : 'NOT BANNED'}`);
-        
+
         return isBanned;
     } catch (error) {
         console.log("Error checking user ban:", error);
@@ -1131,7 +1131,7 @@ const unbanGroupIps = async (groupId, ipAddresses) => {
             WHERE group_id = ${groupId} 
             AND ip_address IN (${ipList}) 
             AND is_active = true;`);
-        
+
         console.log(`Unbanned ${result.rowCount} IP addresses from group ${groupId}: ${ipAddresses}`);
         return result.rowCount;
     } catch (error) {
@@ -1146,14 +1146,14 @@ const debugIpBanStatus = async (groupId, ipAddress) => {
             FROM ip_bans 
             WHERE group_id = ${groupId} AND ip_address = '${ipAddress}'
             ORDER BY banned_at DESC;`);
-        
+
         console.log(`🔍 All IP ban records for ${ipAddress} in group ${groupId}:`, allBans.rows);
-        
+
         const activeBans = await PG_query(`SELECT * FROM ip_bans 
             WHERE group_id = ${groupId} AND ip_address = '${ipAddress}' AND is_active = true;`);
-        
+
         console.log(`🔍 Active IP bans: ${activeBans.rows.length}`, activeBans.rows);
-        
+
         return {
             totalBans: allBans.rows.length,
             activeBans: activeBans.rows.length,
@@ -1171,12 +1171,12 @@ const unbanGroupUser = async (groupId, userId) => {
         await PG_query(`UPDATE group_users
             SET banned = 0, unban_request = 0
             WHERE group_id = ${groupId} AND user_id = ${userId};`)
-        
+
         // Also remove any IP bans for this user in this group
         await PG_query(`UPDATE ip_bans 
             SET is_active = false 
             WHERE group_id = ${groupId} AND user_id = ${userId} AND is_active = true;`)
-        
+
         console.log(`User ${userId} unbanned from group ${groupId} (including IP bans)`);
     } catch (error) {
         console.log("Error unbanning user:", error);
@@ -1189,16 +1189,16 @@ const unbanGroupUsers = async (groupId, userIds) => {
         const userResult = await PG_query(`UPDATE group_users
             SET banned = 0, unban_request = 0
             WHERE group_id = ${groupId} AND user_id IN (${userIds});`)
-        
+
         console.log(`✅ Unbanned ${userResult.rowCount} users from group_users table`);
-        
+
         // Also remove any IP bans for these users in this group
         const ipResult = await PG_query(`UPDATE ip_bans 
             SET is_active = false 
             WHERE group_id = ${groupId} AND user_id IN (${userIds}) AND is_active = true;`)
-        
+
         console.log(`✅ Deactivated ${ipResult.rowCount} IP bans for users [${userIds}] in group ${groupId}`);
-        
+
         // Debug: Show which IP addresses were affected
         if (ipResult.rowCount > 0) {
             const affectedIps = await PG_query(`SELECT ip_address, user_id 
@@ -1207,7 +1207,7 @@ const unbanGroupUsers = async (groupId, userIds) => {
                 ORDER BY banned_at DESC LIMIT 10;`);
             console.log(`🔍 Recently deactivated IPs:`, affectedIps.rows);
         }
-        
+
         console.log(`Users [${userIds}] unbanned from group ${groupId} (including IP bans)`);
     } catch (error) {
         console.log("Error unbanning users:", error);
@@ -1325,7 +1325,7 @@ const getBlockedUsersInfo = async (userId) => {
 }
 
 const updateGroupBlockedUsers = async (userId, groupId, blockIds) => {
-    
+
     try {
         if (blockIds.length > 0) {
             await PG_query(`INSERT INTO block_users (user_id, group_id, block_id)
@@ -1341,7 +1341,7 @@ const updateGroupBlockedUsers = async (userId, groupId, blockIds) => {
             await PG_query(`DELETE FROM block_users
                 WHERE user_id = ${userId}
                     AND group_id = ${groupId};`);
-        }        
+        }
     } catch (error) {
         console.log(error);
     }
@@ -1357,10 +1357,10 @@ const unblockGroupUser = async (userId, groupId, blockId) => {
 }
 
 const updateGroupPostModes = async (
-    groupId, 
-    post_level, 
-    url_level, 
-    slow_mode, 
+    groupId,
+    post_level,
+    url_level,
+    slow_mode,
     slow_time
 ) => {
     try {
@@ -1377,7 +1377,7 @@ const updateGroupPostModes = async (
 }
 
 const updateGroupChatboxStyle = async (
-    groupId, 
+    groupId,
     size_mode,
     frame_width,
     frame_height,
@@ -1392,7 +1392,7 @@ const updateGroupChatboxStyle = async (
     custom_font_size,
     font_size,
     round_corners,
-    corner_radius 
+    corner_radius
 ) => {
     try {
         await PG_query(`UPDATE groups
@@ -1419,12 +1419,12 @@ const updateGroupChatboxStyle = async (
 }
 
 const updateGroupModPriorities = async (
-    modId, 
-    groupId, 
-    chat_limit, 
-    manage_mods, 
-    manage_chat, 
-    manage_censored, 
+    modId,
+    groupId,
+    chat_limit,
+    manage_mods,
+    manage_chat,
+    manage_censored,
     ban_user
 ) => {
     try {
@@ -1458,8 +1458,8 @@ const sendGroupNotification = async (senderId, groupId, message) => {
 }
 
 const getLastMessage = async (senderId, receiverId) => {
-  try {
-    const result = await PG_query(`
+    try {
+        const result = await PG_query(`
       SELECT *
       FROM "Messages"
       WHERE "Sender_Id" = ${senderId}
@@ -1468,17 +1468,17 @@ const getLastMessage = async (senderId, receiverId) => {
       LIMIT 1;
     `);
 
-    const lastMsg = result.rows;
+        const lastMsg = result.rows;
 
-    if (lastMsg && lastMsg.length > 0) {
-      return lastMsg[0];
-    } else {
-      return null;
-    }        
-  } catch (error) {
-    console.error(error);
-    return null;
-  }
+        if (lastMsg && lastMsg.length > 0) {
+            return lastMsg[0];
+        } else {
+            return null;
+        }
+    } catch (error) {
+        console.error(error);
+        return null;
+    }
 };
 
 const getPinnedMsgInfo = async (groupId) => {
@@ -1491,17 +1491,17 @@ const getPinnedMsgInfo = async (groupId) => {
     }
 }
 
- // Router to user to Group as Listener
+// Router to user to Group as Listener
 const joinToGroup = async (groupId, userId) => {
-     try {
-         await PG_query(`INSERT INTO group_users (group_id, user_id, is_member)
+    try {
+        await PG_query(`INSERT INTO group_users (group_id, user_id, is_member)
             VALUES (${groupId}, ${userId}, 1)
             ON CONFLICT (group_id, user_id)
             DO UPDATE SET is_member = 1;`);
-     } catch (error) {
-         console.log(error);
-     }
- };
+    } catch (error) {
+        console.log(error);
+    }
+};
 
 // To handle the message read function
 const readMSG = async (sender, receiver) => {
@@ -1566,11 +1566,11 @@ const getChatRules = async (groupId) => {
             FROM groups 
             WHERE id = ${groupId}
         `);
-        
+
         if (result.rows.length === 0) {
             return null;
         }
-        
+
         return result.rows[0];
     } catch (error) {
         console.log("Error getting chat rules:", error);
@@ -1582,24 +1582,24 @@ const getChatRules = async (groupId) => {
 const updateChatRules = async (groupId, chatRules, showChatRules, userId) => {
     try {
         console.log("updateChatRules called with:", { groupId, userId, chatRules: chatRules?.length, showChatRules });
-        
+
         // Check if user is the creator
         const groupCheck = await PG_query(`SELECT creater_id FROM groups WHERE id = ${groupId}`);
         console.log("Group check result:", groupCheck.rows);
-        
+
         if (groupCheck.rows.length === 0) {
             console.log("Group not found");
             return { success: false, error: "Group not found" };
         }
-        
+
         if (groupCheck.rows[0].creater_id !== userId) {
             console.log("User not authorized:", { creater_id: groupCheck.rows[0].creater_id, userId });
             return { success: false, error: "Unauthorized" };
         }
-        
+
         // Escape single quotes in chat rules to prevent SQL injection
         const escapedChatRules = (chatRules || '').replace(/'/g, "''");
-        
+
         // Update chat rules
         await PG_query(`
             UPDATE groups 
@@ -1607,7 +1607,7 @@ const updateChatRules = async (groupId, chatRules, showChatRules, userId) => {
                 show_chat_rules = ${showChatRules || false}
             WHERE id = ${groupId}
         `);
-        
+
         console.log("Chat rules updated successfully");
         return { success: true, chatRules: chatRules || '', showChatRules: showChatRules || false };
     } catch (error) {
@@ -1620,9 +1620,9 @@ const updateChatRules = async (groupId, chatRules, showChatRules, userId) => {
 const unifiedTimeoutUser = async (groupId, targetUserId, targetIpAddress, timeoutDurationSeconds, timeoutByUserId) => {
     try {
         console.log(`⏰ [UNIFIED-TIMEOUT] Starting unified timeout: User ${targetUserId}, IP: ${targetIpAddress}, Duration: ${timeoutDurationSeconds}s, Group: ${groupId}, By: ${timeoutByUserId}`);
-        
+
         const isAnonymousUser = targetUserId > 100000000;
-        
+
         // Step 1: Timeout the user (if registered)
         if (!isAnonymousUser) {
             console.log(`⏰ [UNIFIED-TIMEOUT] Timing out registered user ${targetUserId}`);
@@ -1630,14 +1630,14 @@ const unifiedTimeoutUser = async (groupId, targetUserId, targetIpAddress, timeou
         } else {
             console.log(`⏰ [UNIFIED-TIMEOUT] Anonymous user ${targetUserId} - skipping user timeout`);
         }
-        
+
         // Step 2: Always timeout the IP address
         console.log(`⏰ [UNIFIED-TIMEOUT] Timing out IP address ${targetIpAddress}`);
         await timeoutIpAddressHelper(groupId, targetUserId, targetIpAddress, timeoutDurationSeconds, timeoutByUserId);
-        
+
         console.log(`✅ [UNIFIED-TIMEOUT] Successfully timed out ${isAnonymousUser ? 'anonymous' : 'registered'} user ${targetUserId} and IP ${targetIpAddress}`);
         return true;
-        
+
     } catch (error) {
         console.log("❌ [UNIFIED-TIMEOUT] Error in unified timeout:", error);
         throw error;
@@ -1650,16 +1650,16 @@ const timeoutIpAddressHelper = async (groupId, userId, ipAddress, durationSecond
         const isAnonymousUser = userId > 100000000;
         const dbUserId = isAnonymousUser ? 'NULL' : userId;
         const expiresAt = new Date(Date.now() + (durationSeconds * 1000)).toISOString();
-        
+
         // Deactivate any existing timeouts
         await PG_query(`UPDATE ip_timeouts 
             SET is_active = false 
             WHERE group_id = ${groupId} AND ip_address = '${ipAddress}' AND is_active = true;`);
-        
+
         // Create new timeout
-        await PG_query(`INSERT INTO ip_timeouts (group_id,  ip_address, timeout_by, expires_at, is_active, created_at)
+        await PG_query(`INSERT INTO ip_timeouts (group_id,  ip_address, timeout_by, expires_at, is_active, timeout_at)
             VALUES (${groupId},  '${ipAddress}', ${timeoutBy}, '${expiresAt}', true, CURRENT_TIMESTAMP);`);
-        
+
         console.log(`⏰ [IP-TIMEOUT] Created IP timeout for ${ipAddress} until ${expiresAt}`);
     } catch (error) {
         console.log("❌ [IP-TIMEOUT] Error timing out IP:", error);
