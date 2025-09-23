@@ -265,5 +265,47 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
             }
         },
 
+        // Handle unban notification
+        handleUnbanNotification(data) {
+            console.log('✅ [Widget] Processing unban notification:', data);
+            
+            // Show notification to user
+            this.showNotification(`✅ ${data.message}`, 'success', 5000);
+            
+            // Clear any timeout-related state since they're now unbanned
+            if (data.groupId && this.groupId == data.groupId) {
+                try {
+                    const timeoutKey = `timeout_${data.groupId}`;
+                    localStorage.removeItem(timeoutKey);
+                    console.log('✅ [Widget] Cleared timeout state after unban');
+                } catch (error) {
+                    console.log('⚠️ [Widget] Error clearing timeout state:', error);
+                }
+                
+                // Hide timeout notification if it's showing
+                if (this.hideTimeoutNotification) {
+                    this.hideTimeoutNotification();
+                }
+                
+                // Re-enable message input if it was disabled
+                const messageInput = this.dialog?.querySelector('.pingbash-message-input');
+                if (messageInput) {
+                    messageInput.disabled = false;
+                    messageInput.placeholder = 'Type your message...';
+                    console.log('✅ [Widget] Re-enabled message input after unban');
+                }
+                
+                // Refresh messages to get latest state
+                setTimeout(() => {
+                    if (this.socket && this.socket.connected) {
+                        this.socket.emit('get group msg', {
+                            groupId: parseInt(this.groupId),
+                            token: this.isAuthenticated ? this.authenticatedToken : `anonusermemine${this.anonId}`
+                        });
+                    }
+                }, 500);
+            }
+        },
+
     });
 }

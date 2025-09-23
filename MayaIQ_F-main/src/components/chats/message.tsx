@@ -261,7 +261,7 @@ const Message: React.FC<MessageProps> = ({
                       content.includes(".gif") ? <img src={content} className="w-40" /> : 
                       <span dangerouslySetInnerHTML={{ __html: content.replace(
                         /(https?:\/\/[^\s]+)/g,
-                        '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>'
+                        '<a href="$1" target="_blank" rel="noopener noreferrer" style="color: #000000; text-decoration: underline;">$1</a>'
                       ) }} />}
               </div>
             </div>

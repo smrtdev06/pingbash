@@ -630,7 +630,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         const escaped = this.escapeHtml(content);
         const result = escaped.replace(
           /(https?:\/\/[^\s]+)/g,
-          '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>'
+          '<a href="$1" target="_blank" rel="noopener noreferrer" style="color: #000000; text-decoration: underline;">$1</a>'
         );
         console.log('🖼️ [Widget] Plain text result:', result);
         return result;

@@ -470,6 +470,12 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         this.handleTimeoutNotification(data);
       });
 
+      // Listen for unban notifications
+      this.socket.on('user unban notification', (data) => {
+        console.log('✅ [Widget] Unban notification received:', data);
+        this.handleUnbanNotification(data);
+      });
+
       // Listen for timeout success (via group updated or direct response)
       this.socket.on('timeout success', (data) => {
         console.log('✅ [Widget] Timeout successful:', data);

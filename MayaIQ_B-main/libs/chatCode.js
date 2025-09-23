@@ -63,6 +63,7 @@ module.exports = {
   UPDATE_GROUP_CHATBOX_STYLE: "udpate group chatbox style",
   TIMEOUT_USER: "timout user",
   USER_TIMEOUT_NOTIFICATION: "user timeout notification",
+  USER_UNBAN_NOTIFICATION: "user unban notification",
   GET_BLOCKED_USERS_INFO: "get blocked users info",
   BLOCK_USER: "block user",
   UNBLOCK_USER: "unblock user",

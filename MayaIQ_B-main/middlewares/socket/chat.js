@@ -682,6 +682,19 @@ module.exports = (socket, users) => {
                 await Controller.unbanGroupUser(groupId, userId);
             }
             
+            // Send unban notification to the unbanned user (if they're online)
+            if (targetUserSocket) {
+                const userSocket = sockets[targetUserSocket.Socket];
+                if (userSocket) {
+                    userSocket.emit(chatCode.USER_UNBAN_NOTIFICATION, { 
+                        groupId, 
+                        message: `You have been unbanned and can now send messages in this group.`,
+                        groupName: groupInfo.name || 'Group'
+                    });
+                    console.log(`📢 [UNBAN-NOTIFICATION] Sent unban notification to user ${userId}`);
+                }
+            }
+            
             const receivers = await Controller.getReceiverIdsOfGroup(groupId);
             const receiveUsers = users.filter(user => receivers?.find(receiverId => receiverId == user.ID));
             const receiverSocketIds = receiveUsers.map(user => user?.Socket);
@@ -736,6 +749,23 @@ module.exports = (socket, users) => {
             }
             // Save message to the database
             await Controller.unbanGroupUsers(groupId, userIds);
+            
+            // Send unban notifications to all unbanned users (if they're online)
+            userIds.forEach(userId => {
+                const targetUserSocket = users.find(user => user.ID == userId);
+                if (targetUserSocket) {
+                    const userSocket = sockets[targetUserSocket.Socket];
+                    if (userSocket) {
+                        userSocket.emit(chatCode.USER_UNBAN_NOTIFICATION, { 
+                            groupId, 
+                            message: `You have been unbanned and can now send messages in this group.`,
+                            groupName: groupInfo.name || 'Group'
+                        });
+                        console.log(`📢 [BULK-UNBAN-NOTIFICATION] Sent unban notification to user ${userId}`);
+                    }
+                }
+            });
+            
             const receivers = await Controller.getReceiverIdsOfGroup(groupId);
             // Find the receiver's and sender's socket IDs
             const receiveUsers = users.filter(user => receivers?.find(receiverId => receiverId == user.ID));
@@ -1240,12 +1270,20 @@ module.exports = (socket, users) => {
             
             // Broadcast updated pinned messages to all group members
             if (receiverSockets && receiverSockets.length > 0) {
-                receiverSockets.map(receiverSocket => {
-                    if (receiverSocket) {
-                        receiverSocket.emit(chatCode.GET_PINNED_MESSAGES, msgIds)
-                    }                    
+                receiverSockets.forEach((receiverSocket, index) => {
+                    try {
+                        if (receiverSocket && typeof receiverSocket.emit === 'function' && receiverSocket.connected) {
+                            receiverSocket.emit(chatCode.GET_PINNED_MESSAGES, msgIds);
+                            console.log(`📌 [Backend] Sent unpinned messages to user ${index + 1}/${receiverSockets.length}`);
+                        }
+                    } catch (error) {
+                        console.log(`📌 [Backend] Failed to send unpinned messages to user ${index + 1}:`, error.message);
+                    }
                 });                
             }
+            
+            // Also send to the requester (in case they're not in the receivers list)
+            socket.emit(chatCode.GET_PINNED_MESSAGES, msgIds);
             
             console.log(`📌 [Backend] Message ${msgId} unpinned successfully by user ${senderId}`);
         } catch (error) {

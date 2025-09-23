@@ -2531,7 +2531,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
 
       // Convert URLs to links
       const urlRegex = /(https?:\/\/[^\s]+)/g;
-      return escaped.replace(urlRegex, '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>');
+      return escaped.replace(urlRegex, '<a href="$1" target="_blank" rel="noopener noreferrer" style="color: #000000; text-decoration: underline;">$1</a>');
     },
     */
     // Helper method to format message time
