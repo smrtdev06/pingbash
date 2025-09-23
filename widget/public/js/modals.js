@@ -2363,7 +2363,18 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
       console.log('📌 [Widget] Sample message structure:', this.messages?.[0]);
       
       if (pinnedMessages.length === 0) {
+        console.log('📌 [Widget] No pinned messages found - showing empty state');
         container.innerHTML = '<div class="pingbash-no-pinned">No pinned messages found</div>';
+        
+        // Optional: Auto-close the pinned messages view when no messages are left
+        console.log('📌 [Widget] Considering auto-closing pinned messages view');
+        // Uncomment the next lines if you want to auto-close the view
+        // const menuView = this.dialog.querySelector('.pingbash-manage-chat-menu');
+        // if (menuView) {
+        //   container.parentElement.style.display = 'none';
+        //   menuView.style.display = 'block';
+        // }
+        
         return;
       }
 

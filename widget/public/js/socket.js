@@ -621,7 +621,21 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         console.log('📌 [Widget] Unpin message response:', response);
         if (response.success) {
           // Update local pinned messages list
-          this.pinnedMessageIds = this.pinnedMessageIds.filter(id => id !== response.messageId);
+          console.log('📌 [Widget] Before unpin - pinnedMessageIds:', this.pinnedMessageIds);
+          console.log('📌 [Widget] Removing message ID:', response.messageId, 'type:', typeof response.messageId);
+          
+          const beforeCount = this.pinnedMessageIds?.length || 0;
+          const targetMessageId = parseInt(response.messageId); // Ensure integer comparison
+          this.pinnedMessageIds = this.pinnedMessageIds.filter(id => {
+            const currentId = parseInt(id);
+            const shouldKeep = currentId !== targetMessageId;
+            console.log('📌 [Widget] Comparing:', currentId, '!==', targetMessageId, '=', shouldKeep);
+            return shouldKeep;
+          });
+          const afterCount = this.pinnedMessageIds?.length || 0;
+          
+          console.log('📌 [Widget] After unpin - pinnedMessageIds:', this.pinnedMessageIds);
+          console.log('📌 [Widget] Pinned count changed from', beforeCount, 'to', afterCount);
           
           // Update UI
           this.updatePinnedMessagesUI();
@@ -791,6 +805,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
     updatePinnedMessagesWidget() {
       console.log('📌 [Widget] Updating pinned messages widget', {
         pinnedIds: this.pinnedMessageIds,
+        pinnedIdsLength: this.pinnedMessageIds?.length,
         messagesCount: this.messages?.length || 0
       });
       
@@ -798,8 +813,11 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         // Hide pinned messages widget if no pinned messages
         const widget = document.querySelector('.pingbash-pinned-messages-widget');
         if (widget) {
+          console.log('📌 [Widget] Hiding pinned messages widget (no pinned messages)');
           widget.style.setProperty('display', 'none', 'important');
-          console.log('📌 [Widget] Widget hidden (no pinned messages)');
+          console.log('📌 [Widget] Widget hidden successfully');
+        } else {
+          console.log('📌 [Widget] No pinned messages widget found to hide');
         }
         return;
       }
