@@ -1238,6 +1238,48 @@ const updateGroupModerators = async (groupId, senderId, modIds) => {
     }
 }
 
+// Get all moderator and admin IDs for a group (for Mods Mode messaging)
+const getGroupModeratorsAndAdmins = async (groupId) => {
+    try {
+        // Get group creator (admin) and moderators (role_id = 2)
+        const result = await PG_query(`
+            SELECT 
+                g.creater_id as admin_id,
+                COALESCE(
+                    ARRAY_AGG(gu.user_id) FILTER (WHERE gu.role_id = 2), 
+                    ARRAY[]::integer[]
+                ) as moderator_ids
+            FROM groups g
+            LEFT JOIN group_users gu ON g.id = gu.group_id AND gu.role_id = 2
+            WHERE g.id = ${groupId}
+            GROUP BY g.id, g.creater_id;
+        `);
+        
+        if (result.rows.length > 0) {
+            const adminId = result.rows[0].admin_id;
+            const moderatorIds = result.rows[0].moderator_ids || [];
+            
+            // Combine admin and moderators, remove duplicates
+            const allModAdminIds = [adminId, ...moderatorIds].filter((id, index, arr) => 
+                id !== null && arr.indexOf(id) === index
+            );
+            
+            console.log(`📋 [MODS-MODE] Group ${groupId} moderators and admins:`, {
+                adminId,
+                moderatorIds,
+                combined: allModAdminIds
+            });
+            
+            return allModAdminIds;
+        }
+        
+        return [];
+    } catch (error) {
+        console.error('Error getting group moderators and admins:', error);
+        return [];
+    }
+}
+
 const clearGroupChat = async (groupId) => {
     try {
         await PG_query(`DELETE FROM "Messages" WHERE group_id = ${groupId};`)
@@ -1733,5 +1775,6 @@ module.exports = {
     banIpAddress,
     unbanIpAddress,
     unbanUserIpAddress,
-    timeoutIpAddressHelper
+    timeoutIpAddressHelper,
+    getGroupModeratorsAndAdmins
 }

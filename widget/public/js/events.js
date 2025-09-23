@@ -1732,7 +1732,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         const modes = {
           0: 'Public Mode - All users can see your messages',
           1: '1-on-1 Mode - Private messages with selected user + public messages',
-          2: 'Mods Mode - Send messages to moderators for help/reports'
+          2: 'Mods Mode - Send messages only to moderators and admins'
         };
         
         const statusMessage = modes[filterMode] || 'Unknown mode';

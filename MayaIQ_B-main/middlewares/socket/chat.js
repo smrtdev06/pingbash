@@ -272,8 +272,28 @@ module.exports = (socket, users) => {
                 sockets[socket.id] = socket;
             }
             
-            // Save message to the database
-            await Controller.saveGroupMsg(senderId, content, groupId, receiverId, data.parent_id);
+            // Handle Mods Mode messaging (receiverId = -1 indicates mods-only message)
+            if (receiverId === -1) {
+                console.log(`📋 [MODS-MODE] User ${senderId} sending message to moderators and admins in group ${groupId}`);
+                
+                // Get all moderator and admin IDs
+                const modAdminIds = await Controller.getGroupModeratorsAndAdmins(groupId);
+                console.log(`📋 [MODS-MODE] Found ${modAdminIds.length} moderators/admins:`, modAdminIds);
+                
+                if (modAdminIds.length > 0) {
+                    // Save the message once for each moderator/admin
+                    for (const modAdminId of modAdminIds) {
+                        await Controller.saveGroupMsg(senderId, content, groupId, modAdminId, data.parent_id);
+                        console.log(`📋 [MODS-MODE] Message saved for moderator/admin ${modAdminId}`);
+                    }
+                } else {
+                    console.log(`📋 [MODS-MODE] No moderators/admins found, saving as regular group message`);
+                    await Controller.saveGroupMsg(senderId, content, groupId, null, data.parent_id);
+                }
+            } else {
+                // Regular message (public or 1-on-1)
+                await Controller.saveGroupMsg(senderId, content, groupId, receiverId, data.parent_id);
+            }
             const receiverIds = await Controller.getReceiverIdsOfGroup(groupId);
             
             // Find the receiver's socket IDs
@@ -389,9 +409,29 @@ module.exports = (socket, users) => {
             
             console.log(`📨 [ANON-MSG] Starting message save and broadcast process`);
             
-            // Save message to the database
+            // Handle Mods Mode messaging for anonymous users (receiverId = -1 indicates mods-only message)
             console.log(`💾 [ANON-MSG] Saving message to database`);
-            await Controller.saveGroupMsg(anonId, content, groupId, receiverId, data.parent_id);
+            if (receiverId === -1) {
+                console.log(`📋 [ANON-MODS-MODE] Anonymous user ${anonId} sending message to moderators and admins in group ${groupId}`);
+                
+                // Get all moderator and admin IDs
+                const modAdminIds = await Controller.getGroupModeratorsAndAdmins(groupId);
+                console.log(`📋 [ANON-MODS-MODE] Found ${modAdminIds.length} moderators/admins:`, modAdminIds);
+                
+                if (modAdminIds.length > 0) {
+                    // Save the message once for each moderator/admin
+                    for (const modAdminId of modAdminIds) {
+                        await Controller.saveGroupMsg(anonId, content, groupId, modAdminId, data.parent_id);
+                        console.log(`📋 [ANON-MODS-MODE] Message saved for moderator/admin ${modAdminId}`);
+                    }
+                } else {
+                    console.log(`📋 [ANON-MODS-MODE] No moderators/admins found, saving as regular group message`);
+                    await Controller.saveGroupMsg(anonId, content, groupId, null, data.parent_id);
+                }
+            } else {
+                // Regular message (public or 1-on-1)
+                await Controller.saveGroupMsg(anonId, content, groupId, receiverId, data.parent_id);
+            }
             console.log(`✅ [ANON-MSG] Message saved to database`);
             
             // Get receiver IDs for the group

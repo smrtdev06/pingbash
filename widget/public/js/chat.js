@@ -1078,7 +1078,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
               return shouldShow;
             });
 
-          case 2: // Mods Mode - show messages to moderators (receiver_id = 1)
+          case 2: // Mods Mode - show messages to moderators/admins and public messages
             // Only available for moderators/admins (same as F version)
             if (!this.isModeratorOrAdmin()) {
               console.log('🔍 [Widget] Mods mode not available for regular user');
@@ -1090,22 +1090,23 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
             }
             
             return messages.filter(msg => {
-              const isToMods = msg.Receiver_Id == 1;
+              const isToCurrentUser = msg.Receiver_Id == currentUserId; // Messages sent in mods mode to this moderator/admin
               const isOwnMessage = msg.Sender_Id == currentUserId;
               const isPublic = msg.Receiver_Id == null;
-              const isToCurrentUser = msg.Receiver_Id == currentUserId;
               
-              // 🔒 IMPORTANT: Even in mods mode, don't show 1:1 messages between other users
-              // Only show: messages to mods, own messages, public messages, and messages TO current user
-              const shouldShow = isToMods || isOwnMessage || isPublic || isToCurrentUser;
+              // 🔒 IMPORTANT: In mods mode, show:
+              // - Public messages (receiver_id = null)
+              // - Own messages (sent by current user)  
+              // - Messages sent to current user (including mods-mode messages)
+              const shouldShow = isPublic || isOwnMessage || isToCurrentUser;
               
-              // Debug: Log filtered out private messages between other users
-              if (msg.Receiver_Id && msg.Receiver_Id !== currentUserId && msg.Receiver_Id !== 1 && msg.Sender_Id !== currentUserId) {
-                console.log('🔒 [Widget] Hiding private message between other users in mods mode:', {
+              // Debug: Log what we're showing/hiding
+              if (isToCurrentUser) {
+                console.log('📋 [Widget] Showing mods-mode message to current user:', {
                   msgId: msg.Id,
                   from: msg.Sender_Id,
                   to: msg.Receiver_Id,
-                  currentUser: currentUserId
+                  content: msg.Content?.substring(0, 50) + '...'
                 });
               }
               
@@ -1182,8 +1183,8 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
             
           case 2: // Mods Mode
             // All authenticated users can send to mods (for reporting, questions, etc.)
-            console.log('🔍 [Widget] Sending message to moderators');
-            return 1; // receiver_id = 1 for moderators
+            console.log('🔍 [Widget] Sending message to moderators and admins');
+            return -1; // receiver_id = -1 indicates mods-only message
             
           default:
             return null;

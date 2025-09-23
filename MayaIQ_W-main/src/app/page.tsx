@@ -1980,7 +1980,8 @@ const ChatsContent: React.FC = () => {
     }
     let receiverid = null
     if (filterMode == 2) {
-      receiverid = 1
+      // Mods Mode: Use -1 to indicate message should be sent to all moderators and admins
+      receiverid = -1
     } else if (filterMode == 1) {
       if (filteredUser?.id) {
         receiverid = filteredUser.id
