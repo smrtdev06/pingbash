@@ -537,10 +537,17 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
       this.socket.on('ip unban success', (data) => {
         console.log('✅ [Socket] IP unban success:', data);
         alert(`Successfully unbanned IP address: ${data.ipAddress}`);
-        // Refresh banned users/IP bans modal if open
-        const modal = document.querySelector('.pingbash-banned-users-modal');
-        if (modal) {
-          this.showBannedUsers(); // Refresh the modal
+        
+        // Refresh the appropriate modal if open
+        const bannedUsersModal = document.querySelector('.pingbash-banned-users-modal');
+        const ipBansModal = document.querySelector('.pingbash-ip-bans-modal');
+        
+        if (bannedUsersModal) {
+          this.showBannedUsers(); // Refresh the unified ban modal
+        }
+        
+        if (ipBansModal) {
+          this.refreshIpBans(); // Refresh the IP bans specific modal
         }
       });
 
@@ -1827,10 +1834,16 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         // Store IP bans data
         this.ipBans = ipBans;
         
-        // If banned users modal is showing, update it with IP bans too
-        const modal = document.querySelector('.pingbash-banned-users-modal');
-        if (modal) {
+        // Update modals if they are currently open
+        const bannedUsersModal = document.querySelector('.pingbash-banned-users-modal');
+        const ipBansModal = document.querySelector('.pingbash-ip-bans-modal');
+        
+        if (bannedUsersModal) {
           this.showBannedUsersModal(this.bannedUsers || [], ipBans);
+        }
+        
+        if (ipBansModal) {
+          this.showIpBansModal(ipBans); // Refresh IP bans specific modal
         }
       },
 
@@ -2028,6 +2041,27 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         document.body.insertAdjacentHTML('beforeend', modalHtml);
       },
 
+      // 🆕 Refresh IP bans modal
+      refreshIpBans() {
+        console.log('🔄 [Widget] Refreshing IP bans list');
+        
+        if (!this.socket || !this.socket.connected) {
+          alert("Not connected to server");
+          return;
+        }
+
+        if (!this.isAuthenticated) {
+          alert("Please log in to refresh IP bans");
+          return;
+        }
+
+        // Re-emit the get IP bans request
+        this.socket.emit('get ip bans', {
+          token: this.authenticatedToken,
+          groupId: parseInt(this.groupId)
+        });
+      },
+
       // Show IP bans modal
       showIpBansModal(ipBans) {
         console.log('🌐 [Widget] Showing IP bans modal with', ipBans.length, 'bans');
@@ -2055,26 +2089,64 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
               overflow-y: auto;
               width: 90%;
             ">
-              <h3>🌐 IP Bans (${ipBans.length})</h3>
+              <h3>🌐 IP Address Bans (${ipBans.length})</h3>
+              <p style="margin: 5px 0 15px 0; color: #666; font-size: 14px;">
+                Anonymous users are highlighted in yellow with unban options for admins/moderators.
+              </p>
               <div class="ip-bans-list">
                 ${ipBans.length > 0 ? 
-                  ipBans.map(ban => `
-                    <div style="
-                      padding: 10px;
-                      border: 1px solid #ddd;
-                      margin: 5px 0;
-                      border-radius: 4px;
-                    ">
-                      <div><strong>IP:</strong> ${ban.ip_address}</div>
-                      <div><strong>User:</strong> ${ban.banned_user_name || `User ${ban.user_id}`}</div>
-                      <div><strong>Banned by:</strong> ${ban.banned_by_name || `User ${ban.banned_by}`}</div>
-                      <div><strong>Date:</strong> ${new Date(ban.banned_at).toLocaleString()}</div>
-                    </div>
-                  `).join('') 
-                  : '<p>No IP bans found.</p>'
+                  ipBans.map(ban => {
+                    // Check if this is an anonymous user (user_id is null or > 100000000)
+                    const isAnonymousUser = !ban.user_id || ban.user_id > 100000000;
+                    const canUnban = window.pingbashWidget && window.pingbashWidget.canManageCensoredContent && window.pingbashWidget.canManageCensoredContent(); // Check if user has permission
+                    
+                    return `
+                      <div style="
+                        padding: 12px;
+                        border: 1px solid #ddd;
+                        margin: 8px 0;
+                        border-radius: 6px;
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                        background: ${isAnonymousUser ? '#fff3cd' : '#f8f9fa'};
+                        border-color: ${isAnonymousUser ? '#ffeaa7' : '#ddd'};
+                      ">
+                        <div style="flex: 1;">
+                          <div><strong>IP:</strong> ${ban.ip_address}</div>
+                          <div><strong>User:</strong> ${ban.banned_user_name || (isAnonymousUser ? `Anonymous User #${ban.user_id || 'Unknown'}` : `User ${ban.user_id}`)}</div>
+                          <div><strong>Banned by:</strong> ${ban.banned_by_name || `User ${ban.banned_by}`}</div>
+                          <div><strong>Date:</strong> ${new Date(ban.banned_at).toLocaleString()}</div>
+                          ${isAnonymousUser ? '<div style="color: #856404; font-weight: bold;">🎭 Anonymous User IP Ban</div>' : ''}
+                        </div>
+                        ${isAnonymousUser && canUnban ? `
+                          <div>
+                            <button onclick="window.pingbashWidget.unbanIpAddress('${ban.ip_address}')" style="
+                              background: #28a745;
+                              color: white;
+                              border: none;
+                              padding: 8px 16px;
+                              border-radius: 4px;
+                              cursor: pointer;
+                              font-weight: bold;
+                            ">🔓 Unban IP</button>
+                          </div>
+                        ` : ''}
+                      </div>
+                    `;
+                  }).join('') 
+                  : '<div style="text-align: center; padding: 40px; color: #666;"><p>🎉 No IP bans found!</p><p>All IP addresses are currently allowed.</p></div>'
                 }
               </div>
-              <div style="text-align: right; margin-top: 15px;">
+              <div style="text-align: right; margin-top: 15px; display: flex; gap: 10px; justify-content: flex-end;">
+                <button onclick="window.pingbashWidget.refreshIpBans()" style="
+                  background: #007bff;
+                  color: white;
+                  border: none;
+                  padding: 8px 16px;
+                  border-radius: 4px;
+                  cursor: pointer;
+                ">🔄 Refresh</button>
                 <button onclick="this.closest('.pingbash-ip-bans-modal').remove()" style="
                   background: #6c757d;
                   color: white;
