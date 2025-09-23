@@ -1008,9 +1008,8 @@ const banIpAddress = async (groupId, userId, ipAddress, bannedBy) => {
 // Helper function to unban IP address
 const unbanIpAddress = async (groupId, ipAddress) => {
     try {
-        await PG_query(`UPDATE ip_bans 
-            SET is_active = false, unbanned_at = CURRENT_TIMESTAMP
-            WHERE group_id = ${groupId} AND ip_address = '${ipAddress}' AND is_active = true;`);
+        await PG_query(`DELETE FROM ip_bans 
+            WHERE group_id = ${groupId} AND ip_address = '${ipAddress}'`);
         console.log(`✅ [IP-BAN] Unbanned IP address ${ipAddress}`);
     } catch (error) {
         console.log("❌ [IP-BAN] Error unbanning IP:", error);
