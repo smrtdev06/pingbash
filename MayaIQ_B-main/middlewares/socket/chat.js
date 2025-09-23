@@ -811,6 +811,86 @@ module.exports = (socket, users) => {
         }
     });
 
+    // 🆕 Unban IP address event handler
+    socket.on('unban ip address', async (data) => {
+        console.log("✅ [IP-UNBAN] Socket received unban IP request:", data);
+        
+        if (!data.groupId || !data.token || !data.ipAddress) {
+            socket.emit(chatCode.FORBIDDEN, httpCode.FORBIDDEN);
+            return;
+        }
+
+        const res = isExpired(socket, data, 'unban ip address');
+        if (res.expired) {
+            socket.emit(chatCode.EXPIRED);
+            return;
+        }
+
+        try {
+            const senderId = verifyUser(data.token);
+            const { groupId, ipAddress } = data;
+
+            // Check if sender has permission (group creator or moderator with ban permission)
+            const groupInfo = await Controller.getGroup(groupId);
+            if (!groupInfo) {
+                socket.emit(chatCode.FORBIDDEN, "Group not found");
+                return;
+            }
+
+            const isGroupCreator = groupInfo.creater_id === senderId;
+            
+            if (!isGroupCreator) {
+                // Check if user is moderator with ban permission
+                const groupMembers = await Controller.getGroupUsersData(groupId);
+                const senderMember = groupMembers.find(member => member.id === senderId);
+                const isModerator = senderMember && senderMember.role_id === 2 && senderMember.ban_user === true;
+                
+                if (!isModerator) {
+                    console.log(`IP unban attempt blocked: User ${senderId} is not authorized`);
+                    socket.emit(chatCode.FORBIDDEN, "Only group creators or moderators with ban permission can unban IP addresses");
+                    return;
+                }
+            }
+
+            console.log(`✅ [IP-UNBAN] User ${senderId} unbanning IP ${ipAddress} from group ${groupId}`);
+
+            // Unban the IP address
+            await Controller.unbanIpAddress(groupId, ipAddress);
+
+            // Send success response
+            socket.emit('ip unban success', { 
+                message: `IP address ${ipAddress} has been unbanned successfully`,
+                ipAddress: ipAddress
+            });
+
+            // Refresh IP bans list for all group members
+            const receivers = await Controller.getReceiverIdsOfGroup(groupId);
+            const receiveUsers = users.filter(user => receivers?.find(receiverId => receiverId == user.ID));
+            const receiverSocketIds = receiveUsers.map(user => user?.Socket);
+            const receiverSockets = receiverSocketIds.map(socketId => sockets[socketId]);
+
+            // Get updated IP bans list
+            const updatedIpBans = await Controller.getIpBans(groupId);
+            
+            if (receiverSockets && receiverSockets.length > 0) {
+                receiverSockets.forEach(receiverSocket => {
+                    if (receiverSocket) {
+                        receiverSocket.emit('get ip bans', updatedIpBans);
+                    }
+                });
+            }
+
+            console.log(`✅ [IP-UNBAN] Successfully unbanned IP ${ipAddress} and notified group members`);
+
+        } catch (error) {
+            console.error("❌ [IP-UNBAN] Error unbanning IP:", error);
+            socket.emit('ip unban error', { 
+                message: "Failed to unban IP address", 
+                error: error.message 
+            });
+        }
+    });
+
     socket.on(chatCode.UPDATE_CENSORED_CONTENTS, async (data) => {        
         if (!data.groupId || !data.token) {
             socket.emit(chatCode.FORBIDDEN, httpCode.FORBIDDEN);

@@ -21,8 +21,9 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
     },
 
   // EXACT COPY from widget.js - showBannedUsers method
+    // 🆕 Enhanced banned users with IP ban management
     showBannedUsers() {
-      console.log('🚫 [Widget] Showing banned users');
+      console.log('🚫 [Widget] Showing banned users and IP bans');
       if (!this.socket || !this.isConnected) return;
   
       if (!this.isAuthenticated) {
@@ -30,12 +31,40 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
         return;
       }
   
-      // Emit socket event to get banned users (same as W version)
-      console.log('🚫 [Widget] Requesting banned users with token:', this.authenticatedToken ? 'present' : 'missing');
+      // Emit socket events to get both banned users AND IP bans
+      console.log('🚫 [Widget] Requesting banned users and IP bans with token:', this.authenticatedToken ? 'present' : 'missing');
+      
+      // Get banned users
       this.socket.emit('get banned users', {
         groupId: parseInt(this.groupId),
         token: this.authenticatedToken
       });
+      
+      // 🆕 Get IP bans
+      this.socket.emit('get ip bans', {
+        groupId: parseInt(this.groupId),
+        token: this.authenticatedToken
+      });
+    },
+
+    // 🆕 Unban IP address
+    unbanIpAddress(ipAddress) {
+      console.log('✅ [Widget] Unbanning IP address:', ipAddress);
+      
+      if (!this.canManageCensoredContent()) {
+        alert('You do not have permission to unban IP addresses');
+        return;
+      }
+
+      if (confirm(`Are you sure you want to unban IP address ${ipAddress}?`)) {
+        console.log('📤 [Widget] Sending IP unban request');
+        
+        this.socket.emit('unban ip address', {
+          token: this.authenticatedToken,
+          groupId: parseInt(this.groupId),
+          ipAddress: ipAddress
+        });
+      }
     },
 
   // EXACT COPY from widget.js - showIpBans method
