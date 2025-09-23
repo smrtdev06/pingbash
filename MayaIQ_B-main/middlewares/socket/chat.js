@@ -1151,28 +1151,53 @@ module.exports = (socket, users) => {
                 sockets[socket.id] = socket;
             }
             // Save message to the database
+            console.log(`📌 [Backend] Pinning message ${msgId} in group ${groupId} by user ${senderId}`);
             await Controller.pinChatMessage(msgId, groupId, senderId);
             const msgIds = await Controller.getPinnedMsgInfo(groupId);
+            console.log(`📌 [Backend] Updated pinned messages for group ${groupId}:`, msgIds);
+            
+            // Send success response to the requester
+            socket.emit('pin message', { 
+                success: true, 
+                messageId: msgId,
+                message: 'Message pinned successfully'
+            });
+            
+            // Get all group members and their sockets
             const receivers = await Controller.getReceiverIdsOfGroup(groupId);
-            // Find the receiver's and sender's socket IDs
             const receiveUsers = users.filter(user => receivers?.find(receiverId => receiverId == user.ID));
+            const receiverSocketIds = receiveUsers.map(user => user?.Socket).filter(socketId => socketId);
+            const receiverSockets = receiverSocketIds.map(socketId => sockets[socketId]).filter(socket => socket && socket.connected);
             
-            const receiverSocketIds = receiveUsers.map(user => user?.Socket);            
-            const receiverSockets = receiverSocketIds.map(socketId => sockets[socketId]);
-            // Retrieve message list for the user         
+            console.log(`📌 [Backend] Broadcasting to ${receiverSockets.length} connected users`);
             
+            // Broadcast updated pinned messages to all group members (including sender)
             if (receiverSockets && receiverSockets.length > 0) {
-                // console.log("==receiverSocketIds ===>", receiverSocketIds);
-                receiverSockets.forEach(receiverSocket => {
-                    if (receiverSocket && typeof receiverSocket.emit === 'function') {
-                        receiverSocket.emit(chatCode.GET_PINNED_MESSAGES, msgIds);
+                receiverSockets.forEach((receiverSocket, index) => {
+                    try {
+                        if (receiverSocket && typeof receiverSocket.emit === 'function' && receiverSocket.connected) {
+                            receiverSocket.emit(chatCode.GET_PINNED_MESSAGES, msgIds);
+                            console.log(`📌 [Backend] Sent pinned messages to user ${index + 1}/${receiverSockets.length}`);
+                        }
+                    } catch (error) {
+                        console.log(`📌 [Backend] Failed to send pinned messages to user ${index + 1}:`, error.message);
                     }
                 });                
             }
+            
+            // Also send to the requester (in case they're not in the receivers list)
             socket.emit(chatCode.GET_PINNED_MESSAGES, msgIds);
+            
+            console.log(`📌 [Backend] Message ${msgId} pinned successfully and broadcast completed`);
         } catch (error) {
-            console.error("Error sending message:", error);
-            socket.emit(chatCode.SERVER_ERROR, httpCode.SERVER_ERROR);
+            console.error("📌 [Backend] Error pinning message:", error);
+            
+            // Send error response to the requester
+            socket.emit('pin message', { 
+                success: false, 
+                error: error.message || 'Failed to pin message',
+                messageId: data.msgId
+            });
         }
     });
 
@@ -1206,6 +1231,14 @@ module.exports = (socket, users) => {
             const receiverSockets = receiverSocketIds.map(socketId => sockets[socketId]);
             // Retrieve message list for the user         
             
+            // Send success response to the requester (same as F version expects)
+            socket.emit('unpin message', { 
+                success: true, 
+                messageId: msgId,
+                message: 'Message unpinned successfully'
+            });
+            
+            // Broadcast updated pinned messages to all group members
             if (receiverSockets && receiverSockets.length > 0) {
                 receiverSockets.map(receiverSocket => {
                     if (receiverSocket) {
@@ -1213,10 +1246,17 @@ module.exports = (socket, users) => {
                     }                    
                 });                
             }
-            // socket.emit(chatCode.GET_PINNED_MESSAGES, msgIds);
+            
+            console.log(`📌 [Backend] Message ${msgId} unpinned successfully by user ${senderId}`);
         } catch (error) {
-            console.error("Error sending message:", error);
-            socket.emit(chatCode.SERVER_ERROR, httpCode.SERVER_ERROR);
+            console.error("📌 [Backend] Error unpinning message:", error);
+            
+            // Send error response to the requester
+            socket.emit('unpin message', { 
+                success: false, 
+                error: error.message || 'Failed to unpin message',
+                messageId: data.msgId
+            });
         }
     });
 

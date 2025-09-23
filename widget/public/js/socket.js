@@ -614,7 +614,17 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         }
       });
 
-
+      // Pin message socket response
+      this.socket.on('pin message', (response) => {
+        console.log('📌 [Widget] Pin message response:', response);
+        if (response.success) {
+          console.log('📌 [Widget] Message pinned successfully');
+          // The pinned messages will be updated via the 'get pinned messages' event
+        } else {
+          console.error('📌 [Widget] Failed to pin message:', response.error);
+          //alert('Failed to pin message: ' + (response.error || 'Unknown error'));
+        }
+      });
 
       // Unpin message socket response
       this.socket.on('unpin message', (response) => {
