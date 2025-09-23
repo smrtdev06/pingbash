@@ -657,11 +657,8 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
           case 'copy-group-url':
             this.copyGroupUrl();
             break;
-          case 'add-to-favorites':
-            this.addToFavorites();
-            break;
-          case 'remove-from-favorites':
-            this.removeFromFavorites();
+          case 'toggle-favorites':
+            this.toggleFavorites();
             break;
           case 'hide-chat':
             this.hideChat();
@@ -719,14 +716,56 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
 
       addToFavorites() {
         console.log('⭐ [Widget] Adding group to favorites');
-        // TODO: Implement favorites functionality
-        this.showNotification('Added to favorites!', 'success');
+        if (this.socket && this.group) {
+          const token = localStorage.getItem('pingbash_token');
+          if (token) {
+            this.socket.emit('update fav groups', {
+              token: token,
+              groupId: this.group.id,
+              isMember: 1
+            });
+            console.log('⭐ [Widget] Sent add to favorites request for group:', this.group.id);
+          } else {
+            this.showNotification('Please log in to add favorites', 'error');
+          }
+        }
       },
 
       removeFromFavorites() {
         console.log('⭐ [Widget] Removing group from favorites');
-        // TODO: Implement favorites functionality  
-        this.showNotification('Removed from favorites!', 'success');
+        if (this.socket && this.group) {
+          const token = localStorage.getItem('pingbash_token');
+          if (token) {
+            this.socket.emit('update fav groups', {
+              token: token,
+              groupId: this.group.id,
+              isMember: 0
+            });
+            console.log('⭐ [Widget] Sent remove from favorites request for group:', this.group.id);
+          } else {
+            this.showNotification('Please log in to manage favorites', 'error');
+          }
+        }
+      },
+
+      toggleFavorites() {
+        const isCurrentlyFavorite = this.isGroupInFavorites();
+        
+        // Store the intended action for showing the correct notification later
+        this.pendingFavoritesAction = isCurrentlyFavorite ? 'remove' : 'add';
+        
+        if (isCurrentlyFavorite) {
+          this.removeFromFavorites();
+        } else {
+          this.addToFavorites();
+        }
+      },
+
+      isGroupInFavorites() {
+        if (!this.group || !this.favoriteGroups) {
+          return false;
+        }
+        return this.favoriteGroups.some(favGroup => favGroup.id === this.group.id);
       },
 
       hideChat() {
@@ -801,8 +840,49 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
 
       showNotification(message, type = 'info') {
         console.log(`📢 [Widget] Notification (${type}): ${message}`);
-        // Simple notification implementation
-        // In a real implementation, you might want a proper notification system
+        
+        // Create a simple toast notification
+        const notification = document.createElement('div');
+        notification.style.cssText = `
+          position: fixed;
+          top: 20px;
+          right: 20px;
+          background: ${type === 'success' ? '#d4edda' : type === 'error' ? '#f8d7da' : '#d1ecf1'};
+          color: ${type === 'success' ? '#155724' : type === 'error' ? '#721c24' : '#0c5460'};
+          border: 1px solid ${type === 'success' ? '#c3e6cb' : type === 'error' ? '#f5c6cb' : '#bee5eb'};
+          border-radius: 8px;
+          padding: 12px 16px;
+          font-size: 14px;
+          font-weight: 500;
+          z-index: 2147483647;
+          animation: slideIn 0.3s ease, fadeOut 0.3s ease 2.7s;
+        `;
+        notification.textContent = message;
+        
+        // Add animations
+        const style = document.createElement('style');
+        style.textContent = `
+          @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+          }
+          @keyframes fadeOut {
+            to { opacity: 0; transform: translateX(100%); }
+          }
+        `;
+        document.head.appendChild(style);
+        
+        document.body.appendChild(notification);
+        
+        // Remove after 3 seconds
+        setTimeout(() => {
+          if (notification.parentNode) {
+            notification.parentNode.removeChild(notification);
+          }
+          if (style.parentNode) {
+            style.parentNode.removeChild(style);
+          }
+        }, 3000);
       },
 
       // EXACT COPY from widget.js - handleImageUpload method

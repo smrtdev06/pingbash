@@ -454,6 +454,39 @@ module.exports = async (http) => {
             }
         });
 
+        // Event handler to update favorites (add/remove group from favorites)
+        socket.on(chatCode.UPDATE_FAV_GROUPS, async (data) => {
+            if (!data.token || !data.groupId || data.isMember === undefined) {
+                socket.emit(chatCode.FORBIDDEN, httpCode.FORBIDDEN);
+            } else {
+                const res = isExpired(socket, data, chatCode.UPDATE_FAV_GROUPS);
+                if (!res.expired) {
+                    try {
+                        // Verify user token and extract user ID
+                        const loggedId = verifyUser(data.token);
+                        
+                        // Update favorites status
+                        await Controller.updateGroupFavInfo(data.groupId, loggedId, data.isMember);
+                        
+                        // Get updated favorites list
+                        const favGroups = await Controller.getFavGroups(loggedId);
+                        
+                        // Emit success response and updated favorites list
+                        socket.emit(chatCode.UPDATE_FAV_GROUPS, { success: true });
+                        socket.emit(chatCode.GET_FAV_GROUPS, favGroups);
+                        
+                        console.log(`⭐ [FAVORITES] User ${loggedId} ${data.isMember ? 'added' : 'removed'} group ${data.groupId} ${data.isMember ? 'to' : 'from'} favorites`);
+                    } catch (error) {
+                        console.error("Error updating favorites:", error);
+                        socket.emit(chatCode.UPDATE_FAV_GROUPS, { success: false, message: error.message });
+                        socket.emit(chatCode.SERVER_ERROR, httpCode.SERVER_ERROR);
+                    }
+                } else {
+                    socket.emit(chatCode.EXPIRED);
+                }
+            }
+        });
+
         // Event handler to fetch group messages
         socket.on(chatCode.GET_GROUP_MSG, async (data) => {
             if (!data.token || !data.groupId) {

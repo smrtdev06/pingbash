@@ -39,6 +39,10 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         console.log('🔍 [Widget] Socket connected successfully!', this.socket.id);
         this.isConnected = true;
         this.updateConnectionStatus(true);
+        
+        // Initialize favorites array
+        this.favoriteGroups = this.favoriteGroups || [];
+        
         this.joinGroup();
 
         // For anonymous users, re-register on reconnection to ensure message reception
@@ -399,7 +403,55 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         if (groups && groups.length > 0) {
           console.log('🔍 [Widget] Fav groups:', groups.map(g => `${g.name} (ID: ${g.id})`).join(', '));
         }
+        this.favoriteGroups = groups || [];
+        console.log('⭐ [Widget] Stored favorite groups:', this.favoriteGroups.length);
+        
+        // Update menu visibility after receiving favorites data
+        if (this.updateMenuVisibility) {
+          this.updateMenuVisibility();
+        }
+        
         this.handleGroupsReceived(groups);
+      });
+
+      // Handle favorites update response
+      this.socket.on('update fav groups', (response) => {
+        console.log('⭐ [Widget] Favorites update response:', response);
+        
+        if (response.success !== false) {
+          // Refresh favorites list to get updated data
+          const token = localStorage.getItem('pingbash_token');
+          if (token) {
+            this.socket.emit('get fav groups', { token: token });
+          }
+          
+                    // Show success notification based on the intended action
+          let message = 'Favorites updated!';
+          if (this.pendingFavoritesAction === 'add') {
+            message = 'Added to favorites!';
+          } else if (this.pendingFavoritesAction === 'remove') {
+            message = 'Removed from favorites!';
+          }
+          
+          console.log('⭐ [Widget] Favorites action successful:', message);
+          
+          // Show success notification
+          if (this.showNotification) {
+            this.showNotification(message, 'success');
+          } else {
+            console.log('✅ [Widget] Favorites success:', message);
+          }
+          
+          // Clear the pending action
+          this.pendingFavoritesAction = null;
+        } else {
+          console.log('❌ [Widget] Failed to update favorites:', response.message || 'Unknown error');
+                     if (this.showNotification) {
+             this.showNotification('Failed to update favorites', 'error');
+           } else {
+             console.log('❌ [Widget] Favorites error: Failed to update favorites');
+           }
+        }
       });
 
       this.socket.on('get my groups', (groups) => {
