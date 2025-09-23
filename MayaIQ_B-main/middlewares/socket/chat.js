@@ -336,80 +336,121 @@ module.exports = (socket, users) => {
     });
 
     socket.on(chatCode.SEND_GROUP_MSG_ANON, async (data) => {  
-        console.log(`🚨 [EMERGENCY-DEBUG] Anonymous message handler triggered! Data:`, data);
+        console.log(`📨 [ANON-MSG] Anonymous message handler triggered! Data:`, JSON.stringify(data, null, 2));
         
         if (!data.groupId || !data.msg || !data.anonId) {
-            console.log(`🚨 [EMERGENCY-DEBUG] Missing required data in anonymous message`);
+            console.log(`❌ [ANON-MSG] Missing required data:`, {
+                hasGroupId: !!data.groupId,
+                hasMsg: !!data.msg,
+                hasAnonId: !!data.anonId,
+                data: data
+            });
             socket.emit(chatCode.FORBIDDEN, httpCode.FORBIDDEN);
             return;
         }
         
         try {
             const { anonId, msg: content, groupId, receiverId } = data;
-            console.log("== Anon Id ===", anonId);
-            console.log(`🚨 [EMERGENCY-DEBUG] Processing message from anonymous user ${anonId} to group ${groupId}`);
+            console.log(`📨 [ANON-MSG] Processing message from anonymous user ${anonId} to group ${groupId}`);
+            console.log(`📨 [ANON-MSG] Socket connected: ${socket.connected}, Socket ID: ${socket.id}`);
             
-            // IMMEDIATE IP BAN CHECK - TOP PRIORITY
-            const clientIp = getClientIpAddress(socket);
-            console.log(`🚨 [EMERGENCY-DEBUG] Anonymous user IP: ${clientIp}`);
-            
-            const isIpBanned = await Controller.checkIpBan(groupId, clientIp);
-            console.log(`🚨 [EMERGENCY-DEBUG] IP Ban Result: ${isIpBanned ? 'BANNED - BLOCKING!' : 'NOT BANNED - ALLOWING'}`);
-            
-            if (isIpBanned) {
-                console.log(`🚨 [EMERGENCY-BLOCK] BLOCKING BANNED ANONYMOUS USER ${anonId} WITH IP ${clientIp}`);
-                socket.emit(chatCode.FORBIDDEN, "You are banned from this group");
-                return;
-            }
-            
-            console.log(`🔍 Anonymous user ${anonId} sending message from IP ${clientIp} to group ${groupId}`);
-
-            // Check if IP is timed out from this group
-            const ipTimeoutCheck = await Controller.checkIpTimeout(groupId, clientIp);
-            if (ipTimeoutCheck.isTimedOut) {
-                console.log(`⏰ IP TIMEOUT BLOCKING ANON MESSAGE: IP ${clientIp} is timed out from group ${groupId} until ${ipTimeoutCheck.expiresAt}`);
-                socket.emit(chatCode.FORBIDDEN, `You are temporarily restricted from sending messages. Restriction expires at ${new Date(ipTimeoutCheck.expiresAt).toLocaleString()}`);
-                return;
-            }
-            
-            // Add user to users list if not already present
-            if (!users.find(user => user.ID == anonId)) {
+            // Ensure anonymous user is registered in users array
+            const existingUser = users.find(user => user.ID == anonId);
+            if (!existingUser) {
+                console.log(`🔄 [ANON-MSG] Registering anonymous user ${anonId} in users array`);
                 users.push({ ID: anonId, Socket: socket.id });
+                sockets[socket.id] = socket;
+            } else if (existingUser.Socket !== socket.id) {
+                console.log(`🔄 [ANON-MSG] Updating socket ID for anonymous user ${anonId}: ${existingUser.Socket} -> ${socket.id}`);
+                existingUser.Socket = socket.id;
                 sockets[socket.id] = socket;
             }
             
+            // Check IP ban status
+            const clientIp = getClientIpAddress(socket);
+            console.log(`🔍 [ANON-MSG] Checking IP ban for ${clientIp} in group ${groupId}`);
+            
+            const isIpBanned = await Controller.checkIpBan(groupId, clientIp);
+            if (isIpBanned) {
+                console.log(`🚫 [ANON-MSG] BLOCKING: IP ${clientIp} is banned from group ${groupId}`);
+                socket.emit(chatCode.FORBIDDEN, "You are banned from this group");
+                return;
+            }
+            console.log(`✅ [ANON-MSG] IP ${clientIp} is not banned - proceeding`);
+            
+            // Check IP timeout status  
+            const ipTimeoutCheck = await Controller.checkIpTimeout(groupId, clientIp);
+            if (ipTimeoutCheck.isTimedOut) {
+                console.log(`⏰ [ANON-MSG] BLOCKING: IP ${clientIp} is timed out until ${ipTimeoutCheck.expiresAt}`);
+                socket.emit(chatCode.FORBIDDEN, `You are temporarily restricted from sending messages. Restriction expires at ${new Date(ipTimeoutCheck.expiresAt).toLocaleString()}`);
+                return;
+            }
+            console.log(`✅ [ANON-MSG] IP ${clientIp} is not timed out - proceeding`);
+            
+            console.log(`📨 [ANON-MSG] Starting message save and broadcast process`);
+            
             // Save message to the database
+            console.log(`💾 [ANON-MSG] Saving message to database`);
             await Controller.saveGroupMsg(anonId, content, groupId, receiverId, data.parent_id);
+            console.log(`✅ [ANON-MSG] Message saved to database`);
+            
+            // Get receiver IDs for the group
             const receiverIds = await Controller.getReceiverIdsOfGroup(groupId);
+            console.log(`👥 [ANON-MSG] Found ${receiverIds.length} group members:`, receiverIds);
             
-            // Find the receiver's socket IDs
+            // Find active receiver sockets
             const receiveUsers = users.filter(user => receiverIds.find(recId => recId == user.ID));
-            const receiverSocketIds = receiveUsers.map(user => user?.Socket);
-            const receiverSockets = receiverSocketIds.map(socketId => sockets[socketId]).filter(socket => socket);
+            const receiverSocketIds = receiveUsers.map(user => user?.Socket).filter(socketId => socketId);
+            const receiverSockets = receiverSocketIds.map(socketId => sockets[socketId]).filter(socket => socket && socket.connected);
+            
+            console.log(`🔌 [ANON-MSG] Active receivers: ${receiveUsers.length} users, ${receiverSockets.length} connected sockets`);
 
-            // Retrieve message list for the user
+            // Retrieve updated message list
             const msgList = await Controller.getGroupMsg(groupId);
+            console.log(`📨 [ANON-MSG] Retrieved ${msgList.length} messages from database`);
             
-            console.log("======receiverIds =======", receiverIds);
-            console.log("======= users ==========", users.length);
-            console.log("======= receiverSocketIds =======", receiverSocketIds);
-            
-            // Send message to all receivers
+            // Send message to all connected receivers
+            let successCount = 0;
             if (receiverSockets && receiverSockets.length > 0) {
-                receiverSockets.forEach(receiverSocket => {
-                    if (receiverSocket && typeof receiverSocket.emit === 'function') {
-                        receiverSocket.emit(chatCode.SEND_GROUP_MSG, msgList);
+                receiverSockets.forEach((receiverSocket, index) => {
+                    try {
+                        if (receiverSocket && typeof receiverSocket.emit === 'function' && receiverSocket.connected) {
+                            receiverSocket.emit(chatCode.SEND_GROUP_MSG, msgList);
+                            successCount++;
+                            console.log(`📤 [ANON-MSG] Sent to receiver ${index + 1}/${receiverSockets.length}`);
+                        }
+                    } catch (error) {
+                        console.log(`❌ [ANON-MSG] Failed to send to receiver ${index + 1}:`, error.message);
                     }
                 });
             }
             
             // Send message back to sender
-            socket.emit(chatCode.SEND_GROUP_MSG, msgList);
-            console.log(`✅ Anonymous message sent successfully by ${anonId} to group ${groupId}`);
+            try {
+                if (socket && socket.connected) {
+                    socket.emit(chatCode.SEND_GROUP_MSG, msgList);
+                    console.log(`📤 [ANON-MSG] Sent message back to sender`);
+                }
+            } catch (error) {
+                console.log(`❌ [ANON-MSG] Failed to send to sender:`, error.message);
+            }
+            
+            console.log(`✅ [ANON-MSG] Message broadcast complete: ${successCount}/${receiverSockets.length} receivers notified`);
             
         } catch (error) {
-            console.error("Error sending anonymous group message:", error);
-            socket.emit(chatCode.SERVER_ERROR, httpCode.SERVER_ERROR);
+            console.error(`❌ [ANON-MSG] Error sending anonymous message from ${data.anonId}:`, error);
+            console.error(`❌ [ANON-MSG] Error details:`, {
+                message: error.message,
+                stack: error.stack?.substring(0, 500),
+                data: data
+            });
+            
+            // Send specific error response
+            socket.emit('message error', { 
+                message: "Failed to send message", 
+                error: error.message,
+                type: 'anonymous'
+            });
         }
     });
 
