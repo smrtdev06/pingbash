@@ -748,47 +748,42 @@ module.exports = (socket, users) => {
                 sockets[socket.id] = socket;
             }
             
-            // Check if this is an anonymous user by checking token format
-            const isAnonymousUser = data.token && data.token.includes('anonuser');
+            // 🆕 Use unified timeout system (just like ban system)
+            // Get the user's IP address from their socket connection
+            const timeoutUser = users.find(user => user.ID == targetUserId);
+            let timeoutUserIp = null;
             
-            if (isAnonymousUser) {
-                // For anonymous users, apply IP-based timeout
-                const timeoutUser = users.find(user => user.ID == userId);
-                if (timeoutUser) {
-                    const timeoutSocket = sockets[timeoutUser.Socket];
-                    if (timeoutSocket) {
-                        const clientIp = getClientIpAddress(timeoutSocket);
-                        await Controller.timeoutIpAddress(groupId, clientIp, senderId);
-                        console.log(`⏰ Anonymous user ${targetUserId} (IP: ${clientIp}) timed out in group ${groupId} by ${senderId} for ${chatCode.TIMEOUT_MINS} minutes`);
-                        
-                        // Send notification to the timed out anonymous user
-                        timeoutSocket.emit(chatCode.USER_TIMEOUT_NOTIFICATION, { 
-                            groupId, 
-                            timeoutMinutes: chatCode.TIMEOUT_MINS,
-                            message: `You have been temporarily restricted from sending messages for ${chatCode.TIMEOUT_MINS} minutes.`,
-                            expiresAt: new Date(Date.now() + chatCode.TIMEOUT_MINS * 60 * 1000).toISOString()
-                        });
-                        console.log(`📢 Timeout notification sent to anonymous user ${userId} (IP: ${clientIp})`);
-                    }
+            if (timeoutUser) {
+                const userSocket = sockets[timeoutUser.Socket];
+                if (userSocket) {
+                    timeoutUserIp = getClientIpAddress(userSocket);
                 }
+            }
+
+            console.log(`⏰ [TIMEOUT-REQUEST] User ${senderId} timing out user ${targetUserId} (IP: ${timeoutUserIp}) in group ${groupId}`);
+
+            // Use unified timeout system (timeout duration in seconds)
+            const timeoutDurationSeconds = chatCode.TIMEOUT_MINS * 60;
+            
+            if (timeoutUserIp) {
+                console.log(`⏰ [UNIFIED-TIMEOUT] Timing out user ${targetUserId} and IP ${timeoutUserIp} using unified system`);
+                await Controller.unifiedTimeoutUser(groupId, targetUserId, timeoutUserIp, timeoutDurationSeconds, senderId);
             } else {
-                // For verified users, apply user-based timeout
-                await Controller.timeoutUser(groupId, targetUserId);
-                console.log(`⏰ User ${targetUserId} timed out in group ${groupId} by ${senderId} for ${chatCode.TIMEOUT_MINS} minutes`);
-                
-                // Send notification to the timed out user
-                const timeoutUser = users.find(user => user.ID == userId);
-                if (timeoutUser) {
-                    const timeoutSocket = sockets[timeoutUser.Socket];
-                    if (timeoutSocket) {
-                        timeoutSocket.emit(chatCode.USER_TIMEOUT_NOTIFICATION, { 
-                            groupId, 
-                            timeoutMinutes: chatCode.TIMEOUT_MINS,
-                            message: `You have been temporarily restricted from sending messages for ${chatCode.TIMEOUT_MINS} minutes.`,
-                            expiresAt: new Date(Date.now() + chatCode.TIMEOUT_MINS * 60 * 1000).toISOString()
-                        });
-                        console.log(`📢 Timeout notification sent to user ${userId}`);
-                    }
+                console.log(`⏰ [FALLBACK-TIMEOUT] Timing out user ${targetUserId} only (IP not available)`);
+                await Controller.timeoutUser(groupId, targetUserId, timeoutDurationSeconds);
+            }
+
+            // Send notification to the timed out user
+            if (timeoutUser) {
+                const userSocket = sockets[timeoutUser.Socket];
+                if (userSocket) {
+                    userSocket.emit(chatCode.USER_TIMEOUT_NOTIFICATION, { 
+                        groupId, 
+                        timeoutMinutes: chatCode.TIMEOUT_MINS,
+                        message: `You have been temporarily restricted from sending messages for ${chatCode.TIMEOUT_MINS} minutes.`,
+                        expiresAt: new Date(Date.now() + timeoutDurationSeconds * 1000).toISOString()
+                    });
+                    console.log(`📢 [UNIFIED-TIMEOUT] Timeout notification sent to user ${targetUserId} (IP: ${timeoutUserIp || 'unknown'})`);
                 }
             }
             
@@ -804,10 +799,21 @@ module.exports = (socket, users) => {
             if (receiverSockets && receiverSockets.length > 0) {
                 receiverSockets.map(receiverSocket => receiverSocket && receiverSocket.emit(chatCode.GROUP_UPDATED, updatedGroup));
             }
-            socket.emit(chatCode.GROUP_UPDATED, updatedGroup)
+            socket.emit(chatCode.GROUP_UPDATED, updatedGroup);
+
+            // 🆕 Send success response (like ban system)
+            socket.emit('timeout success', { 
+                message: `User ${targetUserId} has been timed out for ${chatCode.TIMEOUT_MINS} minutes`,
+                userId: targetUserId,
+                timeoutMinutes: chatCode.TIMEOUT_MINS
+            });
         } catch (error) {
-            console.error("Error sending message:", error);
-            socket.emit(chatCode.SERVER_ERROR, httpCode.SERVER_ERROR);
+            console.error("❌ [UNIFIED-TIMEOUT] Error timing out user:", error);
+            socket.emit('timeout error', { 
+                message: "Failed to timeout user", 
+                error: error.message,
+                userId: data.userId
+            });
         }
     });
 
