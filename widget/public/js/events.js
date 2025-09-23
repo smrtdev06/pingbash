@@ -83,6 +83,24 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
           }
         });
 
+        // Settings menu
+        const settingsBtn = this.dialog.querySelector('.pingbash-settings-btn');
+        const settingsDropdown = this.dialog.querySelector('.pingbash-settings-dropdown');
+
+        settingsBtn?.addEventListener('click', (e) => {
+          e.stopPropagation();
+          this.toggleSettingsMenu();
+          
+          // Close hamburger dropdown if open
+          if (hamburgerDropdown) {
+            hamburgerDropdown.style.display = 'none';
+          }
+          // Close filter dropdown if open
+          if (filterDropdown) {
+            filterDropdown.style.display = 'none';
+          }
+        });
+
         // Hamburger menu items
         const menuItems = this.dialog.querySelectorAll('.pingbash-menu-item');
         menuItems.forEach(item => {
@@ -90,6 +108,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
             const action = item.dataset.action;
             this.handleMenuAction(action);
             this.hideHamburgerMenu();
+            this.hideSettingsMenu();
           });
         });
 
@@ -97,6 +116,9 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         document.addEventListener('click', (e) => {
           if (!hamburgerBtn?.contains(e.target) && !hamburgerDropdown?.contains(e.target)) {
             this.hideHamburgerMenu();
+          }
+          if (!settingsBtn?.contains(e.target) && !settingsDropdown?.contains(e.target)) {
+            this.hideSettingsMenu();
           }
           if (!e.target.closest('.pingbash-filter-container')) {
             if (filterDropdown) {
@@ -608,26 +630,59 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         dropdown.style.display = 'none';
       },
 
+      // Settings menu methods
+      toggleSettingsMenu() {
+        const dropdown = this.dialog.querySelector('.pingbash-settings-dropdown');
+        if (dropdown) {
+          dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
+        }
+      },
+
+      hideSettingsMenu() {
+        const dropdown = this.dialog.querySelector('.pingbash-settings-dropdown');
+        if (dropdown) {
+          dropdown.style.display = 'none';
+        }
+      },
+
       // EXACT COPY from widget.js - handleMenuAction method
       handleMenuAction(action) {
         console.log('🍔 [Widget] Menu action:', action);
 
         switch (action) {
-          case 'group-info':
-            this.showGroupInfo();
-            break;
-          case 'members':
-            this.showMembers();
-            break;
-          case 'banned-users':
-            this.showBannedUsers();
-            break;
-          case 'ip-bans':
-            this.showIpBans();
-            break;
+          // Hamburger menu actions (general)
           case 'chat-rules':
             this.showChatRules();
             break;
+          case 'copy-group-url':
+            this.copyGroupUrl();
+            break;
+          case 'add-to-favorites':
+            this.addToFavorites();
+            break;
+          case 'remove-from-favorites':
+            this.removeFromFavorites();
+            break;
+          case 'hide-chat':
+            this.hideChat();
+            break;
+          case 'show-chat':
+            this.showChat();
+            break;
+          case 'toggle-theme':
+            this.toggleTheme();
+            break;
+          case 'logout':
+            this.logout();
+            break;
+          case 'login':
+            this.showSigninModal();
+            break;
+          case 'close':
+            this.closeDialog();
+            break;
+          
+          // Settings menu actions (admin tools)
           case 'chat-limitations':
             this.showChatLimitations();
             break;
@@ -640,13 +695,114 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
           case 'censored-content':
             this.showCensoredContent();
             break;
-          case 'settings':
-            this.showSettings();
+          case 'banned-users':
+            this.showBannedUsers();
             break;
-          case 'close':
-            this.closeDialog();
+          case 'ip-bans':
+            this.showIpBans();
             break;
         }
+      },
+
+      // New menu action handlers
+      copyGroupUrl() {
+        const groupUrl = window.location.href;
+        navigator.clipboard.writeText(groupUrl).then(() => {
+          console.log('📋 [Widget] Group URL copied to clipboard');
+          // Show success notification
+          this.showNotification('Group URL copied to clipboard!', 'success');
+        }).catch(err => {
+          console.error('❌ [Widget] Failed to copy URL:', err);
+          this.showNotification('Failed to copy URL', 'error');
+        });
+      },
+
+      addToFavorites() {
+        console.log('⭐ [Widget] Adding group to favorites');
+        // TODO: Implement favorites functionality
+        this.showNotification('Added to favorites!', 'success');
+      },
+
+      removeFromFavorites() {
+        console.log('⭐ [Widget] Removing group from favorites');
+        // TODO: Implement favorites functionality  
+        this.showNotification('Removed from favorites!', 'success');
+      },
+
+      hideChat() {
+        console.log('👁️ [Widget] Hiding chat');
+        // TODO: Implement hide chat functionality
+        this.showNotification('Chat hidden', 'info');
+      },
+
+      showChat() {
+        console.log('👁️ [Widget] Showing chat');
+        // TODO: Implement show chat functionality
+        this.showNotification('Chat shown', 'info');
+      },
+
+      toggleTheme() {
+        console.log('🌓 [Widget] Toggling theme');
+        const isDarkMode = this.isDarkMode || false;
+        this.isDarkMode = !isDarkMode;
+        
+        // Update theme icons and text
+        const lightIcon = this.dialog.querySelector('.pingbash-theme-icon-light');
+        const darkIcon = this.dialog.querySelector('.pingbash-theme-icon-dark');
+        const themeText = this.dialog.querySelector('.pingbash-theme-text');
+        
+        if (this.isDarkMode) {
+          // Switch to dark mode
+          lightIcon.style.display = 'none';
+          darkIcon.style.display = 'inline';
+          themeText.textContent = 'Light Mode';
+          this.applyDarkMode();
+          localStorage.setItem('pingbash_theme', 'dark');
+          this.showNotification('Dark mode enabled', 'info');
+        } else {
+          // Switch to light mode
+          lightIcon.style.display = 'inline';
+          darkIcon.style.display = 'none';
+          themeText.textContent = 'Dark Mode';
+          this.applyLightMode();
+          localStorage.setItem('pingbash_theme', 'light');
+          this.showNotification('Light mode enabled', 'info');
+        }
+      },
+
+      applyDarkMode() {
+        console.log('🌙 [Widget] Applying dark mode styles');
+        // Add dark mode class to dialog
+        this.dialog.classList.add('pingbash-dark-mode');
+      },
+
+      applyLightMode() {
+        console.log('☀️ [Widget] Applying light mode styles');
+        // Remove dark mode class from dialog
+        this.dialog.classList.remove('pingbash-dark-mode');
+      },
+
+      logout() {
+        console.log('🚪 [Widget] Logging out');
+        // Clear authentication data
+        localStorage.removeItem('pingbash_token');
+        localStorage.removeItem('pingbash_user_id');
+        localStorage.removeItem('anonToken');
+        
+        // Disconnect socket
+        if (this.socket) {
+          this.socket.disconnect();
+        }
+        
+        // Show signin modal
+        this.showSigninModal();
+        this.showNotification('Logged out successfully', 'info');
+      },
+
+      showNotification(message, type = 'info') {
+        console.log(`📢 [Widget] Notification (${type}): ${message}`);
+        // Simple notification implementation
+        // In a real implementation, you might want a proper notification system
       },
 
       // EXACT COPY from widget.js - handleImageUpload method

@@ -1324,6 +1324,101 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
           console.log('👥 [Widget] Hiding Censored Content menu item');
         }
       }
+      
+      // Update Banned Users menu item (only group owner can access)
+      const bannedUsersItem = this.dialog.querySelector('.pingbash-menu-item[data-action="banned-users"]');
+      if (bannedUsersItem) {
+        const currentUserId = this.getCurrentUserId();
+        const isGroupOwner = this.group && currentUserId === this.group.creater_id;
+        
+        if (isGroupOwner) {
+          bannedUsersItem.style.display = 'flex';
+          console.log('👥 [Widget] Showing Banned Users menu item for group owner');
+        } else {
+          bannedUsersItem.style.display = 'none';
+          console.log('👥 [Widget] Hiding Banned Users menu item');
+        }
+      }
+      
+      // Update IP Bans menu item (only group owner can access)
+      const ipBansItem = this.dialog.querySelector('.pingbash-menu-item[data-action="ip-bans"]');
+      if (ipBansItem) {
+        const currentUserId = this.getCurrentUserId();
+        const isGroupOwner = this.group && currentUserId === this.group.creater_id;
+        
+        if (isGroupOwner) {
+          ipBansItem.style.display = 'flex';
+          console.log('👥 [Widget] Showing IP Bans menu item for group owner');
+        } else {
+          ipBansItem.style.display = 'none';
+          console.log('👥 [Widget] Hiding IP Bans menu item');
+        }
+      }
+      
+      // Show/hide settings container based on permissions
+      const settingsContainer = this.dialog.querySelector('.pingbash-settings-container');
+      if (settingsContainer) {
+        const hasAnyPermission = canManageModeratorPermission || canManageChatLimitations || 
+                                 canManageChat || canManageCensoredContent || 
+                                 (this.group && this.getCurrentUserId() === this.group.creater_id);
+        
+        if (hasAnyPermission) {
+          settingsContainer.style.display = 'flex';
+          console.log('⚙️ [Widget] Showing settings container (user has admin permissions)');
+        } else {
+          settingsContainer.style.display = 'none';
+          console.log('⚙️ [Widget] Hiding settings container (no admin permissions)');
+        }
+      }
+      
+      // Update hamburger menu items based on user state
+      this.updateHamburgerMenuItems();
+    },
+    
+    updateHamburgerMenuItems() {
+      console.log('🍔 [Widget] Updating hamburger menu items based on user state');
+      
+      // Add to favorites / Remove from favorites
+      const addFavItem = this.dialog.querySelector('.pingbash-menu-item[data-action="add-to-favorites"]');
+      const removeFavItem = this.dialog.querySelector('.pingbash-menu-item[data-action="remove-from-favorites"]');
+      
+      if (this.isAuthenticated) {
+        // For authenticated users, show favorites options
+        // TODO: Check if already in favorites and toggle accordingly
+        if (addFavItem) addFavItem.style.display = 'flex';
+        if (removeFavItem) removeFavItem.style.display = 'none';
+        console.log('⭐ [Widget] Showing add to favorites for authenticated user');
+      } else {
+        // Hide favorites for anonymous users
+        if (addFavItem) addFavItem.style.display = 'none';
+        if (removeFavItem) removeFavItem.style.display = 'none';
+        console.log('⭐ [Widget] Hiding favorites options for anonymous user');
+      }
+      
+      // Login / Logout buttons
+      const loginItem = this.dialog.querySelector('.pingbash-menu-item[data-action="login"]');
+      const logoutItem = this.dialog.querySelector('.pingbash-menu-item[data-action="logout"]');
+      
+      if (this.isAuthenticated) {
+        // Show logout for authenticated users
+        if (loginItem) loginItem.style.display = 'none';
+        if (logoutItem) logoutItem.style.display = 'flex';
+        console.log('🚪 [Widget] Showing logout option for authenticated user');
+      } else {
+        // Show login for anonymous users
+        if (loginItem) loginItem.style.display = 'flex';
+        if (logoutItem) logoutItem.style.display = 'none';
+        console.log('🚪 [Widget] Showing login option for anonymous user');
+      }
+      
+      // Hide/Show Chat toggles
+      const hideChatItem = this.dialog.querySelector('.pingbash-menu-item[data-action="hide-chat"]');
+      const showChatItem = this.dialog.querySelector('.pingbash-menu-item[data-action="show-chat"]');
+      
+      // TODO: Implement hide/show chat state management
+      // For now, default to showing "hide chat"
+      if (hideChatItem) hideChatItem.style.display = 'flex';
+      if (showChatItem) showChatItem.style.display = 'none';
     },
 
     // Debug function to manually test menu visibility

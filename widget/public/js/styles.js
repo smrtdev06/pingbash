@@ -427,6 +427,89 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
           margin: 8px 0;
         }
         
+        /* Settings Menu Styles */
+        .pingbash-settings-container {
+          position: relative;
+          margin-right: 12px;
+        }
+        
+        .pingbash-settings-btn {
+          background: none;
+          border: none;
+          cursor: pointer;
+          color: #666;
+          transition: color 0.2s ease;
+          padding: 6px;
+          border-radius: 4px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        
+        .pingbash-settings-btn:hover {
+          color: #007bff;
+          background: rgba(0,123,255,0.1);
+        }
+        
+        .pingbash-settings-dropdown {
+          position: absolute;
+          top: 100%;
+          right: 0;
+          background: white;
+          border: 1px solid #ddd;
+          border-radius: 8px;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+          min-width: 200px;
+          z-index: 2147483647;
+          margin-top: 4px;
+          padding: 8px 0;
+        }
+        
+        /* Dark Mode Styles */
+        .pingbash-dark-mode {
+          background: #1a1a1a !important;
+          color: #e0e0e0 !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-header {
+          background: #2d2d2d !important;
+          border-bottom-color: #444 !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-messages-area {
+          background: #1a1a1a !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-message {
+          background: #2d2d2d !important;
+          border-color: #444 !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-message-input {
+          background: #2d2d2d !important;
+          border-color: #444 !important;
+          color: #e0e0e0 !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-hamburger-dropdown,
+        .pingbash-dark-mode .pingbash-settings-dropdown {
+          background: #2d2d2d !important;
+          border-color: #444 !important;
+          color: #e0e0e0 !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-menu-item {
+          color: #e0e0e0 !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-menu-item:hover {
+          background: rgba(255,255,255,0.1) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-menu-divider {
+          background: #444 !important;
+        }
+        
         /* W Version Messages Area */
         .pingbash-messages-area {
           flex: 1;
