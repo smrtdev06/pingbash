@@ -538,16 +538,14 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         console.log('✅ [Socket] IP unban success:', data);
         alert(`Successfully unbanned IP address: ${data.ipAddress}`);
         
-        // Refresh the appropriate modal if open
-        const bannedUsersModal = document.querySelector('.pingbash-banned-users-modal');
+        // Only refresh IP bans modal if it's open (banned users modal doesn't contain IP bans)
         const ipBansModal = document.querySelector('.pingbash-ip-bans-modal');
         
-        if (bannedUsersModal) {
-          this.showBannedUsers(); // Refresh the unified ban modal
-        }
-        
         if (ipBansModal) {
+          console.log('🔄 [Socket] Refreshing IP bans modal after successful unban');
           this.refreshIpBans(); // Refresh the IP bans specific modal
+        } else {
+          console.log('🔄 [Socket] IP unban successful but IP bans modal not open');
         }
       });
 
@@ -1818,11 +1816,11 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         // Store banned users data
         this.bannedUsers = bannedUsers;
         
-        // Show unified ban modal with both users and IPs
-        this.showBannedUsersModal(bannedUsers, this.ipBans || []);
+        // Show banned users modal (users only)
+        this.showBannedUsersModal(bannedUsers);
       },
 
-      // 🆕 Handle IP bans response
+      // 🔄 Handle IP bans response (don't auto-show modal)
       handleIpBansReceived(ipBans) {
         console.log('🌐 [Widget] Processing IP bans:', ipBans);
         
@@ -1834,16 +1832,14 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         // Store IP bans data
         this.ipBans = ipBans;
         
-        // Update modals if they are currently open
-        const bannedUsersModal = document.querySelector('.pingbash-banned-users-modal');
+        // ONLY refresh IP bans modal if it's currently open (don't auto-show)
         const ipBansModal = document.querySelector('.pingbash-ip-bans-modal');
         
-        if (bannedUsersModal) {
-          this.showBannedUsersModal(this.bannedUsers || [], ipBans);
-        }
-        
         if (ipBansModal) {
+          console.log('🌐 [Widget] Refreshing open IP bans modal');
           this.showIpBansModal(ipBans); // Refresh IP bans specific modal
+        } else {
+          console.log('🌐 [Widget] IP bans data received but modal not open - not showing');
         }
       },
 
@@ -1863,9 +1859,9 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         this.showIpBansModal(ipBans);
       },
 
-      // 🆕 Show unified ban management modal (users + IPs)
-      showBannedUsersModal(bannedUsers, ipBans = []) {
-        console.log('🚫 [Widget] Showing ban management modal with', bannedUsers.length, 'users and', ipBans.length, 'IP bans');
+      // 🔄 Show banned users modal (users only - IP bans separate)
+      showBannedUsersModal(bannedUsers) {
+        console.log('🚫 [Widget] Showing banned users modal with', bannedUsers.length, 'users');
         
         // Create a simple modal to display banned users
         const modalHtml = `
@@ -1891,7 +1887,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
               width: 90%;
             ">
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                <h3 style="margin: 0;">🚫 Ban Management - Users: ${bannedUsers.length} | IPs: ${ipBans.length}</h3>
+                <h3 style="margin: 0;">🚫 Banned Users (${bannedUsers.length})</h3>
                 ${bannedUsers.length > 0 ? `
                   <button onclick="window.pingbashWidget.unbanAllUsers()" style="
                     background: #28a745;
@@ -1941,49 +1937,6 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
                   `).join('') 
                   : '<div style="text-align: center; padding: 40px; color: #666;"><p>🎉 No banned users found!</p><p>All users are currently allowed in this group.</p></div>'
                 }
-              </div>
-
-              <!-- 🆕 IP Bans Section -->
-              <div class="ip-bans-section" style="margin-top: 20px;">
-                <h4 style="margin: 10px 0; color: #dc3545;">🌐 Banned IP Addresses (${ipBans.length})</h4>
-                <div class="ip-bans-list">
-                  ${ipBans.length > 0 ? 
-                    ipBans.map((ban, index) => `
-                      <div style="
-                        padding: 12px;
-                        border: 1px solid #ddd;
-                        margin: 8px 0;
-                        border-radius: 6px;
-                        display: flex;
-                        justify-content: space-between;
-                        align-items: center;
-                        background: #fff3cd;
-                        border-color: #ffeaa7;
-                      ">
-                        <div style="flex: 1;">
-                          <strong>${ban.ip_address}</strong>
-                          <br>
-                          <small style="color: #666;">
-                            Banned: ${ban.banned_at ? new Date(ban.banned_at).toLocaleDateString() : 'Unknown'} • 
-                            By: ${ban.banned_by_name || `User ${ban.banned_by}`}
-                          </small>
-                        </div>
-                        <div>
-                          <button onclick="window.pingbashWidget.unbanIpAddress('${ban.ip_address}')" style="
-                            background: #28a745;
-                            color: white;
-                            border: none;
-                            padding: 6px 12px;
-                            border-radius: 4px;
-                            cursor: pointer;
-                            margin-left: 5px;
-                          ">Unban IP</button>
-                        </div>
-                      </div>
-                    `).join('') 
-                    : '<div style="text-align: center; padding: 20px; color: #666;"><p>No IP addresses are currently banned.</p></div>'
-                  }
-                </div>
               </div>
               
               ${bannedUsers.length > 0 ? `

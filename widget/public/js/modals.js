@@ -21,9 +21,9 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
     },
 
   // EXACT COPY from widget.js - showBannedUsers method
-    // 🆕 Enhanced banned users with IP ban management
+    // 🔄 Show banned users dialog ONLY (separate from IP bans)
     showBannedUsers() {
-      console.log('🚫 [Widget] Showing banned users and IP bans');
+      console.log('🚫 [Widget] Showing banned users dialog only');
       if (!this.socket || !this.isConnected) return;
   
       if (!this.isAuthenticated) {
@@ -31,17 +31,10 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
         return;
       }
   
-      // Emit socket events to get both banned users AND IP bans
-      console.log('🚫 [Widget] Requesting banned users and IP bans with token:', this.authenticatedToken ? 'present' : 'missing');
+      // Get ONLY banned users (IP bans have separate menu/dialog)
+      console.log('🚫 [Widget] Requesting banned users with token:', this.authenticatedToken ? 'present' : 'missing');
       
-      // Get banned users
       this.socket.emit('get banned users', {
-        groupId: parseInt(this.groupId),
-        token: this.authenticatedToken
-      });
-      
-      // 🆕 Get IP bans
-      this.socket.emit('get ip bans', {
         groupId: parseInt(this.groupId),
         token: this.authenticatedToken
       });

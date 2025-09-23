@@ -1657,8 +1657,8 @@ const timeoutIpAddressHelper = async (groupId, userId, ipAddress, durationSecond
             WHERE group_id = ${groupId} AND ip_address = '${ipAddress}' AND is_active = true;`);
         
         // Create new timeout
-        await PG_query(`INSERT INTO ip_timeouts (group_id, user_id, ip_address, timeout_by, expires_at, is_active, created_at)
-            VALUES (${groupId}, ${dbUserId}, '${ipAddress}', ${timeoutBy}, '${expiresAt}', true, CURRENT_TIMESTAMP);`);
+        await PG_query(`INSERT INTO ip_timeouts (group_id,  ip_address, timeout_by, expires_at, is_active, created_at)
+            VALUES (${groupId},  '${ipAddress}', ${timeoutBy}, '${expiresAt}', true, CURRENT_TIMESTAMP);`);
         
         console.log(`⏰ [IP-TIMEOUT] Created IP timeout for ${ipAddress} until ${expiresAt}`);
     } catch (error) {

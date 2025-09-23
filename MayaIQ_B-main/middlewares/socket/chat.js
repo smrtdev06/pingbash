@@ -869,22 +869,8 @@ module.exports = (socket, users) => {
                 ipAddress: ipAddress
             });
 
-            // Refresh IP bans list for all group members
-            const receivers = await Controller.getReceiverIdsOfGroup(groupId);
-            const receiveUsers = users.filter(user => receivers?.find(receiverId => receiverId == user.ID));
-            const receiverSocketIds = receiveUsers.map(user => user?.Socket);
-            const receiverSockets = receiverSocketIds.map(socketId => sockets[socketId]);
-
-            // Get updated IP bans list
-            const updatedIpBans = await Controller.getIpBans(groupId);
-            
-            if (receiverSockets && receiverSockets.length > 0) {
-                receiverSockets.forEach(receiverSocket => {
-                    if (receiverSocket) {
-                        receiverSocket.emit('get ip bans', updatedIpBans);
-                    }
-                });
-            }
+            // Note: Don't broadcast IP bans to all users - only send success to requesting user
+            // Updated IP bans will be fetched when users specifically open IP bans dialog
 
             console.log(`✅ [IP-UNBAN] Successfully unbanned IP ${ipAddress} and notified group members`);
 
