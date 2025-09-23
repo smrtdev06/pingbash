@@ -2363,17 +2363,20 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
       console.log('📌 [Widget] Sample message structure:', this.messages?.[0]);
       
       if (pinnedMessages.length === 0) {
-        console.log('📌 [Widget] No pinned messages found - showing empty state');
-        container.innerHTML = '<div class="pingbash-no-pinned">No pinned messages found</div>';
+        console.log('📌 [Widget] No pinned messages found - auto-closing view');
         
-        // Optional: Auto-close the pinned messages view when no messages are left
-        console.log('📌 [Widget] Considering auto-closing pinned messages view');
-        // Uncomment the next lines if you want to auto-close the view
-        // const menuView = this.dialog.querySelector('.pingbash-manage-chat-menu');
-        // if (menuView) {
-        //   container.parentElement.style.display = 'none';
-        //   menuView.style.display = 'block';
-        // }
+        // Auto-close the pinned messages view when no messages are left
+        const pinnedView = this.dialog.querySelector('.pingbash-pinned-messages-view');
+        const menuView = this.dialog.querySelector('.pingbash-manage-chat-menu');
+        if (pinnedView && menuView) {
+          pinnedView.style.display = 'none';
+          menuView.style.display = 'block';
+          console.log('📌 [Widget] Pinned messages view closed automatically, returned to menu');
+        } else {
+          // Fallback: show empty state if we can't close the view
+          container.innerHTML = '<div class="pingbash-no-pinned">No pinned messages found</div>';
+          console.log('📌 [Widget] Could not auto-close view, showing empty state instead');
+        }
         
         return;
       }

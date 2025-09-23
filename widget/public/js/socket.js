@@ -657,11 +657,14 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
           this.updatePinnedMessagesUI();
           this.updatePinnedMessagesWidget();
           
-          // Refresh pinned messages view if open
-          const pinnedView = this.dialog.querySelector('.pingbash-pinned-messages-view');
-          if (pinnedView && pinnedView.style.display !== 'none') {
-            this.loadPinnedMessages();
-          }
+          // Refresh pinned messages view if open (with delay to ensure state is updated)
+          setTimeout(() => {
+            const pinnedView = this.dialog.querySelector('.pingbash-pinned-messages-view');
+            if (pinnedView && pinnedView.style.display !== 'none') {
+              console.log('📌 [Widget] Refreshing pinned messages view after unpin');
+              this.loadPinnedMessages();
+            }
+          }, 100);
           
           console.log('📌 [Widget] Message unpinned successfully');
         } else {
@@ -831,10 +834,25 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         if (widget) {
           console.log('📌 [Widget] Hiding pinned messages widget (no pinned messages)');
           widget.style.setProperty('display', 'none', 'important');
+          widget.style.setProperty('visibility', 'hidden', 'important');
+          widget.style.setProperty('opacity', '0', 'important');
           console.log('📌 [Widget] Widget hidden successfully');
         } else {
           console.log('📌 [Widget] No pinned messages widget found to hide');
         }
+        
+        // Also auto-close the pinned messages view modal if it's open
+        const pinnedView = this.dialog?.querySelector('.pingbash-pinned-messages-view');
+        if (pinnedView && pinnedView.style.display !== 'none') {
+          console.log('📌 [Widget] Auto-closing pinned messages view (no messages left)');
+          const menuView = this.dialog.querySelector('.pingbash-manage-chat-menu');
+          if (menuView) {
+            pinnedView.style.display = 'none';
+            menuView.style.display = 'block';
+            console.log('📌 [Widget] Pinned messages view closed, returned to menu');
+          }
+        }
+        
         return;
       }
 
@@ -1778,34 +1796,23 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         };
         localStorage.setItem(`timeout_${groupId}`, JSON.stringify(timeoutInfo));
         
-        // Show timeout notification
-        // //alert(message || `You have been timed out for ${timeoutMinutes} minutes.`);
+        // Show timeout notification visually
+        if (this.displayTimeoutNotification) {
+          this.displayTimeoutNotification(message || `You have been timed out for ${timeoutMinutes} minutes.`);
+        }
         
         // Disable input and send button during timeout
-        this.updateTimeoutUI(true, expiresAt);
+        if (this.updateTimeoutUI) {
+          this.updateTimeoutUI(true, expiresAt);
+        }
+        
+        // Set up timeout expiry check
+        if (this.setupTimeoutExpiryCheck) {
+          this.setupTimeoutExpiryCheck(groupId, expiresAt);
+        }
       },
 
-      // Update UI during timeout (disable input)
-      updateTimeoutUI(isTimedOut, expiresAt) {
-        const input = this.dialog.querySelector('.pingbash-message-input');
-        const sendBtn = this.dialog.querySelector('.pingbash-send-btn');
-        
-        if (input) {
-          input.disabled = isTimedOut;
-          if (isTimedOut) {
-            const expiry = new Date(expiresAt);
-            const now = new Date();
-            const minutesLeft = Math.ceil((expiry - now) / (1000 * 60));
-            input.placeholder = `You are timed out for ${minutesLeft} more minutes`;
-          } else {
-            input.placeholder = 'Type a message...';
-          }
-        }
-        
-        if (sendBtn) {
-          sendBtn.disabled = isTimedOut;
-        }
-      },
+
 
       // Check for persisted timeout on page load
       checkPersistedTimeout(groupId) {

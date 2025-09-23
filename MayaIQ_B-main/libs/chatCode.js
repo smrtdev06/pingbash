@@ -64,6 +64,7 @@ module.exports = {
   TIMEOUT_USER: "timout user",
   USER_TIMEOUT_NOTIFICATION: "user timeout notification",
   USER_UNBAN_NOTIFICATION: "user unban notification",
+  USER_UNTIMEOUT_NOTIFICATION: "user untimeout notification",
   GET_BLOCKED_USERS_INFO: "get blocked users info",
   BLOCK_USER: "block user",
   UNBLOCK_USER: "unblock user",

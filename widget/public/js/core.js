@@ -269,8 +269,8 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         handleUnbanNotification(data) {
             console.log('✅ [Widget] Processing unban notification:', data);
             
-            // Show notification to user
-            this.showNotification(`✅ ${data.message}`, 'success', 5000);
+            // Display unban notification as a temporary message in the chat
+            this.displayUnbanNotification(data.message);
             
             // Clear any timeout-related state since they're now unbanned
             if (data.groupId && this.groupId == data.groupId) {
@@ -280,6 +280,13 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
                     console.log('✅ [Widget] Cleared timeout state after unban');
                 } catch (error) {
                     console.log('⚠️ [Widget] Error clearing timeout state:', error);
+                }
+                
+                // Clear any active timeout monitoring
+                if (this.timeoutExpiryInterval) {
+                    clearInterval(this.timeoutExpiryInterval);
+                    this.timeoutExpiryInterval = null;
+                    console.log('✅ [Widget] Cleared timeout expiry monitoring after unban');
                 }
                 
                 // Hide timeout notification if it's showing
@@ -304,6 +311,160 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
                         });
                     }
                 }, 500);
+            }
+        },
+
+        // Display unban notification in chat interface
+        displayUnbanNotification(message) {
+            console.log('✅ [Widget] Displaying unban notification:', message);
+            this.displayNotification(message, 'unban', '#d4edda', '#155724', '#c3e6cb', '✅');
+        },
+
+        // Display timeout notification in chat interface
+        displayTimeoutNotification(message) {
+            console.log('⏰ [Widget] Displaying timeout notification:', message);
+            this.displayNotification(message, 'timeout', '#f8d7da', '#721c24', '#f5c6cb', '⏰');
+        },
+
+        // Display untimeout notification in chat interface
+        displayUntimeoutNotification(message) {
+            console.log('🔓 [Widget] Displaying untimeout notification:', message);
+            this.displayNotification(message, 'untimeout', '#d1ecf1', '#0c5460', '#bee5eb', '🔓');
+        },
+
+        // Generic notification display method
+        displayNotification(message, type, bgColor, textColor, borderColor, icon) {
+            console.log(`📢 [Widget] Displaying ${type} notification:`, message);
+            
+            const messagesArea = this.dialog?.querySelector('.pingbash-messages-list');
+            if (!messagesArea) {
+                console.log('⚠️ [Widget] Messages area not found for notification');
+                return;
+            }
+            
+            // Create notification element
+            const notification = document.createElement('div');
+            notification.className = `pingbash-${type}-notification`;
+            notification.innerHTML = `
+                <div style="
+                    background: ${bgColor};
+                    color: ${textColor};
+                    border: 1px solid ${borderColor};
+                    border-radius: 8px;
+                    padding: 12px;
+                    margin: 10px 0;
+                    text-align: center;
+                    font-size: 14px;
+                    font-weight: 500;
+                    animation: fadeInUp 0.3s ease;
+                ">
+                    ${icon} ${message}
+                </div>
+            `;
+            
+            // Add to messages area
+            messagesArea.appendChild(notification);
+            
+            // Scroll to bottom to show the notification
+            messagesArea.scrollTop = messagesArea.scrollHeight;
+            
+            console.log(`📢 [Widget] ${type} notification displayed successfully`);
+        },
+
+        // Set up timeout expiry monitoring
+        setupTimeoutExpiryCheck(groupId, expiresAt) {
+            console.log('⏰ [Widget] Setting up timeout expiry check for group:', groupId, 'expires:', expiresAt);
+            
+            // Clear any existing timeout check
+            if (this.timeoutExpiryInterval) {
+                clearInterval(this.timeoutExpiryInterval);
+            }
+            
+            this.timeoutExpiryInterval = setInterval(() => {
+                const now = new Date().getTime();
+                const expiry = new Date(expiresAt).getTime();
+                
+                if (now >= expiry) {
+                    console.log('🔓 [Widget] Timeout expired for group:', groupId);
+                    
+                    // Clear the interval
+                    clearInterval(this.timeoutExpiryInterval);
+                    this.timeoutExpiryInterval = null;
+                    
+                    // Show untimeout notification
+                    this.displayUntimeoutNotification('Your timeout has expired. You can now send messages again!');
+                    
+                    // Re-enable input
+                    this.updateTimeoutUI(false, null);
+                    
+                    // Clear timeout from localStorage
+                    try {
+                        localStorage.removeItem(`timeout_${groupId}`);
+                        console.log('🔓 [Widget] Cleared timeout state from localStorage');
+                    } catch (error) {
+                        console.log('⚠️ [Widget] Error clearing timeout state:', error);
+                    }
+                }
+            }, 1000); // Check every second
+        },
+
+        // Update timeout UI state
+        updateTimeoutUI(isTimedOut, expiresAt) {
+            const input = this.dialog?.querySelector('.pingbash-message-input');
+            const sendBtn = this.dialog?.querySelector('.pingbash-send-btn');
+            
+            if (input) {
+                input.disabled = isTimedOut;
+                if (isTimedOut && expiresAt) {
+                    const expiry = new Date(expiresAt);
+                    const now = new Date();
+                    const minutesLeft = Math.ceil((expiry - now) / (1000 * 60));
+                    input.placeholder = `You are timed out for ${minutesLeft} more minutes`;
+                } else {
+                    input.placeholder = 'Type your message...';
+                }
+            }
+            
+            if (sendBtn) {
+                sendBtn.disabled = isTimedOut;
+            }
+            
+            console.log('⏰ [Widget] Timeout UI updated:', { isTimedOut, expiresAt });
+        },
+
+        // Check for persisted timeout state on page load
+        checkPersistedTimeout(groupId) {
+            try {
+                const timeoutKey = `timeout_${groupId}`;
+                const timeoutInfo = localStorage.getItem(timeoutKey);
+                
+                if (timeoutInfo) {
+                    const parsed = JSON.parse(timeoutInfo);
+                    const now = new Date().getTime();
+                    const expiry = new Date(parsed.expiresAt).getTime();
+                    
+                    if (expiry > now) {
+                        // Timeout is still active
+                        console.log(`⏰ [Widget] Restored timeout state for group ${groupId}, expires at ${parsed.expiresAt}`);
+                        
+                        // Update UI to show timeout state
+                        this.updateTimeoutUI(true, parsed.expiresAt);
+                        
+                        // Set up expiry monitoring
+                        this.setupTimeoutExpiryCheck(groupId, parsed.expiresAt);
+                        
+                        return true;
+                    } else {
+                        // Timeout has expired, clean up
+                        console.log(`⏰ [Widget] Timeout expired for group ${groupId}, cleaning up`);
+                        localStorage.removeItem(timeoutKey);
+                        return false;
+                    }
+                }
+                return false;
+            } catch (error) {
+                console.error(`⏰ [Widget] Error checking persisted timeout:`, error);
+                return false;
             }
         },
 
