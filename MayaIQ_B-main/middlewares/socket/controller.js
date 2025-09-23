@@ -990,13 +990,13 @@ const banIpAddress = async (groupId, userId, ipAddress, bannedBy) => {
         if (existingBan.rows.length > 0) {
             // Update existing ban
             await PG_query(`UPDATE ip_bans 
-                SET is_active = true, user_id = ${dbUserId}, banned_by = ${bannedBy}, banned_at = CURRENT_TIMESTAMP
+                SET is_active = true, user_id = ${userId}, banned_by = ${bannedBy}, banned_at = CURRENT_TIMESTAMP
                 WHERE id = ${existingBan.rows[0].id};`);
             console.log(`🔄 [IP-BAN] Reactivated IP ban for ${ipAddress}`);
         } else {
             // Create new IP ban
             await PG_query(`INSERT INTO ip_bans (group_id, user_id, ip_address, banned_by, is_active, banned_at)
-                VALUES (${groupId}, ${dbUserId}, '${ipAddress}', ${bannedBy}, true, CURRENT_TIMESTAMP);`);
+                VALUES (${groupId}, ${userId}, '${ipAddress}', ${bannedBy}, true, CURRENT_TIMESTAMP);`);
             console.log(`➕ [IP-BAN] Created IP ban for ${ipAddress}`);
         }
     } catch (error) {
