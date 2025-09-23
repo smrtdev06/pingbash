@@ -3707,7 +3707,7 @@ Example:
       const escaped = this.escapeHtml(content);
       return escaped.replace(
         /(https?:\/\/[^\s]+)/g,
-                  '<a href="$1" target="_blank" rel="noopener noreferrer" style="color: #000000; text-decoration: underline;">$1</a>'
+                  '<a href="$1" target="_blank" rel="noopener noreferrer" >$1</a>'
       );
     }
   }
