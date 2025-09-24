@@ -1241,13 +1241,25 @@ const updateCensoredContents = async (groupId, contents) => {
 
 const updateGroupModerators = async (groupId, senderId, modIds) => {
     try {
-        await PG_query(`UPDATE group_users
-            SET role_id = CASE
-                WHEN role_id = 1 THEN role_id
-                WHEN user_id = ANY(ARRAY[${modIds}]) THEN 2
-                ELSE NULL
-            END
-            WHERE group_id = ${groupId};`)
+        // Handle empty modIds array (remove all moderators)
+        if (!modIds || modIds.length === 0) {
+            console.log(`👥 [Backend] Removing all moderators from group ${groupId}`);
+            await PG_query(`UPDATE group_users
+                SET role_id = CASE
+                    WHEN role_id = 1 THEN role_id
+                    ELSE NULL
+                END
+                WHERE group_id = ${groupId};`)
+        } else {
+            console.log(`👥 [Backend] Updating moderators for group ${groupId}, new moderator IDs: [${modIds.join(', ')}]`);
+            await PG_query(`UPDATE group_users
+                SET role_id = CASE
+                    WHEN role_id = 1 THEN role_id
+                    WHEN user_id = ANY(ARRAY[${modIds}]) THEN 2
+                    ELSE NULL
+                END
+                WHERE group_id = ${groupId};`)
+        }
     } catch (error) {
         console.log(error);
     }
