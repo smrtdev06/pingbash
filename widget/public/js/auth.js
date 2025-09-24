@@ -92,6 +92,119 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
       modal.style.display = 'none';
     },
 
+    // Show signup modal
+    showSignupModal() {
+      console.log('🔍 [Widget] showSignupModal called');
+      const modal = this.dialog.querySelector('.pingbash-signup-modal');
+      modal.style.display = 'flex';
+      
+      // Focus on first input
+      const emailInput = modal.querySelector('#signup-email');
+      if (emailInput) {
+        setTimeout(() => emailInput.focus(), 100);
+      }
+    },
+
+    // Hide signup modal
+    hideSignupModal() {
+      const modal = this.dialog.querySelector('.pingbash-signup-modal');
+      modal.style.display = 'none';
+    },
+
+    // Switch from signin to signup
+    switchToSignup() {
+      this.hideSigninModal();
+      this.showSignupModal();
+    },
+
+    // Switch from signup to signin
+    switchToSignin() {
+      this.hideSignupModal();
+      this.showSigninModal();
+    },
+
+    // Show verification modal
+    showVerificationModal(email) {
+      console.log('📧 [Widget] showVerificationModal called for:', email);
+      this.hideSignupModal();
+      
+      const modal = this.dialog.querySelector('.pingbash-verification-modal');
+      const emailDisplay = modal.querySelector('.pingbash-verification-email');
+      
+      if (emailDisplay) {
+        emailDisplay.textContent = email;
+      }
+      
+      modal.style.display = 'flex';
+      
+      // Store email for verification
+      this.verificationEmail = email;
+      
+      // Reset OTP inputs
+      this.resetOtpInputs();
+      
+      // Start countdown timer
+      this.startVerificationTimer();
+      
+      // Focus first OTP input
+      const firstInput = modal.querySelector('.pingbash-otp-input[data-index="0"]');
+      if (firstInput) {
+        setTimeout(() => firstInput.focus(), 100);
+      }
+    },
+
+    // Hide verification modal
+    hideVerificationModal() {
+      const modal = this.dialog.querySelector('.pingbash-verification-modal');
+      modal.style.display = 'none';
+      
+      // Clear timer
+      if (this.verificationTimer) {
+        clearInterval(this.verificationTimer);
+        this.verificationTimer = null;
+      }
+    },
+
+    // Reset OTP inputs
+    resetOtpInputs() {
+      const inputs = this.dialog.querySelectorAll('.pingbash-otp-input');
+      inputs.forEach(input => {
+        input.value = '';
+        input.classList.remove('filled');
+      });
+    },
+
+    // Start verification countdown timer
+    startVerificationTimer() {
+      const timerDisplay = this.dialog.querySelector('.pingbash-timer-display');
+      const resendBtn = this.dialog.querySelector('.pingbash-resend-btn');
+      
+      let timeLeft = 300; // 5 minutes in seconds
+      
+      // Clear existing timer
+      if (this.verificationTimer) {
+        clearInterval(this.verificationTimer);
+      }
+      
+      // Enable resend button after timer expires
+      resendBtn.disabled = true;
+      
+      this.verificationTimer = setInterval(() => {
+        const minutes = Math.floor(timeLeft / 60);
+        const seconds = timeLeft % 60;
+        timerDisplay.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+        
+        if (timeLeft <= 0) {
+          clearInterval(this.verificationTimer);
+          this.verificationTimer = null;
+          resendBtn.disabled = false;
+          timerDisplay.textContent = 'Expired';
+        }
+        
+        timeLeft--;
+      }, 1000);
+    },
+
   // EXACT COPY from widget.js - continueAsAnonymous method
     continueAsAnonymous() {
       console.log('👤 [Widget] Continuing as anonymous user - START');
@@ -287,6 +400,263 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         } catch (error) {
           console.error('❌ [Widget] Sign in error:', error);
           this.showError('Sign in failed. Please check your credentials.');
+        }
+      },
+
+      // Handle signup form submission
+      async handleSignup() {
+        const emailInput = this.dialog.querySelector('#signup-email');
+        const nameInput = this.dialog.querySelector('#signup-name');
+        const passwordInput = this.dialog.querySelector('#signup-password');
+        const confirmPasswordInput = this.dialog.querySelector('#signup-confirm-password');
+
+        const email = emailInput.value.trim();
+        const name = nameInput.value.trim();
+        const password = passwordInput.value.trim();
+        const confirmPassword = confirmPasswordInput.value.trim();
+
+        // Basic validation
+        if (!email) {
+          alert('Please enter your email address');
+          emailInput.focus();
+          return;
+        }
+
+        // Email validation regex
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+          alert('Please enter a valid email address');
+          emailInput.focus();
+          return;
+        }
+
+        if (!name) {
+          alert('Please enter your full name');
+          nameInput.focus();
+          return;
+        }
+
+        if (!password) {
+          alert('Please enter a password');
+          passwordInput.focus();
+          return;
+        }
+
+        if (password.length < 6) {
+          alert('Password must be at least 6 characters long');
+          passwordInput.focus();
+          return;
+        }
+
+        if (!confirmPassword) {
+          alert('Please confirm your password');
+          confirmPasswordInput.focus();
+          return;
+        }
+
+        if (password !== confirmPassword) {
+          alert('Passwords do not match');
+          passwordInput.focus();
+          return;
+        }
+
+        try {
+          console.log('🔐 [Widget] Attempting sign up...');
+
+          const requestBody = {
+            Email: email,
+            Name: name,
+            Password: password
+          };
+
+          console.log('🔐 [Widget] Signup Request URL:', `${this.config.apiUrl}/api/user/register/group`);
+          console.log('🔐 [Widget] Signup Request body:', requestBody);
+
+          // Use W version signup API format
+          const response = await fetch(`${this.config.apiUrl}/api/user/register/group`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(requestBody)
+          });
+
+          console.log('🔐 [Widget] Signup Response status:', response.status);
+
+          // Try to get response text regardless of status
+          const responseText = await response.text();
+          console.log('🔐 [Widget] Signup Response text:', responseText);
+
+          if (!response.ok) {
+            if (response.status === 409) {
+              throw new Error('An account with this email already exists');
+            } else if (response.status === 400) {
+              throw new Error('Invalid registration data provided');
+            }
+            throw new Error(`Sign up failed: ${response.status} - ${responseText}`);
+          }
+
+          // Parse the response text as JSON
+          const result = JSON.parse(responseText);
+          console.log('✅ [Widget] Sign up successful:', result);
+
+          // Handle verification flow like W version
+          if (result.requiresVerification) {
+            console.log('📧 [Widget] Verification required, showing verification modal');
+            this.showVerificationModal(result.email || email);
+          } else {
+            // Auto-signin if no verification required (backward compatibility)
+            console.log('✅ [Widget] No verification required, auto-signing in...');
+            
+            // Store token and user info (W version format)
+            this.userId = result.token;
+            this.currentUserId = result.id;
+            this.isAuthenticated = true;
+
+            // Save to localStorage (same keys as W version)
+            localStorage.setItem('pingbash_token', result.token);
+            localStorage.setItem('pingbash_user_id', result.id);
+
+            // Hide modal and continue
+            this.hideSignupModal();
+
+            // Initialize socket with authenticated user
+            console.log('🔐 [Widget] Initializing socket with authenticated user after signup...');
+            this.connectAsAuthenticated = true;
+            this.authenticatedToken = result.token;
+            
+            this.initializeSocket();
+
+            this.triggerChatRulesAfterLogin(this.authenticatedToken, 'logged-in');
+          }
+        } catch (error) {
+          console.error('❌ [Widget] Sign up error:', error);
+          alert(`Sign up failed: ${error.message}`);
+        }
+      },
+
+      // Handle email verification
+      async handleVerification() {
+        const inputs = this.dialog.querySelectorAll('.pingbash-otp-input');
+        const otp = Array.from(inputs).map(input => input.value).join('');
+        
+        if (otp.length !== 4) {
+          alert('Please enter the complete 4-digit verification code');
+          return;
+        }
+        
+        if (!this.verificationEmail) {
+          alert('Email not found. Please try signing up again.');
+          return;
+        }
+        
+        try {
+          console.log('📧 [Widget] Attempting email verification...');
+          
+          const requestBody = {
+            email: this.verificationEmail,
+            otp: parseInt(otp)
+          };
+          
+          console.log('📧 [Widget] Verification Request URL:', `${this.config.apiUrl}/api/user/confirm/group`);
+          console.log('📧 [Widget] Verification Request body:', requestBody);
+          
+          const response = await fetch(`${this.config.apiUrl}/api/user/confirm/group`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(requestBody)
+          });
+          
+          console.log('📧 [Widget] Verification Response status:', response.status);
+          
+          const responseText = await response.text();
+          console.log('📧 [Widget] Verification Response text:', responseText);
+          
+          if (!response.ok) {
+            if (response.status === 400) {
+              throw new Error('Invalid verification code');
+            } else if (response.status === 404) {
+              throw new Error('Verification code expired or not found');
+            }
+            throw new Error(`Verification failed: ${response.status} - ${responseText}`);
+          }
+          
+          const result = JSON.parse(responseText);
+          console.log('✅ [Widget] Email verification successful:', result);
+          
+          // Store token and user info
+          this.userId = result.token;
+          this.currentUserId = result.id;
+          this.isAuthenticated = true;
+          
+          // Save to localStorage
+          localStorage.setItem('pingbash_token', result.token);
+          localStorage.setItem('pingbash_user_id', result.id);
+          
+          // Hide verification modal
+          this.hideVerificationModal();
+          
+          // Show success message
+          alert('Account verified successfully! Welcome to Pingbash!');
+          
+          // Initialize socket with authenticated user
+          console.log('📧 [Widget] Initializing socket with verified user...');
+          this.connectAsAuthenticated = true;
+          this.authenticatedToken = result.token;
+          
+          this.initializeSocket();
+          
+          this.triggerChatRulesAfterLogin(this.authenticatedToken, 'logged-in');
+          
+        } catch (error) {
+          console.error('❌ [Widget] Email verification error:', error);
+          alert(`Verification failed: ${error.message}`);
+        }
+      },
+
+      // Handle resend verification code
+      async handleResendCode() {
+        if (!this.verificationEmail) {
+          alert('Email not found. Please try signing up again.');
+          return;
+        }
+        
+        try {
+          console.log('📧 [Widget] Attempting to resend verification code...');
+          
+          const requestBody = {
+            email: this.verificationEmail
+          };
+          
+          console.log('📧 [Widget] Resend Request URL:', `${this.config.apiUrl}/api/user/resend`);
+          console.log('📧 [Widget] Resend Request body:', requestBody);
+          
+          const response = await fetch(`${this.config.apiUrl}/api/user/resend`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(requestBody)
+          });
+          
+          console.log('📧 [Widget] Resend Response status:', response.status);
+          
+          if (!response.ok) {
+            throw new Error(`Failed to resend code: ${response.status}`);
+          }
+          
+          console.log('✅ [Widget] Verification code resent successfully');
+          alert('Verification code resent successfully!');
+          
+          // Reset OTP inputs and restart timer
+          this.resetOtpInputs();
+          this.startVerificationTimer();
+          
+        } catch (error) {
+          console.error('❌ [Widget] Resend code error:', error);
+          alert('Failed to resend verification code. Please try again.');
         }
       },
 

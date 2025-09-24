@@ -1515,6 +1515,237 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
           background: #e0e0e0;
         }
         
+        /* Auth Footer Styles */
+        .pingbash-auth-footer {
+          margin-top: 16px;
+          padding-top: 16px;
+          border-top: 1px solid #eee;
+          text-align: center;
+        }
+        
+        .pingbash-auth-footer p {
+          margin: 0;
+          font-size: 14px;
+          color: #666;
+        }
+        
+        .pingbash-show-signup-btn,
+        .pingbash-show-signin-btn {
+          background: none;
+          border: none;
+          color: #2596be;
+          text-decoration: underline;
+          cursor: pointer;
+          font-size: 14px;
+          font-weight: 600;
+          padding: 0;
+          margin-left: 4px;
+        }
+        
+        .pingbash-show-signup-btn:hover,
+        .pingbash-show-signin-btn:hover {
+          color: #1e7ba8;
+        }
+        
+        /* Sign Up Modal */
+        .pingbash-signup-modal {
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          z-index: 2147483648;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        
+        .pingbash-signup-form {
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+        }
+        
+        .pingbash-signup-options {
+          display: flex;
+          gap: 12px;
+          margin-top: 8px;
+        }
+        
+        .pingbash-signup-submit-btn {
+          flex: 1;
+          background: #28a745;
+          color: white;
+          border: none;
+          padding: 10px 16px;
+          border-radius: 4px;
+          cursor: pointer;
+          font-size: 14px;
+          font-weight: 600;
+          transition: background-color 0.2s ease;
+        }
+        
+        .pingbash-signup-submit-btn:hover {
+          background: #218838;
+        }
+        
+        /* Email Verification Modal */
+        .pingbash-verification-modal {
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          z-index: 2147483648;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        
+        .pingbash-verification-form {
+          display: flex;
+          flex-direction: column;
+          gap: 20px;
+          text-align: center;
+        }
+        
+        .pingbash-verification-icon {
+          display: flex;
+          justify-content: center;
+          margin-bottom: 10px;
+        }
+        
+        .pingbash-verification-text {
+          font-size: 14px;
+          color: #666;
+          margin: 0;
+          line-height: 1.5;
+        }
+        
+        .pingbash-verification-email {
+          color: #2596be;
+          font-weight: 600;
+        }
+        
+        .pingbash-otp-container {
+          display: flex;
+          justify-content: center;
+          gap: 12px;
+          margin: 20px 0;
+        }
+        
+        .pingbash-otp-input {
+          width: 50px;
+          height: 50px;
+          text-align: center;
+          font-size: 18px;
+          font-weight: 600;
+          border: 2px solid #ddd;
+          border-radius: 8px;
+          outline: none;
+          transition: border-color 0.2s ease;
+          font-family: inherit;
+        }
+        
+        .pingbash-otp-input:focus {
+          border-color: #2596be;
+          box-shadow: 0 0 0 2px rgba(37, 150, 190, 0.1);
+        }
+        
+        .pingbash-otp-input.filled {
+          border-color: #28a745;
+          background-color: #f8fff9;
+        }
+        
+        .pingbash-verification-timer {
+          font-size: 14px;
+          color: #666;
+          margin: 10px 0;
+        }
+        
+        .pingbash-timer-display {
+          font-weight: 600;
+          color: #dc3545;
+        }
+        
+        .pingbash-verification-actions {
+          display: flex;
+          gap: 12px;
+          margin-top: 20px;
+        }
+        
+        .pingbash-verify-btn {
+          flex: 1;
+          background: #28a745;
+          color: white;
+          border: none;
+          padding: 12px 16px;
+          border-radius: 4px;
+          cursor: pointer;
+          font-size: 14px;
+          font-weight: 600;
+          transition: background-color 0.2s ease;
+        }
+        
+        .pingbash-verify-btn:hover:not(:disabled) {
+          background: #218838;
+        }
+        
+        .pingbash-verify-btn:disabled {
+          background: #ccc;
+          cursor: not-allowed;
+        }
+        
+        .pingbash-resend-btn {
+          flex: 1;
+          background: #f0f0f0;
+          color: #333;
+          border: none;
+          padding: 12px 16px;
+          border-radius: 4px;
+          cursor: pointer;
+          font-size: 14px;
+          transition: background-color 0.2s ease;
+        }
+        
+        .pingbash-resend-btn:hover:not(:disabled) {
+          background: #e0e0e0;
+        }
+        
+        .pingbash-resend-btn:disabled {
+          background: #f8f8f8;
+          color: #999;
+          cursor: not-allowed;
+        }
+        
+        .pingbash-verification-footer {
+          margin-top: 16px;
+          padding-top: 16px;
+          border-top: 1px solid #eee;
+        }
+        
+        .pingbash-verification-footer p {
+          margin: 0;
+          font-size: 14px;
+          color: #666;
+        }
+        
+        .pingbash-back-to-signin-btn {
+          background: none;
+          border: none;
+          color: #2596be;
+          text-decoration: underline;
+          cursor: pointer;
+          font-size: 14px;
+          font-weight: 600;
+          padding: 0;
+          margin-left: 4px;
+        }
+        
+        .pingbash-back-to-signin-btn:hover {
+          color: #1e7ba8;
+        }
+        
         /* Emoji and Mention Modal Styles (exact same as sign-in modal) */
         .pingbash-emoji-modal,
         .pingbash-mention-modal {

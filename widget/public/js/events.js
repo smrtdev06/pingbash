@@ -244,6 +244,86 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
 
         signinCloseBtn?.addEventListener('click', () => this.hideSigninModal());
         signinSubmitBtn?.addEventListener('click', () => this.handleSignin());
+        
+        // Signup modal event listeners
+        const signupModal = this.dialog.querySelector('.pingbash-signup-modal');
+        const signupCloseBtn = signupModal?.querySelector('.pingbash-popup-close');
+        const signupSubmitBtn = this.dialog.querySelector('.pingbash-signup-submit-btn');
+        const signupOverlay = signupModal?.querySelector('.pingbash-popup-overlay');
+        const showSignupBtn = this.dialog.querySelector('.pingbash-show-signup-btn');
+        const showSigninBtn = this.dialog.querySelector('.pingbash-show-signin-btn');
+
+        signupCloseBtn?.addEventListener('click', () => this.hideSignupModal());
+        signupSubmitBtn?.addEventListener('click', () => this.handleSignup());
+        signupOverlay?.addEventListener('click', () => this.hideSignupModal());
+        showSignupBtn?.addEventListener('click', () => this.switchToSignup());
+        showSigninBtn?.addEventListener('click', () => this.switchToSignin());
+
+                 // Add Enter key support for signup form
+         const signupInputs = this.dialog.querySelectorAll('#signup-email, #signup-name, #signup-password, #signup-confirm-password');
+         signupInputs.forEach(input => {
+           input.addEventListener('keypress', (e) => {
+             if (e.key === 'Enter') {
+               e.preventDefault();
+               this.handleSignup();
+             }
+           });
+         });
+
+         // Verification modal event listeners
+         const verificationModal = this.dialog.querySelector('.pingbash-verification-modal');
+         const verificationCloseBtn = verificationModal?.querySelector('.pingbash-popup-close');
+         const verifyBtn = this.dialog.querySelector('.pingbash-verify-btn');
+         const resendBtn = this.dialog.querySelector('.pingbash-resend-btn');
+         const verificationOverlay = verificationModal?.querySelector('.pingbash-popup-overlay');
+         const backToSigninBtn = this.dialog.querySelector('.pingbash-back-to-signin-btn');
+
+         verificationCloseBtn?.addEventListener('click', () => this.hideVerificationModal());
+         verifyBtn?.addEventListener('click', () => this.handleVerification());
+         resendBtn?.addEventListener('click', () => this.handleResendCode());
+         verificationOverlay?.addEventListener('click', () => this.hideVerificationModal());
+         backToSigninBtn?.addEventListener('click', () => {
+           this.hideVerificationModal();
+           this.showSigninModal();
+         });
+
+         // OTP input handling
+         const otpInputs = this.dialog.querySelectorAll('.pingbash-otp-input');
+         otpInputs.forEach((input, index) => {
+           input.addEventListener('input', (e) => {
+             const value = e.target.value;
+             
+             // Only allow digits
+             if (value && !/^\d$/.test(value)) {
+               e.target.value = '';
+               return;
+             }
+             
+             // Add filled class
+             if (value) {
+               e.target.classList.add('filled');
+               // Auto-focus next input
+               if (index < otpInputs.length - 1) {
+                 otpInputs[index + 1].focus();
+               }
+               
+               // Auto-submit when all fields are filled
+               const allValues = Array.from(otpInputs).map(inp => inp.value);
+               if (allValues.every(val => val !== '') && allValues.join('').length === 4) {
+                 this.handleVerification();
+               }
+             } else {
+               e.target.classList.remove('filled');
+             }
+           });
+           
+           input.addEventListener('keydown', (e) => {
+             // Handle backspace to move to previous input
+             if (e.key === 'Backspace' && !input.value && index > 0) {
+               otpInputs[index - 1].focus();
+             }
+           });
+         });
 
         // Attach event listeners to ALL Continue As Guest buttons
         continueAnonBtns.forEach((continueAnonBtn, index) => {
@@ -663,9 +743,6 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
           case 'hide-chat':
             this.hideChat();
             break;
-          case 'show-chat':
-            this.showChat();
-            break;
           case 'toggle-theme':
             this.toggleTheme();
             break;
@@ -674,9 +751,6 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
             break;
           case 'login':
             this.showSigninModal();
-            break;
-          case 'close':
-            this.closeDialog();
             break;
           
           // Settings menu actions (admin tools)
@@ -703,9 +777,22 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
 
       // New menu action handlers
       copyGroupUrl() {
-        const groupUrl = window.location.href;
+        // Construct the correct group URL format: {groupname}.pingbash.com
+        let groupUrl = '';
+        
+        if (this.config && this.config.groupName) {
+          groupUrl = `${this.config.groupName}.pingbash.com`;
+        } else if (this.group && this.group.name) {
+          // Fallback to group.name if config.groupName is not available
+          groupUrl = `${this.group.name}.pingbash.com`;
+        } else {
+          // Last resort fallback
+          groupUrl = window.location.href;
+          console.warn('⚠️ [Widget] Could not determine group name, using current URL');
+        }
+        
         navigator.clipboard.writeText(groupUrl).then(() => {
-          console.log('📋 [Widget] Group URL copied to clipboard');
+          console.log('📋 [Widget] Group URL copied to clipboard:', groupUrl);
           // Show success notification
           this.showNotification('Group URL copied to clipboard!', 'success');
         }).catch(err => {
@@ -769,16 +856,11 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
       },
 
       hideChat() {
-        console.log('👁️ [Widget] Hiding chat');
-        // TODO: Implement hide chat functionality
-        this.showNotification('Chat hidden', 'info');
+        console.log('👁️ [Widget] Hiding chat (closing dialog)');
+        this.closeDialog();
       },
 
-      showChat() {
-        console.log('👁️ [Widget] Showing chat');
-        // TODO: Implement show chat functionality
-        this.showNotification('Chat shown', 'info');
-      },
+
 
       toggleTheme() {
         console.log('🌓 [Widget] Toggling theme');

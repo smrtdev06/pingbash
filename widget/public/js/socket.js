@@ -86,7 +86,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
 
       this.socket.on('connect_error', (error) => {
         console.error('🔍 [Widget] Socket connection error:', error);
-        this.showError('Connection failed: ' + error.message);
+        //this.showError('Connection failed: ' + error.message);
         this.updateConnectionStatus(false);
       });
 

@@ -173,12 +173,6 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
                   </svg>
                   Hide Chat
                 </div>
-                <div class="pingbash-menu-item" data-action="show-chat" style="display: none;">
-                  <svg viewBox="0 0 24 24" width="16" height="16">
-                    <path fill="currentColor" d="M12,9A3,3 0 0,0 9,12A3,3 0 0,0 12,15A3,3 0 0,0 15,12A3,3 0 0,0 12,9M12,17A5,5 0 0,1 7,12A5,5 0 0,1 12,7A5,5 0 0,1 17,12A5,5 0 0,1 12,17M12,4.5C7,4.5 2.73,7.61 1,12C2.73,16.39 7,19.5 12,19.5C17,19.5 21.27,16.39 23,12C21.27,7.61 17,4.5 12,4.5Z"/>
-                  </svg>
-                  Show Chat
-                </div>
                 <div class="pingbash-menu-divider"></div>
                 <!-- Dark/Light Mode Toggle -->
                 <div class="pingbash-menu-item" data-action="toggle-theme">
@@ -199,15 +193,9 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
                 </div>
                 <div class="pingbash-menu-item" data-action="login" style="display: none;">
                   <svg viewBox="0 0 24 24" width="16" height="16">
-                    <path fill="currentColor" d="M10,17V14H3V10H10V7L15,12L10,17M10,2H19A2,2 0 0,1 21,4V20A2,2 0 0,1 19,22H10A2,2 0 0,1 8,20V18H10V20H19V4H10V6H8V4A2,2 0 0,1 10,2Z"/>
+                    <path fill="currentColor" d="M10,17V14H3V10H10V7L15,12L10,17M10,2H19A2,2 0 0,1 21,4V20A2,2 0 0,1 19,22H10A2,2 0 0,1 8,20V18H10V6H8V4A2,2 0 0,1 10,2Z"/>
                   </svg>
                   Log in
-                </div>
-                <div class="pingbash-menu-item" data-action="close">
-                  <svg viewBox="0 0 24 24" width="16" height="16">
-                    <path fill="currentColor" d="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z"/>
-                  </svg>
-                  Close Chat
                 </div>
               </div>
             </div>
@@ -293,7 +281,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         <!-- Sign In Modal -->
         <div class="pingbash-signin-modal" style="display: none;">
           <div class="pingbash-popup-overlay"></div>
-          <div class="pingbash-popup-content" style="height:350px">
+          <div class="pingbash-popup-content" style="height:410px">
             <div class="pingbash-popup-header">
               <h3>Sign In to ${this.config.groupName}</h3>
               <button class="pingbash-popup-close">×</button>
@@ -311,6 +299,88 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
                 <div class="pingbash-signin-options">
                   <button class="pingbash-signin-submit-btn">Sign In</button>
                   <button class="pingbash-continue-anon-btn">Continue as Guest</button>
+                </div>
+                <div class="pingbash-auth-footer">
+                  <p>Don't have an account? <button class="pingbash-show-signup-btn">Sign Up</button></p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Signup Modal -->
+        <div class="pingbash-signup-modal" style="display: none;">
+          <div class="pingbash-popup-overlay"></div>
+          <div class="pingbash-popup-content" style="height:576px">
+            <div class="pingbash-popup-header">
+              <h3>Sign Up for ${this.config.groupName}</h3>
+              <button class="pingbash-popup-close">×</button>
+            </div>
+            <div class="pingbash-popup-body">
+              <div class="pingbash-signup-form">
+                <div class="pingbash-form-group">
+                  <label for="signup-email">Email:</label>
+                  <input type="email" id="signup-email" class="pingbash-form-input" placeholder="Enter your email">
+                </div>
+                <div class="pingbash-form-group">
+                  <label for="signup-name">Full Name:</label>
+                  <input type="text" id="signup-name" class="pingbash-form-input" placeholder="Enter your full name">
+                </div>
+                <div class="pingbash-form-group">
+                  <label for="signup-password">Password:</label>
+                  <input type="password" id="signup-password" class="pingbash-form-input" placeholder="Enter your password">
+                </div>
+                <div class="pingbash-form-group">
+                  <label for="signup-confirm-password">Confirm Password:</label>
+                  <input type="password" id="signup-confirm-password" class="pingbash-form-input" placeholder="Confirm your password">
+                </div>
+                <div class="pingbash-signup-options">
+                  <button class="pingbash-signup-submit-btn">Sign Up</button>
+                  <button class="pingbash-continue-anon-btn">Continue as Guest</button>
+                </div>
+                <div class="pingbash-auth-footer">
+                  <p>Already have an account? <button class="pingbash-show-signin-btn">Sign In</button></p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Email Verification Modal -->
+        <div class="pingbash-verification-modal" style="display: none;">
+          <div class="pingbash-popup-overlay"></div>
+          <div class="pingbash-popup-content" style="height:400px; width:400px;">
+            <div class="pingbash-popup-header">
+              <h3>Verify Your Email</h3>
+              <button class="pingbash-popup-close">×</button>
+            </div>
+            <div class="pingbash-popup-body">
+              <div class="pingbash-verification-form">
+                <div class="pingbash-verification-icon">
+                  <svg viewBox="0 0 24 24" width="48" height="48">
+                    <path fill="#2596be" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                  </svg>
+                </div>
+                <p class="pingbash-verification-text">We've sent a 4-digit verification code to<br><strong class="pingbash-verification-email"></strong></p>
+                
+                <div class="pingbash-otp-container">
+                  <input type="text" class="pingbash-otp-input" maxlength="1" data-index="0">
+                  <input type="text" class="pingbash-otp-input" maxlength="1" data-index="1">
+                  <input type="text" class="pingbash-otp-input" maxlength="1" data-index="2">
+                  <input type="text" class="pingbash-otp-input" maxlength="1" data-index="3">
+                </div>
+                
+                <div class="pingbash-verification-timer">
+                  Time remaining: <span class="pingbash-timer-display">5:00</span>
+                </div>
+                
+                <div class="pingbash-verification-actions">
+                  <button class="pingbash-verify-btn">Verify</button>
+                  <button class="pingbash-resend-btn" disabled>Resend Code</button>
+                </div>
+                
+                <div class="pingbash-verification-footer">
+                  <p>Already verified? <button class="pingbash-back-to-signin-btn">Sign In</button></p>
                 </div>
               </div>
             </div>
@@ -1226,12 +1296,7 @@ Example:
                                 </svg>
                                 Settings
                               </div>
-                              <div class="pingbash-menu-item" data-action="close">
-                                <svg viewBox="0 0 24 24" width="16" height="16">
-                                  <path fill="currentColor" d="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z"/>
-                                </svg>
-                                Close Chat
-                              </div>
+
                             </div>
                           </div>
                         </div>

@@ -1427,14 +1427,11 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
         console.log('🚪 [Widget] Showing login option for anonymous user');
       }
       
-      // Hide/Show Chat toggles
+      // Hide Chat (which closes the dialog)
       const hideChatItem = this.dialog.querySelector('.pingbash-menu-item[data-action="hide-chat"]');
-      const showChatItem = this.dialog.querySelector('.pingbash-menu-item[data-action="show-chat"]');
       
-      // TODO: Implement hide/show chat state management
-      // For now, default to showing "hide chat"
+      // Always show "Hide Chat" option
       if (hideChatItem) hideChatItem.style.display = 'flex';
-      if (showChatItem) showChatItem.style.display = 'none';
     },
 
     isGroupInFavorites() {

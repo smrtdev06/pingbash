@@ -4,7 +4,7 @@
  * EXACT functionality from original widget.js
  */
 
-(function() {
+(function () {
   'use strict';
 
   // Define the PingbashChatWidget class first
@@ -88,11 +88,11 @@
       this.testGroupCreationModal = () => {
         console.log('🧪 [Widget] Testing group creation modal...');
         console.log('🧪 [Widget] Dialog element:', !!this.dialog);
-        
+
         if (this.dialog) {
           const modal = this.dialog.querySelector('.pingbash-group-creation-modal');
           console.log('🧪 [Widget] Modal element found:', !!modal);
-          
+
           if (modal) {
             console.log('🧪 [Widget] Modal current display:', modal.style.display);
             console.log('🧪 [Widget] Forcing modal to show...');
@@ -114,7 +114,7 @@
         console.log('🧪 [Widget] Testing logo click...');
         const logo = this.dialog?.querySelector('.pingbash-logo');
         console.log('🧪 [Widget] Logo element found:', !!logo);
-        
+
         if (logo) {
           console.log('🧪 [Widget] Logo element:', logo);
           console.log('🧪 [Widget] Logo cursor style:', logo.style.cursor);
@@ -129,7 +129,7 @@
         console.log('🧪 [Widget] Group:', this.group);
         console.log('🧪 [Widget] Is creator:', this.isCreator);
         console.log('🧪 [Widget] Is authenticated:', this.isAuthenticated);
-        
+
         this.showChatRules();
       };
 
@@ -152,7 +152,7 @@
         console.log('👥 [Widget] Showing online users');
         console.log('👥 [Widget] Online user IDs:', this.onlineUserIds);
         console.log('👥 [Widget] Online count:', this.onlineUserIds?.length || 0);
-        
+
         // For now, just show an alert with the count
         // TODO: Implement online users modal
         const count = this.onlineUserIds?.length || 0;
@@ -191,7 +191,7 @@
   function loadModule(url) {
     return new Promise((resolve, reject) => {
       console.log('📦 [Widget] Loading module:', url);
-      
+
       const script = document.createElement('script');
       script.src = url;
       script.onload = () => {
@@ -210,16 +210,16 @@
   // Load all modules sequentially
   async function loadAllModules() {
     console.log('📦 [Widget] Starting to load modules...');
-    
+
     WIDGET_CONFIG.baseUrl = getBaseUrl();
     console.log('📦 [Widget] Base URL:', WIDGET_CONFIG.baseUrl);
-    
+
     try {
       for (const module of WIDGET_CONFIG.modules) {
         const moduleUrl = WIDGET_CONFIG.baseUrl + module;
         await loadModule(moduleUrl);
       }
-      
+
       console.log('✅ [Widget] All modules loaded successfully');
       return true;
     } catch (error) {
@@ -231,9 +231,9 @@
   // Initialize widget after all modules are loaded
   async function initializeWidget() {
     console.log('🚀 [Widget] Initializing split widget...');
-    
+
     const modulesLoaded = await loadAllModules();
-    
+
     if (!modulesLoaded) {
       console.error('❌ [Widget] Cannot initialize - modules failed to load');
       return;
@@ -250,10 +250,10 @@
   // Create widget instance with configuration from script tag
   async function createWidgetInstance() {
     console.log('🎯 [Widget] Creating widget instance...');
-    
+
     // Find the script tag that loaded this widget
     let script = document.currentScript;
-    
+
     // Fallback methods if currentScript is not available
     if (!script) {
       const selectors = [
@@ -276,7 +276,18 @@
 
     if (script && script.dataset) {
       // Extract configuration from data attributes
-      if (script.dataset.groupName) config.groupName = script.dataset.groupName;
+      if (script.dataset.groupName)
+        config.groupName = script.dataset.groupName;
+      else {
+        // If groupName is not provided, try to extract from window.location if on *.pingbash.com
+        const hostMatch = window.location.hostname.match(/^([^.]+)\.pingbash\.com$/);
+        if (hostMatch && hostMatch[1]) {
+          config.groupName = hostMatch[1];
+          console.log('🌐 [Widget] Extracted groupName from hostname:', config.groupName);
+        } else {
+          config.groupName = 'testgroup6';
+        }
+      }
       if (script.dataset.apiUrl) config.apiUrl = script.dataset.apiUrl;
       if (script.dataset.position) config.position = script.dataset.position;
       if (script.dataset.theme) config.theme = script.dataset.theme;
@@ -290,21 +301,21 @@
     // Create and initialize the widget
     try {
       const widget = new PingbashChatWidget(config);
-      
+
       // Debug: Check available methods
       console.log('🔍 [Widget] Available methods:', Object.getOwnPropertyNames(PingbashChatWidget.prototype));
       console.log('🔍 [Widget] createWidget available:', typeof widget.createWidget);
       console.log('🔍 [Widget] applyStyles available:', typeof widget.applyStyles);
-      
+
       // Initialize the widget after all modules are loaded
       if (widget.init) {
         await widget.init();
         console.log('🎯 [Widget] Widget initialized after module loading');
       }
-      
+
       // Make it globally accessible for debugging
       window.pingbashWidget = widget;
-      
+
       console.log('✅ [Widget] Split widget instance created successfully');
     } catch (error) {
       console.error('❌ [Widget] Failed to create widget instance:', error);
