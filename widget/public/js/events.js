@@ -26,12 +26,12 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
             if (!isVisible) { // Opening the dropdown
               const modsOption = this.dialog.querySelector('.pingbash-mods-option');
               if (modsOption) {
-                if (this.isAuthenticated) {
+                if (this.isAuthenticated && this.isModeratorOrAdmin()) {
                   modsOption.style.display = 'block';
-                  console.log('🔍 [Widget] Showing mods option in filter dropdown');
+                  console.log('🔍 [Widget] Showing mods option for admin/moderator');
                 } else {
                   modsOption.style.display = 'none';
-                  console.log('🔍 [Widget] Hiding mods option for anonymous user');
+                  console.log('🔍 [Widget] Hiding mods option for regular user/anonymous');
                 }
               }
             }
@@ -1897,14 +1897,14 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
           userSearch.style.display = filterMode === 1 ? 'block' : 'none';
         }
         
-        // Show mods option for all authenticated users (same as F version)
+        // Show mods option only for admins/moderators
         if (modsOption) {
-          if (this.isAuthenticated) {
+          if (this.isAuthenticated && this.isModeratorOrAdmin()) {
             modsOption.style.display = 'block';
-            console.log('🔍 [Widget] Showing mods mode for authenticated user');
+            console.log('🔍 [Widget] Showing mods mode for admin/moderator');
           } else {
             modsOption.style.display = 'none';
-            console.log('🔍 [Widget] Hiding mods mode for anonymous user');
+            console.log('🔍 [Widget] Hiding mods mode for regular user/anonymous');
           }
         }
         

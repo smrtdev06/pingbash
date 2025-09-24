@@ -1265,11 +1265,16 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
           filterContainer.style.display = 'flex';
           console.log('🔍 [Widget] Showing Chat Mode filter for authenticated user');
           
-          // Also show mods option for authenticated users
+          // Show mods option only for admins/moderators
           const modsOption = this.dialog.querySelector('.pingbash-mods-option');
           if (modsOption) {
-            modsOption.style.display = 'block';
-            console.log('🔍 [Widget] Enabling mods option for authenticated user');
+            if (this.isModeratorOrAdmin()) {
+              modsOption.style.display = 'block';
+              console.log('🔍 [Widget] Enabling mods option for admin/moderator');
+            } else {
+              modsOption.style.display = 'none';
+              console.log('🔍 [Widget] Hiding mods option for regular user');
+            }
           }
         } else {
           filterContainer.style.display = 'none';

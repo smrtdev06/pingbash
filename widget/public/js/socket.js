@@ -163,7 +163,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
 
       this.socket.on('forbidden', (data) => {
         console.error('🔍 [Widget] Forbidden access:', data);
-        this.showError('Access denied. You may not have permission for this action.');
+        // this.showError('Access denied. You may not have permission for this action.');
         // Hide any moderator loading states  
         this.hideModeratorLoading();
       });

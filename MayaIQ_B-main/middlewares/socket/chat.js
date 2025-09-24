@@ -272,19 +272,37 @@ module.exports = (socket, users) => {
                 sockets[socket.id] = socket;
             }
             
+            // Get moderator and admin IDs for potential use in Mods mode
+            let modAdminIds = null;
+            
             // Handle Mods Mode messaging (receiverId = -1 indicates mods-only message)
             if (receiverId === -1) {
                 console.log(`📋 [MODS-MODE] User ${senderId} sending message to moderators and admins in group ${groupId}`);
                 
                 // Get all moderator and admin IDs
-                const modAdminIds = await Controller.getGroupModeratorsAndAdmins(groupId);
+                modAdminIds = await Controller.getGroupModeratorsAndAdmins(groupId);
                 console.log(`📋 [MODS-MODE] Found ${modAdminIds.length} moderators/admins:`, modAdminIds);
                 
                 if (modAdminIds.length > 0) {
-                    // Save the message once for each moderator/admin
-                    for (const modAdminId of modAdminIds) {
-                        await Controller.saveGroupMsg(senderId, content, groupId, modAdminId, data.parent_id);
-                        console.log(`📋 [MODS-MODE] Message saved for moderator/admin ${modAdminId}`);
+                    console.log(`📋 [MODS-MODE] All mod/admin IDs:`, modAdminIds);
+                    console.log(`📋 [MODS-MODE] Sender ID:`, senderId);
+                    
+                    // Save the message for each moderator/admin EXCEPT the sender
+                    const recipientIds = modAdminIds.filter(id => id !== senderId);
+                    console.log(`📋 [MODS-MODE] Filtered recipients (excluding sender ${senderId}):`, recipientIds);
+                    console.log(`📋 [MODS-MODE] Original count: ${modAdminIds.length}, After filtering: ${recipientIds.length}`);
+                    
+                    if (recipientIds.length > 0) {
+                        for (const modAdminId of recipientIds) {
+                            await Controller.saveGroupMsg(senderId, content, groupId, modAdminId, data.parent_id);
+                            console.log(`📋 [MODS-MODE] ✅ Message saved for moderator/admin ${modAdminId} (receiver: ${modAdminId})`);
+                        }
+                        console.log(`📋 [MODS-MODE] ✅ Total messages created: ${recipientIds.length}`);
+                    } else {
+                        console.log(`📋 [MODS-MODE] ⚠️ No other moderators/admins to send to (sender ${senderId} is the only mod/admin)`);
+                        // Save as public message since there are no other mods/admins
+                        await Controller.saveGroupMsg(senderId, content, groupId, null, data.parent_id);
+                        console.log(`📋 [MODS-MODE] ✅ Saved as public message instead`);
                     }
                 } else {
                     console.log(`📋 [MODS-MODE] No moderators/admins found, saving as regular group message`);
@@ -371,8 +389,15 @@ module.exports = (socket, users) => {
             
             console.log(`🔍 [BROADCAST] Summary: ${successfulBroadcasts}/${receiverSockets?.length || 0} direct broadcasts successful`);
             
-            // Send message back to sender
-            socket.emit(chatCode.SEND_GROUP_MSG, msgList);
+            // Send message back to sender only if they should receive it
+            // For Mods mode messages, sender doesn't get their message back since they were excluded from recipients
+            const shouldSendBackToSender = !(receiverId === -1 && modAdminIds && modAdminIds.includes(senderId));
+            if (shouldSendBackToSender) {
+                socket.emit(chatCode.SEND_GROUP_MSG, msgList);
+                console.log(`📋 [BROADCAST] ✅ Message sent back to sender ${senderId}`);
+            } else {
+                console.log(`📋 [BROADCAST] ⏭️ Skipping send-back to sender ${senderId} (Mods mode - sender excluded)`);
+            }
             socket.emit(chatCode.GET_GROUP_ONLINE_USERS, receiveUsers?.map(u => u.ID));
             
             console.log(`✅ Message sent successfully by user ${senderId} to group ${groupId}`);
@@ -449,7 +474,7 @@ module.exports = (socket, users) => {
                 console.log(`📋 [ANON-MODS-MODE] Found ${modAdminIds.length} moderators/admins:`, modAdminIds);
                 
                 if (modAdminIds.length > 0) {
-                    // Save the message once for each moderator/admin
+                    // Anonymous users can send to all moderators/admins (they're not mods themselves)
                     for (const modAdminId of modAdminIds) {
                         await Controller.saveGroupMsg(anonId, content, groupId, modAdminId, data.parent_id);
                         console.log(`📋 [ANON-MODS-MODE] Message saved for moderator/admin ${modAdminId}`);

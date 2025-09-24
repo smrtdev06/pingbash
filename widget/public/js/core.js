@@ -363,10 +363,17 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
             `;
             
             // Add to messages area
-            messagesArea.appendChild(notification);
-            
-            // Scroll to bottom to show the notification
-            messagesArea.scrollTop = messagesArea.scrollHeight;
+            // Only append if the last message is not a notification of the same type
+            const lastChild = messagesArea.lastElementChild;
+            if (
+                !lastChild ||
+                !lastChild.classList ||
+                !lastChild.classList.contains(`pingbash-${type}-notification`)
+            ) {
+                messagesArea.appendChild(notification);
+                // Scroll to bottom to show the notification
+                messagesArea.scrollTop = messagesArea.scrollHeight;
+            }
             
             console.log(`📢 [Widget] ${type} notification displayed successfully`);
         },

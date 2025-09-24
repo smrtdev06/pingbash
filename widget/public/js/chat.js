@@ -119,8 +119,26 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
   
       console.log('🔍 [Widget] displayMessages called with', allMessages.length, 'messages');
       
+      // First, filter out Mods mode messages for regular users (in ALL modes)
+      let preFilteredMessages = allMessages;
+      if (!this.isModeratorOrAdmin()) {
+        // Regular users should NEVER see messages sent in Mods mode (receiver_id = specific moderator/admin)
+        const beforeModsFilter = preFilteredMessages.length;
+        preFilteredMessages = preFilteredMessages.filter(msg => {
+          // Keep public messages (receiver_id = null) and messages sent to current user
+          const currentUserId = this.getCurrentUserId();
+          const isPublic = msg.Receiver_Id == null;
+          const isToCurrentUser = msg.Receiver_Id == currentUserId;
+          const isOwnMessage = msg.Sender_Id == currentUserId;
+          
+          // Hide messages that were sent in Mods mode (to specific moderators/admins) unless it's to current user
+          return isPublic || isToCurrentUser || isOwnMessage;
+        });
+        console.log('📋 [Widget] Filtered out Mods mode messages for regular user:', beforeModsFilter - preFilteredMessages.length, 'removed');
+      }
+      
       // Apply Chat Mode filter (same as F version)
-      let filteredMessages = this.applyFilterMode(allMessages);
+      let filteredMessages = this.applyFilterMode(preFilteredMessages);
       console.log('🔍 [Widget] After filter mode:', filteredMessages.length, 'messages (mode:', this.filterMode || 0, ')');
       
       // Filter out messages from blocked users
@@ -716,7 +734,21 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
       const errorEl = document.createElement('div');
       errorEl.className = 'pingbash-error';
       errorEl.textContent = message;
-      messagesList.appendChild(errorEl);
+
+      // Check if the last child is an error with the same message
+      const lastChild = messagesList.lastElementChild;
+      if (
+        lastChild &&
+        lastChild.classList &&
+        lastChild.classList.contains('pingbash-error') &&
+        lastChild.textContent === message
+      ) {
+        // Don't append duplicate error
+        this.scrollToBottom();
+        return;
+      }
+
+      //messagesList.appendChild(errorEl);
       this.scrollToBottom();
     },
 
@@ -1119,8 +1151,32 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
       },
 
       isModeratorOrAdmin() {
-        // Check if current user is moderator or admin (same as F version)
-        return this.currentUserRole === 1 || this.currentUserRole === 2 || this.isGroupCreator;
+        // Check if user is moderator or admin (role_id 1 or 2) or group creator
+        const currentUserId = this.getCurrentUserId();
+        if (!currentUserId || !this.group) {
+          console.log('🔍 [Widget] isModeratorOrAdmin: No user ID or group data', { currentUserId, hasGroup: !!this.group });
+          return false;
+        }
+        
+        // Group creator can always access moderator features
+        if (this.group.creater_id === currentUserId) {
+          console.log('🔍 [Widget] isModeratorOrAdmin: User is group creator');
+          return true;
+        }
+        
+        // Check if user is mod/admin in group members
+        const userMember = this.group.members?.find(member => member.id === currentUserId);
+        const isModAdmin = userMember && (userMember.role_id === 1 || userMember.role_id === 2);
+        
+        console.log('🔍 [Widget] isModeratorOrAdmin check:', {
+          currentUserId,
+          groupCreatorId: this.group.creater_id,
+          userMember: userMember ? { id: userMember.id, role_id: userMember.role_id } : null,
+          isModAdmin,
+          totalMembers: this.group.members?.length
+        });
+        
+        return isModAdmin;
       },
 
       getCurrentUserId() {
@@ -1133,16 +1189,31 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
       },
 
       getFilterModeText(message) {
-        // Display filter mode text on messages (same as F version)
+        // Display filter mode text on messages
         if (!message.Receiver_Id) {
           return ''; // Public message - no text needed
         }
 
         const currentUserId = this.getCurrentUserId();
 
-        if (message.Receiver_Id == 1) {
-          return '<span class="pingbash-filter-mode-text">Mods</span>';
-        } else if (message.Receiver_Id > 1) {
+        // Check if this is a Mods mode message
+        const modAdminIds = this.getModeratorAndAdminIds();
+        const isReceiverModAdmin = modAdminIds.includes(message.Receiver_Id);
+        const isCurrentUserModAdmin = this.isModeratorOrAdmin();
+        
+        if (isReceiverModAdmin && isCurrentUserModAdmin) {
+          // Additional check: see if there are other similar messages to other mods/admins
+          if (this.isModsMessage(message)) {
+            return '<span class="pingbash-filter-mode-text">Mod</span>';
+          } else {
+            // Fallback: if receiver is mod/admin and we're viewing in Mods mode (filterMode = 2), assume it's a Mods message
+            if (this.filterMode === 2) {
+              return '<span class="pingbash-filter-mode-text">Mod</span>';
+            }
+          }
+        }
+        
+        if (message.Receiver_Id > 0) {
           if (message.Receiver_Id == currentUserId) {
             return '<span class="pingbash-filter-mode-text">1 on 1</span>';
           } else {
@@ -1153,6 +1224,65 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         }
 
         return '';
+      },
+
+      isModsMessage(message) {
+        // Check if this message was sent in Mods mode by checking if it was sent to all moderators/admins
+        if (!message.Receiver_Id || !this.group || !this.group.members) {
+          return false;
+        }
+
+        // Get all moderator and admin IDs
+        const modAdminIds = this.getModeratorAndAdminIds();
+        if (modAdminIds.length === 0) {
+          return false;
+        }
+
+        // Use the currently loaded messages instead of this.allMessages
+        const messages = this.messages || this.allMessages || [];
+        if (messages.length === 0) {
+          return false;
+        }
+
+        // Check if there are messages with the same content, sender, and timestamp sent to all mods/admins
+        const matchingMessages = messages.filter(msg => 
+          msg.Content === message.Content &&
+          msg.Sender_Id === message.Sender_Id &&
+          msg.Send_Time === message.Send_Time &&
+          msg.Receiver_Id && 
+          modAdminIds.includes(msg.Receiver_Id)
+        );
+
+        // If the message was sent to all or most moderators/admins (excluding sender), it's a Mods mode message
+        // Adjust threshold: for authenticated users, sender is excluded, so we need (total-1) mods/admins
+        const currentUserId = this.getCurrentUserId();
+        const isSenderModAdmin = modAdminIds.includes(message.Sender_Id);
+        const expectedRecipients = isSenderModAdmin ? modAdminIds.length - 1 : modAdminIds.length;
+        const threshold = Math.max(1, Math.floor(expectedRecipients * 0.8)); // At least 80% of expected recipients
+        const isModsMsg = matchingMessages.length >= threshold;
+
+        return isModsMsg;
+      },
+
+      getModeratorAndAdminIds() {
+        // Get all moderator (role_id = 2) and admin (creater_id) IDs
+        const modAdminIds = [];
+        
+        // Add group creator (admin)
+        if (this.group.creater_id) {
+          modAdminIds.push(this.group.creater_id);
+        }
+        
+        // Add moderators
+        if (this.group.members) {
+          this.group.members.forEach(member => {
+            if (member.role_id === 2 && !modAdminIds.includes(member.id)) {
+              modAdminIds.push(member.id);
+            }
+          });
+        }
+        
+        return modAdminIds;
       },
 
       getReceiverName(receiverId) {

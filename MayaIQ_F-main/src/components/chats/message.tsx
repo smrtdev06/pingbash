@@ -168,9 +168,31 @@ const Message: React.FC<MessageProps> = ({
 
   useEffect(() => {
     if (message && group && userId) {
-      if (message.Receiver_Id && message.Receiver_Id == 1) {
-        setFilterModeText("Mods")
-      } else if (message.Receiver_Id && message.Receiver_Id > 1) {
+      // Check if this is a Mods mode message by checking if receiver is a mod/admin and we're a mod/admin
+      const isModsMessage = () => {
+        if (!message.Receiver_Id) return false;
+        
+        // Get all moderator and admin IDs
+        const modAdminIds: number[] = [];
+        if (group.creater_id) modAdminIds.push(group.creater_id);
+        if (group.members) {
+          group.members.forEach(member => {
+            if (member.role_id === 2 && !modAdminIds.includes(member.id)) {
+              modAdminIds.push(member.id);
+            }
+          });
+        }
+        
+        const isReceiverModAdmin = modAdminIds.includes(message.Receiver_Id);
+        const currentUserMember = group.members?.find(member => member.id === userId);
+        const isCurrentUserModAdmin = group.creater_id === userId || currentUserMember?.role_id === 1 || currentUserMember?.role_id === 2;
+        
+        return isReceiverModAdmin && isCurrentUserModAdmin;
+      };
+
+      if (isModsMessage()) {
+        setFilterModeText("Mod")
+      } else if (message.Receiver_Id && message.Receiver_Id > 0) {
         if (message.Receiver_Id == userId) {
           setFilterModeText("1 on 1")
         } else {
