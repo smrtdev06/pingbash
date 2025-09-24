@@ -678,6 +678,9 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         this.unreadCount = 0;
         this.updateUnreadBadge();
 
+        // Update button/dialog visibility
+        this.updateButtonVisibility();
+
         // Update chat limitation UI when dialog opens
         this.onGroupDataUpdated();
 
@@ -694,6 +697,10 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
       closeDialog() {
         this.isOpen = false;
         this.dialog.classList.remove('open');
+        
+        // Update button/dialog visibility
+        this.updateButtonVisibility();
+        
         this.dispatchEvent('pingbash-closed');
       },
 

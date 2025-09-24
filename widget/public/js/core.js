@@ -93,9 +93,11 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
                 setTimeout(() => this.showSigninModal(), 500);
             }
 
-            if (this.config.autoOpen) {
-                setTimeout(() => this.openDialog(), 1000);
-            }
+            // Always open dialog by default, hide chat button
+            setTimeout(() => {
+                this.openDialog();
+                this.updateButtonVisibility();
+            }, 1000);
         },
 
         // EXACT COPY from widget.js - loadSeenRules method
@@ -472,6 +474,23 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
             } catch (error) {
                 console.error(`⏰ [Widget] Error checking persisted timeout:`, error);
                 return false;
+            }
+        },
+
+        // Update button and dialog visibility
+        updateButtonVisibility() {
+            if (this.button && this.dialog) {
+                if (this.isOpen) {
+                    // Dialog is open, hide button
+                    this.button.style.display = 'none';
+                    this.dialog.style.display = 'flex';
+                    console.log('💬 [Widget] Dialog open - hiding chat button');
+                } else {
+                    // Dialog is closed, show button
+                    this.button.style.display = 'flex';
+                    this.dialog.style.display = 'none';
+                    console.log('💬 [Widget] Dialog closed - showing chat button');
+                }
             }
         },
 

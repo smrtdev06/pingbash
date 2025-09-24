@@ -57,6 +57,21 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
           filter: none !important;
           opacity: 1 !important;
           visibility: visible !important;
+          /* Support for drag and drop */
+          cursor: default !important;
+        }
+        
+        .pingbash-widget.dragging {
+          transition: none !important;
+          user-select: none !important;
+          box-shadow: 0 12px 48px rgba(0,0,0,0.2) !important;
+        }
+        
+        .pingbash-chat-dialog.dragging {
+          transition: none !important;
+          user-select: none !important;
+          box-shadow: 0 12px 48px rgba(0,0,0,0.25) !important;
+          z-index: 2147483648 !important;
         }
         
         .pingbash-widget[data-position="top-left"] {
@@ -105,6 +120,11 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
           transform: scale(0.95);
         }
         
+        /* Chat button initially hidden (dialog opens by default) */
+        .pingbash-chat-button {
+          display: none;
+        }
+        
         .pingbash-chat-icon {
           width: 28px;
           height: 28px;
@@ -149,6 +169,37 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
           border: 1px solid #e0e0e0;
           display: flex;
           flex-direction: column;
+        }
+        
+        /* Mobile: Full screen chat dialog */
+        @media (max-width: 768px) {
+          .pingbash-chat-dialog {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            bottom: 0 !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            min-width: 100vw !important;
+            min-height: 100vh !important;
+            max-width: 100vw !important;
+            max-height: 100vh !important;
+            border-radius: 0 !important;
+            border: none !important;
+            transform: translateY(${this.config.position.includes('top') ? '-' : ''}100vh);
+            z-index: 2147483647;
+          }
+          
+          .pingbash-chat-dialog.open {
+            transform: translateY(0) !important;
+          }
+          
+          /* Mobile: Header not draggable */
+          .pingbash-header {
+            cursor: default !important;
+            user-select: auto !important;
+          }
         }
         
         .pingbash-chat-dialog.open {
@@ -292,6 +343,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
         .pingbash-filter-option {
           display: flex;
           flex-direction: column;
+          
         }
 
         .pingbash-filter-option > div:first-child {
@@ -476,6 +528,12 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
           border-bottom-color: #444 !important;
         }
         
+        .pingbash-dark-mode .pingbash-input-bar,
+        .pingbash-dark-mode .pingbash-controls-bar {
+          background: #2d2d2d !important;
+          border-top-color: #444 !important;
+        }
+        
         .pingbash-dark-mode .pingbash-messages-area {
           background: #1a1a1a !important;
         }
@@ -556,6 +614,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
           display: flex;
           align-items: flex-start;
           gap: 2px;
+          flex:1;
           max-width: 100%;
           word-wrap: break-word;
         }
@@ -726,27 +785,82 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
         }
         
         /* W Version Bottom Bar Styling */
-        .pingbash-bottom-bar {
-          background: white;
+        /* First Bottom Bar: Input and Send Only */
+        .pingbash-input-bar {
+          background: var(--title-bg-color, white);
           border-top: 1px solid #e0e0e0;
           padding: 10px 16px;
           flex-shrink: 0;
           display: flex;
           align-items: center;
-          justify-content: space-between;
-          gap: 10px;
+          justify-content: center;
         }
         
-        .pingbash-bar-left {
+        /* Second Bottom Bar: Controls Only */
+        .pingbash-controls-bar {
+          background: var(--title-bg-color, white);
+          border-top: 1px solid #e0e0e0;
+          padding: 8px 16px;
+          flex-shrink: 0;
           display: flex;
           align-items: center;
+          justify-content: space-between;
+          gap: 10px;
+          min-height: 40px;
+        }
+        
+        .pingbash-controls-left {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+        
+        .pingbash-controls-right {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+        
+        .pingbash-control-btn {
+          background: none;
+          border: none;
+          color: #666;
+          cursor: pointer;
+          padding: 6px;
+          border-radius: 6px;
+          transition: all 0.2s ease;
+          display: flex !important;
+          align-items: center;
+          justify-content: center;
+          width: 32px;
+          height: 32px;
+          position: relative;
+        }
+        
+        .pingbash-control-btn:hover {
+          background: rgba(0,123,255,0.1);
+          color: #007bff;
+        }
+        
+        .pingbash-control-btn:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+        }
+        
+        /* General rule: ALL dropdowns in controls bar should be bottom-aligned */
+        .pingbash-controls-bar [class*="dropdown"] {
+          position: absolute !important;
+          top: auto !important;
+          bottom: 100% !important;
+          margin-top: 0 !important;
+          margin-bottom: 8px !important;
         }
         
         .pingbash-media-controls {
           display: flex !important;
-          gap: 10px;
+          gap: 8px;
           align-items: center;
-          min-width: 126px;
+          min-width: 100px;
           opacity: 1 !important;
           visibility: visible !important;
         }
@@ -762,8 +876,8 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
           display: flex !important;
           align-items: center;
           justify-content: center;
-          width: 24px;
-          height: 24px;
+          width: 20px;
+          height: 20px;
           opacity: 1 !important;
           visibility: visible !important;
         }
@@ -775,6 +889,107 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
         .pingbash-media-btn:disabled {
           opacity: 0.5;
           cursor: not-allowed;
+        }
+        
+        /* Chat filter in controls bar */
+        .pingbash-controls-bar .pingbash-filter-container {
+          position: relative;
+        }
+        
+        .pingbash-controls-bar .pingbash-filter-dropdown {
+          position: absolute;
+          bottom: 100%;
+          right: 0;
+          background: white;
+          border: 1px solid #ddd;
+          border-radius: 8px;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+          min-width: 160px;
+          z-index: 2147483647;
+          margin-bottom: 8px;
+          padding: 8px 0;
+        }
+        
+        /* Override any existing filter dropdown positioning when in controls bar */
+        .pingbash-controls-bar .pingbash-filter-dropdown {
+          top: auto !important;
+          bottom: 100% !important;
+          margin-top: 0 !important;
+          margin-bottom: 8px !important;
+        }
+        
+        .pingbash-filter-option {
+          padding: 8px 12px;
+          cursor: pointer;
+          transition: background-color 0.2s ease;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          font-size: 14px;
+        }
+        
+        .pingbash-filter-option:hover {
+          background: rgba(0,123,255,0.1);
+        }
+        
+        .pingbash-filter-dot {
+          width: 8px;
+          height: 8px;
+          border-radius: 50%;
+          background: #ccc;
+          transition: background-color 0.2s ease;
+        }
+        
+        .pingbash-filter-option.active .pingbash-filter-dot {
+          background: #007bff;
+        }
+        
+        /* Online users in controls bar */
+        .pingbash-controls-bar .pingbash-online-users-container {
+          position: relative;
+        }
+        
+        .pingbash-controls-bar .pingbash-online-count-badge {
+          position: absolute;
+          top: -4px;
+          right: -4px;
+          background: #007bff;
+          color: white;
+          border-radius: 10px;
+          padding: 2px 6px;
+          font-size: 10px;
+          font-weight: bold;
+          min-width: 16px;
+          text-align: center;
+          line-height: 1;
+          border: 2px solid #f8f9fa;
+        }
+        
+        /* Settings in controls bar */
+        .pingbash-controls-bar .pingbash-settings-container {
+          position: relative;
+        }
+        
+        .pingbash-controls-bar .pingbash-settings-dropdown {
+          position: absolute;
+          bottom: 100%;
+          right: 0;
+          background: white;
+          border: 1px solid #ddd;
+          border-radius: 8px;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+          min-width: 200px;
+          z-index: 2147483647;
+          margin-bottom: 8px;
+          padding: 8px 0;
+        }
+        
+        /* Override any existing settings dropdown positioning when in controls bar */
+        .pingbash-controls-bar .pingbash-settings-dropdown {
+          top: auto !important;
+          bottom: 100% !important;
+          margin-top: 0 !important;
+          margin-bottom: 8px !important;
         }
         
         .pingbash-input-wrapper {

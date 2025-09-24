@@ -31,6 +31,96 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
       
       // Initialize online user count badge
       this.updateOnlineUserCount(0);
+      
+      // Setup drag functionality for dialog only
+      this.setupDragFunctionality();
+      
+      // Set initial state: dialog will be opened by default, button hidden
+      this.isOpen = false; // Will be set to true when dialog opens
+      this.updateButtonVisibility();
+    },
+
+    // NEW METHOD - Setup drag and drop functionality for dialog only
+    setupDragFunctionality() {
+      if (!this.dialog) return;
+      
+      // Check if device is mobile (disable drag on mobile)
+      const isMobile = window.innerWidth <= 768;
+      if (isMobile) {
+        console.log('📱 [Widget] Mobile device detected - disabling drag functionality');
+        return;
+      }
+      
+      let isDragging = false;
+      let dragOffset = { x: 0, y: 0 };
+      
+      // Make header draggable (only when dialog is open and not on mobile)
+      const header = this.dialog.querySelector('.pingbash-header');
+      if (header) {
+        header.style.cursor = 'move';
+        header.style.userSelect = 'none';
+        
+        const handleMouseDown = (e) => {
+          // Only drag when dialog is open and clicking on header elements, not buttons
+          if (!this.isOpen || e.target.closest('button')) {
+            return;
+          }
+          
+          // Double-check mobile status at interaction time
+          if (window.innerWidth <= 768) {
+            return;
+          }
+          
+          isDragging = true;
+          const rect = this.dialog.getBoundingClientRect();
+          dragOffset.x = e.clientX - rect.left;
+          dragOffset.y = e.clientY - rect.top;
+          
+          header.style.cursor = 'grabbing';
+          this.dialog.classList.add('dragging');
+          document.addEventListener('mousemove', handleMouseMove);
+          document.addEventListener('mouseup', handleMouseUp);
+          e.preventDefault();
+        };
+        
+        const handleMouseMove = (e) => {
+          if (!isDragging || window.innerWidth <= 768) return;
+          
+          const newX = e.clientX - dragOffset.x;
+          const newY = e.clientY - dragOffset.y;
+          
+          // Keep dialog within viewport bounds
+          const maxX = window.innerWidth - this.dialog.offsetWidth;
+          const maxY = window.innerHeight - this.dialog.offsetHeight;
+          
+          const constrainedX = Math.max(0, Math.min(newX, maxX));
+          const constrainedY = Math.max(0, Math.min(newY, maxY));
+          
+          this.dialog.style.left = constrainedX + 'px';
+          this.dialog.style.top = constrainedY + 'px';
+          this.dialog.style.position = 'fixed';
+          this.dialog.style.transform = 'none';
+        };
+        
+        const handleMouseUp = () => {
+          isDragging = false;
+          header.style.cursor = window.innerWidth <= 768 ? 'default' : 'move';
+          this.dialog.classList.remove('dragging');
+          document.removeEventListener('mousemove', handleMouseMove);
+          document.removeEventListener('mouseup', handleMouseUp);
+        };
+        
+        header.addEventListener('mousedown', handleMouseDown);
+        
+        // Update cursor on window resize
+        window.addEventListener('resize', () => {
+          if (window.innerWidth <= 768) {
+            header.style.cursor = 'default';
+          } else if (!isDragging) {
+            header.style.cursor = 'move';
+          }
+        });
+      }
     },
 
   // EXACT COPY from widget.js - createChatButton method
@@ -43,6 +133,8 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         </svg>
         <span class="pingbash-unread-badge" style="display: none;">0</span>
       `;
+
+      this.button.style.display = 'none';
   
       this.widget.appendChild(this.button);
     },
@@ -60,87 +152,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
             </div>
           </div>
           <div class="pingbash-header-right">
-            <div class="pingbash-online-users-container">
-              <div class="pingbash-online-users-icon" title="Online Users">
-                <svg viewBox="0 0 24 24" width="20" height="20">
-                  <path fill="currentColor" d="M16,4C18.21,4 20,5.79 20,8C20,10.21 18.21,12 16,12C13.79,12 12,10.21 12,8C12,5.79 13.79,4 16,4M16,14C20.42,14 24,15.79 24,18V20H8V18C8,15.79 11.58,14 16,14M6,6C7.11,6 8,6.89 8,8C8,9.11 7.11,10 6,10C4.89,10 4,9.11 4,8C4,6.89 4.89,6 6,6M6,12C8.67,12 12,13.34 12,16V18H0V16C0,13.34 3.33,12 6,12Z"/>
-                </svg>
-                <span class="pingbash-online-count-badge">0</span>
-              </div>
-            </div>
-            <div class="pingbash-filter-container" style="display: none;">
-              <div class="pingbash-filter-icon" title="Chat Mode">
-                <svg viewBox="0 0 24 24" width="20" height="20">
-                  <path fill="currentColor" d="M6,13H18V11H6M3,6V8H21V6M10,18H14V16H10V18Z"/>
-                </svg>
-              </div>
-              <div class="pingbash-filter-dropdown" style="display: none;">
-                <div class="pingbash-filter-widget">
-                  <div class="pingbash-filter-option">
-                    <input type="radio" id="filter-public" name="filter-mode" value="0" checked>
-                    <label for="filter-public">Public Mode</label>
-                  </div>
-                  <div class="pingbash-filter-option">
-                    <input type="radio" id="filter-oneone" name="filter-mode" value="1">
-                    <label for="filter-oneone">1 on 1 Mode</label>
-                    <div class="pingbash-user-search" style="display: none;">
-                      <input type="text" class="pingbash-user-search-input" placeholder="Search user...">
-                      <div class="pingbash-user-dropdown" style="display: none;"></div>
-                    </div>
-                  </div>
-                  <div class="pingbash-filter-option pingbash-mods-option" style="display: none;">
-                    <input type="radio" id="filter-mods" name="filter-mode" value="2">
-                    <label for="filter-mods">Mods Mode</label>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <!-- Settings Menu (Admin Tools) -->
-            <div class="pingbash-settings-container" style="display: none;">
-              <button class="pingbash-settings-btn" title="Settings">
-                <svg viewBox="0 0 24 24" width="20" height="20">
-                  <path fill="currentColor" d="M12,15.5A3.5,3.5 0 0,1 8.5,12A3.5,3.5 0 0,1 12,8.5A3.5,3.5 0 0,1 15.5,12A3.5,3.5 0 0,1 12,15.5M19.43,12.97C19.47,12.65 19.5,12.33 19.5,12C19.5,11.67 19.47,11.34 19.43,11L21.54,9.37C21.73,9.22 21.78,8.95 21.66,8.73L19.66,5.27C19.54,5.05 19.27,4.96 19.05,5.05L16.56,6.05C16.04,5.66 15.5,5.32 14.87,5.07L14.5,2.42C14.46,2.18 14.25,2 14,2H10C9.75,2 9.54,2.18 9.5,2.42L9.13,5.07C8.5,5.32 7.96,5.66 7.44,6.05L4.95,5.05C4.73,4.96 4.46,5.05 4.34,5.27L2.34,8.73C2.22,8.95 2.27,9.22 2.46,9.37L4.57,11C4.53,11.34 4.5,11.67 4.5,12C4.5,12.33 4.53,12.65 4.57,12.97L2.46,14.63C2.27,14.78 2.22,15.05 2.34,15.27L4.34,18.73C4.46,18.95 4.73,19.03 4.95,18.95L7.44,17.94C7.96,18.34 8.5,18.68 9.13,18.93L9.5,21.58C9.54,21.82 9.75,22 10,22H14C14.25,22 14.46,21.82 14.5,21.58L14.87,18.93C15.5,18.68 16.04,18.34 16.56,17.94L19.05,18.95C19.27,19.03 19.54,18.95 19.66,18.73L21.66,15.27C21.78,15.05 21.73,14.78 21.54,14.63L19.43,12.97Z"/>
-                </svg>
-              </button>
-              <div class="pingbash-settings-dropdown" style="display: none;">
-                <div class="pingbash-menu-item" data-action="chat-limitations" style="display: none;">
-                  <svg viewBox="0 0 24 24" width="16" height="16">
-                    <path fill="currentColor" d="M12,1L3,5V11C3,16.55 6.84,21.74 12,23C17.16,21.74 21,16.55 21,11V5L12,1M12,7C13.4,7 14.8,8.6 14.8,10V11.5C15.4,11.5 16,12.4 16,13V16C16,17.4 15.4,18 14.8,18H9.2C8.6,18 8,17.4 8,16V13C8,12.4 8.6,11.5 9.2,11.5V10C9.2,8.6 10.6,7 12,7M12,8.2C11.2,8.2 10.5,8.7 10.5,10V11.5H13.5V10C13.5,8.7 12.8,8.2 12,8.2Z"/>
-                  </svg>
-                  Chat Limitations
-                </div>
-                <div class="pingbash-menu-item" data-action="manage-chat" style="display: none;">
-                  <svg viewBox="0 0 24 24" width="16" height="16">
-                    <path fill="currentColor" d="M12,15.5A3.5,3.5 0 0,1 8.5,12A3.5,3.5 0 0,1 12,8.5A3.5,3.5 0 0,1 15.5,12A3.5,3.5 0 0,1 12,15.5M19.43,12.97C19.47,12.65 19.5,12.33 19.5,12C19.5,11.67 19.47,11.34 19.43,11L21.54,9.37C21.73,9.22 21.78,8.95 21.66,8.73L19.66,5.27C19.54,5.05 19.27,4.96 19.05,5.05L16.56,6.05C16.04,5.66 15.5,5.32 14.87,5.07L14.5,2.42C14.46,2.18 14.25,2 14,2H10C9.75,2 9.54,2.18 9.5,2.42L9.13,5.07C8.5,5.32 7.96,5.66 7.44,6.05L4.95,5.05C4.73,4.96 4.46,5.05 4.34,5.27L2.34,8.73C2.22,8.95 2.27,9.22 2.46,9.37L4.57,11C4.53,11.34 4.5,11.67 4.5,12C4.5,12.33 4.53,12.65 4.57,12.97L2.46,14.63C2.27,14.78 2.22,15.05 2.34,15.27L4.34,18.73C4.46,18.95 4.73,19.03 4.95,18.95L7.44,17.94C7.96,18.34 8.5,18.68 9.13,18.93L9.5,21.58C9.54,21.82 9.75,22 10,22H14C14.25,22 14.46,21.82 14.5,21.58L14.87,18.93C15.5,18.68 16.04,18.34 16.56,17.94L19.05,18.95C19.27,19.03 19.54,18.95 19.66,18.73L21.66,15.27C21.78,15.05 21.73,14.78 21.54,14.63L19.43,12.97Z"/>
-                  </svg>
-                  Manage Chat
-                </div>
-                <div class="pingbash-menu-item" data-action="moderator-management" style="display: none;">
-                  <svg viewBox="0 0 24 24" width="16" height="16">
-                    <path fill="currentColor" d="M12,5.5A3.5,3.5 0 0,1 15.5,9A3.5,3.5 0 0,1 12,12.5A3.5,3.5 0 0,1 8.5,9A3.5,3.5 0 0,1 12,5.5M5,8C5.56,8 6.08,8.15 6.53,8.42C6.38,9.85 6.8,11.27 7.66,12.38C7.16,13.34 6.16,14 5,14A3,3 0 0,1 2,11A3,3 0 0,1 5,8M19,8A3,3 0 0,1 22,11A3,3 0 0,1 19,14C17.84,14 16.84,13.34 16.34,12.38C17.2,11.27 17.62,9.85 17.47,8.42C17.92,8.15 18.44,8 19,8M5.5,18.25C5.5,16.18 8.41,14.5 12,14.5C15.59,14.5 18.5,16.18 18.5,18.25V20H5.5V18.25M0,20V18.5C0,17.11 1.89,15.94 4.45,15.6C3.86,16.28 3.5,17.22 3.5,18.25V20H0M24,20H20.5V18.25C20.5,17.22 20.14,16.28 19.55,15.6C22.11,15.94 24,17.11 24,18.5V20Z"/>
-                  </svg>
-                  Manage Moderators
-                </div>
-                <div class="pingbash-menu-item" data-action="censored-content" style="display: none;">
-                  <svg viewBox="0 0 24 24" width="16" height="16">
-                    <path fill="currentColor" d="M11,7H13A1,1 0 0,1 14,8V16A1,1 0 0,1 13,17H11A1,1 0 0,1 10,16V8A1,1 0 0,1 11,7M11,2A1,1 0 0,1 12,1A1,1 0 0,1 13,2V5H11V2M17.5,7A4.5,4.5 0 0,1 22,11.5A4.5,4.5 0 0,1 17.5,16H16V14H17.5A2.5,2.5 0 0,0 20,11.5A2.5,2.5 0 0,0 17.5,9H16V7H17.5M8,7V9H6.5A2.5,2.5 0 0,0 4,11.5A2.5,2.5 0 0,0 6.5,14H8V16H6.5A4.5,4.5 0 0,1 2,11.5A4.5,4.5 0 0,1 6.5,7H8Z"/>
-                  </svg>
-                  Censored Content
-                </div>
-                <div class="pingbash-menu-item" data-action="banned-users" style="display: none;">
-                  <svg viewBox="0 0 24 24" width="16" height="16">
-                    <path fill="currentColor" d="M12,2A10,10 0 0,1 22,12A10,10 0 0,1 12,22A10,10 0 0,1 2,12A10,10 0 0,1 12,2M12,4A8,8 0 0,0 4,12A8,8 0 0,0 12,20A8,8 0 0,0 20,12A8,8 0 0,0 12,4M14.5,9L12,11.5L9.5,9L8,10.5L10.5,13L8,15.5L9.5,17L12,14.5L14.5,17L16,15.5L13.5,13L16,10.5L14.5,9Z"/>
-                  </svg>
-                  Banned Users
-                </div>
-                <div class="pingbash-menu-item" data-action="ip-bans" style="display: none;">
-                  <svg viewBox="0 0 24 24" width="16" height="16">
-                    <path fill="currentColor" d="M4,1C2.89,1 2,1.89 2,3V7C2,8.11 2.89,9 4,9H1V11H13V9H10C11.11,9 12,8.11 12,7V3C12,1.89 11.11,1 10,1H4M4,3H10V7H4V3M3,13V18L3,19H21V18V13H3M5,15H19V17H5V15Z"/>
-                  </svg>
-                  IP Bans
-                </div>
-              </div>
-            </div>
+            
             
             <div class="pingbash-hamburger-container">
               <button class="pingbash-hamburger-btn" title="Menu">
@@ -227,37 +239,8 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
              </div>
              
            </div>
-        <nav class="pingbash-bottom-bar">
-          <!-- Left side: Media and Emoji controls -->
-          <div class="pingbash-bar-left">
-            <div class="pingbash-media-controls">
-              <button class="pingbash-media-btn pingbash-image-btn" title="Send image">
-                <svg viewBox="0 0 24 24" width="24" height="24">
-                  <path fill="currentColor" d="M8.5,13.5L11,16.5L14.5,12L19,18H5M21,19V5C21,3.89 20.1,3 19,3H5A2,2 0 0,0 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19Z"/>
-                </svg>
-              </button>
-              <button class="pingbash-media-btn pingbash-file-btn" title="Attach file">
-                <svg viewBox="0 0 24 24" width="24" height="24">
-                  <path fill="currentColor" d="M16.5,6V17.5A4,4 0 0,1 12.5,21.5A4,4 0 0,1 8.5,17.5V5A2.5,2.5 0 0,1 11,2.5A2.5,2.5 0 0,1 13.5,5V15.5A1,1 0 0,1 12.5,16.5A1,1 0 0,1 11.5,15.5V6H10V15.5A2.5,2.5 0 0,0 12.5,18A2.5,2.5 0 0,0 15,15.5V5A4,4 0 0,0 11,1A4,4 0 0,0 7,5V17.5A5.5,5.5 0 0,0 12.5,23A5.5,5.5 0 0,0 18,17.5V6H16.5Z"/>
-                </svg>
-              </button>
-              <button class="pingbash-media-btn pingbash-emoji-btn" title="Add emoji">
-                <svg viewBox="0 0 24 24" width="24" height="24">
-                  <path fill="currentColor" d="M12,2C6.486,2,2,6.486,2,12s4.486,10,10,10s10-4.486,10-10S17.514,2,12,2z M8.5,9C9.328,9,10,9.672,10,10.5 S9.328,12,8.5,12S7,11.328,7,10.5S7.672,9,8.5,9z M12,18c-4,0-5-3-5-3h10C17,15,16,18,12,18z M15.5,12C14.672,12,14,11.328,14,10.5 S14.672,9,15.5,9S17,9.672,17,10.5S16.328,12,15.5,12z"/>
-                </svg>
-              </button>
-              <button class="pingbash-media-btn pingbash-sound-btn" title="Sound settings">
-                <svg viewBox="0 0 24 24" width="24" height="24">
-                  <path fill="currentColor" d="M14,3.23V5.29C16.89,6.15 19,8.83 19,12C19,15.17 16.89,17.85 14,18.71V20.77C18,19.86 21,16.28 21,12C21,7.72 18,4.14 14,3.23M16.5,12C16.5,10.23 15.5,8.71 14,7.97V16C15.5,15.29 16.5,13.76 16.5,12M3,9V15H7L12,20V4L7,9H3Z"/>
-                </svg>
-              </button>
-            </div>
-          </div>
-          
-          <!-- Reply Preview (hidden by default) - positioned above bottom bar -->
-          
-          
-          <!-- Center: Input field with W version styling -->
+        <!-- First Bottom Bar: Input and Send Button Only -->
+        <nav class="pingbash-input-bar">
           <div class="pingbash-input-wrapper">
             <div class="pingbash-input-row">
               <input 
@@ -274,6 +257,122 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
                   <path fill="currentColor" d="M2,21L23,12L2,3V10L17,12L2,14V21Z"/>
                 </svg>
               </button>
+            </div>
+          </div>
+        </nav>
+        
+        <!-- Second Bottom Bar: Controls Only -->
+        <nav class="pingbash-controls-bar">
+          <!-- Left side: Media controls -->
+          <div class="pingbash-controls-left">
+            <button class="pingbash-control-btn pingbash-image-btn" title="Send image">
+              <svg viewBox="0 0 24 24" width="18" height="18">
+                <path fill="currentColor" d="M8.5,13.5L11,16.5L14.5,12L19,18H5M21,19V5C21,3.89 20.1,3 19,3H5A2,2 0 0,0 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19Z"/>
+              </svg>
+            </button>
+            <button class="pingbash-control-btn pingbash-file-btn" title="Attach file">
+              <svg viewBox="0 0 24 24" width="18" height="18">
+                <path fill="currentColor" d="M16.5,6V17.5A4,4 0 0,1 12.5,21.5A4,4 0 0,1 8.5,17.5V5A2.5,2.5 0 0,1 11,2.5A2.5,2.5 0 0,1 13.5,5V15.5A1,1 0 0,1 12.5,16.5A1,1 0 0,1 11.5,15.5V6H10V15.5A2.5,2.5 0 0,0 12.5,18A2.5,2.5 0 0,0 15,15.5V5A4,4 0 0,0 11,1A4,4 0 0,0 7,5V17.5A5.5,5.5 0 0,0 12.5,23A5.5,5.5 0 0,0 18,17.5V6H16.5Z"/>
+              </svg>
+            </button>
+            <button class="pingbash-control-btn pingbash-emoji-btn" title="Add emoji">
+              <svg viewBox="0 0 24 24" width="18" height="18">
+                <path fill="currentColor" d="M12,2C6.486,2,2,6.486,2,12s4.486,10,10,10s10-4.486,10-10S17.514,2,12,2z M8.5,9C9.328,9,10,9.672,10,10.5 S9.328,12,8.5,12S7,11.328,7,10.5S7.672,9,8.5,9z M12,18c-4,0-5-3-5-3h10C17,15,16,18,12,18z M15.5,12C14.672,12,14,11.328,14,10.5 S14.672,9,15.5,9S17,9.672,17,10.5S16.328,12,15.5,12z"/>
+              </svg>
+            </button>
+            <button class="pingbash-control-btn pingbash-sound-btn" title="Sound settings">
+              <svg viewBox="0 0 24 24" width="18" height="18">
+                <path fill="currentColor" d="M14,3.23V5.29C16.89,6.15 19,8.83 19,12C19,15.17 16.89,17.85 14,18.71V20.77C18,19.86 21,16.28 21,12C21,7.72 18,4.14 14,3.23M16.5,12C16.5,10.23 15.5,8.71 14,7.97V16C15.5,15.29 16.5,13.76 16.5,12M3,9V15H7L12,20V4L7,9H3Z"/>
+              </svg>
+            </button>
+          </div>
+          
+          <!-- Right side: Chat controls -->
+          <div class="pingbash-controls-right">
+            <!-- Chat Mode Filter -->
+            <div class="pingbash-filter-container" style="display: none;">
+              <div class="pingbash-filter-icon" title="Chat Mode">
+                <svg viewBox="0 0 24 24" width="20" height="20">
+                  <path fill="currentColor" d="M6,13H18V11H6M3,6V8H21V6M10,18H14V16H10V18Z"/>
+                </svg>
+              </div>
+              <div class="pingbash-filter-dropdown" style="display: none;">
+                <div class="pingbash-filter-widget">
+                  <div class="pingbash-filter-option" style="display: block;">
+                    <input type="radio" id="filter-public" name="filter-mode" value="0" checked>
+                    <label for="filter-public">Public Mode</label>
+                  </div>
+                  <div class="pingbash-filter-option" style="display: block;">
+                    <input type="radio" id="filter-oneone" name="filter-mode" value="1">
+                    <label for="filter-oneone">1 on 1 Mode</label>
+                    <div class="pingbash-user-search" style="display: none;">
+                      <input type="text" class="pingbash-user-search-input" placeholder="Search user...">
+                      <div class="pingbash-user-dropdown" style="display: none;"></div>
+                    </div>
+                  </div>
+                  <div class="pingbash-filter-option pingbash-mods-option" style="display: none;">
+                    <input type="radio" id="filter-mods" name="filter-mode" value="2">
+                    <label for="filter-mods">Mods Mode</label>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Online Users Badge -->
+            <div class="pingbash-online-users-container">
+              <button class="pingbash-control-btn pingbash-online-users-icon" title="Online Users">
+                <svg viewBox="0 0 24 24" width="18" height="18">
+                  <path fill="currentColor" d="M16,4C18.21,4 20,5.79 20,8C20,10.21 18.21,12 16,12C13.79,12 12,10.21 12,8C12,5.79 13.79,4 16,4M16,14C20.42,14 24,15.79 24,18V20H8V18C8,15.79 11.58,14 16,14M6,6C7.11,6 8,6.89 8,8C8,9.11 7.11,10 6,10C4.89,10 4,9.11 4,8C4,6.89 4.89,6 6,6M6,12C8.67,12 12,13.34 12,16V18H0V16C0,13.34 3.33,12 6,12Z"/>
+                </svg>
+                <span class="pingbash-online-count-badge">0</span>
+              </button>
+            </div>
+            
+            <!-- Settings Menu (Admin Tools) -->
+            <div class="pingbash-settings-container" style="display: none;">
+              <button class="pingbash-control-btn pingbash-settings-btn" title="Settings">
+                <svg viewBox="0 0 24 24" width="18" height="18">
+                  <path fill="currentColor" d="M12,15.5A3.5,3.5 0 0,1 8.5,12A3.5,3.5 0 0,1 12,8.5A3.5,3.5 0 0,1 15.5,12A3.5,3.5 0 0,1 12,15.5M19.43,12.97C19.47,12.65 19.5,12.33 19.5,12C19.5,11.67 19.47,11.34 19.43,11L21.54,9.37C21.73,9.22 21.78,8.95 21.66,8.73L19.66,5.27C19.54,5.05 19.27,4.96 19.05,5.05L16.56,6.05C16.04,5.66 15.5,5.32 14.87,5.07L14.5,2.42C14.46,2.18 14.25,2 14,2H10C9.75,2 9.54,2.18 9.5,2.42L9.13,5.07C8.5,5.32 7.96,5.66 7.44,6.05L4.95,5.05C4.73,4.96 4.46,5.05 4.34,5.27L2.34,8.73C2.22,8.95 2.27,9.22 2.46,9.37L4.57,11C4.53,11.34 4.5,11.67 4.5,12C4.5,12.33 4.53,12.65 4.57,12.97L2.46,14.63C2.27,14.78 2.22,15.05 2.34,15.27L4.34,18.73C4.46,18.95 4.73,19.03 4.95,18.95L7.44,17.94C7.96,18.34 8.5,18.68 9.13,18.93L9.5,21.58C9.54,21.82 9.75,22 10,22H14C14.25,22 14.46,21.82 14.5,21.58L14.87,18.93C15.5,18.68 16.04,18.34 16.56,17.94L19.05,18.95C19.27,19.03 19.54,18.95 19.66,18.73L21.66,15.27C21.78,15.05 21.73,14.78 21.54,14.63L19.43,12.97Z"/>
+                </svg>
+              </button>
+              <div class="pingbash-settings-dropdown" style="display: none;">
+                <div class="pingbash-menu-item" data-action="chat-limitations" style="display: none;">
+                  <svg viewBox="0 0 24 24" width="16" height="16">
+                    <path fill="currentColor" d="M12,1L3,5V11C3,16.55 6.84,21.74 12,23C17.16,21.74 21,16.55 21,11V5L12,1M12,7C13.4,7 14.8,8.6 14.8,10V11.5C15.4,11.5 16,12.4 16,13V16C16,17.4 15.4,18 14.8,18H9.2C8.6,18 8,17.4 8,16V13C8,12.4 8.6,11.5 9.2,11.5V10C9.2,8.6 10.6,7 12,7M12,8.2C11.2,8.2 10.5,8.7 10.5,10V11.5H13.5V10C13.5,8.7 12.8,8.2 12,8.2Z"/>
+                  </svg>
+                  Chat Limitations
+                </div>
+                <div class="pingbash-menu-item" data-action="manage-chat" style="display: none;">
+                  <svg viewBox="0 0 24 24" width="16" height="16">
+                    <path fill="currentColor" d="M12,15.5A3.5,3.5 0 0,1 8.5,12A3.5,3.5 0 0,1 12,8.5A3.5,3.5 0 0,1 15.5,12A3.5,3.5 0 0,1 12,15.5M19.43,12.97C19.47,12.65 19.5,12.33 19.5,12C19.5,11.67 19.47,11.34 19.43,11L21.54,9.37C21.73,9.22 21.78,8.95 21.66,8.73L19.66,5.27C19.54,5.05 19.27,4.96 19.05,5.05L16.56,6.05C16.04,5.66 15.5,5.32 14.87,5.07L14.5,2.42C14.46,2.18 14.25,2 14,2H10C9.75,2 9.54,2.18 9.5,2.42L9.13,5.07C8.5,5.32 7.96,5.66 7.44,6.05L4.95,5.05C4.73,4.96 4.46,5.05 4.34,5.27L2.34,8.73C2.22,8.95 2.27,9.22 2.46,9.37L4.57,11C4.53,11.34 4.5,11.67 4.5,12C4.5,12.33 4.53,12.65 4.57,12.97L2.46,14.63C2.27,14.78 2.22,15.05 2.34,15.27L4.34,18.73C4.46,18.95 4.73,19.03 4.95,18.95L7.44,17.94C7.96,18.34 8.5,18.68 9.13,18.93L9.5,21.58C9.54,21.82 9.75,22 10,22H14C14.25,22 14.46,21.82 14.5,21.58L14.87,18.93C15.5,18.68 16.04,18.34 16.56,17.94L19.05,18.95C19.27,19.03 19.54,18.95 19.66,18.73L21.66,15.27C21.78,15.05 21.73,14.78 21.54,14.63L19.43,12.97Z"/>
+                  </svg>
+                  Manage Chat
+                </div>
+                <div class="pingbash-menu-item" data-action="moderator-management" style="display: none;">
+                  <svg viewBox="0 0 24 24" width="16" height="16">
+                    <path fill="currentColor" d="M12,5.5A3.5,3.5 0 0,1 15.5,9A3.5,3.5 0 0,1 12,12.5A3.5,3.5 0 0,1 8.5,9A3.5,3.5 0 0,1 12,5.5M5,8C5.56,8 6.08,8.15 6.53,8.42C6.38,9.85 6.8,11.27 7.66,12.38C7.16,13.34 6.16,14 5,14A3,3 0 0,1 2,11A3,3 0 0,1 5,8M19,8A3,3 0 0,1 22,11A3,3 0 0,1 19,14C17.84,14 16.84,13.34 16.34,12.38C17.2,11.27 17.62,9.85 17.47,8.42C17.92,8.15 18.44,8 19,8M5.5,18.25C5.5,16.18 8.41,14.5 12,14.5C15.59,14.5 18.5,16.18 18.5,18.25V20H5.5V18.25M0,20V18.5C0,17.11 1.89,15.94 4.45,15.6C3.86,16.28 3.5,17.22 3.5,18.25V20H0M24,20H20.5V18.25C20.5,17.22 20.14,16.28 19.55,15.6C22.11,15.94 24,17.11 24,18.5V20Z"/>
+                  </svg>
+                  Manage Moderators
+                </div>
+                <div class="pingbash-menu-item" data-action="censored-content" style="display: none;">
+                  <svg viewBox="0 0 24 24" width="16" height="16">
+                    <path fill="currentColor" d="M11,7H13A1,1 0 0,1 14,8V16A1,1 0 0,1 13,17H11A1,1 0 0,1 10,16V8A1,1 0 0,1 11,7M11,2A1,1 0 0,1 12,1A1,1 0 0,1 13,2V5H11V2M17.5,7A4.5,4.5 0 0,1 22,11.5A4.5,4.5 0 0,1 17.5,16H16V14H17.5A2.5,2.5 0 0,0 20,11.5A2.5,2.5 0 0,0 17.5,9H16V7H17.5M8,7V9H6.5A2.5,2.5 0 0,0 4,11.5A2.5,2.5 0 0,0 6.5,14H8V16H6.5A4.5,4.5 0 0,1 2,11.5A4.5,4.5 0 0,1 6.5,7H8Z"/>
+                  </svg>
+                  Censored Content
+                </div>
+                <div class="pingbash-menu-item" data-action="banned-users" style="display: none;">
+                  <svg viewBox="0 0 24 24" width="16" height="16">
+                    <path fill="currentColor" d="M12,2A10,10 0 0,1 22,12A10,10 0 0,1 12,22A10,10 0 0,1 2,12A10,10 0 0,1 12,2M12,4A8,8 0 0,0 4,12A8,8 0 0,0 12,20A8,8 0 0,0 20,12A8,8 0 0,0 12,4M14.5,9L12,11.5L9.5,9L8,10.5L10.5,13L8,15.5L9.5,17L12,14.5L14.5,17L16,15.5L13.5,13L16,10.5L14.5,9Z"/>
+                  </svg>
+                  Banned Users
+                </div>
+                <div class="pingbash-menu-item" data-action="ip-bans" style="display: none;">
+                  <svg viewBox="0 0 24 24" width="16" height="16">
+                    <path fill="currentColor" d="M4,1C2.89,1 2,1.89 2,3V7C2,8.11 2.89,9 4,9H1V11H13V9H10C11.11,9 12,8.11 12,7V3C12,1.89 11.11,1 10,1H4M4,3H10V7H4V3M3,13V18L3,19H21V18V13H3M5,15H19V17H5V15Z"/>
+                  </svg>
+                  IP Bans
+                </div>
+              </div>
             </div>
           </div>
         </nav>
