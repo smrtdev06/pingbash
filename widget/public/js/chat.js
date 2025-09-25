@@ -21,14 +21,14 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
             const isAtBottom = element.scrollTop >= (element.scrollHeight - element.clientHeight - 50);
             
             if (isAtBottom) {
-              console.log('📜 [Widget] Height changed, auto-scrolling to bottom');
+              if( window.isDebugging ) console.log('📜 [Widget] Height changed, auto-scrolling to bottom');
               this.scrollToBottom();
             }
           }
         });
         
         this.resizeObserver.observe(messagesList);
-        console.log('📜 [Widget] Auto-scroll monitoring enabled');
+        if( window.isDebugging ) console.log('📜 [Widget] Auto-scroll monitoring enabled');
       }
   
       // Also monitor for new child elements (MutationObserver)
@@ -43,7 +43,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
           });
           
           if (shouldScroll) {
-            console.log('📜 [Widget] New messages added, scrolling to bottom');
+            if( window.isDebugging ) console.log('📜 [Widget] New messages added, scrolling to bottom');
             this.scrollToBottomAfterImages();
           }
         });
@@ -52,22 +52,22 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
           childList: true,
           subtree: true
         });
-        console.log('📜 [Widget] Message monitoring enabled');
+        if( window.isDebugging ) console.log('📜 [Widget] Message monitoring enabled');
       }
     },
 
   // EXACT COPY from widget.js - handleNewMessages method
     handleNewMessages(data) {
-      console.log('🔍 [Widget] handleNewMessages called with:', data?.length, 'messages');
+      if( window.isDebugging ) console.log('🔍 [Widget] handleNewMessages called with:', data?.length, 'messages');
   
       if (!data || !Array.isArray(data) || data.length === 0) {
-        console.log('🔍 [Widget] No new messages to process - data:', data);
+        if( window.isDebugging ) console.log('🔍 [Widget] No new messages to process - data:', data);
         return;
       }
   
-      console.log('🔍 [Widget] handleNewMessages received:', data.length, 'messages');
-      console.log('🔍 [Widget] Current messages count:', this.messages?.length || 0);
-      console.log('🔍 [Widget] New message details:', data.map(msg => ({
+      if( window.isDebugging ) console.log('🔍 [Widget] handleNewMessages received:', data.length, 'messages');
+      if( window.isDebugging ) console.log('🔍 [Widget] Current messages count:', this.messages?.length || 0);
+      if( window.isDebugging ) console.log('🔍 [Widget] New message details:', data.map(msg => ({
         id: msg.Id,
         content: msg.Content,
         sender: msg.sender_name,
@@ -76,30 +76,30 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
   
       // Check if messages belong to current group (same as W version)
       const groupId = data.length && data[data.length - 1].group_id;
-      console.log('🔍 [Widget] Message group ID:', groupId, 'Current group ID:', this.groupId);
-      console.log('🔍 [Widget] Group ID match:', groupId === this.groupId);
+      if( window.isDebugging ) console.log('🔍 [Widget] Message group ID:', groupId, 'Current group ID:', this.groupId);
+      if( window.isDebugging ) console.log('🔍 [Widget] Group ID match:', groupId === this.groupId);
   
       if (groupId === this.groupId) {
-        console.log('🔍 [Widget] ✅ Messages for current group');
-        console.log('🔍 [Widget] Page visible:', this.pageVisible);
+        if( window.isDebugging ) console.log('🔍 [Widget] ✅ Messages for current group');
+        if( window.isDebugging ) console.log('🔍 [Widget] Page visible:', this.pageVisible);
   
         if (this.pageVisible) {
-          console.log('🔍 [Widget] Page visible - adding messages immediately');
-          console.log('🔍 [Widget] Before processing - existing:', this.messages?.length || 0, 'new:', data.length);
+          if( window.isDebugging ) console.log('🔍 [Widget] Page visible - adding messages immediately');
+          if( window.isDebugging ) console.log('🔍 [Widget] Before processing - existing:', this.messages?.length || 0, 'new:', data.length);
   
           // Don't merge here - let displayMessages handle the logic
           this.displayMessages(data);
   
-          console.log('🔍 [Widget] ✅ Messages updated and displayed immediately');
+          if( window.isDebugging ) console.log('🔍 [Widget] ✅ Messages updated and displayed immediately');
         } else {
-          console.log('🔍 [Widget] Page hidden - queuing messages for later');
+          if( window.isDebugging ) console.log('🔍 [Widget] Page hidden - queuing messages for later');
           // Queue messages for when page becomes visible (same as W version)
           this.pendingMessages = this.mergeArrays(this.pendingMessages, data);
-          console.log('🔍 [Widget] Queued messages - pending count:', this.pendingMessages.length);
-          console.log('🔍 [Widget] Latest queued message ID:', this.pendingMessages[this.pendingMessages.length - 1]?.Id);
+          if( window.isDebugging ) console.log('🔍 [Widget] Queued messages - pending count:', this.pendingMessages.length);
+          if( window.isDebugging ) console.log('🔍 [Widget] Latest queued message ID:', this.pendingMessages[this.pendingMessages.length - 1]?.Id);
         }
       } else {
-        console.log('🔍 [Widget] ❌ Messages not for current group, ignoring');
+        if( window.isDebugging ) console.log('🔍 [Widget] ❌ Messages not for current group, ignoring');
       }
     },
 
@@ -117,7 +117,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
       const allMessages = messages || [];
       const messagesList = this.dialog.querySelector('#pingbash-messages');
   
-      console.log('🔍 [Widget] displayMessages called with', allMessages.length, 'messages');
+      if( window.isDebugging ) console.log('🔍 [Widget] displayMessages called with', allMessages.length, 'messages');
       
       // First, filter out Mods mode messages for regular users (in ALL modes)
       let preFilteredMessages = allMessages;
@@ -134,18 +134,18 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
           // Hide messages that were sent in Mods mode (to specific moderators/admins) unless it's to current user
           return isPublic || isToCurrentUser || isOwnMessage;
         });
-        console.log('📋 [Widget] Filtered out Mods mode messages for regular user:', beforeModsFilter - preFilteredMessages.length, 'removed');
+        if( window.isDebugging ) console.log('📋 [Widget] Filtered out Mods mode messages for regular user:', beforeModsFilter - preFilteredMessages.length, 'removed');
       }
       
       // Apply Chat Mode filter (same as F version)
       let filteredMessages = this.applyFilterMode(preFilteredMessages);
-      console.log('🔍 [Widget] After filter mode:', filteredMessages.length, 'messages (mode:', this.filterMode || 0, ')');
+      if( window.isDebugging ) console.log('🔍 [Widget] After filter mode:', filteredMessages.length, 'messages (mode:', this.filterMode || 0, ')');
       
       // Filter out messages from blocked users
       if (this.blockedUsers && this.blockedUsers.size > 0) {
         const beforeBlockFilter = filteredMessages.length;
         filteredMessages = filteredMessages.filter(message => !this.isMessageFromBlockedUser(message));
-        console.log('🚫 [Widget] After blocked user filter:', filteredMessages.length, 'messages (filtered out:', beforeBlockFilter - filteredMessages.length, ')');
+        if( window.isDebugging ) console.log('🚫 [Widget] After blocked user filter:', filteredMessages.length, 'messages (filtered out:', beforeBlockFilter - filteredMessages.length, ')');
       }
       
       const newMessages = filteredMessages;
@@ -166,7 +166,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
   
       if (isInitialLoad) {
         // Initial load - clear and render all messages
-        console.log('🔍 [Widget] Initial load - rendering', newMessages.length, 'messages');
+        if( window.isDebugging ) console.log('🔍 [Widget] Initial load - rendering', newMessages.length, 'messages');
         messagesList.innerHTML = '';
         this.messages = newMessages;
         newMessages.forEach(msg => this.addMessage(msg));
@@ -175,25 +175,25 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         if (this.messages && this.messages.length === newMessages.length) {
           const lastExistingId = this.messages[this.messages.length - 1]?.Id;
           const lastNewId = newMessages[newMessages.length - 1]?.Id;
-          console.log('🔍 [Widget] Comparing message sets - existing:', this.messages.length, 'new:', newMessages.length);
-          console.log('🔍 [Widget] Last existing ID:', lastExistingId, 'Last new ID:', lastNewId);
+          if( window.isDebugging ) console.log('🔍 [Widget] Comparing message sets - existing:', this.messages.length, 'new:', newMessages.length);
+          if( window.isDebugging ) console.log('🔍 [Widget] Last existing ID:', lastExistingId, 'Last new ID:', lastNewId);
   
           // Debug: Show last few message IDs from both sets
           const lastFewExisting = this.messages.slice(-3).map(m => ({ id: m.Id, content: m.Content?.substring(0, 30) }));
           const lastFewNew = newMessages.slice(-3).map(m => ({ id: m.Id, content: m.Content?.substring(0, 30) }));
-          console.log('🔍 [Widget] Last few existing messages:', lastFewExisting);
-          console.log('🔍 [Widget] Last few new messages:', lastFewNew);
+          if( window.isDebugging ) console.log('🔍 [Widget] Last few existing messages:', lastFewExisting);
+          if( window.isDebugging ) console.log('🔍 [Widget] Last few new messages:', lastFewNew);
   
           if (lastExistingId === lastNewId) {
-            console.log('🔍 [Widget] Same message set received, skipping processing');
+            if( window.isDebugging ) console.log('🔍 [Widget] Same message set received, skipping processing');
             return;
           } else {
-            console.log('🔍 [Widget] Different last message ID, proceeding with update');
+            if( window.isDebugging ) console.log('🔍 [Widget] Different last message ID, proceeding with update');
           }
         }
   
         // Smart append - only add messages that don't exist in DOM
-        console.log('🔍 [Widget] Smart append - checking for new messages');
+        if( window.isDebugging ) console.log('🔍 [Widget] Smart append - checking for new messages');
   
         // Get existing message IDs from DOM (more reliable than stored array)
         const existingDomIds = new Set();
@@ -204,23 +204,23 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         // Find truly new messages
         const messagesToAdd = newMessages.filter(msg => !existingDomIds.has(msg.Id));
   
-        console.log('🔍 [Widget] DOM has', existingDomIds.size, 'messages, received', newMessages.length, 'messages');
-        console.log('🔍 [Widget] Found', messagesToAdd.length, 'new messages to append');
+        if( window.isDebugging ) console.log('🔍 [Widget] DOM has', existingDomIds.size, 'messages, received', newMessages.length, 'messages');
+        if( window.isDebugging ) console.log('🔍 [Widget] Found', messagesToAdd.length, 'new messages to append');
   
         if (messagesToAdd.length > 0) {
           // Append only new messages (no clearing!)
           messagesToAdd.forEach(msg => {
-            console.log('🔍 [Widget] Adding new message:', msg.Id, msg.Content?.substring(0, 20) + '...');
+            if( window.isDebugging ) console.log('🔍 [Widget] Adding new message:', msg.Id, msg.Content?.substring(0, 20) + '...');
             this.addMessage(msg, true); // Pass true to indicate this is a new message
           });
   
           // Update stored messages
           this.messages = newMessages;
   
-          console.log('🔍 [Widget] ✅ Appended', messagesToAdd.length, 'new messages without blinking');
+          if( window.isDebugging ) console.log('🔍 [Widget] ✅ Appended', messagesToAdd.length, 'new messages without blinking');
           this.scrollToBottomAfterImages();
         } else {
-          console.log('🔍 [Widget] No new messages to add');
+          if( window.isDebugging ) console.log('🔍 [Widget] No new messages to add');
         }
       }
   
@@ -233,7 +233,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
   // EXACT COPY from widget.js - displayPendingMessages method
     displayPendingMessages(messages) {
       // Special method for displaying pending messages - bypasses optimization checks
-      console.log('🔍 [Widget] displayPendingMessages called with', messages.length, 'messages');
+      if( window.isDebugging ) console.log('🔍 [Widget] displayPendingMessages called with', messages.length, 'messages');
   
       const messagesList = this.dialog.querySelector('#pingbash-messages');
       const newMessages = messages || [];
@@ -251,17 +251,17 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
       // Find messages that aren't in DOM yet
       const messagesToAdd = newMessages.filter(msg => !existingDomIds.has(msg.Id));
   
-      console.log('🔍 [Widget] Pending messages - DOM has', existingDomIds.size, 'messages');
-      console.log('🔍 [Widget] Pending messages - found', messagesToAdd.length, 'new messages to add');
+      if( window.isDebugging ) console.log('🔍 [Widget] Pending messages - DOM has', existingDomIds.size, 'messages');
+      if( window.isDebugging ) console.log('🔍 [Widget] Pending messages - found', messagesToAdd.length, 'new messages to add');
   
       if (messagesToAdd.length > 0) {
         // Add new messages with animation
         messagesToAdd.forEach(msg => {
-          console.log('🔍 [Widget] Adding pending message:', msg.Id, msg.Content?.substring(0, 20) + '...');
+          if( window.isDebugging ) console.log('🔍 [Widget] Adding pending message:', msg.Id, msg.Content?.substring(0, 20) + '...');
           this.addMessage(msg, true); // Mark as new for animation
         });
   
-        console.log('🔍 [Widget] ✅ Added', messagesToAdd.length, 'pending messages');
+        if( window.isDebugging ) console.log('🔍 [Widget] ✅ Added', messagesToAdd.length, 'pending messages');
         this.scrollToBottomAfterImages();
       }
   
@@ -271,7 +271,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
 
   // EXACT COPY from widget.js - addMessage method
     addMessage(message, isNewMessage = false) {
-      console.log('🔍 [Widget] addMessage called for message ID:', message.Id, 'Content:', message.Content, 'isNew:', isNewMessage);
+      if( window.isDebugging ) console.log('🔍 [Widget] addMessage called for message ID:', message.Id, 'Content:', message.Content, 'isNew:', isNewMessage);
       const messagesList = this.dialog.querySelector('#pingbash-messages');
   
       if (!messagesList) {
@@ -282,7 +282,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
       // Check if message already exists to prevent duplicates
       const existingMessage = messagesList.querySelector(`[data-message-id="${message.Id}"]`);
       if (existingMessage) {
-        console.log('🔍 [Widget] Message', message.Id, 'already exists in DOM, skipping');
+        if( window.isDebugging ) console.log('🔍 [Widget] Message', message.Id, 'already exists in DOM, skipping');
         return;
       }
   
@@ -302,7 +302,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         isOwn = senderId === anonId;
       }
   
-      console.log('🔍 [Widget] Message ownership check:', {
+      if( window.isDebugging ) console.log('🔍 [Widget] Message ownership check:', {
         rawSenderId: message.Sender_Id,
         parsedSenderId: parseInt(message.Sender_Id),
         rawCurrentUserId: this.currentUserId,
@@ -318,7 +318,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
       messageEl.className = `pingbash-message ${isOwn ? 'own' : ''} ${isNewMessage ? 'new-message' : ''}`;
       messageEl.setAttribute('data-message-id', message.Id);
   
-      console.log('🔍 [Widget] Creating message element with class:', messageEl.className, 'ID:', message.Id);
+      if( window.isDebugging ) console.log('🔍 [Widget] Creating message element with class:', messageEl.className, 'ID:', message.Id);
   
       const time = new Date(message.Send_Time).toLocaleTimeString([], {
         hour: '2-digit',
@@ -330,19 +330,19 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
       if (message.Sender_Id && message.Sender_Id > 100000) {
         // Anonymous user - show as anon + last 3 digits (same as F version)
         senderName = "anon" + String(message.Sender_Id).slice(-3);
-        console.log(`🔍 [Widget] Anonymous user ${message.Sender_Id} displayed as: ${senderName}`);
+        if( window.isDebugging ) console.log(`🔍 [Widget] Anonymous user ${message.Sender_Id} displayed as: ${senderName}`);
       } else {
         // Regular user - use sender_name or fallback
         senderName = message.sender_name || 'Anonymous';
-        console.log(`🔍 [Widget] Regular user ${message.Sender_Id} displayed as: ${senderName}`);
+        if( window.isDebugging ) console.log(`🔍 [Widget] Regular user ${message.Sender_Id} displayed as: ${senderName}`);
       }
-      console.log('🔍 [Widget] Message content:', message.Content);
+      if( window.isDebugging ) console.log('🔍 [Widget] Message content:', message.Content);
       const escapedContent = this.escapeForAttribute(message.Content);
       // Generate avatar HTML (same as W version)
       const avatarHtml = this.generateAvatarHtml(message, senderName);
-      console.log("******************************", message.Content);
-      console.log("******************************", escapedContent);
-      console.log("******************************", this.renderMessageContent(message.Content));
+      if( window.isDebugging ) console.log("******************************", message.Content);
+      if( window.isDebugging ) console.log("******************************", escapedContent);
+      if( window.isDebugging ) console.log("******************************", this.renderMessageContent(message.Content));
       messageEl.innerHTML = `
         <div class="pingbash-message-content">
           ${avatarHtml}
@@ -367,7 +367,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
   
   
             messagesList.appendChild(messageEl);
-      console.log('🔍 [Widget] ✅ Message element appended to DOM, total messages now:', messagesList.children.length);
+      if( window.isDebugging ) console.log('🔍 [Widget] ✅ Message element appended to DOM, total messages now:', messagesList.children.length);
 
       // Apply current group styling to the new message
       if (this.group) {
@@ -424,7 +424,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         avatar.style.display = groupData.show_user_img !== false ? 'block' : 'none';
       }
       
-      console.log('🎨 [Widget] Applied styling to new message:', messageEl.getAttribute('data-message-id'));
+      if( window.isDebugging ) console.log('🎨 [Widget] Applied styling to new message:', messageEl.getAttribute('data-message-id'));
     },
 
     // NEW METHOD - Generate avatar HTML (same as W version)
@@ -548,7 +548,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         return message;
       }
 
-      console.log('🔍 [Widget] Applying censoring to message');
+      if( window.isDebugging ) console.log('🔍 [Widget] Applying censoring to message');
       const censoredWords = this.getCensoredWordArray(this.group.censored_words);
       
       if (censoredWords.length === 0) {
@@ -558,7 +558,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
       const censoredMessage = this.getCensoredMessage(message, censoredWords);
       
       if (censoredMessage !== message) {
-        console.log('🔍 [Widget] Message censored:', { 
+        if( window.isDebugging ) console.log('🔍 [Widget] Message censored:', { 
           original: message, 
           censored: censoredMessage,
           censoredWords: censoredWords 
@@ -587,7 +587,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
 
       // ANONYMOUS USERS: No moderation actions at all
       if (!this.isAuthenticated) {
-        console.log('🔍 [Widget] Anonymous user - hiding all moderation actions');
+        if( window.isDebugging ) console.log('🔍 [Widget] Anonymous user - hiding all moderation actions');
         return '';
       }
 
@@ -608,7 +608,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         actions.push(`<button class="pingbash-message-action ban" onclick="window.pingbashWidget.banUser(${message.Sender_Id})" title="Ban User">⛔</button>`);
       }
 
-      console.log('🔍 [Widget] Message actions for user', message.Sender_Id, ':', {
+      if( window.isDebugging ) console.log('🔍 [Widget] Message actions for user', message.Sender_Id, ':', {
         isAuth: this.isAuthenticated,
         myRole: myMemInfo?.role_id,
         isCreator: this.group?.creater_id === currentUserId,
@@ -648,7 +648,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
     renderMessageContent(content) {
       if (!content) return '';
   
-      console.log('🖼️ [Widget] renderMessageContent called with:', {
+      if( window.isDebugging ) console.log('🖼️ [Widget] renderMessageContent called with:', {
         content: content,
         contentType: typeof content,
         contentLength: content.length,
@@ -658,49 +658,49 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         hasSticker: content.includes('sticker::'),
         hasDirectGif: content.includes('.gif') && content.includes('https://') && !content.includes(' ')
       });
-      console.log("******************************", content, content.includes('<img'), content.includes('<a'), content.includes('gif::'), content.includes('sticker::'), content.includes('.gif') && content.includes('https://') && !content.includes(' '));
+      if( window.isDebugging ) console.log("******************************", content, content.includes('<img'), content.includes('<a'), content.includes('gif::'), content.includes('sticker::'), content.includes('.gif') && content.includes('https://') && !content.includes(' '));
       // Check if content contains HTML tags (images, links, etc.)
       if (content.includes('<img') || content.includes('<a') || content.includes('gif::') || content.includes('sticker::')) {
-        console.log('🖼️ [Widget] Detected HTML/special content, processing...');
+        if( window.isDebugging ) console.log('🖼️ [Widget] Detected HTML/special content, processing...');
   
         // Handle different content types (same as W version)
         if (content.includes('<img')) {
-          console.log('🖼️ [Widget] Processing <img> tag content:', content);
+          if( window.isDebugging ) console.log('🖼️ [Widget] Processing <img> tag content:', content);
           // Image content - render as HTML
           return content;
         } else if (content.includes('gif::https://')) {
-          console.log('🖼️ [Widget] Processing gif:: content');
+          if( window.isDebugging ) console.log('🖼️ [Widget] Processing gif:: content');
           // GIF content
           const gifUrl = content.slice('gif::'.length);
           const result = `<img src="${gifUrl}" style="width: 160px;" />`;
-          console.log('🖼️ [Widget] Created gif HTML:', result);
+          if( window.isDebugging ) console.log('🖼️ [Widget] Created gif HTML:', result);
           return result;
         } else if (content.includes('sticker::')) {
-          console.log('🖼️ [Widget] Processing sticker:: content');
+          if( window.isDebugging ) console.log('🖼️ [Widget] Processing sticker:: content');
           // Sticker content (would need Lottie implementation)
           const result = `<div>🎭 Sticker: ${content.slice('sticker::'.length)}</div>`;
-          console.log('🖼️ [Widget] Created sticker HTML:', result);
+          if( window.isDebugging ) console.log('🖼️ [Widget] Created sticker HTML:', result);
           return result;
         } else if (content.includes('.gif') && content.includes('https://') && !content.includes(' ')) {
-          console.log('🖼️ [Widget] Processing direct GIF URL');
+          if( window.isDebugging ) console.log('🖼️ [Widget] Processing direct GIF URL');
           // Direct GIF URL
           const result = `<img src="${content}" style="width: 160px;" />`;
-          console.log('🖼️ [Widget] Created direct GIF HTML:', result);
+          if( window.isDebugging ) console.log('🖼️ [Widget] Created direct GIF HTML:', result);
           return result;
         } else {
-          console.log('🖼️ [Widget] Processing other HTML content');
+          if( window.isDebugging ) console.log('🖼️ [Widget] Processing other HTML content');
           // Other HTML content
           return content;
         }
       } else {
-        console.log('🖼️ [Widget] Processing plain text content');
+        if( window.isDebugging ) console.log('🖼️ [Widget] Processing plain text content');
         // Plain text - escape HTML and convert URLs to links
         const escaped = this.escapeHtml(content);
         const result = escaped.replace(
           /(https?:\/\/[^\s]+)/g,
           '<a href="$1" target="_blank" rel="noopener noreferrer" style="color: #000000; text-decoration: underline;">$1</a>'
         );
-        console.log('🖼️ [Widget] Plain text result:', result);
+        if( window.isDebugging ) console.log('🖼️ [Widget] Plain text result:', result);
         return result;
       }
     },
@@ -712,7 +712,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         const messagesList = this.dialog.querySelector('.pingbash-messages-list');
         if (messagesList) {
           messagesList.scrollTop = messagesList.scrollHeight;
-          console.log('📜 [Widget] Scrolled to bottom:', messagesList.scrollTop, '/', messagesList.scrollHeight);
+          if( window.isDebugging ) console.log('📜 [Widget] Scrolled to bottom:', messagesList.scrollTop, '/', messagesList.scrollHeight);
         }
       });
     },
@@ -722,7 +722,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
       const messagesList = this.dialog.querySelector('.pingbash-messages-list');
       if (messagesList) {
         messagesList.scrollTop = messagesList.scrollHeight;
-        console.log('📜 [Widget] Force scrolled to bottom:', messagesList.scrollTop, '/', messagesList.scrollHeight);
+        if( window.isDebugging ) console.log('📜 [Widget] Force scrolled to bottom:', messagesList.scrollTop, '/', messagesList.scrollHeight);
       }
     },
 
@@ -736,7 +736,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
   
       // THEN: Set up monitoring for image loading
       const images = messagesList.querySelectorAll('img');
-      console.log('📜 [Widget] Found', images.length, 'images to monitor');
+      if( window.isDebugging ) console.log('📜 [Widget] Found', images.length, 'images to monitor');
   
       if (images.length === 0) {
         // No images, we're done
@@ -748,12 +748,12 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
   
       const checkAllLoaded = () => {
         loadedImages++;
-        console.log('📜 [Widget] Image loaded:', loadedImages, '/', totalImages);
+        if( window.isDebugging ) console.log('📜 [Widget] Image loaded:', loadedImages, '/', totalImages);
         // Scroll after each image loads (not just when all are loaded)
         this.scrollToBottom();
         
         if (loadedImages >= totalImages) {
-          console.log('📜 [Widget] All images loaded, final scroll');
+          if( window.isDebugging ) console.log('📜 [Widget] All images loaded, final scroll');
           // Final scroll after all images are loaded
           setTimeout(() => this.scrollToBottom(), 100);
         }
@@ -763,7 +763,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
       images.forEach((img, index) => {
         if (img.complete) {
           // Image already loaded
-          console.log('📜 [Widget] Image', index, 'already loaded');
+          if( window.isDebugging ) console.log('📜 [Widget] Image', index, 'already loaded');
           checkAllLoaded();
         } else {
           // Wait for image to load
@@ -864,7 +864,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
 
   // EXACT COPY from widget.js - replyToMessage method
     replyToMessage(messageId, senderName, content) {
-      console.log('💬 [Widget] Reply to message:', messageId, 'from:', senderName);
+      if( window.isDebugging ) console.log('💬 [Widget] Reply to message:', messageId, 'from:', senderName);
   
       // Set reply state
       this.replyingTo = {
@@ -898,7 +898,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         if (senderEl) senderEl.textContent = this.replyingTo.sender;
         if (contentEl) contentEl.textContent = this.getReplyContentPreview(this.replyingTo.content);
   
-        console.log("Showing reply preview", this.replyingTo);
+        if( window.isDebugging ) console.log("Showing reply preview", this.replyingTo);
         if (content.includes('<img')) {
           imageEl.innerHTML = content.replaceAll('<img', '<img style="width:40px; height:40px;');
           imageEl.style.display = 'block';
@@ -918,11 +918,11 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
 
   // EXACT COPY from widget.js - hideReplyPreview method
     hideReplyPreview() {
-      console.log('💬 [Widget] Hiding reply preview');
+      if( window.isDebugging ) console.log('💬 [Widget] Hiding reply preview');
       const replyPreview = this.dialog.querySelector('.pingbash-reply-preview');
       if (replyPreview) {
         replyPreview.style.display = 'none';
-        console.log('💬 [Widget] Reply preview hidden successfully');
+        if( window.isDebugging ) console.log('💬 [Widget] Reply preview hidden successfully');
       } else {
         console.error('💬 [Widget] Reply preview element not found');
       }
@@ -956,8 +956,8 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
     
           // Use the correct token based on authentication state
           const authToken = this.isAuthenticated ? this.userId : '';
-          console.log('📤 [Widget] Upload auth token:', authToken ? authToken.substring(0, 20) + '...' : 'none');
-          console.log('📤 [Widget] Is authenticated:', this.isAuthenticated);
+          if( window.isDebugging ) console.log('📤 [Widget] Upload auth token:', authToken ? authToken.substring(0, 20) + '...' : 'none');
+          if( window.isDebugging ) console.log('📤 [Widget] Is authenticated:', this.isAuthenticated);
     
           const uploadResponse = await fetch(endpoint, {
             method: 'POST',
@@ -968,13 +968,13 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
             body: formData
           });
     
-          console.log('📤 [Widget] Upload response status:', uploadResponse.status);
-          console.log('📤 [Widget] Upload response headers:', Object.fromEntries(uploadResponse.headers.entries()));
+          if( window.isDebugging ) console.log('📤 [Widget] Upload response status:', uploadResponse.status);
+          if( window.isDebugging ) console.log('📤 [Widget] Upload response headers:', Object.fromEntries(uploadResponse.headers.entries()));
     
           // Get response text first to debug JSON parsing issues
           const responseText = await uploadResponse.text();
-          console.log('📤 [Widget] Raw response text:', responseText);
-          console.log('📤 [Widget] Response text length:', responseText.length);
+          if( window.isDebugging ) console.log('📤 [Widget] Raw response text:', responseText);
+          if( window.isDebugging ) console.log('📤 [Widget] Response text length:', responseText.length);
     
           if (!uploadResponse.ok) {
             throw new Error(`Upload failed: ${uploadResponse.status} - ${responseText}`);
@@ -984,7 +984,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
           let uploadResult;
           try {
             uploadResult = responseText;
-            console.log('✅ [Widget] File uploaded:', uploadResult);
+            if( window.isDebugging ) console.log('✅ [Widget] File uploaded:', uploadResult);
           } catch (jsonError) {
             console.error('❌ [Widget] JSON parse error:', jsonError);
             console.error('❌ [Widget] Response that failed to parse:', responseText);
@@ -996,7 +996,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
             ? `<img src="${this.config.apiUrl}/uploads/chats/images/${uploadResult}" alt="" />`
             : `<a className="inline-block text-cyan-300 hover:underline w-8/12 relative rounded-e-md" href="${this.config.apiUrl}/uploads/chats/files/${uploadResult}">File Name : ${uploadResult}</a>`;
     
-          console.log('📤 [Widget] Sending file message:', messageContent);
+          if( window.isDebugging ) console.log('📤 [Widget] Sending file message:', messageContent);
 
           // Validate message against chat limitations
           const validation = this.validateMessageBeforeSending(messageContent);
@@ -1008,11 +1008,11 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
     
           // Use the same socket event format as regular messages (exact same as F version)
           const safeMessage = this.makeTextSafe(messageContent);
-          console.log("=========================", safeMessage);
+          if( window.isDebugging ) console.log("=========================", safeMessage);
     
           if (this.isAuthenticated && this.authenticatedToken) {
-            console.log('📤 [Widget] Sending authenticated file message via socket');
-            console.log('📤 [Widget] Socket payload:', {
+            if( window.isDebugging ) console.log('📤 [Widget] Sending authenticated file message via socket');
+            if( window.isDebugging ) console.log('📤 [Widget] Socket payload:', {
               groupId: parseInt(this.groupId),
               msg: safeMessage,
               token: this.authenticatedToken ? 'present' : 'missing',
@@ -1036,8 +1036,8 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
               console.error('❌ [Widget] Forbidden response after sending file message:', data);
             });
           } else {
-            console.log('📤 [Widget] Sending anonymous file message via socket');
-            console.log('📤 [Widget] Socket payload:', {
+            if( window.isDebugging ) console.log('📤 [Widget] Sending anonymous file message via socket');
+            if( window.isDebugging ) console.log('📤 [Widget] Socket payload:', {
               groupId: parseInt(this.groupId),
               msg: safeMessage,
               anonId: this.anonId,
@@ -1060,7 +1060,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
     
           // Force refresh messages after file upload to ensure it appears
           setTimeout(() => {
-            console.log('📤 [Widget] Force refreshing messages after file upload');
+            if( window.isDebugging ) console.log('📤 [Widget] Force refreshing messages after file upload');
             this.socket.emit('get group msg', {
               token: this.isAuthenticated ? this.authenticatedToken : this.userId,
               groupId: parseInt(this.groupId)
@@ -1076,7 +1076,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
 
     // EXACT COPY from widget.js - scrollToMessage method
       scrollToMessage(messageId) {
-        console.log('📍 [Widget] Scrolling to message:', messageId);
+        if( window.isDebugging ) console.log('📍 [Widget] Scrolling to message:', messageId);
         const messageEl = this.dialog.querySelector(`[data-message-id="${messageId}"]`);
         if (messageEl) {
           messageEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -1098,7 +1098,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         const filterMode = this.filterMode || 0;
         const currentUserId = this.getCurrentUserId();
         
-        console.log('🔍 [Widget] Applying filter mode:', filterMode, 'for user:', currentUserId);
+        if( window.isDebugging ) console.log('🔍 [Widget] Applying filter mode:', filterMode, 'for user:', currentUserId);
 
         switch (filterMode) {
           case 0: // Public Mode - show public messages (receiver_id = null) + private messages to current user
@@ -1113,7 +1113,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
               
               // Debug: Log filtered out private messages between other users
               if (msg.Receiver_Id && msg.Receiver_Id !== currentUserId && msg.Sender_Id !== currentUserId) {
-                console.log('🔒 [Widget] Hiding private message between other users (admin cannot see):', {
+                if( window.isDebugging ) console.log('🔒 [Widget] Hiding private message between other users (admin cannot see):', {
                   msgId: msg.Id,
                   from: msg.Sender_Id,
                   to: msg.Receiver_Id,
@@ -1122,7 +1122,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
               }
               
               if (isToCurrentUser) {
-                console.log('🔍 [Widget] Private message to current user in public mode:', {
+                if( window.isDebugging ) console.log('🔍 [Widget] Private message to current user in public mode:', {
                   msgId: msg.Id,
                   from: msg.Sender_Id,
                   to: msg.Receiver_Id,
@@ -1134,12 +1134,12 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
 
           case 1: // 1 on 1 Mode - show private messages with selected user + public messages
             if (!this.filteredUser) {
-              console.log('🔍 [Widget] 1-on-1 mode but no user selected');
+              if( window.isDebugging ) console.log('🔍 [Widget] 1-on-1 mode but no user selected');
               return [];
             }
             
             const selectedUserId = this.filteredUser.id;
-            console.log('🔍 [Widget] 1-on-1 mode with user:', selectedUserId, 'current user:', currentUserId, '(includes public messages)');
+            if( window.isDebugging ) console.log('🔍 [Widget] 1-on-1 mode with user:', selectedUserId, 'current user:', currentUserId, '(includes public messages)');
             
             return messages.filter(msg => {
               const isToSelectedUser = msg.Receiver_Id == selectedUserId && msg.Sender_Id == currentUserId;
@@ -1150,7 +1150,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
               // Show direct messages between users + public messages + own messages (same as F version)
               const shouldShow = isToSelectedUser || isFromSelectedUser || isPublicMessage || isOwnMessage;
               if (isToSelectedUser || isFromSelectedUser) {
-                console.log('🔍 [Widget] 1-on-1 private message:', {
+                if( window.isDebugging ) console.log('🔍 [Widget] 1-on-1 private message:', {
                   msgId: msg.Id,
                   from: msg.Sender_Id,
                   to: msg.Receiver_Id,
@@ -1163,7 +1163,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
           case 2: // Mods Mode - show messages to moderators/admins and public messages
             // Only available for moderators/admins (same as F version)
             if (!this.isModeratorOrAdmin()) {
-              console.log('🔍 [Widget] Mods mode not available for regular user');
+              if( window.isDebugging ) console.log('🔍 [Widget] Mods mode not available for regular user');
               return messages.filter(msg => {
                 const isPublic = msg.Receiver_Id == null;
                 const isOwnMessage = msg.Sender_Id == currentUserId;
@@ -1184,7 +1184,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
               
               // Debug: Log what we're showing/hiding
               if (isToCurrentUser) {
-                console.log('📋 [Widget] Showing mods-mode message to current user:', {
+                if( window.isDebugging ) console.log('📋 [Widget] Showing mods-mode message to current user:', {
                   msgId: msg.Id,
                   from: msg.Sender_Id,
                   to: msg.Receiver_Id,
@@ -1204,13 +1204,13 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         // Check if user is moderator or admin (role_id 1 or 2) or group creator
         const currentUserId = this.getCurrentUserId();
         if (!currentUserId || !this.group) {
-          console.log('🔍 [Widget] isModeratorOrAdmin: No user ID or group data', { currentUserId, hasGroup: !!this.group });
+          if( window.isDebugging ) console.log('🔍 [Widget] isModeratorOrAdmin: No user ID or group data', { currentUserId, hasGroup: !!this.group });
           return false;
         }
         
         // Group creator can always access moderator features
         if (this.group.creater_id === currentUserId) {
-          console.log('🔍 [Widget] isModeratorOrAdmin: User is group creator');
+          if( window.isDebugging ) console.log('🔍 [Widget] isModeratorOrAdmin: User is group creator');
           return true;
         }
         
@@ -1218,7 +1218,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         const userMember = this.group.members?.find(member => member.id === currentUserId);
         const isModAdmin = userMember && (userMember.role_id === 1 || userMember.role_id === 2);
         
-        console.log('🔍 [Widget] isModeratorOrAdmin check:', {
+        if( window.isDebugging ) console.log('🔍 [Widget] isModeratorOrAdmin check:', {
           currentUserId,
           groupCreatorId: this.group.creater_id,
           userMember: userMember ? { id: userMember.id, role_id: userMember.role_id } : null,
@@ -1355,15 +1355,15 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
           case 1: // 1 on 1 Mode  
             if (this.filteredUser && this.filteredUser.id) {
               const receiverId = parseInt(this.filteredUser.id);
-              console.log('🔍 [Widget] Sending 1-on-1 message to user:', receiverId, 'user name:', this.filteredUser.name);
+              if( window.isDebugging ) console.log('🔍 [Widget] Sending 1-on-1 message to user:', receiverId, 'user name:', this.filteredUser.name);
               return receiverId;
             }
-            console.log('🔍 [Widget] 1-on-1 mode but no user selected, sending as public');
+            if( window.isDebugging ) console.log('🔍 [Widget] 1-on-1 mode but no user selected, sending as public');
             return null;
             
           case 2: // Mods Mode
             // All authenticated users can send to mods (for reporting, questions, etc.)
-            console.log('🔍 [Widget] Sending message to moderators and admins');
+            if( window.isDebugging ) console.log('🔍 [Widget] Sending message to moderators and admins');
             return -1; // receiver_id = -1 indicates mods-only message
             
           default:
@@ -1374,7 +1374,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
       // BAN and TIMEOUT functionality (same as W version)
       banUser(userId) {
         
-        console.log('🚫 [Widget] Ban user clicked:', userId);
+        if( window.isDebugging ) console.log('🚫 [Widget] Ban user clicked:', userId);
         
         // RULE 1: User cannot ban himself
         const currentUserId = this.getCurrentUserId();
@@ -1384,7 +1384,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         }
         
         // RULE 2: Only Group Master can ban users
-        console.log('🚫 [Widget] Permission check:', {
+        if( window.isDebugging ) console.log('🚫 [Widget] Permission check:', {
           groupCreatorId: this.group?.creater_id,
           currentUserId: currentUserId,
           isCreator: this.group?.creater_id === currentUserId,
@@ -1415,11 +1415,11 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
           return;
         }
         
-        console.log(`🚫 [Widget-UNIFIED-BAN] Group Master ${currentUserId} attempting unified ban (user + IP) for user ${userId}`);
+        if( window.isDebugging ) console.log(`🚫 [Widget-UNIFIED-BAN] Group Master ${currentUserId} attempting unified ban (user + IP) for user ${userId}`);
         
         // Check if this is an anonymous user
         const isAnonymousUser = userId > 100000;
-        console.log('🚫 [Widget] Target user info:', {
+        if( window.isDebugging ) console.log('🚫 [Widget] Target user info:', {
           userId: userId,
           userIdType: typeof userId,
           isAnonymous: isAnonymousUser,
@@ -1431,7 +1431,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         const cleanToken = this.authenticatedToken?.trim();
         
         // Debug token information
-        console.log('🚫 [Widget] Token debug info:', {
+        if( window.isDebugging ) console.log('🚫 [Widget] Token debug info:', {
           isAuthenticated: this.isAuthenticated,
           hasToken: !!this.authenticatedToken,
           tokenLength: this.authenticatedToken?.length,
@@ -1461,8 +1461,8 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
           ////alert(`Warning: User ID precision loss detected. Original: ${userId}, Parsed: ${parsedUserId}`);
         }
         
-        console.log('🚫 [Widget] Ban payload:', banPayload);
-        console.log('🚫 [Widget] Payload types:', {
+        if( window.isDebugging ) console.log('🚫 [Widget] Ban payload:', banPayload);
+        if( window.isDebugging ) console.log('🚫 [Widget] Payload types:', {
           token: typeof banPayload.token,
           groupId: typeof banPayload.groupId,
           userId: typeof banPayload.userId,
@@ -1471,16 +1471,16 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         
         this.socket.emit('ban group user', banPayload);
         
-        console.log('🚫 [Widget] Ban request sent to server');
+        if( window.isDebugging ) console.log('🚫 [Widget] Ban request sent to server');
         
         // Add timeout for feedback
         setTimeout(() => {
-          console.log('🚫 [Widget] Ban request should have been processed by now');
+          if( window.isDebugging ) console.log('🚫 [Widget] Ban request should have been processed by now');
         }, 3000);
       },
 
       timeoutUser(userId) {
-        console.log('⏰ [Widget] Timeout user clicked:', userId);
+        if( window.isDebugging ) console.log('⏰ [Widget] Timeout user clicked:', userId);
         
         // RULE 1: User cannot timeout himself
         const currentUserId = this.getCurrentUserId();
@@ -1492,7 +1492,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         // RULE 2: Only Group Creator can timeout users (backend restriction)
         const canTimeout = (this.group?.creater_id === currentUserId);
         
-        console.log('⏰ [Widget] Permission check:', {
+        if( window.isDebugging ) console.log('⏰ [Widget] Permission check:', {
           groupCreatorId: this.group?.creater_id,
           currentUserId: currentUserId,
           isCreator: this.group?.creater_id === currentUserId,
@@ -1520,11 +1520,11 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
           return;
         }
         
-        console.log(`⏰ [Widget] Group Master ${currentUserId} attempting to timeout user ${userId}`);
+        if( window.isDebugging ) console.log(`⏰ [Widget] Group Master ${currentUserId} attempting to timeout user ${userId}`);
         
         // Check if this is an anonymous user
         const isAnonymousUser = userId > 100000;
-        console.log('⏰ [Widget] Target user info:', {
+        if( window.isDebugging ) console.log('⏰ [Widget] Target user info:', {
           userId: userId,
           userIdType: typeof userId,
           isAnonymous: isAnonymousUser,
@@ -1536,7 +1536,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         const cleanToken = this.authenticatedToken?.trim();
         
         // Debug token information
-        console.log('⏰ [Widget] Token debug info:', {
+        if( window.isDebugging ) console.log('⏰ [Widget] Token debug info:', {
           isAuthenticated: this.isAuthenticated,
           hasToken: !!this.authenticatedToken,
           tokenLength: this.authenticatedToken?.length,
@@ -1566,8 +1566,8 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
           ////alert(`Warning: User ID precision loss detected. Original: ${userId}, Parsed: ${parsedUserId}`);
         }
         
-        console.log('⏰ [Widget] Timeout payload:', timeoutPayload);
-        console.log('⏰ [Widget] Payload types:', {
+        if( window.isDebugging ) console.log('⏰ [Widget] Timeout payload:', timeoutPayload);
+        if( window.isDebugging ) console.log('⏰ [Widget] Payload types:', {
           token: typeof timeoutPayload.token,
           groupId: typeof timeoutPayload.groupId,
           userId: typeof timeoutPayload.userId,
@@ -1576,11 +1576,11 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         
         this.socket.emit('timout user', timeoutPayload);
         
-        console.log('⏰ [Widget] Timeout request sent to server');
+        if( window.isDebugging ) console.log('⏰ [Widget] Timeout request sent to server');
         
         // Add timeout for user feedback
         setTimeout(() => {
-          console.log('⏰ [Widget] Timeout request should have been processed by now');
+          if( window.isDebugging ) console.log('⏰ [Widget] Timeout request should have been processed by now');
         }, 3000);
       },
 
@@ -1596,7 +1596,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
 
       // Unban user functionality (same as W version)
       unbanUser(userId) {
-        console.log('✅ [Widget] Unban user clicked:', userId);
+        if( window.isDebugging ) console.log('✅ [Widget] Unban user clicked:', userId);
         
         // Check permissions (only group creator can unban)
         const currentUserId = this.getCurrentUserId();
@@ -1620,7 +1620,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
           return;
         }
         
-        console.log(`✅ [Widget] Group Master ${currentUserId} attempting to unban user ${userId}`);
+        if( window.isDebugging ) console.log(`✅ [Widget] Group Master ${currentUserId} attempting to unban user ${userId}`);
         
         // Emit unban event (same as W version)
         this.socket.emit('unban group users', {
@@ -1632,7 +1632,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
 
       // BLOCK USER FEATURE - Corrected based on backend implementation
       blockUser(userId) {
-        console.log('🚫 [Widget] Blocking user:', userId);
+        if( window.isDebugging ) console.log('🚫 [Widget] Blocking user:', userId);
         
         if (!this.isAuthenticated || !this.authenticatedToken) {
           ////alert('You must be signed in to block users');
@@ -1647,7 +1647,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         }
         
         if (confirm('Are you sure you want to block this user? You will not see their messages.')) {
-          console.log('📤 [Widget] Sending block user request');
+          if( window.isDebugging ) console.log('📤 [Widget] Sending block user request');
           
           if (!this.socket || !this.socket.connected) {
             ////alert("Not connected to server");
@@ -1655,7 +1655,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
           }
 
           // Backend expects: { token, userId } - personal blocking (not group-specific)
-          console.log('📤 [Widget] Block user payload:', {
+          if( window.isDebugging ) console.log('📤 [Widget] Block user payload:', {
             token: this.authenticatedToken.substring(0, 20) + '...',
             userId: userId
           });
@@ -1667,7 +1667,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
             userId: userId
           });
 
-          console.log('🚫 [Widget] Block user request sent to server');
+          if( window.isDebugging ) console.log('🚫 [Widget] Block user request sent to server');
           
           // Add the user to blocked list immediately for better UX
           // (will be corrected by server response if needed)
@@ -1675,7 +1675,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
             this.blockedUsers = new Set();
           }
           this.blockedUsers.add(userId);
-          console.log('🚫 [Widget] Optimistically added user to blocked list:', this.blockedUsers);
+          if( window.isDebugging ) console.log('🚫 [Widget] Optimistically added user to blocked list:', this.blockedUsers);
           
           // Hide messages from this user immediately
           this.filterMessagesFromBlockedUsers();
@@ -1683,7 +1683,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
           // Request updated blocked users list after blocking (backend should send it automatically, but let's be sure)
           setTimeout(() => {
             if (this.socket && this.socket.connected) {
-              console.log('🚫 [Widget] Requesting updated blocked users info after block');
+              if( window.isDebugging ) console.log('🚫 [Widget] Requesting updated blocked users info after block');
               this.socket.emit('get blocked users info', {
                 token: this.authenticatedToken
               });
@@ -1710,7 +1710,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
               const senderId = parseInt(userIdMatch[1]);
               if (this.blockedUsers.has(senderId)) {
                 messageEl.style.display = 'none';
-                console.log('🚫 [Widget] Hidden message from blocked user:', senderId);
+                if( window.isDebugging ) console.log('🚫 [Widget] Hidden message from blocked user:', senderId);
               }
             }
           }
@@ -1724,7 +1724,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
 
       // Unban all users functionality
       unbanAllUsers() {
-        console.log('✅ [Widget] Unban all users clicked');
+        if( window.isDebugging ) console.log('✅ [Widget] Unban all users clicked');
         
         // Check permissions (only group creator can unban)
         const currentUserId = this.getCurrentUserId();
@@ -1756,7 +1756,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
           return;
         }
         
-        console.log(`✅ [Widget] Group Master ${currentUserId} attempting to unban all users:`, bannedUserIds);
+        if( window.isDebugging ) console.log(`✅ [Widget] Group Master ${currentUserId} attempting to unban all users:`, bannedUserIds);
         
         // Emit unban event for all users
         this.socket.emit('unban group users', {
@@ -1844,7 +1844,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
           return;
         }
         
-        console.log(`✅ [Widget] Group Master ${currentUserId} attempting to unban selected users:`, selectedUserIds);
+        if( window.isDebugging ) console.log(`✅ [Widget] Group Master ${currentUserId} attempting to unban selected users:`, selectedUserIds);
         
         // Emit unban event for selected users
         this.socket.emit('unban group users', {
@@ -1859,7 +1859,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
 
       // Refresh banned users list
       refreshBannedUsers() {
-        console.log('🔄 [Widget] Refreshing banned users list');
+        if( window.isDebugging ) console.log('🔄 [Widget] Refreshing banned users list');
         
         if (!this.socket || !this.socket.connected) {
           //alert("Not connected to server");
@@ -1898,7 +1898,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
       },
 
       pinMessage(messageId) {
-        console.log('📌 [Widget] Pin message clicked:', messageId);
+        if( window.isDebugging ) console.log('📌 [Widget] Pin message clicked:', messageId);
         
         if (!this.canPinMessages()) {
           //alert("Only moderators and admins can pin messages");
@@ -1916,7 +1916,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
           return;
         }
         
-        console.log(`📌 [Widget] Pinning message ${messageId} in group ${this.groupId}`);
+        if( window.isDebugging ) console.log(`📌 [Widget] Pinning message ${messageId} in group ${this.groupId}`);
         
         // Emit pin message event (same as W version)
         this.socket.emit('pin message', {
@@ -1927,7 +1927,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
       },
 
       unpinMessage(messageId) {
-        console.log('📌 [Widget] Unpin message clicked:', messageId);
+        if( window.isDebugging ) console.log('📌 [Widget] Unpin message clicked:', messageId);
         
         if (!this.canPinMessages()) {
           //alert("Only moderators and admins can unpin messages");
@@ -1945,7 +1945,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
           return;
         }
         
-        console.log(`📌 [Widget] Unpinning message ${messageId} in group ${this.groupId}`);
+        if( window.isDebugging ) console.log(`📌 [Widget] Unpinning message ${messageId} in group ${this.groupId}`);
         
         const payload = {
           token: this.authenticatedToken?.trim(),
@@ -1953,12 +1953,12 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
           msgId: parseInt(messageId)
         };
         
-        console.log('📌 [Widget] Unpin payload:', payload);
-        console.log('📌 [Widget] Token length:', payload.token?.length);
-        console.log('📌 [Widget] Socket connected:', this.socket.connected);
-        console.log('📌 [Widget] Current user ID:', this.getCurrentUserId());
-        console.log('📌 [Widget] Group creator ID:', this.group?.creater_id);
-        console.log('📌 [Widget] User role in group:', this.group?.members?.find(m => m.id === this.getCurrentUserId())?.role_id);
+        if( window.isDebugging ) console.log('📌 [Widget] Unpin payload:', payload);
+        if( window.isDebugging ) console.log('📌 [Widget] Token length:', payload.token?.length);
+        if( window.isDebugging ) console.log('📌 [Widget] Socket connected:', this.socket.connected);
+        if( window.isDebugging ) console.log('📌 [Widget] Current user ID:', this.getCurrentUserId());
+        if( window.isDebugging ) console.log('📌 [Widget] Group creator ID:', this.group?.creater_id);
+        if( window.isDebugging ) console.log('📌 [Widget] User role in group:', this.group?.members?.find(m => m.id === this.getCurrentUserId())?.role_id);
         
         // Add temporary error listeners
         this.socket.once('forbidden', (error) => {
@@ -1978,7 +1978,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         if (!this.socket || !this.socket.connected) return;
         if (!this.isAuthenticated || !this.authenticatedToken) return;
         
-        console.log('📌 [Widget] Requesting pinned messages for group:', this.groupId);
+        if( window.isDebugging ) console.log('📌 [Widget] Requesting pinned messages for group:', this.groupId);
         
         // Request pinned messages (same as W version)
         this.socket.emit('get pinned messages', {

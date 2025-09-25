@@ -28,10 +28,10 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
               if (modsOption) {
                 if (this.isAuthenticated && this.isModeratorOrAdmin()) {
                   modsOption.style.display = 'block';
-                  console.log('🔍 [Widget] Showing mods option for admin/moderator');
+                  if( window.isDebugging ) console.log('🔍 [Widget] Showing mods option for admin/moderator');
                 } else {
                   modsOption.style.display = 'none';
-                  console.log('🔍 [Widget] Hiding mods option for regular user/anonymous');
+                  if( window.isDebugging ) console.log('🔍 [Widget] Hiding mods option for regular user/anonymous');
                 }
               }
             }
@@ -125,7 +125,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
 
         // Logo click to create group
         const logo = this.dialog.querySelector('.pingbash-logo');
-        console.log('🔍 [Widget] Logo element found:', !!logo, logo);
+        if( window.isDebugging ) console.log('🔍 [Widget] Logo element found:', !!logo, logo);
 
         if (logo) {
           // Add visual indicator that logo is clickable
@@ -133,8 +133,8 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
           logo.style.transition = 'opacity 0.2s';
 
           logo.addEventListener('click', (e) => {
-            console.log('🔍 [Widget] Logo clicked - opening create new group modal');
-            console.log('🔍 [Widget] Event details:', e);
+            if( window.isDebugging ) console.log('🔍 [Widget] Logo clicked - opening create new group modal');
+            if( window.isDebugging ) console.log('🔍 [Widget] Event details:', e);
             e.preventDefault();
             e.stopPropagation();
 
@@ -208,7 +208,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         // Reply preview close button event listener
         const replyCloseBtn = this.dialog.querySelector('.pingbash-reply-preview-close');
         replyCloseBtn?.addEventListener('click', () => {
-          console.log('💬 [Widget] Reply preview close button clicked');
+          if( window.isDebugging ) console.log('💬 [Widget] Reply preview close button clicked');
           this.hideReplyPreview();
         });
 
@@ -219,7 +219,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         const continueAnonBtns = this.dialog.querySelectorAll('.pingbash-continue-anon-btn');
         const signinOverlay = signinModal?.querySelector('.pingbash-popup-overlay');
 
-        console.log('🔍 [Widget] Button elements found:', {
+        if( window.isDebugging ) console.log('🔍 [Widget] Button elements found:', {
           signinCloseBtn: !!signinCloseBtn,
           signinSubmitBtn: !!signinSubmitBtn,
           continueAnonBtns: continueAnonBtns.length
@@ -229,7 +229,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         continueAnonBtns.forEach((btn, index) => {
           btn.style.border = '2px solid red';
           btn.style.backgroundColor = '#ffcccc';
-          console.log(`🔍 [Widget] Continue button ${index + 1} styled for debugging`);
+          if( window.isDebugging ) console.log(`🔍 [Widget] Continue button ${index + 1} styled for debugging`);
         });
 
         signinCloseBtn?.addEventListener('click', () => this.hideSigninModal());
@@ -317,8 +317,8 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
 
         // Attach event listeners to ALL Continue As Guest buttons
         continueAnonBtns.forEach((continueAnonBtn, index) => {
-          console.log(`🔍 [Widget] Adding click listener to Continue As Guest button ${index + 1}`);
-          console.log(`🔍 [Widget] Button ${index + 1} properties:`, {
+          if( window.isDebugging ) console.log(`🔍 [Widget] Adding click listener to Continue As Guest button ${index + 1}`);
+          if( window.isDebugging ) console.log(`🔍 [Widget] Button ${index + 1} properties:`, {
             tagName: continueAnonBtn.tagName,
             className: continueAnonBtn.className,
             disabled: continueAnonBtn.disabled,
@@ -331,8 +331,8 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
 
           // Try multiple event types to debug
           continueAnonBtn.addEventListener('click', (event) => {
-            console.log(`🔍 [Widget] Continue As Guest button ${index + 1} CLICKED!`);
-            console.log('🔍 [Widget] Click event details:', {
+            if( window.isDebugging ) console.log(`🔍 [Widget] Continue As Guest button ${index + 1} CLICKED!`);
+            if( window.isDebugging ) console.log('🔍 [Widget] Click event details:', {
               target: event.target,
               currentTarget: event.currentTarget,
               type: event.type
@@ -343,16 +343,16 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
           });
 
           continueAnonBtn.addEventListener('mousedown', () => {
-            console.log(`🔍 [Widget] Continue As Guest button ${index + 1} MOUSEDOWN!`);
+            if( window.isDebugging ) console.log(`🔍 [Widget] Continue As Guest button ${index + 1} MOUSEDOWN!`);
           });
 
           continueAnonBtn.addEventListener('mouseup', () => {
-            console.log(`🔍 [Widget] Continue As Guest button ${index + 1} MOUSEUP!`);
+            if( window.isDebugging ) console.log(`🔍 [Widget] Continue As Guest button ${index + 1} MOUSEUP!`);
           });
 
           // Also try direct onclick
           continueAnonBtn.onclick = (event) => {
-            console.log(`🔍 [Widget] Continue As Guest button ${index + 1} ONCLICK!`);
+            if( window.isDebugging ) console.log(`🔍 [Widget] Continue As Guest button ${index + 1} ONCLICK!`);
             event.preventDefault();
             event.stopPropagation();
             this.continueAsAnonymous();
@@ -361,7 +361,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
           // Mark that listener has been attached
           continueAnonBtn._listenerAttached = true;
 
-          console.log(`🔍 [Widget] All event listeners added to Continue As Guest button ${index + 1}`);
+          if( window.isDebugging ) console.log(`🔍 [Widget] All event listeners added to Continue As Guest button ${index + 1}`);
         });
 
         if (continueAnonBtns.length === 0) {
@@ -429,11 +429,11 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         manageChatOptions.forEach(option => {
           option.addEventListener('click', () => {
             const action = option.dataset.action;
-            console.log('🔧 [Widget] Manage chat option clicked:', action);
+            if( window.isDebugging ) console.log('🔧 [Widget] Manage chat option clicked:', action);
             if (action === 'pinned-messages') {
               this.showPinnedMessagesView();
             } else if (action === 'clear-chat') {
-              console.log('🧹 [Widget] Clear chat option selected, calling clearChat()');
+              if( window.isDebugging ) console.log('🧹 [Widget] Clear chat option selected, calling clearChat()');
               this.clearChat();
             }
           });
@@ -486,7 +486,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
           if (e.target.matches('input[data-permission]')) {
             const permission = e.target.dataset.permission;
             const isChecked = e.target.checked;
-            console.log('👥 [Widget] Permission checkbox changed:', permission, 'checked:', isChecked);
+            if( window.isDebugging ) console.log('👥 [Widget] Permission checkbox changed:', permission, 'checked:', isChecked);
           }
         });
 
@@ -500,7 +500,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
             if (checkbox && !e.target.matches('input[data-permission]')) {
               checkbox.checked = !checkbox.checked;
               const permission = checkbox.dataset.permission;
-              console.log('👥 [Widget] Permission toggled via click:', permission, 'checked:', checkbox.checked);
+              if( window.isDebugging ) console.log('👥 [Widget] Permission toggled via click:', permission, 'checked:', checkbox.checked);
               
               // Trigger change event
               checkbox.dispatchEvent(new Event('change', { bubbles: true }));
@@ -615,7 +615,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         // Online users icon click
         const onlineUsersContainer = this.dialog.querySelector('.pingbash-online-users-container');
         onlineUsersContainer?.addEventListener('click', () => {
-          console.log('👥 [Widget] Online users icon clicked');
+          if( window.isDebugging ) console.log('👥 [Widget] Online users icon clicked');
           this.showOnlineUsers();
         });
 
@@ -724,7 +724,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
 
       // EXACT COPY from widget.js - handleMenuAction method
       handleMenuAction(action) {
-        console.log('🍔 [Widget] Menu action:', action);
+        if( window.isDebugging ) console.log('🍔 [Widget] Menu action:', action);
 
         switch (action) {
           // Hamburger menu actions (general)
@@ -792,7 +792,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         }
         
         navigator.clipboard.writeText(groupUrl).then(() => {
-          console.log('📋 [Widget] Group URL copied to clipboard:', groupUrl);
+          if( window.isDebugging ) console.log('📋 [Widget] Group URL copied to clipboard:', groupUrl);
           // Show success notification
           this.showNotification('Group URL copied to clipboard!', 'success');
         }).catch(err => {
@@ -802,7 +802,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
       },
 
       addToFavorites() {
-        console.log('⭐ [Widget] Adding group to favorites');
+        if( window.isDebugging ) console.log('⭐ [Widget] Adding group to favorites');
         if (this.socket && this.group) {
           const token = localStorage.getItem('pingbash_token');
           if (token) {
@@ -811,7 +811,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
               groupId: this.group.id,
               isMember: 1
             });
-            console.log('⭐ [Widget] Sent add to favorites request for group:', this.group.id);
+            if( window.isDebugging ) console.log('⭐ [Widget] Sent add to favorites request for group:', this.group.id);
           } else {
             this.showNotification('Please log in to add favorites', 'error');
           }
@@ -819,7 +819,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
       },
 
       removeFromFavorites() {
-        console.log('⭐ [Widget] Removing group from favorites');
+        if( window.isDebugging ) console.log('⭐ [Widget] Removing group from favorites');
         if (this.socket && this.group) {
           const token = localStorage.getItem('pingbash_token');
           if (token) {
@@ -828,7 +828,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
               groupId: this.group.id,
               isMember: 0
             });
-            console.log('⭐ [Widget] Sent remove from favorites request for group:', this.group.id);
+            if( window.isDebugging ) console.log('⭐ [Widget] Sent remove from favorites request for group:', this.group.id);
           } else {
             this.showNotification('Please log in to manage favorites', 'error');
           }
@@ -856,14 +856,14 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
       },
 
       hideChat() {
-        console.log('👁️ [Widget] Hiding chat (closing dialog)');
+        if( window.isDebugging ) console.log('👁️ [Widget] Hiding chat (closing dialog)');
         this.closeDialog();
       },
 
 
 
       toggleTheme() {
-        console.log('🌓 [Widget] Toggling theme');
+        if( window.isDebugging ) console.log('🌓 [Widget] Toggling theme');
         const isDarkMode = this.isDarkMode || false;
         this.isDarkMode = !isDarkMode;
         
@@ -892,19 +892,19 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
       },
 
       applyDarkMode() {
-        console.log('🌙 [Widget] Applying dark mode styles');
+        if( window.isDebugging ) console.log('🌙 [Widget] Applying dark mode styles');
         // Add dark mode class to dialog
         this.dialog.classList.add('pingbash-dark-mode');
       },
 
       applyLightMode() {
-        console.log('☀️ [Widget] Applying light mode styles');
+        if( window.isDebugging ) console.log('☀️ [Widget] Applying light mode styles');
         // Remove dark mode class from dialog
         this.dialog.classList.remove('pingbash-dark-mode');
       },
 
       logout() {
-        console.log('🚪 [Widget] Logging out');
+        if( window.isDebugging ) console.log('🚪 [Widget] Logging out');
         // Clear authentication data
         localStorage.removeItem('pingbash_token');
         localStorage.removeItem('pingbash_user_id');
@@ -921,7 +921,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
       },
 
       showNotification(message, type = 'info') {
-        console.log(`📢 [Widget] Notification (${type}): ${message}`);
+        if( window.isDebugging ) console.log(`📢 [Widget] Notification (${type}): ${message}`);
         
         // Create a simple toast notification
         const notification = document.createElement('div');
@@ -969,7 +969,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
 
       // EXACT COPY from widget.js - handleImageUpload method
       handleImageUpload() {
-        console.log('📷 [Widget] Image upload clicked');
+        if( window.isDebugging ) console.log('📷 [Widget] Image upload clicked');
         // Create hidden file input for images
         const input = document.createElement('input');
         input.type = 'file';
@@ -977,7 +977,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         input.onchange = async (e) => {
           const file = e.target.files[0];
           if (file) {
-            console.log('📷 [Widget] Image selected:', file.name);
+            if( window.isDebugging ) console.log('📷 [Widget] Image selected:', file.name);
             await this.uploadAndSendFile(file, 'image');
           }
         };
@@ -986,14 +986,14 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
 
       // EXACT COPY from widget.js - handleFileUpload method
       handleFileUpload() {
-        console.log('📎 [Widget] File upload clicked');
+        if( window.isDebugging ) console.log('📎 [Widget] File upload clicked');
         // Create hidden file input for any file type
         const input = document.createElement('input');
         input.type = 'file';
         input.onchange = async (e) => {
           const file = e.target.files[0];
           if (file) {
-            console.log('📎 [Widget] File selected:', file.name);
+            if( window.isDebugging ) console.log('📎 [Widget] File selected:', file.name);
             await this.uploadAndSendFile(file, 'file');
           }
         };
@@ -1002,7 +1002,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
 
       // EXACT COPY from widget.js - toggleEmojiPicker method
       toggleEmojiPicker() {
-        console.log('😀 [Widget] Emoji button clicked');
+        if( window.isDebugging ) console.log('😀 [Widget] Emoji button clicked');
         const emojiModal = this.dialog.querySelector('.pingbash-emoji-modal');
         if (!emojiModal) return;
 
@@ -1047,18 +1047,18 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         // Prevent multiple clicks with a more robust check
         const now = Date.now();
         if (this.lastEmojiClickTime && (now - this.lastEmojiClickTime) < 300) {
-          console.log('😀 [Widget] Emoji click ignored - too fast');
+          if( window.isDebugging ) console.log('😀 [Widget] Emoji click ignored - too fast');
           return;
         }
         this.lastEmojiClickTime = now;
 
         const emoji = e.target.dataset.emoji;
         if (!emoji) {
-          console.log('😀 [Widget] No emoji data found');
+          if( window.isDebugging ) console.log('😀 [Widget] No emoji data found');
           return;
         }
 
-        console.log('😀 [Widget] Emoji selected:', emoji);
+        if( window.isDebugging ) console.log('😀 [Widget] Emoji selected:', emoji);
         const input = this.dialog.querySelector('.pingbash-message-input');
         if (input) {
           // Insert emoji at cursor position
@@ -1140,11 +1140,11 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
 
       // EXACT COPY from widget.js - showMentionDropdown method
       showMentionDropdown(searchTerm, atIndex) {
-        console.log('@ [Widget] Showing mention dropdown for:', searchTerm);
+        if( window.isDebugging ) console.log('@ [Widget] Showing mention dropdown for:', searchTerm);
 
         // Get online users (mock data for now - in real app would come from socket)
         const onlineUsers = this.getOnlineUsers();
-        console.log('👥 [Widget] Online users:', onlineUsers);
+        if( window.isDebugging ) console.log('👥 [Widget] Online users:', onlineUsers);
         const filteredUsers = onlineUsers.filter(user =>
           user.name.toLowerCase().includes(searchTerm.toLowerCase())
         );
@@ -1222,19 +1222,19 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
       requestOnlineUsers() {
         // Request online users from backend (now public endpoint)
         if (!this.socket || !this.isConnected || !this.groupId) {
-          console.log('👥 [Widget] Cannot request online users - missing socket, connection, or groupId');
+          if( window.isDebugging ) console.log('👥 [Widget] Cannot request online users - missing socket, connection, or groupId');
           return;
         }
 
         // Prevent too frequent requests
         const now = Date.now();
         if (this.lastOnlineUsersRequest && (now - this.lastOnlineUsersRequest) < 2000) {
-          console.log('👥 [Widget] Skipping online users request - too frequent');
+          if( window.isDebugging ) console.log('👥 [Widget] Skipping online users request - too frequent');
           return;
         }
         this.lastOnlineUsersRequest = now;
 
-        console.log('👥 [Widget] Requesting online users for group:', this.groupId, '(public endpoint)');
+        if( window.isDebugging ) console.log('👥 [Widget] Requesting online users for group:', this.groupId, '(public endpoint)');
         // No token needed - endpoint is now public
         this.socket.emit('get group online users', { groupId: parseInt(this.groupId) });
       },
@@ -1246,8 +1246,8 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
 
         // First, try to map online user IDs to actual member names
         if (this.onlineUserIds && this.onlineUserIds.length > 0 && this.groupMembers && this.groupMembers.length > 0) {
-          console.log('👥 [Widget] Mapping online user IDs to names:', this.onlineUserIds);
-          console.log('👥 [Widget] Available group members:', this.groupMembers.length);
+          if( window.isDebugging ) console.log('👥 [Widget] Mapping online user IDs to names:', this.onlineUserIds);
+          if( window.isDebugging ) console.log('👥 [Widget] Available group members:', this.groupMembers.length);
 
           onlineUsers = this.onlineUserIds
             .map(userId => {
@@ -1265,7 +1265,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
 
         // If no online users mapped, use all group members as fallback
         if (onlineUsers.length === 0 && this.groupMembers && this.groupMembers.length > 0) {
-          console.log('👥 [Widget] Using all group members as fallback');
+          if( window.isDebugging ) console.log('👥 [Widget] Using all group members as fallback');
           onlineUsers = this.groupMembers.map(member => ({
             id: member.id,
             name: member.name
@@ -1274,7 +1274,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
 
         // Final fallback to mock data if no real data available
         if (onlineUsers.length === 0) {
-          console.log('👥 [Widget] Using mock data as final fallback');
+          if( window.isDebugging ) console.log('👥 [Widget] Using mock data as final fallback');
           onlineUsers = [
             { id: 1, name: 'John Doe' },
             { id: 2, name: 'Jane Smith' },
@@ -1284,7 +1284,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
           ];
         }
 
-        console.log('👥 [Widget] Final online users list:', onlineUsers);
+        if( window.isDebugging ) console.log('👥 [Widget] Final online users list:', onlineUsers);
         return onlineUsers;
       },
 
@@ -1328,11 +1328,11 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
       setupBodyModalEventListeners() {
         const modal = document.body.querySelector('.pingbash-group-creation-modal-body');
         if (!modal) {
-          console.log('🏗️ [Widget] Body modal not found, skipping event listener setup');
+          if( window.isDebugging ) console.log('🏗️ [Widget] Body modal not found, skipping event listener setup');
           return;
         }
 
-        console.log('🏗️ [Widget] Setting up body modal event listeners');
+        if( window.isDebugging ) console.log('🏗️ [Widget] Setting up body modal event listeners');
 
               // Get elements from the body modal (W Version)
       const groupCreationCloseBtn = modal.querySelector('.pingbash-popup-close');
@@ -1352,7 +1352,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         // Set up form interactions for body modal
         this.setupBodyGroupCreationForm();
 
-        console.log('🏗️ [Widget] Body modal event listeners set up successfully');
+        if( window.isDebugging ) console.log('🏗️ [Widget] Body modal event listeners set up successfully');
       },
 
       // NEW METHOD - Set up form interactions for body-attached modal (W Version)
@@ -1401,7 +1401,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         // Set up real-time content sync with actual chat
         this.setupPreviewContentSync(modal);
 
-        console.log('🏗️ [Widget] Body modal form interactions set up (W Version)');
+        if( window.isDebugging ) console.log('🏗️ [Widget] Body modal form interactions set up (W Version)');
       },
 
       // NEW METHOD - Set up configuration panel interactions
@@ -1410,7 +1410,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         const updatePreviewImmediately = () => {
           const config = this.getCurrentConfiguration(modal);
           this.applySettingsToPreview(modal, config);
-          console.log('🔄 [Widget] Preview updated immediately from form change');
+          if( window.isDebugging ) console.log('🔄 [Widget] Preview updated immediately from form change');
         };
 
         // Size mode radio buttons
@@ -1552,7 +1552,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         const initialConfig = this.getCurrentConfiguration(modal);
         this.applySettingsToPreview(modal, initialConfig);
         
-        console.log('🎯 [Widget] All form inputs configured for immediate preview updates');
+        if( window.isDebugging ) console.log('🎯 [Widget] All form inputs configured for immediate preview updates');
       },
 
       // NEW METHOD - Update preview colors based on configuration
@@ -1611,10 +1611,10 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         // Preview is now part of horizontal layout - no dragging needed
         const previewContainer = modal.querySelector('#draggable-chat-preview');
         if (previewContainer) {
-          console.log('🎯 [Widget] Preview container found - using horizontal layout');
+          if( window.isDebugging ) console.log('🎯 [Widget] Preview container found - using horizontal layout');
         }
 
-        console.log('🏗️ [Widget] Preview interactions set up (horizontal layout)');
+        if( window.isDebugging ) console.log('🏗️ [Widget] Preview interactions set up (horizontal layout)');
       },
 
       // NEW METHOD - Sync preview content with actual chat (EXACT HTML)
@@ -1640,7 +1640,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
           // Replace preview content with EXACT same HTML
           previewMessagesContainer.innerHTML = clonedContent.innerHTML;
           
-          console.log('🔄 [Widget] Preview synced with EXACT actual chat content');
+          if( window.isDebugging ) console.log('🔄 [Widget] Preview synced with EXACT actual chat content');
         } else {
           // Show placeholder content when no messages
           this.showPreviewPlaceholder(previewMessagesContainer);
@@ -1651,7 +1651,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
       syncPreviewHeader(modal) {
         // The actual chat dialog doesn't have a group name in header initially
         // Group name is shown in the group creation form, not in the header
-        console.log('🔄 [Widget] Header sync - no group name in header to sync');
+        if( window.isDebugging ) console.log('🔄 [Widget] Header sync - no group name in header to sync');
       },
 
       // NEW METHOD - Sync preview online user count with actual chat
@@ -1746,7 +1746,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
           }.bind(this);
         }
         
-        console.log('🔄 [Widget] Preview content sync set up');
+        if( window.isDebugging ) console.log('🔄 [Widget] Preview content sync set up');
       },
 
       // NEW METHOD - Apply settings to preview ONLY (from form values)
@@ -1801,7 +1801,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
           previewContainer.style.borderRadius = settings.settings.cornerRadius + 'px';
         }
         
-        console.log('🎨 [Widget] Preview settings applied from form values:', settings);
+        if( window.isDebugging ) console.log('🎨 [Widget] Preview settings applied from form values:', settings);
       },
 
       // ENHANCED METHOD - Apply ALL chat style settings to actual chat dialog
@@ -1809,11 +1809,11 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         const actualChatDialog = document.querySelector('.pingbash-chat-dialog');
         
         if (!actualChatDialog || !groupData) {
-          console.log('🎨 [Widget] Cannot apply settings - missing dialog or group data');
+          if( window.isDebugging ) console.log('🎨 [Widget] Cannot apply settings - missing dialog or group data');
           return;
         }
         
-        console.log('🎨 [Widget] Applying comprehensive chat style settings:', groupData);
+        if( window.isDebugging ) console.log('🎨 [Widget] Applying comprehensive chat style settings:', groupData);
         
         // Create comprehensive CSS variables from group data
         const cssVars = {
@@ -1852,12 +1852,12 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
           actualChatDialog.style.minHeight = groupData.frame_height + 'px';
           actualChatDialog.style.maxWidth = 'none';
           actualChatDialog.style.maxHeight = 'none';
-          console.log('🎨 [Widget] Applied fixed size:', groupData.frame_width + 'x' + groupData.frame_height);
+          if( window.isDebugging ) console.log('🎨 [Widget] Applied fixed size:', groupData.frame_width + 'x' + groupData.frame_height);
         } else if (groupData.frame_width && groupData.frame_height) {
           // Fallback for older format without size_mode
           actualChatDialog.style.width = groupData.frame_width + 'px';
           actualChatDialog.style.height = groupData.frame_height + 'px';
-          console.log('🎨 [Widget] Applied legacy size:', groupData.frame_width + 'x' + groupData.frame_height);
+          if( window.isDebugging ) console.log('🎨 [Widget] Applied legacy size:', groupData.frame_width + 'x' + groupData.frame_height);
         } else {
           // Responsive mode - reset to default responsive behavior
           actualChatDialog.style.width = '';
@@ -1866,7 +1866,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
           actualChatDialog.style.minHeight = '';
           actualChatDialog.style.maxWidth = '';
           actualChatDialog.style.maxHeight = '';
-          console.log('🎨 [Widget] Applied responsive sizing');
+          if( window.isDebugging ) console.log('🎨 [Widget] Applied responsive sizing');
         }
         
         // Apply border radius to dialog itself
@@ -1885,7 +1885,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         // Also refresh styling on all existing messages
         this.refreshAllMessagesStyling(actualChatDialog, groupData);
         
-        console.log('🎨 [Widget] ✅ Applied ALL chat style settings to dialog');
+        if( window.isDebugging ) console.log('🎨 [Widget] ✅ Applied ALL chat style settings to dialog');
       },
 
       // NEW METHOD - Apply detailed styling to specific chat elements
@@ -1992,7 +1992,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
           }
         });
         
-        console.log('🎨 [Widget] Applied detailed styling to chat elements');
+        if( window.isDebugging ) console.log('🎨 [Widget] Applied detailed styling to chat elements');
       },
 
       // NEW METHOD - Refresh styling on all existing messages
@@ -2000,14 +2000,14 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         if (!chatDialog || !groupData || !this.applyStyleToMessage) return;
         
         const messages = chatDialog.querySelectorAll('.pingbash-message');
-        console.log('🎨 [Widget] Refreshing styles for', messages.length, 'existing messages');
+        if( window.isDebugging ) console.log('🎨 [Widget] Refreshing styles for', messages.length, 'existing messages');
         
         messages.forEach(messageEl => {
           const isOwn = messageEl.classList.contains('own');
           this.applyStyleToMessage(messageEl, groupData, isOwn);
         });
         
-        console.log('🎨 [Widget] ✅ Refreshed styling for all existing messages');
+        if( window.isDebugging ) console.log('🎨 [Widget] ✅ Refreshed styling for all existing messages');
       },
 
       // NEW METHOD - Get current configuration from form
@@ -2040,14 +2040,14 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         };
         
         // Debug log for troubleshooting
-        console.log('🔍 [Widget] Current configuration extracted:', config);
+        if( window.isDebugging ) console.log('🔍 [Widget] Current configuration extracted:', config);
         
         return config;
             },
 
       // Chat Mode Filter Methods (same as F version)
       handleFilterModeChange(filterMode) {
-        console.log('🔍 [Widget] Filter mode changed to:', filterMode);
+        if( window.isDebugging ) console.log('🔍 [Widget] Filter mode changed to:', filterMode);
         
         // Store current filter mode
         this.filterMode = filterMode;
@@ -2055,7 +2055,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         
         // Show user search modal for 1-on-1 mode
         if (filterMode === 1) {
-          console.log('🔍 [Widget] Opening user search modal for 1-on-1 mode');
+          if( window.isDebugging ) console.log('🔍 [Widget] Opening user search modal for 1-on-1 mode');
           this.showUserSearchModal();
           return; // Don't continue with filter logic until user is selected
         }
@@ -2065,10 +2065,10 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         if (modsOption) {
           if (this.isAuthenticated && this.isModeratorOrAdmin()) {
             modsOption.style.display = 'block';
-            console.log('🔍 [Widget] Showing mods mode for admin/moderator');
+            if( window.isDebugging ) console.log('🔍 [Widget] Showing mods mode for admin/moderator');
           } else {
             modsOption.style.display = 'none';
-            console.log('🔍 [Widget] Hiding mods mode for regular user/anonymous');
+            if( window.isDebugging ) console.log('🔍 [Widget] Hiding mods mode for regular user/anonymous');
           }
         }
         
@@ -2080,7 +2080,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
       },
 
       handleUserSearch(searchTerm) {
-        console.log('🔍 [Widget] User search:', searchTerm);
+        if( window.isDebugging ) console.log('🔍 [Widget] User search:', searchTerm);
         
         const userDropdown = this.dialog.querySelector('.pingbash-user-dropdown');
         if (!userDropdown) return;
@@ -2127,7 +2127,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
       },
 
       selectUser(user) {
-        console.log('🔍 [Widget] User selected:', user);
+        if( window.isDebugging ) console.log('🔍 [Widget] User selected:', user);
         
         this.filteredUser = user;
         
@@ -2158,8 +2158,8 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
 
         // First, try to map online user IDs to actual member names
         if (this.onlineUserIds && this.onlineUserIds.length > 0 && this.groupMembers && this.groupMembers.length > 0) {
-          console.log('👥 [Widget] Mapping online user IDs to names:', this.onlineUserIds);
-          console.log('👥 [Widget] Available group members:', this.groupMembers.length);
+          if( window.isDebugging ) console.log('👥 [Widget] Mapping online user IDs to names:', this.onlineUserIds);
+          if( window.isDebugging ) console.log('👥 [Widget] Available group members:', this.groupMembers.length);
 
           onlineUsers = this.onlineUserIds
             .map(userId => {
@@ -2177,7 +2177,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
 
         // If no online users mapped, use all group members as fallback
         if (onlineUsers.length === 0 && this.groupMembers && this.groupMembers.length > 0) {
-          console.log('👥 [Widget] Using all group members as fallback');
+          if( window.isDebugging ) console.log('👥 [Widget] Using all group members as fallback');
           onlineUsers = this.groupMembers.map(member => ({
             id: member.id,
             name: member.name
@@ -2186,20 +2186,20 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
 
         // Final fallback - create mock users from online IDs
         if (onlineUsers.length === 0 && this.onlineUserIds && this.onlineUserIds.length > 0) {
-          console.log('👥 [Widget] Creating mock users from online IDs');
+          if( window.isDebugging ) console.log('👥 [Widget] Creating mock users from online IDs');
           onlineUsers = this.onlineUserIds.map(userId => {
             const last3Digits = String(userId).slice(-3);
             return { id: userId, name: `anon${last3Digits}` };
           });
         }
 
-        console.log('👥 [Widget] Final online users list:', onlineUsers);
+        if( window.isDebugging ) console.log('👥 [Widget] Final online users list:', onlineUsers);
         return onlineUsers;
       },
 
       getGroupMembers() {
         // Get all group members for 1-on-1 messaging (not just online users)
-        console.log('👥 [Widget] Getting all group members for 1-on-1 search');
+        if( window.isDebugging ) console.log('👥 [Widget] Getting all group members for 1-on-1 search');
         
         const currentUserId = this.getCurrentUserId();
         let allMembers = [];
@@ -2218,17 +2218,17 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
               email: member.email
             }));
           
-          console.log('👥 [Widget] Available group members for 1-on-1 search:', allMembers.length);
-          console.log('👥 [Widget] Group members:', allMembers.map(m => ({ id: m.id, name: m.name })));
+          if( window.isDebugging ) console.log('👥 [Widget] Available group members for 1-on-1 search:', allMembers.length);
+          if( window.isDebugging ) console.log('👥 [Widget] Group members:', allMembers.map(m => ({ id: m.id, name: m.name })));
         } else {
-          console.log('👥 [Widget] No group members available for search');
+          if( window.isDebugging ) console.log('👥 [Widget] No group members available for search');
         }
         
         return allMembers;
       },
 
       applyMessageFilter() {
-        console.log('🔍 [Widget] Applying message filter - mode:', this.filterMode, 'user:', this.filteredUser);
+        if( window.isDebugging ) console.log('🔍 [Widget] Applying message filter - mode:', this.filterMode, 'user:', this.filteredUser);
         
         // Re-display messages with current filter
         if (this.allMessages) {
@@ -2245,7 +2245,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         };
         
         const statusMessage = modes[filterMode] || 'Unknown mode';
-        console.log('🔍 [Widget] Chat mode:', statusMessage);
+        if( window.isDebugging ) console.log('🔍 [Widget] Chat mode:', statusMessage);
         
         // Update input placeholder to show current mode
         this.updateInputPlaceholder(filterMode);

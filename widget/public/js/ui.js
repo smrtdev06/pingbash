@@ -4,9 +4,9 @@
  */
 
 // Add ui methods to the prototype
-console.log('🔍 [UI] Checking PingbashChatWidget:', !!window.PingbashChatWidget, !!window.PingbashChatWidget?.prototype);
+if( window.isDebugging ) console.log('🔍 [UI] Checking PingbashChatWidget:', !!window.PingbashChatWidget, !!window.PingbashChatWidget?.prototype);
 if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
-  console.log('✅ [UI] Adding UI methods to prototype');
+  if( window.isDebugging ) console.log('✅ [UI] Adding UI methods to prototype');
   Object.assign(window.PingbashChatWidget.prototype, {
 
   // EXACT COPY from widget.js - createWidget method
@@ -47,7 +47,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
       // Check if device is mobile (disable drag on mobile)
       const isMobile = window.innerWidth <= 768;
       if (isMobile) {
-        console.log('📱 [Widget] Mobile device detected - disabling drag functionality');
+        if( window.isDebugging ) console.log('📱 [Widget] Mobile device detected - disabling drag functionality');
         return;
       }
       
@@ -1214,7 +1214,7 @@ Example:
       this.button.classList.add(position);
       this.dialog.classList.add(position);
   
-      console.log('🔄 [Widget] Position updated to:', position);
+      if( window.isDebugging ) console.log('🔄 [Widget] Position updated to:', position);
     },
 
   // EXACT COPY from widget.js - minimizeDialog method
@@ -1537,7 +1537,7 @@ Example:
       modal.style.zIndex = '2147483648';
       modal.style.position = 'fixed';
 
-      console.log('🏗️ [Widget] Group creation modal created and attached to body');
+      if( window.isDebugging ) console.log('🏗️ [Widget] Group creation modal created and attached to body');
       return modal;
     },
 

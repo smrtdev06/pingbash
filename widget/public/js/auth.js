@@ -12,10 +12,10 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
       const handleVisibilityChange = () => {
         const isVisible = !document.hidden;
         this.pageVisible = isVisible;
-        console.log('🔍 [Widget] Page visibility changed:', isVisible ? 'visible' : 'hidden');
+        if( window.isDebugging ) console.log('🔍 [Widget] Page visibility changed:', isVisible ? 'visible' : 'hidden');
   
         if (isVisible) {
-          console.log('🔍 [Widget] Window reactivated - polling for new messages');
+          if( window.isDebugging ) console.log('🔍 [Widget] Window reactivated - polling for new messages');
   
           // Clear any existing timeout
           if (this.reloadTimeoutRef) {
@@ -24,9 +24,9 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
   
           // Process any pending messages first
           if (this.pendingMessages.length > 0) {
-            console.log('🔍 [Widget] Processing', this.pendingMessages.length, 'pending messages');
+            if( window.isDebugging ) console.log('🔍 [Widget] Processing', this.pendingMessages.length, 'pending messages');
             const mergedMessages = this.mergeArrays(this.messages || [], this.pendingMessages);
-            console.log('🔍 [Widget] After merging pending - total messages:', mergedMessages.length);
+            if( window.isDebugging ) console.log('🔍 [Widget] After merging pending - total messages:', mergedMessages.length);
   
             // Force display of pending messages (bypass optimization checks)
             this.displayPendingMessages(mergedMessages);
@@ -35,17 +35,17 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
   
           // Debounce polling to prevent rapid successive calls
           this.reloadTimeoutRef = setTimeout(() => {
-            console.log('🔍 [Widget] Polling for new messages - Socket connected:', this.socket?.connected, 'Group ID:', this.groupId);
+            if( window.isDebugging ) console.log('🔍 [Widget] Polling for new messages - Socket connected:', this.socket?.connected, 'Group ID:', this.groupId);
   
             if (this.socket && this.socket.connected && this.groupId) {
-              console.log('🔍 [Widget] Emitting GET_GROUP_MSG to poll for new messages');
+              if( window.isDebugging ) console.log('🔍 [Widget] Emitting GET_GROUP_MSG to poll for new messages');
               // Use socket to poll for messages (same as W version)
               this.socket.emit('get group msg', {
                 token: this.userId,
                 groupId: parseInt(this.groupId)
               });
             } else {
-              console.log('🔍 [Widget] Cannot poll messages - missing socket, group ID, or socket disconnected');
+              if( window.isDebugging ) console.log('🔍 [Widget] Cannot poll messages - missing socket, group ID, or socket disconnected');
             }
           }, 200); // 200ms debounce (same as W version)
         }
@@ -55,27 +55,27 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
       document.addEventListener('visibilitychange', handleVisibilityChange);
   
       // Log initial page visibility state
-      console.log('🔍 [Widget] Page visibility tracking setup complete');
-      console.log('🔍 [Widget] Initial page visibility:', this.pageVisible);
-      console.log('🔍 [Widget] Document hidden:', document.hidden);
+      if( window.isDebugging ) console.log('🔍 [Widget] Page visibility tracking setup complete');
+      if( window.isDebugging ) console.log('🔍 [Widget] Initial page visibility:', this.pageVisible);
+      if( window.isDebugging ) console.log('🔍 [Widget] Document hidden:', document.hidden);
     },
 
   // EXACT COPY from widget.js - showSigninModal method
     showSigninModal() {
-      console.log('🔍 [Widget] showSigninModal called');
+      if( window.isDebugging ) console.log('🔍 [Widget] showSigninModal called');
       const modal = this.dialog.querySelector('.pingbash-signin-modal');
       modal.style.display = 'flex';
   
       // Re-attach event listeners when modal is shown (in case they got lost)
       setTimeout(() => {
         const continueAnonBtns = this.dialog.querySelectorAll('.pingbash-continue-anon-btn');
-        console.log('🔍 [Widget] Re-checking Continue As Guest buttons in showSigninModal:', continueAnonBtns.length);
+        if( window.isDebugging ) console.log('🔍 [Widget] Re-checking Continue As Guest buttons in showSigninModal:', continueAnonBtns.length);
   
         continueAnonBtns.forEach((continueAnonBtn, index) => {
           if (continueAnonBtn && !continueAnonBtn._listenerAttached) {
-            console.log(`🔍 [Widget] Re-attaching event listener to Continue As Guest button ${index + 1}`);
+            if( window.isDebugging ) console.log(`🔍 [Widget] Re-attaching event listener to Continue As Guest button ${index + 1}`);
             continueAnonBtn.addEventListener('click', (event) => {
-              console.log(`🔍 [Widget] Continue As Guest button ${index + 1} CLICKED (from showSigninModal)!`);
+              if( window.isDebugging ) console.log(`🔍 [Widget] Continue As Guest button ${index + 1} CLICKED (from showSigninModal)!`);
               event.preventDefault();
               event.stopPropagation();
               this.continueAsAnonymous();
@@ -94,7 +94,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
 
     // Show signup modal
     showSignupModal() {
-      console.log('🔍 [Widget] showSignupModal called');
+      if( window.isDebugging ) console.log('🔍 [Widget] showSignupModal called');
       const modal = this.dialog.querySelector('.pingbash-signup-modal');
       modal.style.display = 'flex';
       
@@ -125,7 +125,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
 
     // Show verification modal
     showVerificationModal(email) {
-      console.log('📧 [Widget] showVerificationModal called for:', email);
+      if( window.isDebugging ) console.log('📧 [Widget] showVerificationModal called for:', email);
       this.hideSignupModal();
       
       const modal = this.dialog.querySelector('.pingbash-verification-modal');
@@ -207,20 +207,20 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
 
   // EXACT COPY from widget.js - continueAsAnonymous method
     continueAsAnonymous() {
-      console.log('👤 [Widget] Continuing as anonymous user - START');
+      if( window.isDebugging ) console.log('👤 [Widget] Continuing as anonymous user - START');
   
       try {
         this.hideSigninModal();
-        console.log('👤 [Widget] Sign-in modal hidden');
+        if( window.isDebugging ) console.log('👤 [Widget] Sign-in modal hidden');
   
         this.isAuthenticated = false;
         this.connectAsAuthenticated = false;
         this.authenticatedToken = null;
-        console.log('👤 [Widget] Authentication state reset');
+        if( window.isDebugging ) console.log('👤 [Widget] Authentication state reset');
   
         // Generate anonymous ID using same method as W version
         const anonId = this.getAnonId();
-        console.log("=== Anon Id ====", anonId);
+        if( window.isDebugging ) console.log("=== Anon Id ====", anonId);
   
         // Set anonymous user state (same as W version)
         this.anonId = anonId;
@@ -238,13 +238,13 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
   
         // Register as anonymous user (same as W version)
         if (this.socket && this.socket.connected) {
-          console.log('👤 [Widget] Registering as anonymous user with ID:', anonId);
+          if( window.isDebugging ) console.log('👤 [Widget] Registering as anonymous user with ID:', anonId);
           this.socket.emit('user logged as annon', { userId: anonId });
         } else {
           // If socket not ready, register after connection
           setTimeout(() => {
             if (this.socket && this.socket.connected) {
-              console.log('👤 [Widget] Registering as anonymous user with ID (delayed):', anonId);
+              if( window.isDebugging ) console.log('👤 [Widget] Registering as anonymous user with ID (delayed):', anonId);
               this.socket.emit('user logged as annon', { userId: anonId });
             }
           }, 1000);
@@ -252,11 +252,11 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
   
         // Trigger chat rules after manual anonymous selection (same as W version)
         setTimeout(() => {
-          console.log('🔍 [Widget] [Chat Rules] Triggering chat rules after manual anonymous selection');
+          if( window.isDebugging ) console.log('🔍 [Widget] [Chat Rules] Triggering chat rules after manual anonymous selection');
           this.triggerChatRulesAfterLogin(anonToken, 'anonymous');
         }, 1500); // Delay to ensure anonymous registration completes
   
-        console.log('👤 [Widget] Continuing as anonymous user - COMPLETED');
+        if( window.isDebugging ) console.log('👤 [Widget] Continuing as anonymous user - COMPLETED');
   
       } catch (error) {
         console.error('❌ [Widget] Error in continueAsAnonymous:', error);
@@ -308,7 +308,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         }
     
         try {
-          console.log('🔐 [Widget] Attempting sign in...');
+          if( window.isDebugging ) console.log('🔐 [Widget] Attempting sign in...');
     
           const requestBody = {
             Email: email,
@@ -316,8 +316,8 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
             Role: 1
           };
     
-          console.log('🔐 [Widget] Request URL:', `${this.config.apiUrl}/api/user/login`);
-          console.log('🔐 [Widget] Request body:', requestBody);
+          if( window.isDebugging ) console.log('🔐 [Widget] Request URL:', `${this.config.apiUrl}/api/user/login`);
+          if( window.isDebugging ) console.log('🔐 [Widget] Request body:', requestBody);
     
           // Use exact W version sign-in API format
           const response = await fetch(`${this.config.apiUrl}/api/user/login`, {
@@ -328,11 +328,11 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
             body: JSON.stringify(requestBody)
           });
     
-          console.log('🔐 [Widget] Response status:', response.status);
+          if( window.isDebugging ) console.log('🔐 [Widget] Response status:', response.status);
     
           // Try to get response text regardless of status
           const responseText = await response.text();
-          console.log('🔐 [Widget] Response text:', responseText);
+          if( window.isDebugging ) console.log('🔐 [Widget] Response text:', responseText);
     
           if (!response.ok) {
             if (response.status === 403) {
@@ -343,14 +343,14 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
     
           // Parse the response text as JSON
           const result = JSON.parse(responseText);
-          console.log('✅ [Widget] Sign in successful:', result);
+          if( window.isDebugging ) console.log('✅ [Widget] Sign in successful:', result);
     
           // Store token and user info (W version format)
           this.userId = result.token;
           this.currentUserId = result.id;
           this.isAuthenticated = true;
     
-          console.log('🔍 [Widget] Sign-in successful - stored values:', {
+          if( window.isDebugging ) console.log('🔍 [Widget] Sign-in successful - stored values:', {
             token: result.token ? 'present' : 'missing',
             userId: result.id,
             currentUserId: this.currentUserId
@@ -364,14 +364,14 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
           this.hideSigninModal();
     
           // Always initialize socket with authenticated user after login
-          console.log('🔐 [Widget] Initializing socket with authenticated user...');
-          console.log('🔐 [Widget] - Authenticated token:', result.token.substring(0, 20) + '...');
+          if( window.isDebugging ) console.log('🔐 [Widget] Initializing socket with authenticated user...');
+          if( window.isDebugging ) console.log('🔐 [Widget] - Authenticated token:', result.token.substring(0, 20) + '...');
     
           // Set a flag to indicate we're connecting as authenticated user
           this.connectAsAuthenticated = true;
           
           // Debug token storage
-          console.log('🔐 [Widget] Storing authentication token:', {
+          if( window.isDebugging ) console.log('🔐 [Widget] Storing authentication token:', {
             tokenLength: result.token?.length,
             tokenStart: result.token?.substring(0, 20) + '...',
             tokenType: typeof result.token,
@@ -392,8 +392,8 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
     
           // Trigger chat rules after successful login (same as W version)
           setTimeout(() => {
-            console.log('🔍 [Widget] [Chat Rules] Triggering chat rules after logged-in authentication');
-            console.log('🔍 [Widget] [Chat Rules] Current state - groupId:', this.groupId, 'socket connected:', this.socket?.connected);
+            if( window.isDebugging ) console.log('🔍 [Widget] [Chat Rules] Triggering chat rules after logged-in authentication');
+            if( window.isDebugging ) console.log('🔍 [Widget] [Chat Rules] Current state - groupId:', this.groupId, 'socket connected:', this.socket?.connected);
             this.triggerChatRulesAfterLogin(result.token, 'logged-in');
           }, 1500); // Delay to ensure group state is properly set
     
@@ -461,7 +461,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         }
 
         try {
-          console.log('🔐 [Widget] Attempting sign up...');
+          if( window.isDebugging ) console.log('🔐 [Widget] Attempting sign up...');
 
           const requestBody = {
             Email: email,
@@ -469,8 +469,8 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
             Password: password
           };
 
-          console.log('🔐 [Widget] Signup Request URL:', `${this.config.apiUrl}/api/user/register/group`);
-          console.log('🔐 [Widget] Signup Request body:', requestBody);
+          if( window.isDebugging ) console.log('🔐 [Widget] Signup Request URL:', `${this.config.apiUrl}/api/user/register/group`);
+          if( window.isDebugging ) console.log('🔐 [Widget] Signup Request body:', requestBody);
 
           // Use W version signup API format
           const response = await fetch(`${this.config.apiUrl}/api/user/register/group`, {
@@ -481,11 +481,11 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
             body: JSON.stringify(requestBody)
           });
 
-          console.log('🔐 [Widget] Signup Response status:', response.status);
+          if( window.isDebugging ) console.log('🔐 [Widget] Signup Response status:', response.status);
 
           // Try to get response text regardless of status
           const responseText = await response.text();
-          console.log('🔐 [Widget] Signup Response text:', responseText);
+          if( window.isDebugging ) console.log('🔐 [Widget] Signup Response text:', responseText);
 
           if (!response.ok) {
             if (response.status === 409) {
@@ -498,15 +498,15 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
 
           // Parse the response text as JSON
           const result = JSON.parse(responseText);
-          console.log('✅ [Widget] Sign up successful:', result);
+          if( window.isDebugging ) console.log('✅ [Widget] Sign up successful:', result);
 
           // Handle verification flow like W version
           if (result.requiresVerification) {
-            console.log('📧 [Widget] Verification required, showing verification modal');
+            if( window.isDebugging ) console.log('📧 [Widget] Verification required, showing verification modal');
             this.showVerificationModal(result.email || email);
           } else {
             // Auto-signin if no verification required (backward compatibility)
-            console.log('✅ [Widget] No verification required, auto-signing in...');
+            if( window.isDebugging ) console.log('✅ [Widget] No verification required, auto-signing in...');
             
             // Store token and user info (W version format)
             this.userId = result.token;
@@ -521,7 +521,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
             this.hideSignupModal();
 
             // Initialize socket with authenticated user
-            console.log('🔐 [Widget] Initializing socket with authenticated user after signup...');
+            if( window.isDebugging ) console.log('🔐 [Widget] Initializing socket with authenticated user after signup...');
             this.connectAsAuthenticated = true;
             this.authenticatedToken = result.token;
             
@@ -551,15 +551,15 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         }
         
         try {
-          console.log('📧 [Widget] Attempting email verification...');
+          if( window.isDebugging ) console.log('📧 [Widget] Attempting email verification...');
           
           const requestBody = {
             email: this.verificationEmail,
             otp: parseInt(otp)
           };
           
-          console.log('📧 [Widget] Verification Request URL:', `${this.config.apiUrl}/api/user/confirm/group`);
-          console.log('📧 [Widget] Verification Request body:', requestBody);
+          if( window.isDebugging ) console.log('📧 [Widget] Verification Request URL:', `${this.config.apiUrl}/api/user/confirm/group`);
+          if( window.isDebugging ) console.log('📧 [Widget] Verification Request body:', requestBody);
           
           const response = await fetch(`${this.config.apiUrl}/api/user/confirm/group`, {
             method: 'POST',
@@ -569,10 +569,10 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
             body: JSON.stringify(requestBody)
           });
           
-          console.log('📧 [Widget] Verification Response status:', response.status);
+          if( window.isDebugging ) console.log('📧 [Widget] Verification Response status:', response.status);
           
           const responseText = await response.text();
-          console.log('📧 [Widget] Verification Response text:', responseText);
+          if( window.isDebugging ) console.log('📧 [Widget] Verification Response text:', responseText);
           
           if (!response.ok) {
             if (response.status === 400) {
@@ -584,7 +584,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
           }
           
           const result = JSON.parse(responseText);
-          console.log('✅ [Widget] Email verification successful:', result);
+          if( window.isDebugging ) console.log('✅ [Widget] Email verification successful:', result);
           
           // Store token and user info
           this.userId = result.token;
@@ -602,7 +602,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
           alert('Account verified successfully! Welcome to Pingbash!');
           
           // Initialize socket with authenticated user
-          console.log('📧 [Widget] Initializing socket with verified user...');
+          if( window.isDebugging ) console.log('📧 [Widget] Initializing socket with verified user...');
           this.connectAsAuthenticated = true;
           this.authenticatedToken = result.token;
           
@@ -624,14 +624,14 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         }
         
         try {
-          console.log('📧 [Widget] Attempting to resend verification code...');
+          if( window.isDebugging ) console.log('📧 [Widget] Attempting to resend verification code...');
           
           const requestBody = {
             email: this.verificationEmail
           };
           
-          console.log('📧 [Widget] Resend Request URL:', `${this.config.apiUrl}/api/user/resend`);
-          console.log('📧 [Widget] Resend Request body:', requestBody);
+          if( window.isDebugging ) console.log('📧 [Widget] Resend Request URL:', `${this.config.apiUrl}/api/user/resend`);
+          if( window.isDebugging ) console.log('📧 [Widget] Resend Request body:', requestBody);
           
           const response = await fetch(`${this.config.apiUrl}/api/user/resend`, {
             method: 'POST',
@@ -641,13 +641,13 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
             body: JSON.stringify(requestBody)
           });
           
-          console.log('📧 [Widget] Resend Response status:', response.status);
+          if( window.isDebugging ) console.log('📧 [Widget] Resend Response status:', response.status);
           
           if (!response.ok) {
             throw new Error(`Failed to resend code: ${response.status}`);
           }
           
-          console.log('✅ [Widget] Verification code resent successfully');
+          if( window.isDebugging ) console.log('✅ [Widget] Verification code resent successfully');
           alert('Verification code resent successfully!');
           
           // Reset OTP inputs and restart timer

@@ -5,12 +5,12 @@
 
 // Add core utility methods to the prototype
 if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
-    console.log('✅ [Core] Adding core utility methods to prototype');
+    if( window.isDebugging ) console.log('✅ [Core] Adding core utility methods to prototype');
     Object.assign(window.PingbashChatWidget.prototype, {
 
         // EXACT COPY from widget.js - init method
         async init() {
-            console.log('🚀 Initializing Pingbash Chat Widget...');
+            if( window.isDebugging ) console.log('🚀 Initializing Pingbash Chat Widget...');
 
             // Load seen rules first
             this.hasSeenRulesForGroup = this.loadSeenRules();
@@ -34,7 +34,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
                 this.isAuthenticated = true;
                 this.connectAsAuthenticated = true;
                 this.authenticatedToken = savedToken;
-                console.log('🔐 [Widget] Found saved token, auto-signing in...');
+                if( window.isDebugging ) console.log('🔐 [Widget] Found saved token, auto-signing in...');
                 this.initializeSocket();
 
                 // Check for persisted timeout state
@@ -46,13 +46,13 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
 
                 // Trigger chat rules for auto-signed in users (same as W version)
                 setTimeout(() => {
-                    console.log('🔍 [Widget] [Chat Rules] Triggering chat rules for auto-signed in user');
-                    console.log('🔍 [Widget] [Chat Rules] Auto-signin state - groupId:', this.groupId, 'socket connected:', this.socket?.connected);
+                    if( window.isDebugging ) console.log('🔍 [Widget] [Chat Rules] Triggering chat rules for auto-signed in user');
+                    if( window.isDebugging ) console.log('🔍 [Widget] [Chat Rules] Auto-signin state - groupId:', this.groupId, 'socket connected:', this.socket?.connected);
                     this.triggerChatRulesAfterLogin(savedToken, 'logged-in');
                 }, 2000); // Longer delay to ensure socket and group are ready
             } else if (savedAnonToken) {
                 // Auto-signin with anonymous user (same as W version)
-                console.log('👤 [Widget] Found saved anonymous token, auto-signing in as anonymous...');
+                if( window.isDebugging ) console.log('👤 [Widget] Found saved anonymous token, auto-signing in as anonymous...');
 
                 // Extract anonId from token (format: anonuser{groupName}{anonId})
                 const tokenPrefix = `anonuser${this.config.groupName}`;
@@ -77,19 +77,19 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
                 // Register as anonymous user after socket connection (same as W version)
                 setTimeout(() => {
                     if (this.socket && this.socket.connected) {
-                        console.log('👤 [Widget] Auto-registering as anonymous user with ID:', anonId);
+                        if( window.isDebugging ) console.log('👤 [Widget] Auto-registering as anonymous user with ID:', anonId);
                         this.socket.emit('user logged as annon', { userId: anonId });
                     }
                 }, 1000);
 
                 // Trigger chat rules for auto-anonymous users (same as W version)
                 setTimeout(() => {
-                    console.log('🔍 [Widget] [Chat Rules] Triggering chat rules for auto-anonymous user');
+                    if( window.isDebugging ) console.log('🔍 [Widget] [Chat Rules] Triggering chat rules for auto-anonymous user');
                     this.triggerChatRulesAfterLogin(savedAnonToken, 'anonymous');
                 }, 2000); // Longer delay to ensure socket and group are ready
             } else {
                 // Show sign-in modal for first-time users
-                console.log('👤 [Widget] New user detected, showing sign-in options...');
+                if( window.isDebugging ) console.log('👤 [Widget] New user detected, showing sign-in options...');
                 setTimeout(() => this.showSigninModal(), 500);
             }
 
@@ -105,10 +105,10 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
             try {
                 const stored = localStorage.getItem('pingbash_widget_seen_rules');
                 const result = stored ? JSON.parse(stored) : {};
-                console.log('🔍 [Widget] [Chat Rules] Loaded seen rules from localStorage:', result);
+                if( window.isDebugging ) console.log('🔍 [Widget] [Chat Rules] Loaded seen rules from localStorage:', result);
                 return result;
             } catch (error) {
-                console.log('🔍 [Widget] Error loading seen rules:', error);
+                if( window.isDebugging ) console.log('🔍 [Widget] Error loading seen rules:', error);
                 return {};
             }
         },
@@ -117,13 +117,13 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         markRulesAsSeen(groupId) {
             if (!groupId) return;
 
-            console.log('🔍 [Widget] [Chat Rules] Marking rules as seen for group:', groupId);
+            if( window.isDebugging ) console.log('🔍 [Widget] [Chat Rules] Marking rules as seen for group:', groupId);
             this.hasSeenRulesForGroup[groupId] = true;
 
             try {
                 localStorage.setItem('pingbash_widget_seen_rules', JSON.stringify(this.hasSeenRulesForGroup));
             } catch (error) {
-                console.log('🔍 [Widget] Error saving seen rules:', error);
+                if( window.isDebugging ) console.log('🔍 [Widget] Error saving seen rules:', error);
             }
         },
 
@@ -155,7 +155,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
 
         // Check if there's a pending chat rules trigger waiting for group ID
         checkPendingChatRulesTrigger() {
-            console.log('🔍 [Widget] [Chat Rules] Checking pending trigger:', {
+            if( window.isDebugging ) console.log('🔍 [Widget] [Chat Rules] Checking pending trigger:', {
                 hasPending: !!this.pendingChatRulesDisplay,
                 pendingGroupId: this.pendingChatRulesDisplay?.groupId,
                 pendingUserType: this.pendingChatRulesDisplay?.userType,
@@ -169,7 +169,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
                 this.groupId &&
                 Date.now() - this.pendingChatRulesDisplay.timestamp < 30000) { // 30 second timeout
 
-                console.log('🔍 [Widget] [Chat Rules] Found pending trigger, executing now with group:', this.groupId);
+                if( window.isDebugging ) console.log('🔍 [Widget] [Chat Rules] Found pending trigger, executing now with group:', this.groupId);
 
                 // Update the pending state with the real group ID
                 this.pendingChatRulesDisplay.groupId = this.groupId;
@@ -181,11 +181,11 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
 
         // Trigger chat rules after authentication (same as W version)
         triggerChatRulesAfterLogin(token, userType) {
-            console.log('🔍 [Widget] [Chat Rules] Triggering chat rules after', userType, 'authentication');
-            console.log('🔍 [Widget] [Chat Rules] Current group ID:', this.groupId);
+            if( window.isDebugging ) console.log('🔍 [Widget] [Chat Rules] Triggering chat rules after', userType, 'authentication');
+            if( window.isDebugging ) console.log('🔍 [Widget] [Chat Rules] Current group ID:', this.groupId);
 
             if (!this.groupId) {
-                console.log('🔍 [Widget] [Chat Rules] No group available yet, setting up pending trigger...');
+                if( window.isDebugging ) console.log('🔍 [Widget] [Chat Rules] No group available yet, setting up pending trigger...');
 
                 // Set pending state without group ID - will be triggered when group becomes available
                 this.pendingChatRulesDisplay = {
@@ -200,10 +200,10 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
 
                 const checkForGroup = () => {
                     attempts++;
-                    console.log('🔍 [Widget] [Chat Rules] Checking for group (attempt', attempts + '):', this.groupId);
+                    if( window.isDebugging ) console.log('🔍 [Widget] [Chat Rules] Checking for group (attempt', attempts + '):', this.groupId);
 
                     if (this.groupId) {
-                        console.log('🔍 [Widget] [Chat Rules] Group now available, loading chat rules for group:', this.groupId);
+                        if( window.isDebugging ) console.log('🔍 [Widget] [Chat Rules] Group now available, loading chat rules for group:', this.groupId);
 
                         // Update pending state with the group ID
                         this.pendingChatRulesDisplay.groupId = this.groupId;
@@ -213,7 +213,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
                     } else if (attempts < maxAttempts) {
                         setTimeout(checkForGroup, 500); // Check every 500ms
                     } else {
-                        console.log('🔍 [Widget] [Chat Rules] Timeout waiting for group to be available');
+                        if( window.isDebugging ) console.log('🔍 [Widget] [Chat Rules] Timeout waiting for group to be available');
                     }
                 };
 
@@ -221,7 +221,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
                 return;
             }
 
-            console.log('🔍 [Widget] [Chat Rules] Loading chat rules for group:', this.groupId);
+            if( window.isDebugging ) console.log('🔍 [Widget] [Chat Rules] Loading chat rules for group:', this.groupId);
 
             // Set pending state to indicate we're waiting for chat rules after authentication
             this.pendingChatRulesDisplay = {
@@ -263,13 +263,13 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
             if (this.applyGroupSettingsToChatDialog) {
                 this.applyGroupSettingsToChatDialog(groupData);
             } else {
-                console.log('🔍 [Widget] applyGroupSettingsToChatDialog method not available yet');
+                if( window.isDebugging ) console.log('🔍 [Widget] applyGroupSettingsToChatDialog method not available yet');
             }
         },
 
         // Handle unban notification
         handleUnbanNotification(data) {
-            console.log('✅ [Widget] Processing unban notification:', data);
+            if( window.isDebugging ) console.log('✅ [Widget] Processing unban notification:', data);
             
             // Display unban notification as a temporary message in the chat
             this.displayUnbanNotification(data.message);
@@ -279,16 +279,16 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
                 try {
                     const timeoutKey = `timeout_${data.groupId}`;
                     localStorage.removeItem(timeoutKey);
-                    console.log('✅ [Widget] Cleared timeout state after unban');
+                    if( window.isDebugging ) console.log('✅ [Widget] Cleared timeout state after unban');
                 } catch (error) {
-                    console.log('⚠️ [Widget] Error clearing timeout state:', error);
+                    if( window.isDebugging ) console.log('⚠️ [Widget] Error clearing timeout state:', error);
                 }
                 
                 // Clear any active timeout monitoring
                 if (this.timeoutExpiryInterval) {
                     clearInterval(this.timeoutExpiryInterval);
                     this.timeoutExpiryInterval = null;
-                    console.log('✅ [Widget] Cleared timeout expiry monitoring after unban');
+                    if( window.isDebugging ) console.log('✅ [Widget] Cleared timeout expiry monitoring after unban');
                 }
                 
                 // Hide timeout notification if it's showing
@@ -301,7 +301,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
                 if (messageInput) {
                     messageInput.disabled = false;
                     messageInput.placeholder = 'Type your message...';
-                    console.log('✅ [Widget] Re-enabled message input after unban');
+                    if( window.isDebugging ) console.log('✅ [Widget] Re-enabled message input after unban');
                 }
                 
                 // Refresh messages to get latest state
@@ -318,29 +318,29 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
 
         // Display unban notification in chat interface
         displayUnbanNotification(message) {
-            console.log('✅ [Widget] Displaying unban notification:', message);
+            if( window.isDebugging ) console.log('✅ [Widget] Displaying unban notification:', message);
             this.displayNotification(message, 'unban', '#d4edda', '#155724', '#c3e6cb', '✅');
         },
 
         // Display timeout notification in chat interface
         displayTimeoutNotification(message) {
-            console.log('⏰ [Widget] Displaying timeout notification:', message);
+            if( window.isDebugging ) console.log('⏰ [Widget] Displaying timeout notification:', message);
             this.displayNotification(message, 'timeout', '#f8d7da', '#721c24', '#f5c6cb', '⏰');
         },
 
         // Display untimeout notification in chat interface
         displayUntimeoutNotification(message) {
-            console.log('🔓 [Widget] Displaying untimeout notification:', message);
+            if( window.isDebugging ) console.log('🔓 [Widget] Displaying untimeout notification:', message);
             this.displayNotification(message, 'untimeout', '#d1ecf1', '#0c5460', '#bee5eb', '🔓');
         },
 
         // Generic notification display method
         displayNotification(message, type, bgColor, textColor, borderColor, icon) {
-            console.log(`📢 [Widget] Displaying ${type} notification:`, message);
+            if( window.isDebugging ) console.log(`📢 [Widget] Displaying ${type} notification:`, message);
             
             const messagesArea = this.dialog?.querySelector('.pingbash-messages-list');
             if (!messagesArea) {
-                console.log('⚠️ [Widget] Messages area not found for notification');
+                if( window.isDebugging ) console.log('⚠️ [Widget] Messages area not found for notification');
                 return;
             }
             
@@ -377,12 +377,12 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
                 messagesArea.scrollTop = messagesArea.scrollHeight;
             }
             
-            console.log(`📢 [Widget] ${type} notification displayed successfully`);
+            if( window.isDebugging ) console.log(`📢 [Widget] ${type} notification displayed successfully`);
         },
 
         // Set up timeout expiry monitoring
         setupTimeoutExpiryCheck(groupId, expiresAt) {
-            console.log('⏰ [Widget] Setting up timeout expiry check for group:', groupId, 'expires:', expiresAt);
+            if( window.isDebugging ) console.log('⏰ [Widget] Setting up timeout expiry check for group:', groupId, 'expires:', expiresAt);
             
             // Clear any existing timeout check
             if (this.timeoutExpiryInterval) {
@@ -394,7 +394,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
                 const expiry = new Date(expiresAt).getTime();
                 
                 if (now >= expiry) {
-                    console.log('🔓 [Widget] Timeout expired for group:', groupId);
+                    if( window.isDebugging ) console.log('🔓 [Widget] Timeout expired for group:', groupId);
                     
                     // Clear the interval
                     clearInterval(this.timeoutExpiryInterval);
@@ -409,9 +409,9 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
                     // Clear timeout from localStorage
                     try {
                         localStorage.removeItem(`timeout_${groupId}`);
-                        console.log('🔓 [Widget] Cleared timeout state from localStorage');
+                        if( window.isDebugging ) console.log('🔓 [Widget] Cleared timeout state from localStorage');
                     } catch (error) {
-                        console.log('⚠️ [Widget] Error clearing timeout state:', error);
+                        if( window.isDebugging ) console.log('⚠️ [Widget] Error clearing timeout state:', error);
                     }
                 }
             }, 1000); // Check every second
@@ -438,7 +438,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
                 sendBtn.disabled = isTimedOut;
             }
             
-            console.log('⏰ [Widget] Timeout UI updated:', { isTimedOut, expiresAt });
+            if( window.isDebugging ) console.log('⏰ [Widget] Timeout UI updated:', { isTimedOut, expiresAt });
         },
 
         // Check for persisted timeout state on page load
@@ -454,7 +454,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
                     
                     if (expiry > now) {
                         // Timeout is still active
-                        console.log(`⏰ [Widget] Restored timeout state for group ${groupId}, expires at ${parsed.expiresAt}`);
+                        if( window.isDebugging ) console.log(`⏰ [Widget] Restored timeout state for group ${groupId}, expires at ${parsed.expiresAt}`);
                         
                         // Update UI to show timeout state
                         this.updateTimeoutUI(true, parsed.expiresAt);
@@ -465,7 +465,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
                         return true;
                     } else {
                         // Timeout has expired, clean up
-                        console.log(`⏰ [Widget] Timeout expired for group ${groupId}, cleaning up`);
+                        if( window.isDebugging ) console.log(`⏰ [Widget] Timeout expired for group ${groupId}, cleaning up`);
                         localStorage.removeItem(timeoutKey);
                         return false;
                     }
@@ -484,12 +484,12 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
                     // Dialog is open, hide button
                     this.button.style.display = 'none';
                     this.dialog.style.display = 'flex';
-                    console.log('💬 [Widget] Dialog open - hiding chat button');
+                    if( window.isDebugging ) console.log('💬 [Widget] Dialog open - hiding chat button');
                 } else {
                     // Dialog is closed, show button
                     this.button.style.display = 'flex';
                     this.dialog.style.display = 'none';
-                    console.log('💬 [Widget] Dialog closed - showing chat button');
+                    if( window.isDebugging ) console.log('💬 [Widget] Dialog closed - showing chat button');
                 }
             }
         },
