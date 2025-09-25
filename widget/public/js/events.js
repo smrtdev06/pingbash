@@ -1814,46 +1814,210 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         console.log('🎨 [Widget] Preview settings applied from form values:', settings);
       },
 
-      // NEW METHOD - Apply saved group settings to actual chat dialog ONLY
+      // ENHANCED METHOD - Apply ALL chat style settings to actual chat dialog
       applyGroupSettingsToChatDialog(groupData) {
         const actualChatDialog = document.querySelector('.pingbash-chat-dialog');
         
-        if (!actualChatDialog || !groupData) return;
+        if (!actualChatDialog || !groupData) {
+          console.log('🎨 [Widget] Cannot apply settings - missing dialog or group data');
+          return;
+        }
         
-        // Create CSS variables from SAVED group data
+        console.log('🎨 [Widget] Applying comprehensive chat style settings:', groupData);
+        
+        // Create comprehensive CSS variables from group data
         const cssVars = {
-          '--title-bg-color': groupData.bg_color || 'white',
-          '--title-color': groupData.title_color || '#333',
+          // Color variables
+          '--title-bg-color': groupData.bg_color || '#ffffff',
+          '--title-color': groupData.title_color || '#333333',
           '--msg-bg-color': groupData.msg_bg_color || '#f8f9fa',
-          '--msg-text-color': groupData.msg_txt_color || '#333',
-          '--date-color': groupData.msg_date_color || '#999',
+          '--msg-text-color': groupData.msg_txt_color || '#333333',
+          '--date-color': groupData.msg_date_color || '#999999',
           '--owner-msg-bg-color': groupData.reply_msg_color || '#2596be',
-          '--input-bg-color': groupData.input_bg_color || '#f8f9fa',
-          '--input-text-color': '#333',
+          '--input-bg-color': groupData.input_bg_color || '#ffffff',
+          '--input-text-color': groupData.msg_txt_color || '#333333',
+          
+          // Font size variables
           '--font-size': (groupData.custom_font_size && groupData.font_size ? groupData.font_size : 14) + 'px',
-          '--show-avatars': groupData.show_user_img ? 'block' : 'none',
-          '--corner-radius': (groupData.round_corners && groupData.corner_radius ? groupData.corner_radius : 12) + 'px'
+          
+          // Avatar visibility
+          '--show-avatars': groupData.show_user_img !== false ? 'block' : 'none',
+          
+          // Corner radius
+          '--corner-radius': (groupData.round_corners !== false && groupData.corner_radius ? groupData.corner_radius : 8) + 'px'
         };
         
-        // Apply to actual chat dialog ONLY (using saved group settings)
+        // Apply CSS variables to chat dialog
         Object.entries(cssVars).forEach(([property, value]) => {
-          if (value && value !== 'null') {
+          if (value && value !== 'null' && value !== 'undefined') {
             actualChatDialog.style.setProperty(property, value);
           }
         });
         
-        // Apply size settings from saved group data
-        if (groupData.frame_width && groupData.frame_height) {
+        // Apply size settings (frame dimensions)
+        if (groupData.size_mode === 'fixed' && groupData.frame_width && groupData.frame_height) {
           actualChatDialog.style.width = groupData.frame_width + 'px';
           actualChatDialog.style.height = groupData.frame_height + 'px';
+          actualChatDialog.style.minWidth = groupData.frame_width + 'px';
+          actualChatDialog.style.minHeight = groupData.frame_height + 'px';
+          actualChatDialog.style.maxWidth = 'none';
+          actualChatDialog.style.maxHeight = 'none';
+          console.log('🎨 [Widget] Applied fixed size:', groupData.frame_width + 'x' + groupData.frame_height);
+        } else if (groupData.frame_width && groupData.frame_height) {
+          // Fallback for older format without size_mode
+          actualChatDialog.style.width = groupData.frame_width + 'px';
+          actualChatDialog.style.height = groupData.frame_height + 'px';
+          console.log('🎨 [Widget] Applied legacy size:', groupData.frame_width + 'x' + groupData.frame_height);
+        } else {
+          // Responsive mode - reset to default responsive behavior
+          actualChatDialog.style.width = '';
+          actualChatDialog.style.height = '';
+          actualChatDialog.style.minWidth = '';
+          actualChatDialog.style.minHeight = '';
+          actualChatDialog.style.maxWidth = '';
+          actualChatDialog.style.maxHeight = '';
+          console.log('🎨 [Widget] Applied responsive sizing');
         }
         
-        // Apply border radius from saved group data
-        if (groupData.round_corners && groupData.corner_radius) {
+        // Apply border radius to dialog itself
+        if (groupData.round_corners !== false && groupData.corner_radius) {
           actualChatDialog.style.borderRadius = groupData.corner_radius + 'px';
         }
         
-        console.log('🎨 [Widget] Actual chat settings applied from saved group data:', groupData);
+        // Apply background color to dialog
+        if (groupData.bg_color) {
+          actualChatDialog.style.backgroundColor = groupData.bg_color;
+        }
+        
+        // Apply specific styling to chat elements
+        this.applyDetailedChatStyling(actualChatDialog, groupData);
+        
+        // Also refresh styling on all existing messages
+        this.refreshAllMessagesStyling(actualChatDialog, groupData);
+        
+        console.log('🎨 [Widget] ✅ Applied ALL chat style settings to dialog');
+      },
+
+      // NEW METHOD - Apply detailed styling to specific chat elements
+      applyDetailedChatStyling(chatDialog, groupData) {
+        if (!chatDialog || !groupData) return;
+        
+        // Apply header styling
+        const header = chatDialog.querySelector('.pingbash-header');
+        if (header && groupData.bg_color) {
+          header.style.backgroundColor = groupData.bg_color;
+          if (groupData.title_color) {
+            header.style.color = groupData.title_color;
+            // Apply color to header elements
+            const headerElements = header.querySelectorAll('svg, .pingbash-online-count-badge');
+            headerElements.forEach(el => el.style.color = groupData.title_color);
+          }
+        }
+        
+        // Apply input bar styling
+        const inputBars = chatDialog.querySelectorAll('.pingbash-input-bar, .pingbash-controls-bar');
+        inputBars.forEach(bar => {
+          if (groupData.bg_color) {
+            bar.style.backgroundColor = groupData.bg_color;
+          }
+        });
+        
+        // Apply message input styling
+        const messageInput = chatDialog.querySelector('.pingbash-message-input');
+        if (messageInput) {
+          if (groupData.input_bg_color) {
+            messageInput.style.backgroundColor = groupData.input_bg_color;
+          }
+          if (groupData.msg_txt_color) {
+            messageInput.style.color = groupData.msg_txt_color;
+          }
+          if (groupData.custom_font_size && groupData.font_size) {
+            messageInput.style.fontSize = groupData.font_size + 'px';
+          }
+          if (groupData.round_corners && groupData.corner_radius) {
+            messageInput.style.borderRadius = Math.min(groupData.corner_radius, 20) + 'px';
+          }
+        }
+        
+        // Apply message styling to existing messages
+        const messages = chatDialog.querySelectorAll('.pingbash-message');
+        messages.forEach(message => {
+          // Apply message background colors
+          if (message.classList.contains('own')) {
+            // User's own messages
+            if (groupData.reply_msg_color) {
+              //message.style.backgroundColor = groupData.reply_msg_color;
+            }
+          } else {
+            // Other users' messages
+            if (groupData.msg_bg_color) {
+              message.style.backgroundColor = groupData.msg_bg_color;
+            }
+          }
+          
+          // Apply text color
+          if (groupData.msg_txt_color) {
+            message.style.color = groupData.msg_txt_color;
+            const messageContent = message.querySelector('.pingbash-message-content');
+            if (messageContent) messageContent.style.color = groupData.msg_txt_color;
+          }
+          
+          // Apply font size
+          if (groupData.custom_font_size && groupData.font_size) {
+            message.style.fontSize = groupData.font_size + 'px';
+          }
+          
+          // Apply border radius to messages
+          if (groupData.round_corners && groupData.corner_radius) {
+            message.style.borderRadius = Math.min(groupData.corner_radius, 16) + 'px';
+          }
+          
+          // Apply date color
+          const dateElement = message.querySelector('.pingbash-message-time, .pingbash-message-date');
+          if (dateElement && groupData.msg_date_color) {
+            dateElement.style.color = groupData.msg_date_color;
+          }
+          
+          // Handle avatar visibility
+          const avatar = message.querySelector('.pingbash-message-avatar, .pingbash-avatar');
+          if (avatar) {
+            avatar.style.display = groupData.show_user_img !== false ? 'block' : 'none';
+          }
+        });
+        
+        // Apply send button styling
+        const sendBtn = chatDialog.querySelector('.pingbash-send-btn');
+        if (sendBtn && groupData.reply_msg_color) {
+          sendBtn.style.backgroundColor = groupData.reply_msg_color;
+          if (groupData.round_corners && groupData.corner_radius) {
+            sendBtn.style.borderRadius = Math.min(groupData.corner_radius, 20) + 'px';
+          }
+        }
+        
+        // Apply styling to control buttons
+        const controlBtns = chatDialog.querySelectorAll('.pingbash-control-btn, .pingbash-media-btn');
+        controlBtns.forEach(btn => {
+          if (groupData.title_color) {
+            btn.style.color = groupData.title_color;
+          }
+        });
+        
+        console.log('🎨 [Widget] Applied detailed styling to chat elements');
+      },
+
+      // NEW METHOD - Refresh styling on all existing messages
+      refreshAllMessagesStyling(chatDialog, groupData) {
+        if (!chatDialog || !groupData || !this.applyStyleToMessage) return;
+        
+        const messages = chatDialog.querySelectorAll('.pingbash-message');
+        console.log('🎨 [Widget] Refreshing styles for', messages.length, 'existing messages');
+        
+        messages.forEach(messageEl => {
+          const isOwn = messageEl.classList.contains('own');
+          this.applyStyleToMessage(messageEl, groupData, isOwn);
+        });
+        
+        console.log('🎨 [Widget] ✅ Refreshed styling for all existing messages');
       },
 
       // NEW METHOD - Get current configuration from form

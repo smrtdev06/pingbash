@@ -366,15 +366,65 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
       `;
   
   
-      messagesList.appendChild(messageEl);
+            messagesList.appendChild(messageEl);
       console.log('🔍 [Widget] ✅ Message element appended to DOM, total messages now:', messagesList.children.length);
-  
+
+      // Apply current group styling to the new message
+      if (this.group) {
+        this.applyStyleToMessage(messageEl, this.group, isOwn);
+      }
+
       // Remove animation class after animation completes
       if (isNewMessage) {
         setTimeout(() => {
           messageEl.classList.remove('new-message');
         }, 300); // Match animation duration
       }
+    },
+
+    // NEW METHOD - Apply styling to individual message element
+    applyStyleToMessage(messageEl, groupData, isOwn) {
+      if (!messageEl || !groupData) return;
+      
+      // Apply message background color
+      if (isOwn && groupData.reply_msg_color) {
+        // User's own messages - use reply message color
+        //messageEl.style.backgroundColor = groupData.reply_msg_color;
+      } else if (!isOwn && groupData.msg_bg_color) {
+        // Other users' messages - use message background color
+        //messageEl.style.backgroundColor = groupData.msg_bg_color;
+      }
+      
+      // Apply text color
+      if (groupData.msg_txt_color) {
+        messageEl.style.color = groupData.msg_txt_color;
+        const messageContent = messageEl.querySelector('.pingbash-message-content, .pingbash-message-text');
+        if (messageContent) messageContent.style.color = groupData.msg_txt_color;
+      }
+      
+      // Apply font size
+      if (groupData.custom_font_size && groupData.font_size) {
+        messageEl.style.fontSize = groupData.font_size + 'px';
+      }
+      
+      // Apply border radius
+      if (groupData.round_corners && groupData.corner_radius) {
+        messageEl.style.borderRadius = Math.min(groupData.corner_radius, 16) + 'px';
+      }
+      
+      // Apply date/time color
+      const timeElement = messageEl.querySelector('.pingbash-message-time');
+      if (timeElement && groupData.msg_date_color) {
+        timeElement.style.color = groupData.msg_date_color;
+      }
+      
+      // Handle avatar visibility
+      const avatar = messageEl.querySelector('.pingbash-message-avatar, .pingbash-avatar');
+      if (avatar) {
+        avatar.style.display = groupData.show_user_img !== false ? 'block' : 'none';
+      }
+      
+      console.log('🎨 [Widget] Applied styling to new message:', messageEl.getAttribute('data-message-id'));
     },
 
     // NEW METHOD - Generate avatar HTML (same as W version)
