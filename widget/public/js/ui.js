@@ -173,6 +173,12 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
                   </svg>
                   Copy Group URL
                 </div>
+                <div class="pingbash-menu-item" data-action="edit-chat-style">
+                  <svg viewBox="0 0 24 24" width="16" height="16">
+                    <path fill="currentColor" d="M12,2A2,2 0 0,1 14,4C14,4.74 13.6,5.39 13,5.73V7A1,1 0 0,0 14,8H18A1,1 0 0,0 19,7V5.73C18.4,5.39 18,4.74 18,4A2,2 0 0,1 20,2A2,2 0 0,1 22,4C22,4.74 21.6,5.39 21,5.73V7A3,3 0 0,1 18,10H14A3,3 0 0,1 11,7V5.73C10.4,5.39 10,4.74 10,4A2,2 0 0,1 12,2Z"/>
+                  </svg>
+                  Edit Chat Style
+                </div>
                               <div class="pingbash-menu-item pingbash-favorites-toggle" data-action="toggle-favorites" style="display: none;">
                 <svg viewBox="0 0 24 24" width="16" height="16" class="pingbash-favorites-icon">
                   <path fill="currentColor" d="M12,21.35L10.55,20.03C5.4,15.36 2,12.27 2,8.5C2,5.41 4.42,3 7.5,3C9.24,3 10.91,3.81 12,5.08C13.09,3.81 14.76,3 16.5,3C19.58,3 22,5.41 22,8.5C22,12.27 18.6,15.36 13.45,20.03L12,21.35Z"/>

@@ -744,6 +744,9 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
           case 'copy-group-url':
             this.copyGroupUrl();
             break;
+          case 'edit-chat-style':
+            this.showEditChatStyleModal();
+            break;
           case 'toggle-favorites':
             this.toggleFavorites();
             break;

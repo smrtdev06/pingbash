@@ -2204,6 +2204,51 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
           flex-direction: column !important;
         }
 
+        /* Edit Chat Style Modal - Same centered styling as group creation modal */
+        .pingbash-edit-style-modal-body {
+          position: fixed !important;
+          top: 0 !important;
+          left: 0 !important;
+          width: 100% !important;
+          height: 100% !important;
+          background: rgba(0, 0, 0, 0.5) !important;
+          display: none ;
+          align-items: center !important;
+          justify-content: center !important;
+          z-index: 2147483648 !important;
+        }
+
+        .pingbash-edit-style-modal-body.show {
+          display: flex !important;
+        }
+
+        .pingbash-edit-style-modal-body .pingbash-popup-overlay {
+          position: fixed !important;
+          top: 0 !important;
+          left: 0 !important;
+          width: 100% !important;
+          height: 100% !important;
+          background: rgba(0, 0, 0, 0.5) !important;
+          z-index: 2147483648 !important;
+        }
+
+        .pingbash-edit-style-modal-body .pingbash-popup-content {
+          width: 95% !important;
+          max-width: 1400px !important;
+          min-width: 320px !important;
+          height: 90% !important;
+          max-height: 800px !important;
+          overflow-y: auto !important;
+          overflow-x: hidden !important;
+          z-index: 2147483649 !important;
+          position: relative !important;
+          background: white !important;
+          border-radius: 8px !important;
+          padding: 24px !important;
+          display: flex !important;
+          flex-direction: column !important;
+        }
+
         /* W Version Modal Styles */
         .pingbash-modal-title {
           font-size: 20px !important;
@@ -2879,7 +2924,8 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
           margin-bottom: 4px !important;
         }
 
-        .pingbash-create-group-btn {
+        .pingbash-create-group-btn,
+        .pingbash-update-chat-style-btn {
           width: 100% !important;
           height: 40px !important;
           margin-top: 20px !important;
@@ -2894,12 +2940,14 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
           transition: opacity 0.2s !important;
         }
 
-        .pingbash-create-group-btn:disabled {
+        .pingbash-create-group-btn:disabled,
+        .pingbash-update-chat-style-btn:disabled {
           background: #9CA3AF !important;
           cursor: not-allowed !important;
         }
 
-        .pingbash-create-group-btn:not(:disabled):hover {
+        .pingbash-create-group-btn:not(:disabled):hover,
+        .pingbash-update-chat-style-btn:not(:disabled):hover {
           opacity: 0.9 !important;
         }
 

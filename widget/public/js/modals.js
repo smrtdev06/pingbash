@@ -2996,5 +2996,696 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
       this.updateChatLimitationUI();
     },
 
-  });
-}
+    // NEW METHOD - Show edit chat style modal (based on group creation modal)
+    showEditChatStyleModal() {
+      console.log('🎨 [Widget] Opening Edit Chat Style modal');
+      
+      // Check permissions - only group creator or admins can edit style
+      if (!this.canManageChat()) {
+        console.log('🎨 [Widget] User does not have permission to edit chat style');
+        return;
+      }
+      
+      // Create or get the modal
+      const modal = this.createEditChatStyleModalInBody();
+      if (!modal) {
+        console.error('🎨 [Widget] Failed to create edit chat style modal');
+        return;
+      }
+      
+      // Populate with current group data
+      this.populateEditChatStyleModal(modal);
+      
+      // Show the modal
+      modal.style.display = 'flex';
+      
+      // Set up event listeners
+      this.setupEditChatStyleEventListeners();
+      
+      console.log('🎨 [Widget] Edit Chat Style modal displayed');
+    },
+
+    // NEW METHOD - Create edit chat style modal in body
+    createEditChatStyleModalInBody() {
+      // Check if modal already exists in body
+      let existingModal = document.body.querySelector('.pingbash-edit-style-modal-body');
+      if (existingModal) {
+        return existingModal;
+      }
+
+      // Create the modal HTML - based on group creation modal
+      const modalHTML = `
+        <div class="pingbash-edit-style-modal-body" style="display: none;">
+          <div class="pingbash-popup-overlay"></div>
+          <div class="pingbash-popup-content pingbash-group-creation-content">
+            <div class="pingbash-popup-header">
+              <h2 class="pingbash-modal-title">Edit Chat Style</h2>
+              <button class="pingbash-popup-close">×</button>
+            </div>
+            <div class="pingbash-popup-body">
+              <!-- Group Name Input (Disabled for editing) -->
+              <div class="pingbash-group-name-section">
+                <label class="pingbash-input-label">Group Name</label>
+                <input 
+                  type="text" 
+                  id="edit-group-name-input-body" 
+                  class="pingbash-group-name-input" 
+                  placeholder="Group name..." 
+                  readonly
+                  disabled
+                  style="background: #f5f5f5; cursor: not-allowed;"
+                />
+              </div>
+
+              <!-- Group Configuration Widget (Same as create group) -->
+              <div class="pingbash-group-config-widget">
+                <!-- Toggle Button -->
+                <button class="pingbash-config-toggle" title="Toggle Configuration Panel">
+                  <span class="pingbash-toggle-icon">‹</span>
+                </button>
+                
+                <div class="pingbash-config-container">
+                  <!-- Configuration Panel -->
+                  <div class="pingbash-config-panel" id="edit-config-panel-body">
+                    <div class="pingbash-config-section">
+                      <h3 class="pingbash-config-title">Size</h3>
+                      <div class="pingbash-radio-group">
+                        <label class="pingbash-radio-option">
+                          <input type="radio" name="edit-size-mode-body" value="fixed" checked />
+                          <span class="pingbash-radio-dot"></span>
+                          Fixed
+                        </label>
+                        <label class="pingbash-radio-option">
+                          <input type="radio" name="edit-size-mode-body" value="responsive" />
+                          <span class="pingbash-radio-dot"></span>
+                          Responsive
+                        </label>
+                      </div>
+                      
+                      <div class="pingbash-size-inputs">
+                        <div class="pingbash-input-group">
+                          <input type="number" id="edit-width-input-body" class="pingbash-size-input" value="500" />
+                          <label>Width (px)</label>
+                        </div>
+                        <div class="pingbash-input-group">
+                          <input type="number" id="edit-height-input-body" class="pingbash-size-input" value="400" />
+                          <label>Height (px)</label>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="pingbash-config-section">
+                      <h3 class="pingbash-config-title">Colors</h3>
+                      <div class="pingbash-color-grid">
+                        <div class="pingbash-color-item">
+                          <label>Background</label>
+                          <input type="color" id="edit-bg-color-body" value="#FFFFFF" />
+                        </div>
+                        <div class="pingbash-color-item">
+                          <label>Titles and icons</label>
+                          <input type="color" id="edit-title-color-body" value="#333333" />
+                        </div>
+                        <div class="pingbash-color-item">
+                          <label>Messages bg</label>
+                          <input type="color" id="edit-msg-bg-color-body" value="#F5F5F5" />
+                        </div>
+                        <div class="pingbash-color-item">
+                          <label>Messages text</label>
+                          <input type="color" id="edit-msg-text-color-body" value="#000000" />
+                        </div>
+                        <div class="pingbash-color-item">
+                          <label>Reply message</label>
+                          <input type="color" id="edit-reply-color-body" value="#1E81B0" />
+                        </div>
+                        <div class="pingbash-color-item">
+                          <label>Date text</label>
+                          <input type="color" id="edit-date-color-body" value="#666666" />
+                        </div>
+                        <div class="pingbash-color-item">
+                          <label>Input bg</label>
+                          <input type="color" id="edit-input-bg-color-body" value="#FFFFFF" />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="pingbash-config-section">
+                      <h3 class="pingbash-config-title">Settings</h3>
+                      <div class="pingbash-settings-grid">
+                        <label class="pingbash-checkbox-option">
+                          <input type="checkbox" id="edit-user-images-body" checked />
+                          <span class="pingbash-checkbox-mark"></span>
+                          Show user images
+                        </label>
+                        <label class="pingbash-checkbox-option">
+                          <input type="checkbox" id="edit-custom-font-size-body" />
+                          <span class="pingbash-checkbox-mark"></span>
+                          Custom font size
+                        </label>
+                        <label class="pingbash-checkbox-option">
+                          <input type="checkbox" id="edit-round-corners-body" checked />
+                          <span class="pingbash-checkbox-mark"></span>
+                          Round corners
+                        </label>
+                        <label class="pingbash-checkbox-option">
+                          <input type="checkbox" id="edit-show-chat-rules-body" />
+                          <span class="pingbash-checkbox-mark"></span>
+                          Show chat rules
+                        </label>
+                      </div>
+                      
+                      <div class="pingbash-font-size-section" style="display: none;">
+                        <label>Font Size</label>
+                        <input type="range" id="edit-font-size-slider-body" min="12" max="20" value="14" />
+                        <span class="pingbash-font-size-value">14px</span>
+                      </div>
+                      
+                      <div class="pingbash-corner-radius-section">
+                        <label>Corner Radius</label>
+                        <input type="range" id="edit-corner-radius-slider-body" min="0" max="20" value="8" />
+                        <span class="pingbash-corner-radius-value">8px</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Chat Preview (Same as create group) -->
+                  <div class="pingbash-chat-preview">
+                    <!-- Chat preview content same as create group modal -->
+                    <div class="pingbash-preview-container" id="edit-draggable-chat-preview">
+                      <!-- Header -->
+                      <nav class="pingbash-header">
+                        <div class="pingbash-header-left">
+                          <div class="pingbash-header-logo-section">
+                            <img class="pingbash-logo" src="https://pingbash.com/logo-orange.png" alt="Pingbash" />
+                          </div>
+                        </div>
+                        <div class="pingbash-header-right">
+                          <div class="pingbash-hamburger-container">
+                            <button class="pingbash-hamburger-btn">
+                              <svg viewBox="0 0 24 24" width="22" height="22">
+                                <path fill="currentColor" d="M3,6H21V8H3V6M3,11H21V13H3V11M3,16H21V18H3V16Z"/>
+                              </svg>
+                            </button>
+                          </div>
+                        </div>
+                      </nav>
+                      
+                      <!-- Messages Area -->
+                      <article class="pingbash-messages-area">
+                        <div class="pingbash-messages-container">
+                          <div class="pingbash-messages-list" id="edit-preview-messages-list">
+                            <!-- Preview messages -->
+                          </div>
+                        </div>
+                      </article>
+                      
+                      <!-- Bottom Bar -->
+                      <nav class="pingbash-input-bar">
+                        <div class="pingbash-input-wrapper">
+                          <div class="pingbash-input-row">
+                            <input 
+                              type="text" 
+                              id="edit-preview-message-input"
+                              class="pingbash-message-input" 
+                              placeholder="Write a message"
+                              disabled
+                            />
+                            <button class="pingbash-send-btn" disabled>
+                              <span class="pingbash-send-text">Send</span>
+                              <svg class="pingbash-send-icon" viewBox="0 0 24 24" width="16" height="16">
+                                <path fill="currentColor" d="M2,21L23,12L2,3V10L17,12L2,14V21Z"/>
+                              </svg>
+                            </button>
+                          </div>
+                        </div>
+                      </nav>
+                      
+                      <!-- Controls Bar -->
+                      <nav class="pingbash-controls-bar">
+                        <div class="pingbash-controls-left">
+                          <button class="pingbash-control-btn" disabled>
+                            <svg viewBox="0 0 24 24" width="18" height="18">
+                              <path fill="currentColor" d="M8.5,13.5L11,16.5L14.5,12L19,18H5M21,19V5C21,3.89 20.1,3 19,3H5A2,2 0 0,0 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19Z"/>
+                            </svg>
+                          </button>
+                        </div>
+                        <div class="pingbash-controls-right">
+                          <button class="pingbash-control-btn" disabled>
+                            <svg viewBox="0 0 24 24" width="18" height="18">
+                              <path fill="currentColor" d="M16,4C18.21,4 20,5.79 20,8C20,10.21 18.21,12 16,12C13.79,12 12,10.21 12,8C12,5.79 13.79,4 16,4M16,14C20.42,14 24,15.79 24,18V20H8V18C8,15.79 11.58,14 16,14M6,6C7.11,6 8,6.89 8,8C8,9.11 7.11,10 6,10C4.89,10 4,9.11 4,8C4,6.89 4.89,6 6,6M6,12C8.67,12 12,13.34 12,16V18H0V16C0,13.34 3.33,12 6,12Z"/>
+                            </svg>
+                          </button>
+                        </div>
+                      </nav>
+                    </div>
+                    
+                    <!-- Demo Background Text -->
+                    <div class="pingbash-preview-demo-text">
+                      <h2>Chat Style Editor</h2>
+                      <p>Preview your chat style changes!</p>
+                      <p>Configure colors and settings in the left panel</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Update Button -->
+              <button class="pingbash-update-chat-style-btn">Update Chat Style</button>
+            </div>
+          </div>
+        </div>
+      `;
+
+      // Create and append to body
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = modalHTML;
+      const modal = tempDiv.firstElementChild;
+      document.body.appendChild(modal);
+
+      // Ensure modal is on top
+      modal.style.zIndex = '2147483648';
+      modal.style.position = 'fixed';
+
+      console.log('🎨 [Widget] Edit Chat Style modal created and attached to body');
+      return modal;
+    },
+
+    // NEW METHOD - Populate edit modal with current group data
+    populateEditChatStyleModal(modal) {
+      if (!this.group || !modal) return;
+      
+      console.log('🎨 [Widget] Populating edit modal with group data:', this.group);
+      
+      // Set group name (readonly)
+      const groupNameInput = modal.querySelector('#edit-group-name-input-body');
+      if (groupNameInput) {
+        groupNameInput.value = this.group.name || '';
+      }
+      
+      // Set current values from group data
+      const setIfExists = (selector, value, type = 'value') => {
+        const element = modal.querySelector(selector);
+        if (element && value !== undefined && value !== null) {
+          if (type === 'checked') {
+            element.checked = Boolean(value);
+          } else {
+            element[type] = value;
+          }
+        }
+      };
+      
+      // Size settings
+      setIfExists('input[name="edit-size-mode-body"][value="' + (this.group.size_mode || 'fixed') + '"]', true, 'checked');
+      setIfExists('#edit-width-input-body', this.group.frame_width || 500);
+      setIfExists('#edit-height-input-body', this.group.frame_height || 400);
+      
+      // Colors
+      setIfExists('#edit-bg-color-body', this.group.bg_color || '#FFFFFF');
+      setIfExists('#edit-title-color-body', this.group.title_color || '#333333');
+      setIfExists('#edit-msg-bg-color-body', this.group.msg_bg_color || '#F5F5F5');
+      setIfExists('#edit-msg-text-color-body', this.group.msg_txt_color || '#000000');
+      setIfExists('#edit-reply-color-body', this.group.reply_msg_color || '#1E81B0');
+      setIfExists('#edit-date-color-body', this.group.msg_date_color || '#666666');
+      setIfExists('#edit-input-bg-color-body', this.group.input_bg_color || '#FFFFFF');
+      
+      // Settings
+      setIfExists('#edit-user-images-body', this.group.show_user_img, 'checked');
+      setIfExists('#edit-custom-font-size-body', this.group.custom_font_size, 'checked');
+      setIfExists('#edit-round-corners-body', this.group.round_corners, 'checked');
+      setIfExists('#edit-show-chat-rules-body', this.group.show_chat_rules, 'checked');
+      
+      // Sliders
+      setIfExists('#edit-font-size-slider-body', this.group.font_size || 14);
+      setIfExists('#edit-corner-radius-slider-body', this.group.corner_radius || 8);
+      
+      // Update slider value displays
+      const fontSizeValue = modal.querySelector('.pingbash-font-size-value');
+      if (fontSizeValue) fontSizeValue.textContent = (this.group.font_size || 14) + 'px';
+      
+      const cornerRadiusValue = modal.querySelector('.pingbash-corner-radius-value');
+      if (cornerRadiusValue) cornerRadiusValue.textContent = (this.group.corner_radius || 8) + 'px';
+      
+      // Show/hide font size section based on custom font size setting
+      const fontSizeSection = modal.querySelector('.pingbash-font-size-section');
+      if (fontSizeSection) {
+        fontSizeSection.style.display = this.group.custom_font_size ? 'block' : 'none';
+      }
+    },
+
+    // NEW METHOD - Setup event listeners for edit chat style modal
+    setupEditChatStyleEventListeners() {
+      const modal = document.body.querySelector('.pingbash-edit-style-modal-body');
+      if (!modal) return;
+
+      console.log('🎨 [Widget] Setting up edit chat style event listeners');
+
+      // Close button
+      const closeBtn = modal.querySelector('.pingbash-popup-close');
+      const overlay = modal.querySelector('.pingbash-popup-overlay');
+      const updateBtn = modal.querySelector('.pingbash-update-chat-style-btn');
+
+      // Remove existing listeners to prevent duplicates
+      closeBtn?.removeEventListener('click', this.hideEditChatStyleModal);
+      overlay?.removeEventListener('click', this.hideEditChatStyleModal);
+      updateBtn?.removeEventListener('click', this.updateChatStyle);
+
+      // Add new listeners
+      closeBtn?.addEventListener('click', () => this.hideEditChatStyleModal());
+      overlay?.addEventListener('click', () => this.hideEditChatStyleModal());
+      updateBtn?.addEventListener('click', () => this.updateChatStyle());
+
+      // Set up form interactions (reuse existing methods with edit prefixes)
+      this.setupEditChatStyleForm();
+
+      console.log('🎨 [Widget] Edit chat style event listeners set up successfully');
+    },
+
+    // NEW METHOD - Setup form interactions for edit modal
+    setupEditChatStyleForm() {
+      const modal = document.body.querySelector('.pingbash-edit-style-modal-body');
+      if (!modal) return;
+      
+      // Set up all the interactive elements (similar to group creation form)
+      // Font size toggle
+      const customFontCheckbox = modal.querySelector('#edit-custom-font-size-body');
+      const fontSizeSection = modal.querySelector('.pingbash-font-size-section');
+      
+      if (customFontCheckbox && fontSizeSection) {
+        customFontCheckbox.addEventListener('change', () => {
+          fontSizeSection.style.display = customFontCheckbox.checked ? 'block' : 'none';
+        });
+      }
+      
+      // Font size slider
+      const fontSizeSlider = modal.querySelector('#edit-font-size-slider-body');
+      const fontSizeValue = modal.querySelector('.pingbash-font-size-value');
+      
+      if (fontSizeSlider && fontSizeValue) {
+        fontSizeSlider.addEventListener('input', () => {
+          fontSizeValue.textContent = fontSizeSlider.value + 'px';
+        });
+      }
+      
+      // Corner radius slider
+      const cornerRadiusSlider = modal.querySelector('#edit-corner-radius-slider-body');
+      const cornerRadiusValue = modal.querySelector('.pingbash-corner-radius-value');
+      
+      if (cornerRadiusSlider && cornerRadiusValue) {
+        cornerRadiusSlider.addEventListener('input', () => {
+          cornerRadiusValue.textContent = cornerRadiusSlider.value + 'px';
+        });
+      }
+      
+      // Color inputs - add real-time preview updates
+      const colorInputs = modal.querySelectorAll('input[type="color"]');
+      colorInputs.forEach(input => {
+        input.addEventListener('input', () => {
+          this.updateEditStylePreview();
+        });
+      });
+      
+      // Other inputs for real-time preview
+      const allInputs = modal.querySelectorAll('input, select');
+      allInputs.forEach(input => {
+        input.addEventListener('input', () => {
+          this.updateEditStylePreview();
+        });
+        input.addEventListener('change', () => {
+          this.updateEditStylePreview();
+        });
+      });
+    },
+
+    // NEW METHOD - Update preview in edit modal
+    updateEditStylePreview() {
+      const modal = document.body.querySelector('.pingbash-edit-style-modal-body');
+      if (!modal) return;
+      
+      const preview = modal.querySelector('#edit-draggable-chat-preview');
+      if (!preview) return;
+      
+      // Get current values and apply to preview (similar to group creation)
+      const config = this.getCurrentEditConfigFromModal();
+      this.applySettingsToEditPreview(modal, config);
+    },
+
+    // NEW METHOD - Get current configuration from edit modal
+    getCurrentEditConfigFromModal() {
+      const modal = document.body.querySelector('.pingbash-edit-style-modal-body');
+      if (!modal) return {};
+      
+      return {
+        sizeMode: modal.querySelector('input[name="edit-size-mode-body"]:checked')?.value || 'fixed',
+        width: parseInt(modal.querySelector('#edit-width-input-body')?.value) || 500,
+        height: parseInt(modal.querySelector('#edit-height-input-body')?.value) || 400,
+        colors: {
+          background: modal.querySelector('#edit-bg-color-body')?.value || '#FFFFFF',
+          title: modal.querySelector('#edit-title-color-body')?.value || '#333333',
+          msgBg: modal.querySelector('#edit-msg-bg-color-body')?.value || '#F5F5F5',
+          msgText: modal.querySelector('#edit-msg-text-color-body')?.value || '#000000',
+          replyText: modal.querySelector('#edit-reply-color-body')?.value || '#1E81B0',
+          dateText: modal.querySelector('#edit-date-color-body')?.value || '#666666',
+          inputBg: modal.querySelector('#edit-input-bg-color-body')?.value || '#FFFFFF'
+        },
+        settings: {
+          userImages: modal.querySelector('#edit-user-images-body')?.checked || false,
+          customFontSize: modal.querySelector('#edit-custom-font-size-body')?.checked || false,
+          fontSize: parseInt(modal.querySelector('#edit-font-size-slider-body')?.value) || 14,
+          roundCorners: modal.querySelector('#edit-round-corners-body')?.checked || false,
+          cornerRadius: parseInt(modal.querySelector('#edit-corner-radius-slider-body')?.value) || 8,
+          showChatRules: modal.querySelector('#edit-show-chat-rules-body')?.checked || false
+        }
+      };
+    },
+
+    // NEW METHOD - Apply settings to edit preview
+    applySettingsToEditPreview(modal, config) {
+      const preview = modal.querySelector('#edit-draggable-chat-preview');
+      if (!preview) return;
+      
+      // Apply same logic as group creation preview
+      const cssVars = {
+        '--title-bg-color': config.colors.background,
+        '--title-color': config.colors.title,
+        '--msg-bg-color': config.colors.msgBg,
+        '--msg-text-color': config.colors.msgText,
+        '--date-color': config.colors.dateText,
+        '--owner-msg-bg-color': config.colors.replyText,
+        '--input-bg-color': config.colors.inputBg,
+        '--font-size': (config.settings.customFontSize ? config.settings.fontSize : 14) + 'px',
+        '--corner-radius': (config.settings.roundCorners ? config.settings.cornerRadius : 12) + 'px'
+      };
+      
+      Object.entries(cssVars).forEach(([property, value]) => {
+        preview.style.setProperty(property, value);
+      });
+      
+      if (config.sizeMode === 'fixed') {
+        preview.style.width = config.width + 'px';
+        preview.style.height = config.height + 'px';
+      }
+    },
+
+    // NEW METHOD - Hide edit chat style modal
+    hideEditChatStyleModal() {
+      const modal = document.body.querySelector('.pingbash-edit-style-modal-body');
+      if (modal) {
+        modal.style.display = 'none';
+        console.log('🎨 [Widget] Edit Chat Style modal hidden');
+      }
+    },
+
+        // NEW METHOD - Update chat style (Socket event - same as F version)
+    updateChatStyle() {
+      console.log('🎨 [Widget] Updating chat style');
+      
+      if (!this.group || !this.group.id) {
+        console.error('🎨 [Widget] No group data available for update');
+        return;
+      }
+      
+      if (!this.socket || !this.socket.connected) {
+        console.error('🎨 [Widget] Socket not connected');
+        this.showNotification('Connection error. Please try again.', 'error');
+        return;
+      }
+      
+      // Get config from edit modal
+      const config = this.getCurrentEditConfigFromModal();
+      
+      // Prepare update data (same structure as F version)
+      const updateData = {
+        token: this.authenticatedToken,
+        groupId: this.group.id,
+        size_mode: config.sizeMode,
+        frame_width: config.width,
+        frame_height: config.height,
+        bg_color: config.colors.background,
+        title_color: config.colors.title,
+        msg_bg_color: config.colors.msgBg,
+        msg_txt_color: config.colors.msgText,
+        reply_msg_color: config.colors.replyText,
+        msg_date_color: config.colors.dateText,
+        input_bg_color: config.colors.inputBg,
+        show_user_img: config.settings.userImages,
+        custom_font_size: config.settings.customFontSize,
+        font_size: config.settings.fontSize,
+        round_corners: config.settings.roundCorners,
+        corner_radius: config.settings.cornerRadius
+      };
+      
+      console.log('🎨 [Widget] Update data:', updateData);
+      
+      // Disable update button during request
+      const updateBtn = document.body.querySelector('.pingbash-update-chat-style-btn');
+      if (updateBtn) {
+        updateBtn.disabled = true;
+        updateBtn.textContent = 'Updating...';
+      }
+      
+      // Set up one-time listener for the response
+      const handleStyleUpdate = (updatedGroup) => {
+        console.log('🎨 [Widget] Chat style updated successfully:', updatedGroup);
+        
+        // Update local group data
+        Object.assign(this.group, updatedGroup);
+        
+        // Apply changes to current chat dialog
+        this.applyGroupSettingsToChatDialog(this.group);
+        
+        // Hide modal
+        this.hideEditChatStyleModal();
+        
+        // Show success message
+        this.showNotification('Chat style updated successfully!', 'success');
+        
+        // Re-enable update button
+        if (updateBtn) {
+          updateBtn.disabled = false;
+          updateBtn.textContent = 'Update Chat Style';
+        }
+        
+        // Remove the listener
+        this.socket.off('group updated', handleStyleUpdate);
+      };
+      
+      // Listen for group updated event
+      this.socket.on('group updated', handleStyleUpdate);
+      
+      // Set timeout for the operation
+      setTimeout(() => {
+        this.socket.off('group updated', handleStyleUpdate);
+        if (updateBtn && updateBtn.disabled) {
+          updateBtn.disabled = false;
+          updateBtn.textContent = 'Update Chat Style';
+          this.showNotification('Update timeout. Please try again.', 'error');
+        }
+      }, 10000); // 10 second timeout
+      
+      // Emit the socket event (same as F version)
+      this.socket.emit('udpate group chatbox style', updateData);
+      console.log('🎨 [Widget] Chat style update event emitted');
+    },
+
+     // NEW METHOD - Show notification message
+     showNotification(message, type = 'info') {
+       console.log(`📢 [Widget] Showing ${type} notification:`, message);
+       
+       // Remove any existing notification
+       const existingNotification = document.body.querySelector('.pingbash-notification');
+       if (existingNotification) {
+         existingNotification.remove();
+       }
+       
+       // Create notification element
+       const notification = document.createElement('div');
+       notification.className = `pingbash-notification pingbash-notification-${type}`;
+       notification.innerHTML = `
+         <div class="pingbash-notification-content">
+           <span class="pingbash-notification-icon">
+             ${type === 'success' ? '✅' : type === 'error' ? '❌' : 'ℹ️'}
+           </span>
+           <span class="pingbash-notification-message">${message}</span>
+           <button class="pingbash-notification-close">×</button>
+         </div>
+       `;
+       
+       // Style the notification
+       notification.style.cssText = `
+         position: fixed;
+         top: 20px;
+         right: 20px;
+         z-index: 2147483649;
+         max-width: 400px;
+         background: ${type === 'success' ? '#d4edda' : type === 'error' ? '#f8d7da' : '#d1ecf1'};
+         color: ${type === 'success' ? '#155724' : type === 'error' ? '#721c24' : '#0c5460'};
+         border: 1px solid ${type === 'success' ? '#c3e6cb' : type === 'error' ? '#f5c6cb' : '#bee5eb'};
+         border-radius: 8px;
+         padding: 12px;
+         box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+         animation: slideInRight 0.3s ease;
+         font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+         font-size: 14px;
+       `;
+       
+       // Style notification content
+       const content = notification.querySelector('.pingbash-notification-content');
+       content.style.cssText = `
+         display: flex;
+         align-items: center;
+         gap: 8px;
+       `;
+       
+       // Style close button
+       const closeBtn = notification.querySelector('.pingbash-notification-close');
+       closeBtn.style.cssText = `
+         background: none;
+         border: none;
+         color: inherit;
+         cursor: pointer;
+         font-size: 18px;
+         margin-left: auto;
+         padding: 0;
+         width: 20px;
+         height: 20px;
+         display: flex;
+         align-items: center;
+         justify-content: center;
+       `;
+       
+       // Add CSS animation
+       if (!document.getElementById('pingbash-notification-styles')) {
+         const style = document.createElement('style');
+         style.id = 'pingbash-notification-styles';
+         style.textContent = `
+           @keyframes slideInRight {
+             from {
+               transform: translateX(100%);
+               opacity: 0;
+             }
+             to {
+               transform: translateX(0);
+               opacity: 1;
+             }
+           }
+         `;
+         document.head.appendChild(style);
+       }
+       
+       // Add to page
+       document.body.appendChild(notification);
+       
+       // Close button functionality
+       closeBtn.addEventListener('click', () => {
+         notification.remove();
+       });
+       
+       // Auto-hide after 5 seconds
+       setTimeout(() => {
+         if (notification.parentNode) {
+           notification.remove();
+         }
+       }, 5000);
+     },
+
+    });
+  }
