@@ -50,23 +50,13 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
               const filterMode = parseInt(e.target.value);
               this.handleFilterModeChange(filterMode);
             });
+
+            radio.addEventListener('click', (e) => {
+              this.handleFilterModeChange(parseInt(e.target.value));
+            });
           });
 
-          // User search for 1-on-1 mode (same as F version)
-          const userSearchInput = this.dialog.querySelector('.pingbash-user-search-input');
-          const userDropdown = this.dialog.querySelector('.pingbash-user-dropdown');
-          
-          if (userSearchInput && userDropdown) {
-            userSearchInput.addEventListener('input', (e) => {
-              this.handleUserSearch(e.target.value);
-            });
-            
-            userSearchInput.addEventListener('focus', () => {
-              if (userSearchInput.value) {
-                userDropdown.style.display = 'block';
-              }
-            });
-          }
+          // User search now handled by modal - no inline search needed
         }
 
         // Hamburger menu
@@ -2063,15 +2053,15 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         this.filterMode = filterMode;
         this.filteredUser = null;
         
-        // Show/hide user search for 1-on-1 mode
-        const userSearch = this.dialog.querySelector('.pingbash-user-search');
-        const modsOption = this.dialog.querySelector('.pingbash-mods-option');
-        
-        if (userSearch) {
-          userSearch.style.display = filterMode === 1 ? 'block' : 'none';
+        // Show user search modal for 1-on-1 mode
+        if (filterMode === 1) {
+          console.log('🔍 [Widget] Opening user search modal for 1-on-1 mode');
+          this.showUserSearchModal();
+          return; // Don't continue with filter logic until user is selected
         }
         
         // Show mods option only for admins/moderators
+        const modsOption = this.dialog.querySelector('.pingbash-mods-option');
         if (modsOption) {
           if (this.isAuthenticated && this.isModeratorOrAdmin()) {
             modsOption.style.display = 'block';
@@ -2080,19 +2070,6 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
             modsOption.style.display = 'none';
             console.log('🔍 [Widget] Hiding mods mode for regular user/anonymous');
           }
-        }
-        
-        // Clear user search
-        const userSearchInput = this.dialog.querySelector('.pingbash-user-search-input');
-        if (userSearchInput) {
-          userSearchInput.value = '';
-          userSearchInput.placeholder = 'Search user...';
-        }
-        
-        // Hide user dropdown
-        const userDropdown = this.dialog.querySelector('.pingbash-user-dropdown');
-        if (userDropdown) {
-          userDropdown.style.display = 'none';
         }
         
         // Re-filter messages

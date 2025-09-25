@@ -291,7 +291,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
           <!-- Right side: Chat controls -->
           <div class="pingbash-controls-right">
             <!-- Chat Mode Filter -->
-            <div class="pingbash-filter-container" style="display: none;">
+            <div class="pingbash-filter-container pingbash-control-btn" style="display: none;">
               <div class="pingbash-filter-icon" title="Chat Mode">
                 <svg viewBox="0 0 24 24" width="20" height="20">
                   <path fill="currentColor" d="M6,13H18V11H6M3,6V8H21V6M10,18H14V16H10V18Z"/>
@@ -306,10 +306,6 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
                   <div class="pingbash-filter-option" style="display: block;">
                     <input type="radio" id="filter-oneone" name="filter-mode" value="1">
                     <label for="filter-oneone">1 on 1 Mode</label>
-                    <div class="pingbash-user-search" style="display: none;">
-                      <input type="text" class="pingbash-user-search-input" placeholder="Search user...">
-                      <div class="pingbash-user-dropdown" style="display: none;"></div>
-                    </div>
                   </div>
                   <div class="pingbash-filter-option pingbash-mods-option" style="display: none;">
                     <input type="radio" id="filter-mods" name="filter-mode" value="2">
@@ -455,7 +451,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         <!-- Email Verification Modal -->
         <div class="pingbash-verification-modal" style="display: none;">
           <div class="pingbash-popup-overlay"></div>
-          <div class="pingbash-popup-content" style="height:400px; width:400px;">
+          <div class="pingbash-popup-content" style="height:auto; max-height:90vh; width:400px; max-width:90vw;">
             <div class="pingbash-popup-header">
               <h3>Verify Your Email</h3>
               <button class="pingbash-popup-close">×</button>
@@ -463,32 +459,61 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
             <div class="pingbash-popup-body">
               <div class="pingbash-verification-form">
                 <div class="pingbash-verification-icon">
-                  <svg viewBox="0 0 24 24" width="48" height="48">
-                    <path fill="#2596be" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                  <svg viewBox="0 0 24 24" width="48" height="48" style="color: #28a745;">
+                    <path fill="currentColor" d="M20,8L12,13L4,8V6L12,11L20,6M20,4H4C2.89,4 2,4.89 2,6V18A2,2 0 0,0 4,20H20A2,2 0 0,0 22,18V6C22,4.89 21.11,4 20,4Z"/>
                   </svg>
                 </div>
-                <p class="pingbash-verification-text">We've sent a 4-digit verification code to<br><strong class="pingbash-verification-email"></strong></p>
-                
+                <p class="pingbash-verification-text">
+                  We've sent a verification code to <span class="pingbash-verification-email"></span>
+                </p>
                 <div class="pingbash-otp-container">
                   <input type="text" class="pingbash-otp-input" maxlength="1" data-index="0">
                   <input type="text" class="pingbash-otp-input" maxlength="1" data-index="1">
                   <input type="text" class="pingbash-otp-input" maxlength="1" data-index="2">
                   <input type="text" class="pingbash-otp-input" maxlength="1" data-index="3">
+                  <input type="text" class="pingbash-otp-input" maxlength="1" data-index="4">
+                  <input type="text" class="pingbash-otp-input" maxlength="1" data-index="5">
                 </div>
-                
                 <div class="pingbash-verification-timer">
-                  Time remaining: <span class="pingbash-timer-display">5:00</span>
+                  Code expires in <span class="pingbash-timer-display">05:00</span>
                 </div>
-                
                 <div class="pingbash-verification-actions">
                   <button class="pingbash-verify-btn">Verify</button>
-                  <button class="pingbash-resend-btn" disabled>Resend Code</button>
+                  <button class="pingbash-resend-btn">Resend Code</button>
                 </div>
-                
                 <div class="pingbash-verification-footer">
-                  <p>Already verified? <button class="pingbash-back-to-signin-btn">Sign In</button></p>
+                  <p>Wrong email? <button class="pingbash-back-to-signin-btn">Back to Sign In</button></p>
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- User Search Modal -->
+        <div class="pingbash-user-search-modal" style="display: none;">
+          <div class="pingbash-popup-overlay"></div>
+          <div class="pingbash-popup-content" style="height:auto; max-height:80vh; width:500px; max-width:90vw;">
+            <div class="pingbash-popup-header">
+              <h3>Select User for 1-on-1 Chat</h3>
+              <button class="pingbash-popup-close">×</button>
+            </div>
+            <div class="pingbash-popup-body">
+              <div class="pingbash-user-search-form">
+                <div class="pingbash-search-input-container">
+                  <input type="text" class="pingbash-user-search-modal-input" placeholder="Search users...">
+                  <svg class="pingbash-search-icon" viewBox="0 0 24 24" width="20" height="20">
+                    <path fill="currentColor" d="M9.5,3A6.5,6.5 0 0,1 16,9.5C16,11.11 15.41,12.59 14.44,13.73L14.71,14H15.5L20.5,19L19,20.5L14,15.5V14.71L13.73,14.44C12.59,15.41 11.11,16 9.5,16A6.5,6.5 0 0,1 3,9.5A6.5,6.5 0 0,1 9.5,3M9.5,5C7,5 5,7 5,9.5C5,12 7,14 9.5,14C12,14 14,12 14,9.5C14,7 12,5 9.5,5Z"/>
+                  </svg>
+                </div>
+                <div class="pingbash-user-search-results">
+                  <div class="pingbash-loading-users" style="text-align: center; padding: 20px; color: #666;">
+                    Loading users...
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="pingbash-popup-footer">
+              <button class="pingbash-user-search-cancel-btn">Cancel</button>
             </div>
           </div>
         </div>

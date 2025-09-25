@@ -314,7 +314,6 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
           display: flex;
           align-items: center;
           justify-content: center;
-          color: #666;
         }
 
         .pingbash-filter-dropdown {
@@ -363,46 +362,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
           color: #333;
         }
 
-        .pingbash-user-search {
-          padding-left: 24px;
-          position: relative;
-        }
-
-        .pingbash-user-search-input {
-          width: 100%;
-          padding: 8px 12px;
-          border: 1px solid #ddd;
-          border-radius: 4px;
-          font-size: 14px;
-        }
-
-        .pingbash-user-dropdown {
-          position: absolute;
-          top: 100%;
-          left: 24px;
-          right: 0;
-          background: white;
-          border: 1px solid #ddd;
-          border-radius: 4px;
-          box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-          max-height: 200px;
-          overflow-y: auto;
-          z-index: 1001;
-        }
-
-        .pingbash-user-dropdown-item {
-          padding: 8px 12px;
-          cursor: pointer;
-          border-bottom: 1px solid #f0f0f0;
-        }
-
-        .pingbash-user-dropdown-item:hover {
-          background-color: #f5f5f5;
-        }
-
-        .pingbash-user-dropdown-item:last-child {
-          border-bottom: none;
-        }
+        /* Old inline user search styles removed - now using modal */
 
         /* Filter Mode Text Styles (same as F version) */
         .pingbash-filter-mode-text {
@@ -4969,6 +4929,160 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
           .pingbash-permission-description {
             font-size: 15px !important;
           }
+        }
+
+        /* User Search Modal */
+        .pingbash-user-search-modal {
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          z-index: 2147483648;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        
+        .pingbash-user-search-form {
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+        }
+        
+        .pingbash-search-input-container {
+          position: relative;
+          display: flex;
+          align-items: center;
+        }
+        
+        .pingbash-user-search-modal-input {
+          width: 100%;
+          padding: 12px 40px 12px 12px;
+          border: 2px solid #e0e0e0;
+          border-radius: 8px;
+          font-size: 16px;
+          outline: none;
+          transition: border-color 0.2s ease;
+          font-family: inherit;
+        }
+        
+        .pingbash-user-search-modal-input:focus {
+          border-color: #2596be;
+          box-shadow: 0 0 0 2px rgba(37, 150, 190, 0.1);
+        }
+        
+        .pingbash-search-icon {
+          position: absolute;
+          right: 12px;
+          color: #666;
+          pointer-events: none;
+        }
+        
+        .pingbash-user-search-results {
+          max-height: 400px;
+          overflow-y: auto;
+          border: 1px solid #e0e0e0;
+          border-radius: 8px;
+          background: #f8f9fa;
+        }
+        
+        .pingbash-user-result-item {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          padding: 12px 16px;
+          cursor: pointer;
+          border-bottom: 1px solid #e9ecef;
+          transition: background-color 0.2s ease;
+        }
+        
+        .pingbash-user-result-item:hover {
+          background: #e9ecef;
+        }
+        
+        .pingbash-user-result-item:last-child {
+          border-bottom: none;
+        }
+        
+        .pingbash-user-result-avatar {
+          width: 40px;
+          height: 40px;
+          border-radius: 50%;
+          background: #6c757d;
+          color: white;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 16px;
+          font-weight: bold;
+          flex-shrink: 0;
+        }
+        
+        .pingbash-user-result-info {
+          flex: 1;
+          min-width: 0;
+        }
+        
+        .pingbash-user-result-name {
+          font-weight: 600;
+          color: #333;
+          font-size: 14px;
+          margin-bottom: 2px;
+        }
+        
+        .pingbash-user-result-status {
+          font-size: 12px;
+          color: #666;
+          display: flex;
+          align-items: center;
+          gap: 4px;
+        }
+        
+        .pingbash-status-dot {
+          width: 8px;
+          height: 8px;
+          border-radius: 50%;
+          flex-shrink: 0;
+        }
+        
+        .pingbash-status-dot.online {
+          background: #28a745;
+        }
+        
+        .pingbash-status-dot.offline {
+          background: #6c757d;
+        }
+        
+        .pingbash-user-search-cancel-btn {
+          background: #f8f9fa;
+          color: #333;
+          border: 1px solid #ddd;
+          padding: 10px 20px;
+          border-radius: 4px;
+          cursor: pointer;
+          font-size: 14px;
+          font-weight: 500;
+          transition: background-color 0.2s ease;
+        }
+        
+        .pingbash-user-search-cancel-btn:hover {
+          background: #e9ecef;
+        }
+        
+        .pingbash-no-users-found {
+          text-align: center;
+          padding: 40px 20px;
+          color: #666;
+          font-style: italic;
+          font-size: 14px;
+        }
+        
+        .pingbash-loading-users {
+          text-align: center;
+          padding: 20px;
+          color: #666;
+          font-size: 14px;
         }
       `;
   

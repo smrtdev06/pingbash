@@ -3679,7 +3679,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
          notification.remove();
        });
        
-       // Auto-hide after 5 seconds
+              // Auto-hide after 5 seconds
        setTimeout(() => {
          if (notification.parentNode) {
            notification.remove();
@@ -3687,5 +3687,197 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
        }, 5000);
      },
 
-    });
+     // User Search Modal Methods
+     showUserSearchModal() {
+       console.log('🔍 [Widget] Opening user search modal');
+       
+       const modal = this.dialog.querySelector('.pingbash-user-search-modal');
+       if (!modal) {
+         console.error('🔍 [Widget] User search modal not found');
+         return;
+       }
+       
+       // Show the modal
+       modal.style.display = 'flex';
+       
+       // Load all group members
+       this.loadUsersForModal();
+       
+       // Setup event listeners if not already done
+       this.setupUserSearchModalEventListeners();
+       
+       // Focus on search input
+       const searchInput = modal.querySelector('.pingbash-user-search-modal-input');
+       if (searchInput) {
+         setTimeout(() => searchInput.focus(), 100);
+       }
+     },
+
+     hideUserSearchModal() {
+       console.log('🔍 [Widget] Closing user search modal');
+       
+       const modal = this.dialog.querySelector('.pingbash-user-search-modal');
+       if (modal) {
+         modal.style.display = 'none';
+         
+         // Clear search input
+         const searchInput = modal.querySelector('.pingbash-user-search-modal-input');
+         if (searchInput) {
+           searchInput.value = '';
+         }
+         
+         // Reset filter mode to public if no user was selected
+         if (!this.filteredUser) {
+           const publicRadio = this.dialog.querySelector('#filter-public');
+           if (publicRadio) {
+             publicRadio.checked = true;
+             this.filterMode = 0;
+             this.applyMessageFilter();
+             this.showModeStatus(0);
+           }
+         }
+       }
+     },
+
+     setupUserSearchModalEventListeners() {
+       if (this.userSearchModalListenersAdded) return;
+       this.userSearchModalListenersAdded = true;
+       
+       const modal = this.dialog.querySelector('.pingbash-user-search-modal');
+       if (!modal) return;
+       
+       // Search input listener
+       const searchInput = modal.querySelector('.pingbash-user-search-modal-input');
+       if (searchInput) {
+         searchInput.addEventListener('input', (e) => {
+           this.handleUserSearchModal(e.target.value);
+         });
+       }
+       
+       // Cancel button
+       const cancelBtn = modal.querySelector('.pingbash-user-search-cancel-btn');
+       if (cancelBtn) {
+         cancelBtn.addEventListener('click', () => {
+           this.hideUserSearchModal();
+         });
+       }
+       
+       // Close button
+       const closeBtn = modal.querySelector('.pingbash-popup-close');
+       if (closeBtn) {
+         closeBtn.addEventListener('click', () => {
+           this.hideUserSearchModal();
+         });
+       }
+       
+       // Overlay click to close
+       const overlay = modal.querySelector('.pingbash-popup-overlay');
+       if (overlay) {
+         overlay.addEventListener('click', () => {
+           this.hideUserSearchModal();
+         });
+       }
+     },
+
+     loadUsersForModal() {
+       console.log('🔍 [Widget] Loading users for modal');
+       
+       const resultsContainer = this.dialog.querySelector('.pingbash-user-search-results');
+       if (!resultsContainer) return;
+       
+       // Show loading state
+       resultsContainer.innerHTML = '<div class="pingbash-loading-users">Loading users...</div>';
+       
+       // Get all group members
+       const allGroupMembers = this.getGroupMembers();
+       const onlineUserIds = this.onlineUserIds || [];
+       
+       if (allGroupMembers.length === 0) {
+         resultsContainer.innerHTML = '<div class="pingbash-no-users-found">No users found</div>';
+         return;
+       }
+       
+       this.renderUsersInModal(allGroupMembers, onlineUserIds);
+     },
+
+     renderUsersInModal(users, onlineUserIds, searchTerm = '') {
+       const resultsContainer = this.dialog.querySelector('.pingbash-user-search-results');
+       if (!resultsContainer) return;
+       
+       // Filter users by search term if provided
+       let filteredUsers = users;
+       if (searchTerm.trim()) {
+         filteredUsers = users.filter(user => 
+           user.name && user.name.toLowerCase().includes(searchTerm.toLowerCase())
+         );
+       }
+       
+       if (filteredUsers.length === 0) {
+         resultsContainer.innerHTML = '<div class="pingbash-no-users-found">No users found</div>';
+         return;
+       }
+       
+       // Render users
+       resultsContainer.innerHTML = filteredUsers.map(user => {
+         const isOnline = onlineUserIds.includes(user.id);
+         const avatarLetter = user.name ? user.name.charAt(0).toUpperCase() : '?';
+         
+         return `
+           <div class="pingbash-user-result-item" data-user-id="${user.id}" data-user-name="${user.name}">
+             <div class="pingbash-user-result-avatar">${avatarLetter}</div>
+             <div class="pingbash-user-result-info">
+               <div class="pingbash-user-result-name">${user.name || 'Unknown User'}</div>
+               <div class="pingbash-user-result-status">
+                 <div class="pingbash-status-dot ${isOnline ? 'online' : 'offline'}"></div>
+                 ${isOnline ? 'Online' : 'Offline'}
+               </div>
+             </div>
+           </div>
+         `;
+       }).join('');
+       
+       // Add click listeners to user items
+       resultsContainer.querySelectorAll('.pingbash-user-result-item').forEach(item => {
+         item.addEventListener('click', () => {
+           const userId = parseInt(item.dataset.userId);
+           const userName = item.dataset.userName;
+           const user = users.find(u => u.id === userId);
+           if (user) {
+             this.selectUserFromModal(user);
+           }
+         });
+       });
+     },
+
+     handleUserSearchModal(searchTerm) {
+       console.log('🔍 [Widget] User search in modal:', searchTerm);
+       
+       const allGroupMembers = this.getGroupMembers();
+       const onlineUserIds = this.onlineUserIds || [];
+       
+       this.renderUsersInModal(allGroupMembers, onlineUserIds, searchTerm);
+     },
+
+     selectUserFromModal(user) {
+       console.log('🔍 [Widget] User selected from modal:', user);
+       
+       // Set the filtered user
+       this.filteredUser = user;
+       
+       // Hide the modal
+       this.hideUserSearchModal();
+       
+       // Apply message filter
+       this.applyMessageFilter();
+       
+       // Update input placeholder
+       this.updateInputPlaceholder(1);
+       
+       // Show mode status feedback
+       this.showModeStatus(1);
+       
+       console.log('🔍 [Widget] 1-on-1 mode activated with user:', user.name);
+     },
+
+   });
   }
