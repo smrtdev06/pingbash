@@ -349,7 +349,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
           <div class="pingbash-message-body">
             ${message.parent_id ? this.renderReplyIndicator(message.parent_id) : ''}
             <div class="pingbash-message-header">
-              <span class="pingbash-message-sender">${senderName}</span>
+              <span class="pingbash-message-sender">${senderName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
               ${this.getFilterModeText(message)}
               <span class="pingbash-message-time">${time}</span>
               <div class="pingbash-message-buttons">
