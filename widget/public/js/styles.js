@@ -418,7 +418,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
         .pingbash-hamburger-btn {
           background: none;
           border: none;
-          color: #333;
+          color: #666;
           cursor: pointer;
           padding: 4px;
           border-radius: 4px;
