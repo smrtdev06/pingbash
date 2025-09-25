@@ -180,11 +180,8 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
             right: 0 !important;
             bottom: 0 !important;
             width: 100vw !important;
-            height: 100vh !important;
             min-width: 100vw !important;
-            min-height: 100vh !important;
             max-width: 100vw !important;
-            max-height: 100vh !important;
             border-radius: 0 !important;
             border: none !important;
             transform: translateY(${this.config.position.includes('top') ? '-' : ''}100vh);
@@ -2136,12 +2133,12 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
         /* Mobile responsive */
         @media (max-width: 768px) {
           .pingbash-chat-dialog {
-            width: calc(100vw - 40px);
-            height: calc(100vh - 100px);
+            width: calc(100vw) !important;
+            height: calc(100vh - 100px) !important;
           }
           
           .pingbash-message-content {
-            max-width: 85%;
+            max-width: 100%;
           }
         }
   
