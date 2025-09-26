@@ -737,6 +737,11 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
           case 'edit-chat-style':
             this.showEditChatStyleModal();
             break;
+
+          case 'toggle-theme':
+            if( window.isDebugging ) console.log('🌙 [Widget] Dark mode toggle clicked');
+            this.toggleDarkMode();
+            break;
           case 'toggle-favorites':
             this.toggleFavorites();
             break;
@@ -2274,6 +2279,155 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
             messageInput.placeholder = 'Type a message...';
         }
       },
+
+      // NEW METHOD - Toggle Dark Mode
+      toggleDarkMode() {
+        if( window.isDebugging ) console.log('🌙 [Widget] Toggling dark mode');
+        
+        // Toggle the dark mode state
+        this.isDarkMode = !this.isDarkMode;
+        
+        // Save preference to localStorage
+        try {
+          localStorage.setItem('pingbash_dark_mode', JSON.stringify(this.isDarkMode));
+        } catch (error) {
+          if( window.isDebugging ) console.log('❌ [Widget] Error saving dark mode preference:', error);
+        }
+        
+        // Apply dark mode to the widget
+        this.applyDarkMode();
+        
+        // Update toggle icons and text
+        this.updateDarkModeToggle();
+        
+        if( window.isDebugging ) console.log('🌙 [Widget] Dark mode toggled:', this.isDarkMode ? 'ON' : 'OFF');
+      },
+
+      // NEW METHOD - Apply Dark Mode Styling
+      applyDarkMode() {
+        if (!this.dialog) return;
+        
+        if (this.isDarkMode) {
+          this.dialog.classList.add('pingbash-dark-mode');
+          document.documentElement.setAttribute('data-pingbash-theme', 'dark');
+        } else {
+          this.dialog.classList.remove('pingbash-dark-mode');
+          document.documentElement.setAttribute('data-pingbash-theme', 'light');
+        }
+        
+        // Apply to any existing modals/popups
+        const modals = document.querySelectorAll([
+          '.pingbash-signin-modal',
+          '.pingbash-signup-modal', 
+          '.pingbash-verification-modal',
+          '.pingbash-chat-rules-popup',
+          '.pingbash-sound-popup',
+          '.pingbash-group-creation-modal-body',
+          '.pingbash-edit-style-modal-body',
+          '.pingbash-user-search-modal'
+        ].join(','));
+        
+        modals.forEach(modal => {
+          if (this.isDarkMode) {
+            modal.classList.add('pingbash-dark-mode');
+          } else {
+            modal.classList.remove('pingbash-dark-mode');
+          }
+        });
+      },
+
+      // NEW METHOD - Update Dark Mode Toggle UI
+      updateDarkModeToggle() {
+        const lightIcons = this.dialog.querySelectorAll('.pingbash-theme-icon-light');
+        const darkIcons = this.dialog.querySelectorAll('.pingbash-theme-icon-dark'); 
+        const themeTexts = this.dialog.querySelectorAll('.pingbash-theme-text');
+        
+        lightIcons.forEach(icon => {
+          icon.style.display = this.isDarkMode ? 'none' : 'inline';
+        });
+        
+        darkIcons.forEach(icon => {
+          icon.style.display = this.isDarkMode ? 'inline' : 'none';
+        });
+        
+        themeTexts.forEach(text => {
+          text.textContent = this.isDarkMode ? 'Light Mode' : 'Dark Mode';
+        });
+      },
+
+      // NEW METHOD - Initialize Dark Mode from localStorage
+      initializeDarkMode() {
+        // Load dark mode preference from localStorage
+        try {
+          const savedDarkMode = localStorage.getItem('pingbash_dark_mode');
+          this.isDarkMode = savedDarkMode ? JSON.parse(savedDarkMode) : false;
+        } catch (error) {
+          if( window.isDebugging ) console.log('❌ [Widget] Error loading dark mode preference:', error);
+          this.isDarkMode = false;
+        }
+        
+              // Apply the mode and update UI
+      this.applyDarkMode();
+      this.updateDarkModeToggle();
+      
+      // Set up observer for dynamically created modals
+      this.setupDarkModeObserver();
+      
+      if( window.isDebugging ) console.log('🌙 [Widget] Dark mode initialized:', this.isDarkMode ? 'ON' : 'OFF');
+    },
+
+    // NEW METHOD - Apply dark mode to a specific element (for dynamically created modals)
+    applyDarkModeToElement(element) {
+      if (!element) return;
+      
+      if (this.isDarkMode) {
+        element.classList.add('pingbash-dark-mode');
+      } else {
+        element.classList.remove('pingbash-dark-mode');
+      }
+    },
+
+    // NEW METHOD - Set up observer to watch for new modals
+    setupDarkModeObserver() {
+      if (this.darkModeObserver) {
+        this.darkModeObserver.disconnect();
+      }
+      
+      this.darkModeObserver = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+          mutation.addedNodes.forEach((node) => {
+            if (node.nodeType === 1) { // Element node
+              // Check if it's a modal or contains modals
+              const modalSelectors = [
+                '.pingbash-signin-modal',
+                '.pingbash-signup-modal', 
+                '.pingbash-verification-modal',
+                '.pingbash-chat-rules-popup',
+                '.pingbash-sound-popup',
+                '.pingbash-group-creation-modal-body',
+                '.pingbash-edit-style-modal-body',
+                '.pingbash-user-search-modal'
+              ];
+              
+              modalSelectors.forEach(selector => {
+                if (node.matches && node.matches(selector)) {
+                  this.applyDarkModeToElement(node);
+                } else if (node.querySelector) {
+                  const childModals = node.querySelectorAll(selector);
+                  childModals.forEach(modal => this.applyDarkModeToElement(modal));
+                }
+              });
+            }
+          });
+        });
+      });
+      
+      // Start observing
+      this.darkModeObserver.observe(document.body, {
+        childList: true,
+        subtree: true
+      });
+    },
 
   });
 }

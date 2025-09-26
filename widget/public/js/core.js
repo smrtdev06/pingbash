@@ -17,6 +17,10 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
 
             this.createWidget();
             this.applyStyles();
+            
+            // Initialize dark mode preference
+            this.initializeDarkMode();
+            
             await this.loadSocketIO();
 
             // Setup page visibility tracking (same as W version)
