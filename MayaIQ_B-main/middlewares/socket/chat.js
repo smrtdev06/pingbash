@@ -687,14 +687,38 @@ module.exports = (socket, users) => {
                 return;
             }
 
-            // RULE 2: Only Group Master (creator) can ban users
+            // RULE 2: Group creator OR moderators with ban_user permission can ban users
             const groupInfo = await Controller.getGroup(groupId);
-            if (!groupInfo || groupInfo.creater_id !== senderId) {
-                console.log(`Ban attempt blocked: User ${senderId} is not the group master of group ${groupId} (creator: ${groupInfo?.creater_id})`);
-                socket.emit(chatCode.FORBIDDEN, "Only the group creator can ban users");
+            if (!groupInfo) {
+                console.log(`Ban attempt blocked: Group ${groupId} not found`);
+                socket.emit(chatCode.FORBIDDEN, "Group not found");
                 return;
             }
-            console.log(`✅ Group Master ${senderId} authorized to ban users in group ${groupId}`);
+
+            // Check if sender is group creator
+            const isGroupCreator = groupInfo.creater_id === senderId;
+            
+            // Check if sender is a moderator with ban_user permission
+            let isModerator = false;
+            let hasBanPermission = false;
+            
+            if (!isGroupCreator && groupInfo.members) {
+                // Find sender in group members
+                const senderMember = groupInfo.members.find(member => member.id === senderId);
+                if (senderMember && senderMember.role_id === 2) {
+                    isModerator = true;
+                    hasBanPermission = senderMember.ban_user === true;
+                }
+            }
+            
+            const canBan = isGroupCreator || (isModerator && hasBanPermission);
+            
+            if (!canBan) {
+                console.log(`Ban attempt blocked: User ${senderId} is not authorized to ban users in group ${groupId}. Creator: ${isGroupCreator}, Moderator: ${isModerator}, HasBanPerm: ${hasBanPermission}`);
+                socket.emit(chatCode.FORBIDDEN, "Only the group creator or moderators with ban permission can ban users");
+                return;
+            }
+            console.log(`✅ User ${senderId} authorized to ban users in group ${groupId} (Creator: ${isGroupCreator}, Moderator: ${isModerator})`);
 
             if (!users.find(user => user.ID == senderId)) {
                 users.push({ ID: senderId, Socket: socket.id });
@@ -929,12 +953,38 @@ module.exports = (socket, users) => {
             const senderId = verifyUser(data.token);
             const { userId, groupId} = data;
 
-            // Check if sender is group creator
+                        // Check if sender is group creator or moderator with ban_user permission
             const groupInfo = await Controller.getGroup(groupId);
-            if (!groupInfo || groupInfo.creater_id !== senderId) {
-                            socket.emit(chatCode.FORBIDDEN, "Only the group creator can timeout users");
-            return;
-        }
+            if (!groupInfo) {
+                console.log(`Timeout attempt blocked: Group ${groupId} not found`);
+                socket.emit(chatCode.FORBIDDEN, "Group not found");
+                return;
+            }
+
+            // Check if sender is group creator
+            const isGroupCreator = groupInfo.creater_id === senderId;
+            
+            // Check if sender is a moderator with ban_user permission
+            let isModerator = false;
+            let hasBanPermission = false;
+            
+            if (!isGroupCreator && groupInfo.members) {
+                // Find sender in group members
+                const senderMember = groupInfo.members.find(member => member.id === senderId);
+                if (senderMember && senderMember.role_id === 2) {
+                    isModerator = true;
+                    hasBanPermission = senderMember.ban_user === true;
+                }
+            }
+            
+            const canTimeout = isGroupCreator || (isModerator && hasBanPermission);
+            
+            if (!canTimeout) {
+                console.log(`Timeout attempt blocked: User ${senderId} is not authorized to timeout users in group ${groupId}. Creator: ${isGroupCreator}, Moderator: ${isModerator}, HasBanPerm: ${hasBanPermission}`);
+                socket.emit(chatCode.FORBIDDEN, "Only the group creator or moderators with ban permission can timeout users");
+                return;
+            }
+            console.log(`✅ User ${senderId} authorized to timeout users in group ${groupId} (Creator: ${isGroupCreator}, Moderator: ${isModerator})`);
 
         // Fix: Ensure userId is parsed as integer for proper comparison
         const targetUserId = parseInt(userId);

@@ -828,7 +828,7 @@ class PingbashChatElement extends HTMLElement {
     messageEl.innerHTML = `
       <div class="message-content">
         <div class="message-header">
-          <span class="sender-name">${senderName}</span>
+          <span class="sender-name">${senderName}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
           <span class="message-time">${timeStr}</span>
         </div>
         <div class="message-text">${this.escapeHtml(message.Content)}</div>
