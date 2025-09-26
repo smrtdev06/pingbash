@@ -248,10 +248,17 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
           
           // Hide loading state on permissions save button if it exists
           const saveBtn = this.dialog.querySelector('.pingbash-mod-permissions-save');
-          this.setButtonLoading(saveBtn, false);
+          if (saveBtn && this.setButtonLoading) {
+            this.setButtonLoading(saveBtn, false);
+          }
           
           // Hide permissions popup if it's open
-          this.hideModeratorPermissionsPopup();
+          const permissionsPopup = this.dialog.querySelector('.pingbash-mod-permissions-popup');
+          if (permissionsPopup && permissionsPopup.style.display === 'flex') {
+            if (this.hideModeratorPermissionsPopup) {
+              this.hideModeratorPermissionsPopup();
+            }
+          }
         }
 
         if (oldModerators.length !== newModerators.length) {

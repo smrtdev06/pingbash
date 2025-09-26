@@ -597,15 +597,17 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         actions.push(`<button class="pingbash-message-action block" onclick="window.pingbashWidget.blockUser(${message.Sender_Id})" title="Block User">🚫</button>`);
       }
 
-      // TIMEOUT PERMISSION: Only Group creator can timeout users (backend restriction)
+      // TIMEOUT PERMISSION: Group creator OR moderators with ban_user permission can timeout users
       // But NOT against other mods/admins and NOT if target is already timed out
-      if ((this.group?.creater_id === currentUserId) && senderInfo?.role_id !== 1 && senderInfo?.role_id !== 2 && !senderInfo?.is_timed_out) {
+      const canTimeout = (this.group?.creater_id === currentUserId) || (myMemInfo?.role_id === 2 && myMemInfo?.ban_user === true);
+      if (canTimeout && senderInfo?.role_id !== 1 && senderInfo?.role_id !== 2 && !senderInfo?.is_timed_out) {
         actions.push(`<button class="pingbash-message-action timeout" onclick="window.pingbashWidget.timeoutUser(${message.Sender_Id})" title="Timeout User">⏰</button>`);
       }
 
       // BAN PERMISSION: Group creator OR moderators with ban_user permission - F version line 198 + ban_user flag
-      if ((this.group?.creater_id === currentUserId || (myMemInfo?.role_id === 2 && myMemInfo?.ban_user === true)) && senderInfo?.role_id !== 1 && senderInfo?.role_id !== 2) {
-        actions.push(`<button class="pingbash-message-action ban" onclick="window.pingbashWidget.banUser(${message.Sender_Id})" title="Ban User">⛔</button>`);
+      const canBan = (this.group?.creater_id === currentUserId) || (myMemInfo?.role_id === 2 && myMemInfo?.ban_user === true);
+      if (canBan && senderInfo?.role_id !== 1 && senderInfo?.role_id !== 2) {
+        actions.push(`<button class="pingbash-message-action ban" onclick="window.pingbashWidget.banUser(${message.Sender_Id})" title="Ban User">🔨</button>`);
       }
 
       if( window.isDebugging ) console.log('🔍 [Widget] Message actions for user', message.Sender_Id, ':', {
@@ -1489,19 +1491,23 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
           return;
         }
         
-        // RULE 2: Only Group Creator can timeout users (backend restriction)
-        const canTimeout = (this.group?.creater_id === currentUserId);
+        // RULE 2: Group Creator OR moderators with ban_user permission can timeout users
+        const myMemInfo = this.group?.members?.find(user => user.id === currentUserId);
+        const canTimeout = (this.group?.creater_id === currentUserId) || (myMemInfo?.role_id === 2 && myMemInfo?.ban_user === true);
         
         if( window.isDebugging ) console.log('⏰ [Widget] Permission check:', {
           groupCreatorId: this.group?.creater_id,
           currentUserId: currentUserId,
           isCreator: this.group?.creater_id === currentUserId,
+          myMemInfo: myMemInfo,
+          isModerator: myMemInfo?.role_id === 2,
+          hasBanPermission: myMemInfo?.ban_user === true,
           canTimeout: canTimeout,
           groupExists: !!this.group
         });
         
         if (!canTimeout) {
-          ////alert("Only the group creator can timeout users");
+          ////alert("You don't have permission to timeout users");
           return;
         }
         

@@ -197,9 +197,9 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
 
         // Sound popup
         const soundPopup = this.dialog.querySelector('.pingbash-sound-popup');
-        const soundCloseBtn = this.dialog.querySelector('.pingbash-popup-close');
-        const soundOkBtn = this.dialog.querySelector('.pingbash-sound-ok-btn');
-        const soundOverlay = this.dialog.querySelector('.pingbash-popup-overlay');
+        const soundCloseBtn = soundPopup?.querySelector('.pingbash-popup-close');
+        const soundOkBtn = soundPopup?.querySelector('.pingbash-sound-ok-btn');
+        const soundOverlay = soundPopup?.querySelector('.pingbash-popup-overlay');
 
         soundCloseBtn?.addEventListener('click', () => this.hideSoundSettings());
         soundOkBtn?.addEventListener('click', () => this.saveSoundSettings());
