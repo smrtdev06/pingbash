@@ -714,6 +714,19 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         if( window.isDebugging ) console.log('🚫 [Widget] User input disabled due to ban');
       });
 
+      // Handle group notification
+      this.socket.on('send group notify', (data) => {
+        if( window.isDebugging ) console.log('📢 [Widget] Group notification received:', data);
+        
+        if (typeof data === 'string') {
+          // Success response from server
+          if( window.isDebugging ) console.log('📢 [Widget] Group notification response:', data);
+        } else if (data && data.message) {
+          // Notification data with message
+          this.showGroupNotificationDialog(data.message, data.senderName || 'Group Admin');
+        }
+      });
+
       // Pin message socket response
       this.socket.on('pin message', (response) => {
         if( window.isDebugging ) console.log('📌 [Widget] Pin message response:', response);

@@ -1581,6 +1581,63 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         }, 1000);
       },
 
+      // Show group notification dialog (when receiving notification)
+      showGroupNotificationDialog(message, senderName) {
+        if( window.isDebugging ) console.log('📢 [Widget] Showing group notification dialog:', { message, senderName });
+        
+        // Create modal HTML
+        const modalHtml = `
+          <div class="pingbash-group-notification-dialog" style="display: flex;">
+            <div class="pingbash-popup-overlay"></div>
+            <div class="pingbash-popup-content" style="max-width: 500px;">
+              <div class="pingbash-popup-header">
+                <h3>📢 Group Notification</h3>
+                <button class="pingbash-popup-close">×</button>
+              </div>
+              <div class="pingbash-popup-body">
+                <div class="pingbash-notification-sender">
+                  <strong>From: ${senderName}</strong>
+                </div>
+                <div class="pingbash-notification-message-display">
+                  ${message}
+                </div>
+                <div class="pingbash-notification-actions">
+                  <button class="pingbash-notification-ok-btn">OK</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+        
+        // Remove existing notification dialog if present
+        const existingDialog = document.querySelector('.pingbash-group-notification-dialog');
+        if (existingDialog) {
+          existingDialog.remove();
+        }
+        
+        // Add to body
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+        
+        // Add event listeners
+        const dialog = document.querySelector('.pingbash-group-notification-dialog');
+        const closeBtn = dialog.querySelector('.pingbash-popup-close');
+        const okBtn = dialog.querySelector('.pingbash-notification-ok-btn');
+        const overlay = dialog.querySelector('.pingbash-popup-overlay');
+        
+        const closeDialog = () => {
+          if (dialog) {
+            dialog.remove();
+          }
+        };
+        
+        closeBtn?.addEventListener('click', closeDialog);
+        okBtn?.addEventListener('click', closeDialog);
+        overlay?.addEventListener('click', closeDialog);
+        
+        // Auto-close after 10 seconds
+        setTimeout(closeDialog, 10000);
+      },
+
       // EXACT COPY from widget.js - attachMentionOverlayListener method
       attachMentionOverlayListener() {
         const mentionModal = this.dialog.querySelector('.pingbash-mention-modal');

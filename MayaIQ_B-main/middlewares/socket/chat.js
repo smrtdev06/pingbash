@@ -1776,27 +1776,26 @@ module.exports = (socket, users) => {
                 groupId, 
                 message
             );
-            const receiverEmails = await Controller.getReceiverEmailsOfGroup(groupId);
-            console.log("receiverEmails ====", receiverEmails)
-            // Controller.sendNotificationEamil(receiverEmails, message)
-            const receivers = await Controller.getReceiverIdsOfGroup(groupId);
-            for (const receiverId of receivers) {
-            // receivers.forEach(async receiverId => {
-                if (receiverId < 1000000 && receiverId != senderId) {
-                    const receiver = users.find(u => u.ID == receiverId)
-                    const receiverSocketId = receiver?.Socket
-                    if (receiver && receiverSocketId) {                        
-                        const receiverSocket = sockets[receiverSocketId]
-                        
-                        // const lastMsg = await Controller.getLastMessage(senderId, receiverId)
-                        const msgList = await Controller.getMsg(senderId, receiverId);                        
-                        if (receiverSocket && msgList) {
-                            receiverSocket.emit(chatCode.SEND_MSG, msgList)
-                        }
-                    }                    
-                }
-            }
+            // Get sender name for the notification (simplified)
+            const senderName = 'Group Admin'; // Could be enhanced to get actual user name
+
+            // Use Socket.IO rooms to broadcast notification to ALL users in the group
+            const roomName = `group_${groupId}`;
+            console.log(`📢 [BROADCAST] Sending group notification to room: ${roomName}`);
+            console.log(`📢 [BROADCAST] Notification from ${senderName}: ${message}`);
+
+            // Broadcast to all sockets in the group room (except sender)
+            socket.to(roomName).emit(chatCode.SEND_GROUP_NOTIFY, {
+                message: message,
+                senderName: senderName,
+                groupId: groupId,
+                senderId: senderId
+            });
+
+            // Send success response to sender
             socket.emit(chatCode.SEND_GROUP_NOTIFY, "Sent Notification successfully.")
+
+            console.log(`📢 [BROADCAST] Group notification sent to all users in group ${groupId}`);
         } catch (error) {
             console.error("Error sending message:", error);
             socket.emit(chatCode.SERVER_ERROR, httpCode.SERVER_ERROR);

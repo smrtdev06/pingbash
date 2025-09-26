@@ -5700,6 +5700,214 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
           color: #666;
           font-size: 14px;
         }
+
+        /* Send Notification Modal Styles */
+        .pingbash-notification-modal .pingbash-popup-content {
+          width: 90%;
+          max-width: 600px;
+          background: white;
+          border-radius: 12px;
+          box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+          position: relative;
+          max-height: 80vh;
+          overflow-y: auto;
+        }
+
+        .pingbash-notification-form {
+          display: flex;
+          flex-direction: column;
+          gap: 20px;
+        }
+
+        .pingbash-notification-textarea {
+          width: 100%;
+          min-height: 120px;
+          padding: 12px;
+          border: 2px solid #e1e5e9;
+          border-radius: 8px;
+          font-family: inherit;
+          font-size: 14px;
+          resize: vertical;
+          box-sizing: border-box;
+        }
+
+        .pingbash-notification-textarea:focus {
+          outline: none;
+          border-color: #007bff;
+          box-shadow: 0 0 0 3px rgba(0,123,255,0.1);
+        }
+
+        .pingbash-char-counter {
+          text-align: right;
+          font-size: 12px;
+          color: #6c757d;
+          margin-top: 5px;
+        }
+
+        .pingbash-char-count.over-limit {
+          color: #dc3545;
+          font-weight: bold;
+        }
+
+        .pingbash-notification-preview {
+          border: 1px solid #e1e5e9;
+          border-radius: 8px;
+          padding: 15px;
+          background: #f8f9fa;
+        }
+
+        .pingbash-notification-preview h4 {
+          margin: 0 0 10px 0;
+          font-size: 14px;
+          color: #495057;
+        }
+
+        .pingbash-notification-preview-content {
+          background: white;
+          border: 1px solid #dee2e6;
+          border-radius: 6px;
+          padding: 12px;
+          min-height: 40px;
+        }
+
+        .pingbash-notification-preview-message {
+          font-size: 14px;
+          color: #6c757d;
+          font-style: italic;
+        }
+
+        .pingbash-notification-preview-message.has-content {
+          color: #333;
+          font-style: normal;
+          white-space: pre-wrap;
+        }
+
+        .pingbash-notification-buttons {
+          display: flex;
+          gap: 10px;
+          justify-content: flex-end;
+          margin-top: 20px;
+        }
+
+        .pingbash-notification-cancel-btn {
+          padding: 10px 20px;
+          border: 2px solid #6c757d;
+          background: white;
+          color: #6c757d;
+          border-radius: 6px;
+          cursor: pointer;
+          font-size: 14px;
+          font-weight: 500;
+          transition: all 0.2s ease;
+        }
+
+        .pingbash-notification-cancel-btn:hover {
+          background: #6c757d;
+          color: white;
+        }
+
+        .pingbash-notification-send-btn {
+          padding: 10px 20px;
+          border: 2px solid #007bff;
+          background: #007bff;
+          color: white;
+          border-radius: 6px;
+          cursor: pointer;
+          font-size: 14px;
+          font-weight: 500;
+          transition: all 0.2s ease;
+        }
+
+        .pingbash-notification-send-btn:disabled {
+          background: #e9ecef;
+          border-color: #e9ecef;
+          color: #6c757d;
+          cursor: not-allowed;
+        }
+
+        .pingbash-notification-send-btn:not(:disabled):hover {
+          background: #0056b3;
+          border-color: #0056b3;
+        }
+
+        .pingbash-notification-send-btn.sending {
+          background: #28a745;
+          border-color: #28a745;
+        }
+
+        /* Group Notification Dialog Styles */
+        .pingbash-group-notification-dialog {
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          z-index: 999999;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          animation: fadeIn 0.3s ease;
+        }
+
+        .pingbash-group-notification-dialog .pingbash-popup-overlay {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background: rgba(0, 0, 0, 0.5);
+          backdrop-filter: blur(2px);
+        }
+
+        .pingbash-group-notification-dialog .pingbash-popup-content {
+          background: white;
+          border-radius: 12px;
+          box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+          position: relative;
+          animation: slideInScale 0.3s ease;
+          margin: 20px;
+          max-width: 500px;
+          width: 90%;
+        }
+
+        .pingbash-notification-sender {
+          margin-bottom: 15px;
+          color: #007bff;
+          font-size: 14px;
+        }
+
+        .pingbash-notification-message-display {
+          background: #f8f9fa;
+          border: 1px solid #e9ecef;
+          border-radius: 8px;
+          padding: 15px;
+          margin-bottom: 20px;
+          font-size: 14px;
+          line-height: 1.5;
+          white-space: pre-wrap;
+          word-wrap: break-word;
+        }
+
+        .pingbash-notification-actions {
+          display: flex;
+          justify-content: center;
+        }
+
+        .pingbash-notification-ok-btn {
+          padding: 10px 30px;
+          background: #007bff;
+          color: white;
+          border: none;
+          border-radius: 6px;
+          cursor: pointer;
+          font-size: 14px;
+          font-weight: 500;
+          transition: background 0.2s ease;
+        }
+
+        .pingbash-notification-ok-btn:hover {
+          background: #0056b3;
+        }
       `;
   
       document.head.appendChild(style);
