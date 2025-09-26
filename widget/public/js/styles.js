@@ -617,8 +617,16 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
         }
         
         /* Filter Options Dark Mode */
+        .pingbash-dark-mode .pingbash-filter-option {
+          color: var(--dark-text-primary) !important;
+        }
+        
         .pingbash-dark-mode .pingbash-filter-option:hover {
           background: var(--dark-bg-hover) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-filter-option label {
+          color: var(--dark-text-primary) !important;
         }
         
         /* Message Actions Dark Mode */
@@ -1107,6 +1115,14 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
         
         .pingbash-message-action.timeout:hover {
           background: rgba(255, 152, 0, 0.1) !important;
+        }
+        
+        .pingbash-message-action.delete {
+          color: #e91e63 !important;
+        }
+        
+        .pingbash-message-action.delete:hover {
+          background: rgba(233, 30, 99, 0.1) !important;
         }
         
         /* W Version Bottom Bar Styling */
@@ -2331,6 +2347,238 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
         
         .pingbash-emoji:hover {
           background: #f0f0f0 !important;
+        }
+        
+        /* Enhanced Emoji Picker Styles */
+        .pingbash-emoji-popup-content {
+          max-width: 420px !important;
+          width: 90vw !important;
+          max-height: 500px !important;
+        }
+        
+        .pingbash-emoji-header {
+          display: flex !important;
+          padding: 12px !important;
+          border-bottom: 1px solid #e0e0e0 !important;
+          gap: 8px !important;
+          align-items: center !important;
+        }
+        
+        .pingbash-emoji-search {
+          flex: 1 !important;
+          padding: 8px 12px !important;
+          border: 1px solid #e0e0e0 !important;
+          border-radius: 20px !important;
+          outline: none !important;
+          font-size: 14px !important;
+        }
+        
+        .pingbash-emoji-search:focus {
+          border-color: #007bff !important;
+          box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25) !important;
+        }
+        
+        .pingbash-emoji-close {
+          background: #f5f5f5 !important;
+          border: none !important;
+          border-radius: 50% !important;
+          width: 32px !important;
+          height: 32px !important;
+          display: flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          cursor: pointer !important;
+          font-size: 18px !important;
+          color: #666 !important;
+        }
+        
+        .pingbash-emoji-close:hover {
+          background: #e0e0e0 !important;
+        }
+        
+        .pingbash-emoji-tabs {
+          display: flex !important;
+          padding: 8px 12px !important;
+          gap: 4px !important;
+          border-bottom: 1px solid #e0e0e0 !important;
+          background: #f8f9fa !important;
+          overflow-x: auto !important;
+        }
+        
+        .pingbash-emoji-tab {
+          background: none !important;
+          border: none !important;
+          padding: 8px 12px !important;
+          border-radius: 8px !important;
+          cursor: pointer !important;
+          font-size: 18px !important;
+          transition: all 0.2s ease !important;
+          min-width: 44px !important;
+          height: 44px !important;
+          display: flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+        }
+        
+        .pingbash-emoji-tab:hover {
+          background: rgba(0, 123, 255, 0.1) !important;
+        }
+        
+        .pingbash-emoji-tab.active {
+          background: #007bff !important;
+          color: white !important;
+        }
+        
+        .pingbash-emoji-tab[data-category="gifs"] {
+          font-size: 12px !important;
+          font-weight: 600 !important;
+        }
+        
+        .pingbash-emoji-content {
+          flex: 1 !important;
+          overflow-y: auto !important;
+          padding: 12px !important;
+        }
+        
+        .pingbash-gif-grid {
+          display: flex !important;
+          flex-direction: column !important;
+          align-items: center !important;
+          justify-content: center !important;
+          height: 100% !important;
+          text-align: center !important;
+          color: #666 !important;
+        }
+        
+        .pingbash-gif-placeholder p {
+          margin: 8px 0 !important;
+          font-size: 14px !important;
+        }
+
+        /* Send Notification Modal Styles */
+        .pingbash-notification-modal .pingbash-popup-content {
+          max-width: 500px !important;
+          width: 90vw !important;
+        }
+        
+        .pingbash-notification-form {
+          display: flex !important;
+          flex-direction: column !important;
+          gap: 20px !important;
+        }
+        
+        .pingbash-notification-textarea {
+          width: 100% !important;
+          min-height: 100px !important;
+          padding: 12px !important;
+          border: 2px solid #e0e0e0 !important;
+          border-radius: 8px !important;
+          font-family: inherit !important;
+          font-size: 14px !important;
+          line-height: 1.4 !important;
+          resize: vertical !important;
+          outline: none !important;
+          transition: border-color 0.2s ease !important;
+        }
+        
+        .pingbash-notification-textarea:focus {
+          border-color: #007bff !important;
+          box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1) !important;
+        }
+        
+        .pingbash-char-counter {
+          text-align: right !important;
+          font-size: 12px !important;
+          color: #666 !important;
+          margin-top: 4px !important;
+        }
+        
+        .pingbash-char-count.over-limit {
+          color: #dc3545 !important;
+          font-weight: 600 !important;
+        }
+        
+        .pingbash-notification-preview {
+          background: #f8f9fa !important;
+          border: 1px solid #e0e0e0 !important;
+          border-radius: 8px !important;
+          padding: 16px !important;
+        }
+        
+        .pingbash-notification-preview h4 {
+          margin: 0 0 12px 0 !important;
+          font-size: 14px !important;
+          color: #495057 !important;
+          font-weight: 600 !important;
+        }
+        
+        .pingbash-notification-preview-content {
+          background: white !important;
+          border: 1px solid #dee2e6 !important;
+          border-radius: 6px !important;
+          padding: 12px !important;
+          min-height: 60px !important;
+        }
+        
+        .pingbash-notification-preview-message {
+          font-size: 14px !important;
+          line-height: 1.4 !important;
+          color: #495057 !important;
+          font-style: italic !important;
+        }
+        
+        .pingbash-notification-preview-message.has-content {
+          font-style: normal !important;
+          color: #212529 !important;
+        }
+        
+        .pingbash-notification-buttons {
+          display: flex !important;
+          gap: 12px !important;
+          justify-content: flex-end !important;
+        }
+        
+        .pingbash-notification-cancel-btn {
+          background: #6c757d !important;
+          color: white !important;
+          border: none !important;
+          padding: 10px 20px !important;
+          border-radius: 6px !important;
+          cursor: pointer !important;
+          font-size: 14px !important;
+          font-weight: 500 !important;
+          transition: background-color 0.2s ease !important;
+        }
+        
+        .pingbash-notification-cancel-btn:hover {
+          background: #5a6268 !important;
+        }
+        
+        .pingbash-notification-send-btn {
+          background: #007bff !important;
+          color: white !important;
+          border: none !important;
+          padding: 10px 20px !important;
+          border-radius: 6px !important;
+          cursor: pointer !important;
+          font-size: 14px !important;
+          font-weight: 500 !important;
+          transition: all 0.2s ease !important;
+        }
+        
+        .pingbash-notification-send-btn:disabled {
+          background: #ccc !important;
+          cursor: not-allowed !important;
+          opacity: 0.6 !important;
+        }
+        
+        .pingbash-notification-send-btn:not(:disabled):hover {
+          background: #0056b3 !important;
+        }
+        
+        .pingbash-notification-send-btn.sending {
+          background: #28a745 !important;
+          cursor: wait !important;
         }
   
         /* @ Mention Styles */

@@ -679,6 +679,41 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         }
       });
 
+      // Handle deleted group message
+      this.socket.on('delete group msg', (messageId) => {
+        if( window.isDebugging ) console.log('🗑️ [Widget] Message deleted:', messageId);
+        
+        // Remove the message from the UI
+        const messageElement = this.dialog?.querySelector(`[data-message-id="${messageId}"]`);
+        if (messageElement) {
+          messageElement.remove();
+          if( window.isDebugging ) console.log('🗑️ [Widget] Message element removed from UI');
+        }
+      });
+
+      // Handle ban notification
+      this.socket.on('user ban notification', (data) => {
+        if( window.isDebugging ) console.log('🚫 [Widget] Ban notification received:', data);
+        
+        // Display ban notification as a persistent alert-style message
+        this.displayBanNotification(data.message);
+        
+        // Disable message input
+        const messageInput = this.dialog?.querySelector('.pingbash-message-input');
+        const sendBtn = this.dialog?.querySelector('.pingbash-send-btn');
+        
+        if (messageInput) {
+          messageInput.disabled = true;
+          messageInput.placeholder = 'You have been banned from this group';
+        }
+        
+        if (sendBtn) {
+          sendBtn.disabled = true;
+        }
+        
+        if( window.isDebugging ) console.log('🚫 [Widget] User input disabled due to ban');
+      });
+
       // Pin message socket response
       this.socket.on('pin message', (response) => {
         if( window.isDebugging ) console.log('📌 [Widget] Pin message response:', response);

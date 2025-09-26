@@ -557,6 +557,29 @@ module.exports = async (http) => {
                             }
                         }
 
+                        // Add user to users list if not already present for real-time messaging
+                        if (!users.find(user => user.ID == loggedId)) {
+                            console.log(`🔗 [GET_MSG] Adding user ${loggedId} to socket tracking for real-time messages`);
+                            users.push({ ID: loggedId, Socket: socket.id });
+                            sockets[socket.id] = socket;
+                        } else {
+                            console.log(`🔗 [GET_MSG] User ${loggedId} already in socket tracking, updating socket ID`);
+                            // Update socket ID in case user reconnected
+                            const existingUser = users.find(user => user.ID == loggedId);
+                            if (existingUser) {
+                                existingUser.Socket = socket.id;
+                                sockets[socket.id] = socket;
+                            }
+                        }
+                        
+                        // Join socket room for real-time updates (chat limitations, clear chat, etc.)
+                        try {
+                            socket.join(`group_${data.groupId}`);
+                            console.log(`🔗 [GET_MSG] User ${loggedId} joined socket room: group_${data.groupId}`);
+                        } catch (error) {
+                            console.log(`🔗 [GET_MSG] Failed to join socket room for user ${loggedId}:`, error.message);
+                        }
+
                         // Retrieve group messages
                         const groupMessages = await Controller.getGroupMsg(data.groupId);
 

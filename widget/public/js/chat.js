@@ -87,9 +87,12 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
           if( window.isDebugging ) console.log('🔍 [Widget] Page visible - adding messages immediately');
           if( window.isDebugging ) console.log('🔍 [Widget] Before processing - existing:', this.messages?.length || 0, 'new:', data.length);
   
-          // Don't merge here - let displayMessages handle the logic
+                    // Don't merge here - let displayMessages handle the logic
           this.displayMessages(data);
-  
+
+          // Play notification sound for new messages
+          this.playMessageSound(data);
+
           if( window.isDebugging ) console.log('🔍 [Widget] ✅ Messages updated and displayed immediately');
         } else {
           if( window.isDebugging ) console.log('🔍 [Widget] Page hidden - queuing messages for later');
@@ -608,6 +611,12 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
       const canBan = (this.group?.creater_id === currentUserId) || (myMemInfo?.role_id === 2 && myMemInfo?.ban_user === true);
       if (canBan && senderInfo?.role_id !== 1 && senderInfo?.role_id !== 2) {
         actions.push(`<button class="pingbash-message-action ban" onclick="window.pingbashWidget.banUser(${message.Sender_Id})" title="Ban User">🔨</button>`);
+      }
+
+      // DELETE MESSAGE PERMISSION: Group creator OR moderators can delete messages
+      const canDeleteMessage = (this.group?.creater_id === currentUserId) || (myMemInfo?.role_id === 2);
+      if (canDeleteMessage) {
+        actions.push(`<button class="pingbash-message-action delete" onclick="window.pingbashWidget.deleteMessage(${message.Id})" title="Delete Message">🗑️</button>`);
       }
 
       if( window.isDebugging ) console.log('🔍 [Widget] Message actions for user', message.Sender_Id, ':', {
@@ -1149,8 +1158,11 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
               const isPublicMessage = msg.Receiver_Id == null; // Include public messages (anonymous users)
               const isOwnMessage = msg.Sender_Id == currentUserId;
               
-              // Show direct messages between users + public messages + own messages (same as F version)
-              const shouldShow = isToSelectedUser || isFromSelectedUser || isPublicMessage || isOwnMessage;
+              // Exclude mods-mode messages from 1on1 view (prevent duplication)
+              const isModsMessage = this.isModsMessage(msg, currentUserId);
+              
+              // Show direct messages between users + public messages + own messages (but NOT mods messages)
+              const shouldShow = (isToSelectedUser || isFromSelectedUser || isPublicMessage || isOwnMessage) && !isModsMessage;
               if (isToSelectedUser || isFromSelectedUser) {
                 if( window.isDebugging ) console.log('🔍 [Widget] 1-on-1 private message:', {
                   msgId: msg.Id,
@@ -1238,6 +1250,30 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
           return parseInt(this.anonId);
         }
         return null;
+      },
+
+      // Helper method to detect mods-mode messages
+      isModsMessage(msg, currentUserId) {
+        if (!msg || !this.group || !this.group.members) return false;
+        
+        // If message has no receiver (public), it's not a mods message
+        if (!msg.Receiver_Id) return false;
+        
+        // Check if receiver is a moderator or admin (role_id 1 or 2)
+        const receiverInfo = this.group.members.find(member => member.id === msg.Receiver_Id);
+        const isReceiverMod = receiverInfo && (receiverInfo.role_id === 1 || receiverInfo.role_id === 2);
+        
+        // Check if sender is a moderator or admin (role_id 1 or 2) 
+        const senderInfo = this.group.members.find(member => member.id === msg.Sender_Id);
+        const isSenderMod = senderInfo && (senderInfo.role_id === 1 || senderInfo.role_id === 2);
+        
+        // Fallback: if receiver is mod/admin and we're viewing in Mods mode (filterMode = 2), assume it's a Mods message
+        if (this.filterMode === 2) {
+          return isReceiverMod && isSenderMod;
+        }
+        
+        // More sophisticated check: if both sender and receiver are mods/admins, it's likely a mods message
+        return isReceiverMod && isSenderMod;
       },
 
       getFilterModeText(message) {
@@ -1479,6 +1515,44 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         setTimeout(() => {
           if( window.isDebugging ) console.log('🚫 [Widget] Ban request should have been processed by now');
         }, 3000);
+      },
+
+      // NEW METHOD - Delete Message
+      deleteMessage(messageId) {
+        if( window.isDebugging ) console.log('🗑️ [Widget] Delete message requested for ID:', messageId);
+        
+        // Confirm deletion
+        if (!confirm('Are you sure you want to delete this message?')) {
+          return;
+        }
+        
+        // Check permissions
+        const currentUserId = this.getCurrentUserId();
+        const myMemInfo = this.group?.members?.find(user => user.id === currentUserId);
+        const canDelete = (this.group?.creater_id === currentUserId) || (myMemInfo?.role_id === 2);
+        
+        if (!canDelete) {
+          alert("You don't have permission to delete messages");
+          return;
+        }
+        
+        if (!this.socket || !this.socket.connected) {
+          alert('Not connected to server');
+          return;
+        }
+        
+        // Emit delete message event
+        if( window.isDebugging ) console.log('🗑️ [Widget] Sending delete message event:', {
+          messageId: messageId,
+          groupId: this.groupId,
+          token: this.isAuthenticated ? this.authenticatedToken : `anonuser${this.config.groupName}${this.anonId}`
+        });
+        
+        this.socket.emit('delete group msg', {
+          msgId: parseInt(messageId),
+          groupId: parseInt(this.groupId),
+          token: this.isAuthenticated ? this.authenticatedToken : `anonuser${this.config.groupName}${this.anonId}`
+        });
       },
 
       timeoutUser(userId) {
@@ -1991,6 +2065,80 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
           token: this.authenticatedToken?.trim(),
           groupId: parseInt(this.groupId)
         });
+      },
+
+      // NEW METHOD - Play message notification sound
+      playMessageSound(newMessages) {
+        if (!newMessages || newMessages.length === 0) return;
+        
+        // Check if sounds are enabled
+        const soundSetting = this.getSoundSetting();
+        if (soundSetting === 'off') {
+          if( window.isDebugging ) console.log('🔊 [Widget] Sound disabled, not playing notification');
+          return;
+        }
+        
+        // Don't play sound for own messages
+        const currentUserId = this.getCurrentUserId();
+        const hasOwnMessages = newMessages.some(msg => msg.Sender_Id === currentUserId);
+        if (hasOwnMessages && newMessages.length === 1) {
+          if( window.isDebugging ) console.log('🔊 [Widget] Not playing sound for own message');
+          return;
+        }
+        
+        // Check if page is visible (don't spam sounds when page is hidden)
+        if (!this.pageVisible) {
+          if( window.isDebugging ) console.log('🔊 [Widget] Page not visible, not playing sound');
+          return;
+        }
+        
+        // Throttle sounds to prevent spam
+        const now = Date.now();
+        if (this.lastSoundTime && (now - this.lastSoundTime) < 1000) {
+          if( window.isDebugging ) console.log('🔊 [Widget] Sound throttled (too recent)');
+          return;
+        }
+        
+        this.lastSoundTime = now;
+        
+        try {
+          // Use the same sound file path as the F and W versions
+          const audio = new Audio('/sounds/sound_bell.wav');
+          audio.volume = soundSetting === 'low' ? 0.3 : soundSetting === 'medium' ? 0.6 : 1.0;
+          
+          const playPromise = audio.play();
+          if (playPromise !== undefined) {
+            playPromise.then(() => {
+              if( window.isDebugging ) console.log('🔊 [Widget] Message sound played successfully');
+            }).catch(error => {
+              if( window.isDebugging ) console.log('🔊 [Widget] Failed to play message sound:', error);
+              // This is normal if user hasn't interacted with page yet
+            });
+          }
+        } catch (error) {
+          if( window.isDebugging ) console.log('🔊 [Widget] Error playing message sound:', error);
+        }
+      },
+
+      // NEW METHOD - Get current sound setting
+      getSoundSetting() {
+        // Check localStorage first
+        try {
+          const saved = localStorage.getItem('pingbash_sound_setting');
+          if (saved) {
+            return saved;
+          }
+        } catch (error) {
+          if( window.isDebugging ) console.log('🔊 [Widget] Error reading sound setting from localStorage:', error);
+        }
+        
+        // Check instance variable
+        if (this.soundSetting) {
+          return this.soundSetting;
+        }
+        
+        // Default to medium
+        return 'medium';
       },
 
   });

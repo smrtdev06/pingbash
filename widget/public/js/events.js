@@ -742,6 +742,11 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
             if( window.isDebugging ) console.log('🌙 [Widget] Dark mode toggle clicked');
             this.toggleDarkMode();
             break;
+
+          case 'send-notification':
+            if( window.isDebugging ) console.log('📢 [Widget] Send notification clicked');
+            this.showNotificationModal();
+            break;
           case 'toggle-favorites':
             this.toggleFavorites();
             break;
@@ -1023,6 +1028,8 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
           // Only attach listeners once when showing
           this.attachEmojiListeners();
           this.attachEmojiOverlayListener();
+          this.setupEmojiSearch();
+          this.setupEmojiTabs();
         }
       },
 
@@ -1311,6 +1318,267 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         emojiOverlay.addEventListener('click', () => {
           this.hideEmojiPicker();
         });
+      },
+
+      // NEW - Setup enhanced emoji search functionality
+      setupEmojiSearch() {
+        const searchInput = this.dialog.querySelector('.pingbash-emoji-search');
+        if (!searchInput) return;
+
+        // Remove existing listener
+        searchInput.removeEventListener('input', this.handleEmojiSearch);
+        
+        // Add search listener
+        searchInput.addEventListener('input', (e) => {
+          const query = e.target.value.toLowerCase().trim();
+          this.filterEmojis(query);
+        });
+      },
+
+      // NEW - Setup emoji category tabs
+      setupEmojiTabs() {
+        const tabs = this.dialog.querySelectorAll('.pingbash-emoji-tab');
+        tabs.forEach(tab => {
+          tab.addEventListener('click', (e) => {
+            const category = e.target.dataset.category;
+            this.switchEmojiCategory(category);
+            
+            // Update active tab
+            tabs.forEach(t => t.classList.remove('active'));
+            e.target.classList.add('active');
+          });
+        });
+
+        // Close button in header
+        const closeBtn = this.dialog.querySelector('.pingbash-emoji-close');
+        closeBtn?.addEventListener('click', () => this.hideEmojiPicker());
+      },
+
+      // NEW - Filter emojis based on search
+      filterEmojis(query) {
+        const emojis = this.dialog.querySelectorAll('.pingbash-emoji');
+        let hasResults = false;
+        
+        emojis.forEach(emoji => {
+          const keywords = emoji.dataset.keywords || '';
+          const emojiChar = emoji.dataset.emoji || '';
+          
+          if (query === '' || 
+              keywords.toLowerCase().includes(query) || 
+              emojiChar.includes(query)) {
+            emoji.style.display = 'flex';
+            hasResults = true;
+          } else {
+            emoji.style.display = 'none';
+          }
+        });
+
+        // Show "no results" message if needed
+        if (!hasResults && query !== '') {
+          // Could add a "no results" message here
+          if( window.isDebugging ) console.log('😀 [Widget] No emojis found for:', query);
+        }
+      },
+
+      // NEW - Switch emoji category
+      switchEmojiCategory(category) {
+        const emojiGrid = this.dialog.querySelector('.pingbash-emoji-grid');
+        const gifGrid = this.dialog.querySelector('.pingbash-gif-grid');
+        
+        if (category === 'gifs') {
+          emojiGrid.style.display = 'none';
+          gifGrid.style.display = 'flex';
+          if( window.isDebugging ) console.log('😀 [Widget] Switched to GIFs');
+        } else {
+          emojiGrid.style.display = 'grid';
+          gifGrid.style.display = 'none';
+          
+          // Clear search when switching categories
+          const searchInput = this.dialog.querySelector('.pingbash-emoji-search');
+          if (searchInput) {
+            searchInput.value = '';
+            this.filterEmojis('');
+          }
+          if( window.isDebugging ) console.log('😀 [Widget] Switched to category:', category);
+        }
+      },
+
+      // NEW - Show notification modal
+      showNotificationModal() {
+        const modal = this.dialog.querySelector('.pingbash-notification-modal');
+        if (!modal) return;
+
+        // Reset the modal
+        this.resetNotificationModal();
+        
+        // Show the modal
+        modal.style.display = 'flex';
+        
+        // Setup event listeners
+        this.setupNotificationModalListeners();
+        
+        // Focus the textarea
+        const textarea = modal.querySelector('.pingbash-notification-textarea');
+        setTimeout(() => textarea?.focus(), 100);
+      },
+
+      // NEW - Hide notification modal
+      hideNotificationModal() {
+        const modal = this.dialog.querySelector('.pingbash-notification-modal');
+        if (modal) {
+          modal.style.display = 'none';
+          this.resetNotificationModal();
+        }
+      },
+
+      // NEW - Reset notification modal to default state
+      resetNotificationModal() {
+        const modal = this.dialog.querySelector('.pingbash-notification-modal');
+        if (!modal) return;
+
+        // Reset textarea
+        const textarea = modal.querySelector('.pingbash-notification-textarea');
+        if (textarea) {
+          textarea.value = '';
+        }
+
+        // Reset character counter
+        const charCount = modal.querySelector('.pingbash-char-count');
+        if (charCount) {
+          charCount.textContent = '0';
+          charCount.classList.remove('over-limit');
+        }
+
+        // Reset preview
+        const previewMessage = modal.querySelector('.pingbash-notification-preview-message');
+        if (previewMessage) {
+          previewMessage.textContent = 'Your notification will appear here...';
+          previewMessage.classList.remove('has-content');
+        }
+
+        // Reset send button
+        const sendBtn = modal.querySelector('.pingbash-notification-send-btn');
+        if (sendBtn) {
+          sendBtn.disabled = true;
+          sendBtn.textContent = 'Send Notification';
+          sendBtn.classList.remove('sending');
+        }
+      },
+
+      // NEW - Setup notification modal event listeners
+      setupNotificationModalListeners() {
+        const modal = this.dialog.querySelector('.pingbash-notification-modal');
+        if (!modal) return;
+
+        // Close button
+        const closeBtn = modal.querySelector('.pingbash-popup-close');
+        closeBtn?.addEventListener('click', () => this.hideNotificationModal());
+
+        // Cancel button
+        const cancelBtn = modal.querySelector('.pingbash-notification-cancel-btn');
+        cancelBtn?.addEventListener('click', () => this.hideNotificationModal());
+
+        // Overlay click
+        const overlay = modal.querySelector('.pingbash-popup-overlay');
+        overlay?.addEventListener('click', () => this.hideNotificationModal());
+
+        // Textarea input
+        const textarea = modal.querySelector('.pingbash-notification-textarea');
+        textarea?.addEventListener('input', (e) => this.handleNotificationInput(e));
+
+        // Send button
+        const sendBtn = modal.querySelector('.pingbash-notification-send-btn');
+        sendBtn?.addEventListener('click', () => this.sendGroupNotification());
+      },
+
+      // NEW - Handle notification textarea input
+      handleNotificationInput(e) {
+        const textarea = e.target;
+        const value = textarea.value;
+        const length = value.length;
+        const maxLength = 500;
+
+        // Update character counter
+        const charCount = this.dialog.querySelector('.pingbash-char-count');
+        if (charCount) {
+          charCount.textContent = length.toString();
+          
+          if (length > maxLength) {
+            charCount.classList.add('over-limit');
+          } else {
+            charCount.classList.remove('over-limit');
+          }
+        }
+
+        // Update preview
+        const previewMessage = this.dialog.querySelector('.pingbash-notification-preview-message');
+        if (previewMessage) {
+          if (value.trim()) {
+            previewMessage.textContent = value.trim();
+            previewMessage.classList.add('has-content');
+          } else {
+            previewMessage.textContent = 'Your notification will appear here...';
+            previewMessage.classList.remove('has-content');
+          }
+        }
+
+        // Update send button state
+        const sendBtn = this.dialog.querySelector('.pingbash-notification-send-btn');
+        if (sendBtn) {
+          sendBtn.disabled = !value.trim() || length > maxLength;
+        }
+      },
+
+      // NEW - Send group notification
+      sendGroupNotification() {
+        const textarea = this.dialog.querySelector('.pingbash-notification-textarea');
+        const sendBtn = this.dialog.querySelector('.pingbash-notification-send-btn');
+        
+        if (!textarea || !sendBtn) return;
+        
+        const message = textarea.value.trim();
+        if (!message) return;
+
+        // Check permissions
+        const currentUserId = this.getCurrentUserId();
+        const isGroupCreator = this.group?.creater_id === currentUserId;
+        
+        if (!isGroupCreator) {
+          alert("Only group admins can send notifications");
+          return;
+        }
+
+        if (!this.socket || !this.socket.connected) {
+          alert('Not connected to server');
+          return;
+        }
+
+        // Update button state
+        sendBtn.disabled = true;
+        sendBtn.textContent = 'Sending...';
+        sendBtn.classList.add('sending');
+
+        if( window.isDebugging ) console.log('📢 [Widget] Sending group notification:', {
+          groupId: this.groupId,
+          message: message,
+          token: this.authenticatedToken
+        });
+
+        // Send notification via socket
+        this.socket.emit('send group notify', {
+          groupId: parseInt(this.groupId),
+          message: message,
+          token: this.authenticatedToken
+        });
+
+        // Hide modal after short delay
+        setTimeout(() => {
+          this.hideNotificationModal();
+          // Show success message
+          if (this.showNotification) {
+            this.showNotification('📢 Group notification sent successfully!', 'success');
+          }
+        }, 1000);
       },
 
       // EXACT COPY from widget.js - attachMentionOverlayListener method

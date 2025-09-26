@@ -21,6 +21,9 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
             // Initialize dark mode preference
             this.initializeDarkMode();
             
+            // Initialize sound settings
+            this.initializeSoundSettings();
+            
             await this.loadSocketIO();
 
             // Setup page visibility tracking (same as W version)
@@ -338,6 +341,12 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
             this.displayNotification(message, 'untimeout', '#d1ecf1', '#0c5460', '#bee5eb', '🔓');
         },
 
+        // Display ban notification in chat interface
+        displayBanNotification(message) {
+            if( window.isDebugging ) console.log('🚫 [Widget] Displaying ban notification:', message);
+            this.displayNotification(message, 'ban', '#f8d7da', '#721c24', '#f5c6cb', '🚫');
+        },
+
         // Generic notification display method
         displayNotification(message, type, bgColor, textColor, borderColor, icon) {
             if( window.isDebugging ) console.log(`📢 [Widget] Displaying ${type} notification:`, message);
@@ -478,6 +487,23 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
             } catch (error) {
                 console.error(`⏰ [Widget] Error checking persisted timeout:`, error);
                 return false;
+            }
+        },
+
+        // Initialize sound settings
+        initializeSoundSettings() {
+            try {
+                const savedSetting = localStorage.getItem('pingbash_sound_setting');
+                if (savedSetting) {
+                    this.soundSetting = savedSetting;
+                    if( window.isDebugging ) console.log('🔊 [Widget] Sound setting loaded from localStorage:', this.soundSetting);
+                } else {
+                    this.soundSetting = 'medium'; // Default
+                    if( window.isDebugging ) console.log('🔊 [Widget] Using default sound setting:', this.soundSetting);
+                }
+            } catch (error) {
+                this.soundSetting = 'medium'; // Fallback
+                if( window.isDebugging ) console.log('🔊 [Widget] Error loading sound setting, using default:', error);
             }
         },
 

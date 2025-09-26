@@ -395,8 +395,16 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
       const selectedOption = this.dialog.querySelector('input[name="sound"]:checked');
       if (selectedOption) {
         this.soundSetting = selectedOption.value;
+        
+        // Save to localStorage
+        try {
+          localStorage.setItem('pingbash_sound_setting', this.soundSetting);
+          if( window.isDebugging ) console.log('🔊 [Widget] Sound setting saved to localStorage:', this.soundSetting);
+        } catch (error) {
+          if( window.isDebugging ) console.log('🔊 [Widget] Error saving sound setting to localStorage:', error);
+        }
+        
         if( window.isDebugging ) console.log('🔊 [Widget] Sound setting saved:', this.soundSetting);
-        // TODO: Save to localStorage or backend
       }
       this.hideSoundSettings();
     },
@@ -1360,6 +1368,19 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
         }
       }
       
+      // Show/hide send notification option (group creators only)
+      const sendNotificationItem = this.dialog.querySelector('[data-action="send-notification"]');
+      if (sendNotificationItem) {
+        const isGroupCreator = this.group && this.getCurrentUserId() === this.group.creater_id;
+        if (isGroupCreator) {
+          sendNotificationItem.style.display = 'flex';
+          if( window.isDebugging ) console.log('📢 [Widget] Showing send notification option for group creator');
+        } else {
+          sendNotificationItem.style.display = 'none';
+          if( window.isDebugging ) console.log('📢 [Widget] Hiding send notification option (not group creator)');
+        }
+      }
+
       // Show/hide settings container based on permissions
       const settingsContainer = this.dialog.querySelector('.pingbash-settings-container');
       if (settingsContainer) {

@@ -375,6 +375,12 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
                   </svg>
                   IP Bans
                 </div>
+                <div class="pingbash-menu-item" data-action="send-notification" style="display: none;">
+                  <svg viewBox="0 0 24 24" width="16" height="16">
+                    <path fill="currentColor" d="M10,21H14A2,2 0 0,1 12,23A2,2 0 0,1 10,21M21,19V20H3V19L5,17V11C5,7.9 7.03,5.17 10,4.29C10,4.19 10,4.1 10,4A2,2 0 0,1 12,2A2,2 0 0,1 14,4C14,4.1 14,4.19 14,4.29C16.97,5.17 19,7.9 19,11V17L21,19M17,11A5,5 0 0,0 12,6A5,5 0 0,0 7,11V18H17V11Z"/>
+                  </svg>
+                  Send Notification
+                </div>
               </div>
             </div>
           </div>
@@ -979,205 +985,126 @@ Example:
           </div>
         </div>
         
-                  <!-- Emoji Picker Modal -->
+                  <!-- Enhanced Emoji & GIF Picker Modal -->
             <div class="pingbash-emoji-modal" style="display: none;">
               <div class="pingbash-popup-overlay"></div>
-              <div class="pingbash-popup-content">
+              <div class="pingbash-popup-content pingbash-emoji-popup-content">
                 <div class="pingbash-emoji-picker">
-                  <div class="pingbash-emoji-grid">
-                <span class="pingbash-emoji" data-emoji="😀">😀</span>
-                <span class="pingbash-emoji" data-emoji="😃">😃</span>
-                <span class="pingbash-emoji" data-emoji="😄">😄</span>
-                <span class="pingbash-emoji" data-emoji="😁">😁</span>
-                <span class="pingbash-emoji" data-emoji="😆">😆</span>
-                <span class="pingbash-emoji" data-emoji="😅">😅</span>
-                <span class="pingbash-emoji" data-emoji="😂">😂</span>
-                <span class="pingbash-emoji" data-emoji="🤣">🤣</span>
-                <span class="pingbash-emoji" data-emoji="😊">😊</span>
-                <span class="pingbash-emoji" data-emoji="😇">😇</span>
-                <span class="pingbash-emoji" data-emoji="🙂">🙂</span>
-                <span class="pingbash-emoji" data-emoji="🙃">🙃</span>
-                <span class="pingbash-emoji" data-emoji="😉">😉</span>
-                <span class="pingbash-emoji" data-emoji="😌">😌</span>
-                <span class="pingbash-emoji" data-emoji="😍">😍</span>
-                <span class="pingbash-emoji" data-emoji="🥰">🥰</span>
-                <span class="pingbash-emoji" data-emoji="😘">😘</span>
-                <span class="pingbash-emoji" data-emoji="😗">😗</span>
-                <span class="pingbash-emoji" data-emoji="😙">😙</span>
-                <span class="pingbash-emoji" data-emoji="😚">😚</span>
-                <span class="pingbash-emoji" data-emoji="😋">😋</span>
-                <span class="pingbash-emoji" data-emoji="😛">😛</span>
-                <span class="pingbash-emoji" data-emoji="😝">😝</span>
-                <span class="pingbash-emoji" data-emoji="😜">😜</span>
-                <span class="pingbash-emoji" data-emoji="🤪">🤪</span>
-                <span class="pingbash-emoji" data-emoji="🤨">🤨</span>
-                <span class="pingbash-emoji" data-emoji="🧐">🧐</span>
-                <span class="pingbash-emoji" data-emoji="🤓">🤓</span>
-                <span class="pingbash-emoji" data-emoji="😎">😎</span>
-                <span class="pingbash-emoji" data-emoji="🤩">🤩</span>
-                <span class="pingbash-emoji" data-emoji="🥳">🥳</span>
-                <span class="pingbash-emoji" data-emoji="😏">😏</span>
-                <span class="pingbash-emoji" data-emoji="😒">😒</span>
-                <span class="pingbash-emoji" data-emoji="😞">😞</span>
-                <span class="pingbash-emoji" data-emoji="😔">😔</span>
-                <span class="pingbash-emoji" data-emoji="😟">😟</span>
-                <span class="pingbash-emoji" data-emoji="😕">😕</span>
-                <span class="pingbash-emoji" data-emoji="🙁">🙁</span>
-                <span class="pingbash-emoji" data-emoji="☹️">☹️</span>
-                <span class="pingbash-emoji" data-emoji="😣">😣</span>
-                <span class="pingbash-emoji" data-emoji="😖">😖</span>
-                <span class="pingbash-emoji" data-emoji="😫">😫</span>
-                <span class="pingbash-emoji" data-emoji="😩">😩</span>
-                <span class="pingbash-emoji" data-emoji="🥺">🥺</span>
-                <span class="pingbash-emoji" data-emoji="😢">😢</span>
-                <span class="pingbash-emoji" data-emoji="😭">😭</span>
-                <span class="pingbash-emoji" data-emoji="😤">😤</span>
-                <span class="pingbash-emoji" data-emoji="😠">😠</span>
-                <span class="pingbash-emoji" data-emoji="😡">😡</span>
-                <span class="pingbash-emoji" data-emoji="🤬">🤬</span>
-                <span class="pingbash-emoji" data-emoji="🤯">🤯</span>
-                <span class="pingbash-emoji" data-emoji="😳">😳</span>
-                <span class="pingbash-emoji" data-emoji="🥵">🥵</span>
-                <span class="pingbash-emoji" data-emoji="🥶">🥶</span>
-                <span class="pingbash-emoji" data-emoji="😱">😱</span>
-                <span class="pingbash-emoji" data-emoji="😨">😨</span>
-                <span class="pingbash-emoji" data-emoji="😰">😰</span>
-                <span class="pingbash-emoji" data-emoji="😥">😥</span>
-                <span class="pingbash-emoji" data-emoji="😓">😓</span>
-                <span class="pingbash-emoji" data-emoji="🤗">🤗</span>
-                <span class="pingbash-emoji" data-emoji="🤔">🤔</span>
-                <span class="pingbash-emoji" data-emoji="🤭">🤭</span>
-                <span class="pingbash-emoji" data-emoji="🤫">🤫</span>
-                <span class="pingbash-emoji" data-emoji="🤥">🤥</span>
-                <span class="pingbash-emoji" data-emoji="😶">😶</span>
-                <span class="pingbash-emoji" data-emoji="😐">😐</span>
-                <span class="pingbash-emoji" data-emoji="😑">😑</span>
-                <span class="pingbash-emoji" data-emoji="😬">😬</span>
-                <span class="pingbash-emoji" data-emoji="🙄">🙄</span>
-                <span class="pingbash-emoji" data-emoji="😯">😯</span>
-                <span class="pingbash-emoji" data-emoji="😦">😦</span>
-                <span class="pingbash-emoji" data-emoji="😧">😧</span>
-                <span class="pingbash-emoji" data-emoji="😮">😮</span>
-                <span class="pingbash-emoji" data-emoji="😲">😲</span>
-                <span class="pingbash-emoji" data-emoji="🥱">🥱</span>
-                <span class="pingbash-emoji" data-emoji="😴">😴</span>
-                <span class="pingbash-emoji" data-emoji="🤤">🤤</span>
-                <span class="pingbash-emoji" data-emoji="😪">😪</span>
-                <span class="pingbash-emoji" data-emoji="😵">😵</span>
-                <span class="pingbash-emoji" data-emoji="🤐">🤐</span>
-                <span class="pingbash-emoji" data-emoji="🥴">🥴</span>
-                <span class="pingbash-emoji" data-emoji="🤢">🤢</span>
-                <span class="pingbash-emoji" data-emoji="🤮">🤮</span>
-                <span class="pingbash-emoji" data-emoji="🤧">🤧</span>
-                <span class="pingbash-emoji" data-emoji="😷">😷</span>
-                <span class="pingbash-emoji" data-emoji="🤒">🤒</span>
-                <span class="pingbash-emoji" data-emoji="🤕">🤕</span>
-                <span class="pingbash-emoji" data-emoji="🤑">🤑</span>
-                <span class="pingbash-emoji" data-emoji="🤠">🤠</span>
-                <span class="pingbash-emoji" data-emoji="😈">😈</span>
-                <span class="pingbash-emoji" data-emoji="👿">👿</span>
-                <span class="pingbash-emoji" data-emoji="👹">👹</span>
-                <span class="pingbash-emoji" data-emoji="👺">👺</span>
-                <span class="pingbash-emoji" data-emoji="🤡">🤡</span>
-                <span class="pingbash-emoji" data-emoji="💩">💩</span>
-                <span class="pingbash-emoji" data-emoji="👻">👻</span>
-                <span class="pingbash-emoji" data-emoji="💀">💀</span>
-                <span class="pingbash-emoji" data-emoji="☠️">☠️</span>
-                <span class="pingbash-emoji" data-emoji="👽">👽</span>
-                <span class="pingbash-emoji" data-emoji="👾">👾</span>
-                <span class="pingbash-emoji" data-emoji="🤖">🤖</span>
-                <span class="pingbash-emoji" data-emoji="🎃">🎃</span>
-                <span class="pingbash-emoji" data-emoji="😺">😺</span>
-                <span class="pingbash-emoji" data-emoji="😸">😸</span>
-                <span class="pingbash-emoji" data-emoji="😹">😹</span>
-                <span class="pingbash-emoji" data-emoji="😻">😻</span>
-                <span class="pingbash-emoji" data-emoji="😼">😼</span>
-                <span class="pingbash-emoji" data-emoji="😽">😽</span>
-                <span class="pingbash-emoji" data-emoji="🙀">🙀</span>
-                <span class="pingbash-emoji" data-emoji="😿">😿</span>
-                <span class="pingbash-emoji" data-emoji="😾">😾</span>
-                <span class="pingbash-emoji" data-emoji="❤️">❤️</span>
-                <span class="pingbash-emoji" data-emoji="🧡">🧡</span>
-                <span class="pingbash-emoji" data-emoji="💛">💛</span>
-                <span class="pingbash-emoji" data-emoji="💚">💚</span>
-                <span class="pingbash-emoji" data-emoji="💙">💙</span>
-                <span class="pingbash-emoji" data-emoji="💜">💜</span>
-                <span class="pingbash-emoji" data-emoji="🤎">🤎</span>
-                <span class="pingbash-emoji" data-emoji="🖤">🖤</span>
-                <span class="pingbash-emoji" data-emoji="🤍">🤍</span>
-                <span class="pingbash-emoji" data-emoji="💔">💔</span>
-                <span class="pingbash-emoji" data-emoji="❣️">❣️</span>
-                <span class="pingbash-emoji" data-emoji="💕">💕</span>
-                <span class="pingbash-emoji" data-emoji="💞">💞</span>
-                <span class="pingbash-emoji" data-emoji="💓">💓</span>
-                <span class="pingbash-emoji" data-emoji="💗">💗</span>
-                <span class="pingbash-emoji" data-emoji="💖">💖</span>
-                <span class="pingbash-emoji" data-emoji="💘">💘</span>
-                <span class="pingbash-emoji" data-emoji="💝">💝</span>
-                <span class="pingbash-emoji" data-emoji="💟">💟</span>
-                <span class="pingbash-emoji" data-emoji="♥️">♥️</span>
-                <span class="pingbash-emoji" data-emoji="💯">💯</span>
-                <span class="pingbash-emoji" data-emoji="💢">💢</span>
-                <span class="pingbash-emoji" data-emoji="💥">💥</span>
-                <span class="pingbash-emoji" data-emoji="💫">💫</span>
-                <span class="pingbash-emoji" data-emoji="💦">💦</span>
-                <span class="pingbash-emoji" data-emoji="💨">💨</span>
-                <span class="pingbash-emoji" data-emoji="🕳️">🕳️</span>
-                <span class="pingbash-emoji" data-emoji="💣">💣</span>
-                <span class="pingbash-emoji" data-emoji="💬">💬</span>
-                <span class="pingbash-emoji" data-emoji="👁️‍🗨️">👁️‍🗨️</span>
-                <span class="pingbash-emoji" data-emoji="🗨️">🗨️</span>
-                <span class="pingbash-emoji" data-emoji="🗯️">🗯️</span>
-                <span class="pingbash-emoji" data-emoji="💭">💭</span>
-                <span class="pingbash-emoji" data-emoji="💤">💤</span>
-                <span class="pingbash-emoji" data-emoji="👋">👋</span>
-                <span class="pingbash-emoji" data-emoji="🤚">🤚</span>
-                <span class="pingbash-emoji" data-emoji="🖐️">🖐️</span>
-                <span class="pingbash-emoji" data-emoji="✋">✋</span>
-                <span class="pingbash-emoji" data-emoji="🖖">🖖</span>
-                <span class="pingbash-emoji" data-emoji="👌">👌</span>
-                <span class="pingbash-emoji" data-emoji="🤏">🤏</span>
-                <span class="pingbash-emoji" data-emoji="✌️">✌️</span>
-                <span class="pingbash-emoji" data-emoji="🤞">🤞</span>
-                <span class="pingbash-emoji" data-emoji="🤟">🤟</span>
-                <span class="pingbash-emoji" data-emoji="🤘">🤘</span>
-                <span class="pingbash-emoji" data-emoji="🤙">🤙</span>
-                <span class="pingbash-emoji" data-emoji="👈">👈</span>
-                <span class="pingbash-emoji" data-emoji="👉">👉</span>
-                <span class="pingbash-emoji" data-emoji="👆">👆</span>
-                <span class="pingbash-emoji" data-emoji="🖕">🖕</span>
-                <span class="pingbash-emoji" data-emoji="👇">👇</span>
-                <span class="pingbash-emoji" data-emoji="☝️">☝️</span>
-                <span class="pingbash-emoji" data-emoji="👍">👍</span>
-                <span class="pingbash-emoji" data-emoji="👎">👎</span>
-                <span class="pingbash-emoji" data-emoji="✊">✊</span>
-                <span class="pingbash-emoji" data-emoji="👊">👊</span>
-                <span class="pingbash-emoji" data-emoji="🤛">🤛</span>
-                <span class="pingbash-emoji" data-emoji="🤜">🤜</span>
-                <span class="pingbash-emoji" data-emoji="👏">👏</span>
-                <span class="pingbash-emoji" data-emoji="🙌">🙌</span>
-                <span class="pingbash-emoji" data-emoji="👐">👐</span>
-                <span class="pingbash-emoji" data-emoji="🤲">🤲</span>
-                <span class="pingbash-emoji" data-emoji="🤝">🤝</span>
-                <span class="pingbash-emoji" data-emoji="🙏">🙏</span>
-                <span class="pingbash-emoji" data-emoji="✍️">✍️</span>
-                <span class="pingbash-emoji" data-emoji="💅">💅</span>
-                <span class="pingbash-emoji" data-emoji="🤳">🤳</span>
-                <span class="pingbash-emoji" data-emoji="💪">💪</span>
-                <span class="pingbash-emoji" data-emoji="🦾">🦾</span>
-                <span class="pingbash-emoji" data-emoji="🦿">🦿</span>
-                <span class="pingbash-emoji" data-emoji="🦵">🦵</span>
-                <span class="pingbash-emoji" data-emoji="🦶">🦶</span>
-                <span class="pingbash-emoji" data-emoji="👂">👂</span>
-                <span class="pingbash-emoji" data-emoji="🦻">🦻</span>
-                <span class="pingbash-emoji" data-emoji="👃">👃</span>
-                <span class="pingbash-emoji" data-emoji="🧠">🧠</span>
-                <span class="pingbash-emoji" data-emoji="🦷">🦷</span>
-                <span class="pingbash-emoji" data-emoji="🦴">🦴</span>
-                <span class="pingbash-emoji" data-emoji="👀">👀</span>
-                <span class="pingbash-emoji" data-emoji="👁️">👁️</span>
-                <span class="pingbash-emoji" data-emoji="👅">👅</span>
-                                <span class="pingbash-emoji" data-emoji="👄">👄</span>
+                  <!-- Header with Search and Close -->
+                  <div class="pingbash-emoji-header">
+                    <input type="text" class="pingbash-emoji-search" placeholder="Search emojis and GIFs..." />
+                    <button class="pingbash-emoji-close">×</button>
+                  </div>
+                  
+                  <!-- Category Tabs -->
+                  <div class="pingbash-emoji-tabs">
+                    <button class="pingbash-emoji-tab active" data-category="smileys">😀</button>
+                    <button class="pingbash-emoji-tab" data-category="people">👋</button>
+                    <button class="pingbash-emoji-tab" data-category="nature">🌿</button>
+                    <button class="pingbash-emoji-tab" data-category="food">🍕</button>
+                    <button class="pingbash-emoji-tab" data-category="activities">⚽</button>
+                    <button class="pingbash-emoji-tab" data-category="travel">🚗</button>
+                    <button class="pingbash-emoji-tab" data-category="objects">💡</button>
+                    <button class="pingbash-emoji-tab" data-category="symbols">❤️</button>
+                    <button class="pingbash-emoji-tab" data-category="flags">🏁</button>
+                    <button class="pingbash-emoji-tab" data-category="gifs">GIF</button>
+                  </div>
+                  
+                  <!-- Emoji/GIF Content Area -->
+                  <div class="pingbash-emoji-content">
+                    <!-- Emoji Grid -->
+                    <div class="pingbash-emoji-grid" data-category="smileys">
+                      <!-- Smileys & Emotion -->
+                      <span class="pingbash-emoji" data-emoji="😀" data-keywords="grinning face happy smile">😀</span>
+                      <span class="pingbash-emoji" data-emoji="😃" data-keywords="grinning face with big eyes happy smile">😃</span>
+                      <span class="pingbash-emoji" data-emoji="😄" data-keywords="grinning face with smiling eyes happy laugh">😄</span>
+                      <span class="pingbash-emoji" data-emoji="😁" data-keywords="beaming face with smiling eyes happy laugh">😁</span>
+                      <span class="pingbash-emoji" data-emoji="😆" data-keywords="grinning squinting face happy laugh">😆</span>
+                      <span class="pingbash-emoji" data-emoji="😅" data-keywords="grinning face with sweat happy laugh nervous">😅</span>
+                      <span class="pingbash-emoji" data-emoji="🤣" data-keywords="rolling on the floor laughing rofl lol">🤣</span>
+                      <span class="pingbash-emoji" data-emoji="😂" data-keywords="face with tears of joy laugh lol crying">😂</span>
+                      <span class="pingbash-emoji" data-emoji="🙂" data-keywords="slightly smiling face happy">🙂</span>
+                      <span class="pingbash-emoji" data-emoji="🙃" data-keywords="upside-down face silly sarcasm">🙃</span>
+                      <span class="pingbash-emoji" data-emoji="😊" data-keywords="smiling face with smiling eyes happy blush">😊</span>
+                      <span class="pingbash-emoji" data-emoji="😇" data-keywords="smiling face with halo angel innocent">😇</span>
+                      <span class="pingbash-emoji" data-emoji="🥰" data-keywords="smiling face with hearts love adore">🥰</span>
+                      <span class="pingbash-emoji" data-emoji="😍" data-keywords="smiling face with heart-eyes love">😍</span>
+                      <span class="pingbash-emoji" data-emoji="🤩" data-keywords="star-struck starstruck amazing wow">🤩</span>
+                      <span class="pingbash-emoji" data-emoji="😘" data-keywords="face blowing a kiss love">😘</span>
+                      <span class="pingbash-emoji" data-emoji="😗" data-keywords="kissing face kiss">😗</span>
+                      <span class="pingbash-emoji" data-emoji="☺️" data-keywords="smiling face happy relaxed">☺️</span>
+                      <span class="pingbash-emoji" data-emoji="😚" data-keywords="kissing face with closed eyes kiss">😚</span>
+                      <span class="pingbash-emoji" data-emoji="😙" data-keywords="kissing face with smiling eyes kiss">😙</span>
+                      <span class="pingbash-emoji" data-emoji="🥲" data-keywords="smiling face with tear happy cry">🥲</span>
+                      <span class="pingbash-emoji" data-emoji="😋" data-keywords="face savoring food yum delicious">😋</span>
+                      <span class="pingbash-emoji" data-emoji="😛" data-keywords="face with tongue silly playful">😛</span>
+                      <span class="pingbash-emoji" data-emoji="😜" data-keywords="winking face with tongue playful">😜</span>
+                      <span class="pingbash-emoji" data-emoji="🤪" data-keywords="zany face crazy silly">🤪</span>
+                      <span class="pingbash-emoji" data-emoji="😝" data-keywords="squinting face with tongue silly">😝</span>
+                      <span class="pingbash-emoji" data-emoji="🤑" data-keywords="money-mouth face greedy rich">🤑</span>
+                      <span class="pingbash-emoji" data-emoji="🤗" data-keywords="hugging face hug love">🤗</span>
+                      <span class="pingbash-emoji" data-emoji="🤭" data-keywords="face with hand over mouth oops">🤭</span>
+                      <span class="pingbash-emoji" data-emoji="🤫" data-keywords="shushing face quiet secret">🤫</span>
+                      <span class="pingbash-emoji" data-emoji="🤔" data-keywords="thinking face hmm ponder">🤔</span>
+                      <span class="pingbash-emoji" data-emoji="🤐" data-keywords="zipper-mouth face quiet">🤐</span>
+                      <span class="pingbash-emoji" data-emoji="🤨" data-keywords="face with raised eyebrow skeptical">🤨</span>
+                      <span class="pingbash-emoji" data-emoji="😐" data-keywords="neutral face meh">😐</span>
+                      <span class="pingbash-emoji" data-emoji="😑" data-keywords="expressionless face blank">😑</span>
+                      <span class="pingbash-emoji" data-emoji="😶" data-keywords="face without mouth silent">😶</span>
+                      <span class="pingbash-emoji" data-emoji="😏" data-keywords="smirking face smug">😏</span>
+                      <span class="pingbash-emoji" data-emoji="😒" data-keywords="unamused face meh bored">😒</span>
+                      <span class="pingbash-emoji" data-emoji="🙄" data-keywords="face with rolling eyes annoyed">🙄</span>
+                      <span class="pingbash-emoji" data-emoji="😬" data-keywords="grimacing face awkward">😬</span>
+                      <span class="pingbash-emoji" data-emoji="🤥" data-keywords="lying face pinocchio dishonest">🤥</span>
+                      <span class="pingbash-emoji" data-emoji="😔" data-keywords="pensive face sad thoughtful">😔</span>
+                      <span class="pingbash-emoji" data-emoji="😕" data-keywords="confused face puzzled">😕</span>
+                      <span class="pingbash-emoji" data-emoji="🙁" data-keywords="slightly frowning face sad">🙁</span>
+                      <span class="pingbash-emoji" data-emoji="☹️" data-keywords="frowning face sad">☹️</span>
+                      <span class="pingbash-emoji" data-emoji="😣" data-keywords="persevering face struggle">😣</span>
+                      <span class="pingbash-emoji" data-emoji="😞" data-keywords="disappointed face sad">😞</span>
+                      <span class="pingbash-emoji" data-emoji="😖" data-keywords="confounded face frustrated">😖</span>
+                      <span class="pingbash-emoji" data-emoji="😤" data-keywords="face with steam from nose angry huffing">😤</span>
+                      <span class="pingbash-emoji" data-emoji="😢" data-keywords="crying face sad tear">😢</span>
+                      <span class="pingbash-emoji" data-emoji="😭" data-keywords="loudly crying face bawling">😭</span>
+                      <span class="pingbash-emoji" data-emoji="😪" data-keywords="sleepy face tired">😪</span>
+                      <span class="pingbash-emoji" data-emoji="😥" data-keywords="sad but relieved face disappointed">😥</span>
+                      <span class="pingbash-emoji" data-emoji="😰" data-keywords="anxious face with sweat nervous">😰</span>
+                      <span class="pingbash-emoji" data-emoji="😅" data-keywords="grinning face with sweat nervous laugh">😅</span>
+                      <span class="pingbash-emoji" data-emoji="😓" data-keywords="downcast face with sweat tired">😓</span>
+                      <span class="pingbash-emoji" data-emoji="🤯" data-keywords="exploding head mind blown shocked">🤯</span>
+                      <span class="pingbash-emoji" data-emoji="😳" data-keywords="flushed face embarrassed blush">😳</span>
+                      <span class="pingbash-emoji" data-emoji="🥵" data-keywords="hot face sweating burning">🥵</span>
+                      <span class="pingbash-emoji" data-emoji="🥶" data-keywords="cold face freezing">🥶</span>
+                      <span class="pingbash-emoji" data-emoji="😱" data-keywords="face screaming in fear scared">😱</span>
+                      <span class="pingbash-emoji" data-emoji="😨" data-keywords="fearful face scared afraid">😨</span>
+                      <span class="pingbash-emoji" data-emoji="😰" data-keywords="anxious face with sweat worried">😰</span>
+                      <span class="pingbash-emoji" data-emoji="😯" data-keywords="hushed face surprised">😯</span>
+                      <span class="pingbash-emoji" data-emoji="😦" data-keywords="frowning face with open mouth shocked">😦</span>
+                      <span class="pingbash-emoji" data-emoji="😧" data-keywords="anguished face distressed">😧</span>
+                      <span class="pingbash-emoji" data-emoji="😮" data-keywords="face with open mouth surprised">😮</span>
+                      <span class="pingbash-emoji" data-emoji="😲" data-keywords="astonished face amazed">😲</span>
+                      <span class="pingbash-emoji" data-emoji="🥱" data-keywords="yawning face tired sleepy">🥱</span>
+                      <span class="pingbash-emoji" data-emoji="😴" data-keywords="sleeping face zzz">😴</span>
+                      <span class="pingbash-emoji" data-emoji="🤤" data-keywords="drooling face">🤤</span>
+                      <span class="pingbash-emoji" data-emoji="😪" data-keywords="sleepy face tired">😪</span>
+                      <span class="pingbash-emoji" data-emoji="😵" data-keywords="dizzy face knockout">😵</span>
+                      <span class="pingbash-emoji" data-emoji="🤐" data-keywords="zipper-mouth face quiet">🤐</span>
+                      <span class="pingbash-emoji" data-emoji="🥴" data-keywords="woozy face drunk dizzy">🥴</span>
+                      <span class="pingbash-emoji" data-emoji="🤢" data-keywords="nauseated face sick">🤢</span>
+                      <span class="pingbash-emoji" data-emoji="🤮" data-keywords="face vomiting sick">🤮</span>
+                      <span class="pingbash-emoji" data-emoji="🤧" data-keywords="sneezing face sick">🤧</span>
+                      <span class="pingbash-emoji" data-emoji="😷" data-keywords="face with medical mask sick">😷</span>
+                      <span class="pingbash-emoji" data-emoji="🤒" data-keywords="face with thermometer sick fever">🤒</span>
+                      <span class="pingbash-emoji" data-emoji="🤕" data-keywords="face with head-bandage hurt injured">🤕</span>
+                    </div>
+                    
+                    <!-- GIF Grid (placeholder) -->
+                    <div class="pingbash-gif-grid" data-category="gifs" style="display: none;">
+                      <div class="pingbash-gif-placeholder">
+                        <p>🔄 Loading GIFs...</p>
+                        <p>Popular GIF categories coming soon!</p>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1190,6 +1117,46 @@ Example:
                 <div class="pingbash-mention-dropdown">
                   <div class="pingbash-mention-list">
                     <!-- Users will be populated here -->
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Send Notification Modal -->
+            <div class="pingbash-notification-modal" style="display: none;">
+              <div class="pingbash-popup-overlay"></div>
+              <div class="pingbash-popup-content">
+                <div class="pingbash-popup-header">
+                  <h3>📢 Send Group Notification</h3>
+                  <button class="pingbash-popup-close">×</button>
+                </div>
+                <div class="pingbash-popup-body">
+                  <div class="pingbash-notification-form">
+                    <div class="pingbash-form-group">
+                      <label for="notification-message">Notification Message:</label>
+                      <textarea 
+                        id="notification-message" 
+                        class="pingbash-notification-textarea" 
+                        placeholder="Enter your notification message for all group members..."
+                        maxlength="500"
+                        rows="4"
+                      ></textarea>
+                      <div class="pingbash-char-counter">
+                        <span class="pingbash-char-count">0</span>/500 characters
+                      </div>
+                    </div>
+                    <div class="pingbash-notification-preview">
+                      <h4>Preview:</h4>
+                      <div class="pingbash-notification-preview-content">
+                        <div class="pingbash-notification-preview-message">
+                          Your notification will appear here...
+                        </div>
+                      </div>
+                    </div>
+                    <div class="pingbash-notification-buttons">
+                      <button class="pingbash-notification-cancel-btn">Cancel</button>
+                      <button class="pingbash-notification-send-btn" disabled>Send Notification</button>
+                    </div>
                   </div>
                 </div>
               </div>

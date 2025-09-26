@@ -637,11 +637,40 @@ module.exports = (socket, users) => {
             const senderId = verifyUser(data.token);
             const { msgId, groupId} = data;
 
+            // Check if sender has permission to delete messages (group creator or moderator)
+            const groupInfo = await Controller.getGroup(groupId);
+            if (!groupInfo) {
+                console.log(`Delete message attempt blocked: Group ${groupId} not found`);
+                socket.emit(chatCode.FORBIDDEN, "Group not found");
+                return;
+            }
+
+            // Check if sender is group creator
+            const isGroupCreator = groupInfo.creater_id === senderId;
+            
+            // Check if sender is a moderator
+            let isModerator = false;
+            if (!isGroupCreator && groupInfo.members) {
+                // Find sender in group members
+                const senderMember = groupInfo.members.find(member => member.id === senderId);
+                isModerator = senderMember && senderMember.role_id === 2;
+            }
+
+            const canDelete = isGroupCreator || isModerator;
+            
+            if (!canDelete) {
+                console.log(`Delete message attempt blocked: User ${senderId} is not authorized (creator: ${groupInfo.creater_id}, moderator: ${isModerator})`);
+                socket.emit(chatCode.FORBIDDEN, "Only group admins and moderators can delete messages");
+                return;
+            }
+
+            console.log(`✅ User ${senderId} authorized to delete message ${msgId} in group ${groupId}`);
+
             if (!users.find(user => user.ID == senderId)) {
                 users.push({ ID: senderId, Socket: socket.id });
                 sockets[socket.id] = socket;
             }
-            // Save message to the database
+            // Delete message from the database
             await Controller.deleteGroupMsg(msgId);
             const receivers = await Controller.getReceiverIdsOfGroup(groupId);
             // Find the receiver's and sender's socket IDs
@@ -658,8 +687,9 @@ module.exports = (socket, users) => {
             //     senderSocket.emit(chatCode.DELETE_GROUP_MSG, msgId);
             // }
             safeEmitToSockets(receiverSockets, chatCode.DELETE_GROUP_MSG, msgId);
+            console.log(`✅ Message ${msgId} deleted and notification sent to all group members`);
         } catch (error) {
-            console.error("Error sending message:", error);
+            console.error("Error deleting message:", error);
             socket.emit(chatCode.SERVER_ERROR, httpCode.SERVER_ERROR);
         }
     });
@@ -765,6 +795,20 @@ module.exports = (socket, users) => {
             const receiverSocketIds = receiveUsers.map(user => user?.Socket);
             const receiverSockets = receiverSocketIds.map(socketId => sockets[socketId]);
             
+            // Send ban notification to the banned user specifically
+            if (bannedUserSocket) {
+                const bannedSocket = sockets[bannedUserSocket.Socket];
+                if (bannedSocket && typeof bannedSocket.emit === 'function') {
+                    // Send ban notification directly to the banned user
+                    bannedSocket.emit('user ban notification', {
+                        message: "You have been banned from this group and can no longer send messages.",
+                        groupId: groupId,
+                        bannedBy: senderId
+                    });
+                    console.log(`✅ Ban notification sent to user ${targetUserId}`);
+                }
+            }
+
             const group = await Controller.getGroup(groupId);
             if (receiverSockets && receiverSockets.length > 0) {
                 receiverSockets.forEach(receiverSocket => {
@@ -1309,28 +1353,47 @@ module.exports = (socket, users) => {
             // Get sender ID from the token
             const senderId = verifyUser(data.token);
             const { groupId} = data;
+            
+            // Check permissions: Only group creator can clear chat for all members
+            const groupInfo = await Controller.getGroup(groupId);
+            if (!groupInfo) {
+                console.log(`Clear chat attempt blocked: Group ${groupId} not found`);
+                socket.emit(chatCode.FORBIDDEN, "Group not found");
+                return;
+            }
+
+            // Check if sender is group creator
+            const isGroupCreator = groupInfo.creater_id === senderId;
+            
+            if (!isGroupCreator) {
+                console.log(`Clear chat attempt blocked: User ${senderId} is not the group creator of group ${groupId} (creator: ${groupInfo.creater_id})`);
+                socket.emit(chatCode.FORBIDDEN, "Only the group creator can clear chat for all members");
+                return;
+            }
+
+            console.log(`✅ Group creator ${senderId} authorized to clear chat for group ${groupId}`);
+            
             if (!users.find(user => user.ID == senderId)) {
                 users.push({ ID: senderId, Socket: socket.id });
                 sockets[socket.id] = socket;
             }
-            // Save message to the database
+            
+            // Clear messages from the database for all members
             await Controller.clearGroupChat(groupId);
-            const receivers = await Controller.getReceiverIdsOfGroup(groupId);
-            // Find the receiver's and sender's socket IDs
-            const receiveUsers = users.filter(user => receivers?.find(receiverId => receiverId == user.ID));
+            console.log(`🧹 Chat cleared for group ${groupId} by creator ${senderId}`);
             
-            const receiverSocketIds = receiveUsers.map(user => user?.Socket);            
-            const receiverSockets = receiverSocketIds.map(socketId => sockets[socketId]);
-            // Retrieve message list for the user         
+            // Use Socket.IO rooms to broadcast to ALL users (authenticated + anonymous) in the group
+            // This includes everyone who has joined the group room via socket.join(`group_${groupId}`)
+            const roomName = `group_${groupId}`;
+            console.log(`🧹 [BROADCAST] Sending clear chat event to room: ${roomName}`);
             
-            if (receiverSockets && receiverSockets.length > 0) {
-                receiverSockets.forEach(receiverSocket => {
-                    if (receiverSocket && typeof receiverSocket.emit === 'function') {
-                        receiverSocket.emit(chatCode.CLEAR_GROUP_CHAT, groupId);
-                    }
-                });                
-            }
+            // Broadcast to all sockets in the group room
+            socket.to(roomName).emit(chatCode.CLEAR_GROUP_CHAT, groupId);
+            
+            // Also send to the sender
             socket.emit(chatCode.CLEAR_GROUP_CHAT, groupId);
+            
+            console.log(`🧹 [BROADCAST] CLEAR_GROUP_CHAT sent to all users in group ${groupId}`);
         } catch (error) {
             console.error("Error sending message:", error);
             socket.emit(chatCode.SERVER_ERROR, httpCode.SERVER_ERROR);
@@ -1544,23 +1607,20 @@ module.exports = (socket, users) => {
                 slow_mode, 
                 slow_time
             );
-            const receivers = await Controller.getReceiverIdsOfGroup(groupId);
-            // Find the receiver's and sender's socket IDs
-            const receiveUsers = users.filter(user => receivers?.find(receiverId => receiverId == user.ID));
-            
-            const receiverSocketIds = receiveUsers.map(user => user?.Socket);            
-            const receiverSockets = receiverSocketIds.map(socketId => sockets[socketId]);
-            // Retrieve message list for the user
-
             const group = await Controller.getGroup(groupId); 
-            if (receiverSockets && receiverSockets.length > 0) {
-                receiverSockets.forEach(receiverSocket => {
-                    if (receiverSocket && typeof receiverSocket.emit === 'function') {
-                        receiverSocket.emit(chatCode.GROUP_UPDATED, group);
-                    }
-                });                
-            }
-            socket.emit(chatCode.GROUP_UPDATED, group)
+            
+            // Use Socket.IO rooms to broadcast to ALL users (authenticated + anonymous) in the group
+            // This includes everyone who has joined the group room via socket.join(`group_${groupId}`)
+            const roomName = `group_${groupId}`;
+            console.log(`📡 [BROADCAST] Sending chat limitation updates to room: ${roomName}`);
+            
+            // Broadcast to all sockets in the group room
+            socket.to(roomName).emit(chatCode.GROUP_UPDATED, group);
+            
+            // Also send to the sender
+            socket.emit(chatCode.GROUP_UPDATED, group);
+            
+            console.log(`📡 [BROADCAST] GROUP_UPDATED sent to all users in group ${groupId}`);
         } catch (error) {
             console.error("Error sending message:", error);
             socket.emit(chatCode.SERVER_ERROR, httpCode.SERVER_ERROR);
@@ -1886,20 +1946,19 @@ module.exports = (socket, users) => {
             // Unban IPs
             await Controller.unbanGroupIps(groupId, ipAddresses);
 
-            const receivers = await Controller.getReceiverIdsOfGroup(groupId);
-            const receiveUsers = users.filter(user => receivers?.find(receiverId => receiverId == user.ID));
-            const receiverSocketIds = receiveUsers.map(user => user?.Socket);
-            const receiverSockets = receiverSocketIds.map(socketId => sockets[socketId]);
-
             const group = await Controller.getGroup(groupId);
-            if (receiverSockets && receiverSockets.length > 0) {
-                receiverSockets.forEach(receiverSocket => {
-                    if (receiverSocket && typeof receiverSocket.emit === 'function') {
-                        receiverSocket.emit(chatCode.UNBAN_GROUP_IPS, ipAddresses);
-                        receiverSocket.emit(chatCode.GROUP_UPDATED, group);
-                    }
-                });
-            }
+            
+            // Use Socket.IO rooms to broadcast to ALL users (authenticated + anonymous) in the group
+            const roomName = `group_${groupId}`;
+            console.log(`📡 [BROADCAST] Sending IP unban updates to room: ${roomName}`);
+            
+            // Broadcast to all sockets in the group room
+            socket.to(roomName).emit(chatCode.UNBAN_GROUP_IPS, ipAddresses);
+            socket.to(roomName).emit(chatCode.GROUP_UPDATED, group);
+            
+            // Also send to the sender
+            socket.emit(chatCode.UNBAN_GROUP_IPS, ipAddresses);
+            socket.emit(chatCode.GROUP_UPDATED, group);
 
             console.log(`IP unban completed successfully for IPs ${ipAddresses} by ${senderId}`);
         } catch (error) {
