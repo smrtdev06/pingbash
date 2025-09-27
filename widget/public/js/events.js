@@ -1610,16 +1610,27 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         `;
         
         // Remove existing notification dialog if present
-        const existingDialog = document.querySelector('.pingbash-group-notification-dialog');
+        const existingDialog = this.dialog?.querySelector('.pingbash-group-notification-dialog');
         if (existingDialog) {
           existingDialog.remove();
         }
         
-        // Add to body
-        document.body.insertAdjacentHTML('beforeend', modalHtml);
+        // Add to chat dialog instead of body
+        if (!this.dialog) {
+          if( window.isDebugging ) console.log('📢 [Widget] Chat dialog not found, cannot show notification');
+          return;
+        }
+        
+        this.dialog.insertAdjacentHTML('beforeend', modalHtml);
         
         // Add event listeners
-        const dialog = document.querySelector('.pingbash-group-notification-dialog');
+        const dialog = this.dialog.querySelector('.pingbash-group-notification-dialog');
+        
+        // Apply dark mode if widget is in dark mode
+        if (this.widget && this.widget.classList.contains('pingbash-dark-mode')) {
+          dialog.classList.add('pingbash-dark-mode');
+          if( window.isDebugging ) console.log('📢 [Widget] Applied dark mode to notification dialog');
+        }
         const closeBtn = dialog.querySelector('.pingbash-popup-close');
         const okBtn = dialog.querySelector('.pingbash-notification-ok-btn');
         const overlay = dialog.querySelector('.pingbash-popup-overlay');

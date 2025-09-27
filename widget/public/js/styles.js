@@ -5702,15 +5702,40 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
         }
 
         /* Send Notification Modal Styles */
+        .pingbash-notification-modal {
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          z-index: 999999999;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          animation: fadeIn 0.3s ease;
+        }
+
+        .pingbash-notification-modal .pingbash-popup-overlay {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background: rgba(0, 0, 0, 0.5);
+          backdrop-filter: blur(2px);
+        }
+
         .pingbash-notification-modal .pingbash-popup-content {
           width: 90%;
           max-width: 600px;
           background: white;
           border-radius: 12px;
-          box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+          box-shadow: 0 15px 40px rgba(0,0,0,0.3);
           position: relative;
           max-height: 80vh;
           overflow-y: auto;
+          animation: slideInScale 0.3s ease;
+          margin: 20px;
         }
 
         .pingbash-notification-form {
@@ -5835,39 +5860,160 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
           border-color: #28a745;
         }
 
-        /* Group Notification Dialog Styles */
+        /* Dark Mode Support for Send Notification Dialog */
+        .pingbash-dark-mode .pingbash-notification-modal .pingbash-popup-content {
+          background: #2d3748 !important;
+          color: #e2e8f0 !important;
+        }
+
+        .pingbash-dark-mode .pingbash-notification-modal .pingbash-popup-header {
+          background: #2d3748 !important;
+          color: #e2e8f0 !important;
+          border-bottom: 1px solid #4a5568 !important;
+        }
+
+        .pingbash-dark-mode .pingbash-notification-modal .pingbash-popup-header h3 {
+          color: #e2e8f0 !important;
+        }
+
+        .pingbash-dark-mode .pingbash-notification-modal .pingbash-popup-close {
+          color: #e2e8f0 !important;
+          background: transparent !important;
+        }
+
+        .pingbash-dark-mode .pingbash-notification-modal .pingbash-popup-close:hover {
+          background: rgba(255, 255, 255, 0.1) !important;
+        }
+
+        .pingbash-dark-mode .pingbash-notification-modal .pingbash-notification-form label {
+          color: #e2e8f0 !important;
+        }
+
+        .pingbash-dark-mode .pingbash-notification-modal .pingbash-notification-textarea {
+          background: #1a202c !important;
+          border: 2px solid #4a5568 !important;
+          color: #e2e8f0 !important;
+        }
+
+        .pingbash-dark-mode .pingbash-notification-modal .pingbash-notification-textarea:focus {
+          border-color: #4299e1 !important;
+        }
+
+        .pingbash-dark-mode .pingbash-notification-modal .pingbash-char-counter {
+          color: #a0aec0 !important;
+        }
+
+        .pingbash-dark-mode .pingbash-notification-modal .pingbash-notification-preview h4 {
+          color: #e2e8f0 !important;
+        }
+
+        .pingbash-dark-mode .pingbash-notification-modal .pingbash-notification-preview-content {
+          background: #1a202c !important;
+          border: 1px solid #4a5568 !important;
+        }
+
+        .pingbash-dark-mode .pingbash-notification-modal .pingbash-notification-preview-message {
+          color: #e2e8f0 !important;
+        }
+
+        .pingbash-dark-mode .pingbash-notification-modal .pingbash-notification-cancel-btn {
+          background: #4a5568 !important;
+          color: #e2e8f0 !important;
+          border: 1px solid #4a5568 !important;
+        }
+
+        .pingbash-dark-mode .pingbash-notification-modal .pingbash-notification-cancel-btn:hover {
+          background: #2d3748 !important;
+        }
+
+        .pingbash-dark-mode .pingbash-notification-modal .pingbash-notification-send-btn {
+          background: #4299e1 !important;
+          border-color: #4299e1 !important;
+        }
+
+        .pingbash-dark-mode .pingbash-notification-modal .pingbash-notification-send-btn:not(:disabled):hover {
+          background: #3182ce !important;
+          border-color: #3182ce !important;
+        }
+
+        /* Group Notification Dialog Styles - Inside Chat Dialog */
         .pingbash-group-notification-dialog {
-          position: fixed;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 100%;
-          z-index: 999999;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          animation: fadeIn 0.3s ease;
+          position: absolute !important;
+          top: 0 !important;
+          left: 0 !important;
+          width: 100% !important;
+          height: 100% !important;
+          z-index: 1000 !important;
+          display: flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          animation: fadeIn 0.3s ease !important;
+          background: transparent !important;
         }
 
         .pingbash-group-notification-dialog .pingbash-popup-overlay {
-          position: absolute;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 100%;
-          background: rgba(0, 0, 0, 0.5);
-          backdrop-filter: blur(2px);
+          position: absolute !important;
+          top: 0 !important;
+          left: 0 !important;
+          width: 100% !important;
+          height: 100% !important;
+          background: rgba(0, 0, 0, 0.5) !important;
+          backdrop-filter: blur(2px) !important;
         }
 
         .pingbash-group-notification-dialog .pingbash-popup-content {
-          background: white;
-          border-radius: 12px;
-          box-shadow: 0 15px 40px rgba(0,0,0,0.3);
-          position: relative;
-          animation: slideInScale 0.3s ease;
-          margin: 20px;
-          max-width: 500px;
-          width: 90%;
+          background: white !important;
+          border-radius: 12px !important;
+          box-shadow: 0 15px 40px rgba(0,0,0,0.3) !important;
+          position: relative !important;
+          animation: slideInScale 0.3s ease !important;
+          margin: 20px !important;
+          max-width: 500px !important;
+          width: 90% !important;
+        }
+
+        /* Dark Mode Support for Group Notification Dialog */
+        .pingbash-dark-mode .pingbash-group-notification-dialog .pingbash-popup-content {
+          background: #2d3748 !important;
+          color: #e2e8f0 !important;
+        }
+
+        .pingbash-dark-mode .pingbash-group-notification-dialog .pingbash-popup-header {
+          background: #2d3748 !important;
+          color: #e2e8f0 !important;
+          border-bottom: 1px solid #4a5568 !important;
+        }
+
+        .pingbash-dark-mode .pingbash-group-notification-dialog .pingbash-popup-header h3 {
+          color: #e2e8f0 !important;
+        }
+
+        .pingbash-dark-mode .pingbash-group-notification-dialog .pingbash-popup-close {
+          color: #e2e8f0 !important;
+          background: transparent !important;
+        }
+
+        .pingbash-dark-mode .pingbash-group-notification-dialog .pingbash-popup-close:hover {
+          background: rgba(255, 255, 255, 0.1) !important;
+        }
+
+        .pingbash-dark-mode .pingbash-group-notification-dialog .pingbash-notification-sender {
+          color: #81c784 !important;
+        }
+
+        .pingbash-dark-mode .pingbash-group-notification-dialog .pingbash-notification-message-display {
+          background: #1a202c !important;
+          border: 1px solid #4a5568 !important;
+          color: #e2e8f0 !important;
+        }
+
+        .pingbash-dark-mode .pingbash-group-notification-dialog .pingbash-notification-ok-btn {
+          background: #4299e1 !important;
+          color: white !important;
+        }
+
+        .pingbash-dark-mode .pingbash-group-notification-dialog .pingbash-notification-ok-btn:hover {
+          background: #3182ce !important;
         }
 
         .pingbash-notification-sender {
@@ -5907,6 +6053,57 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
 
         .pingbash-notification-ok-btn:hover {
           background: #0056b3;
+        }
+
+        /* Dark Mode Hamburger Icon Fix */
+        /* When in dark mode, hamburger icon should use same color as settings icon */
+        .pingbash-dark-mode .pingbash-hamburger-btn {
+          color: #e5e5e5 !important;
+        }
+
+        .pingbash-dark-mode .pingbash-hamburger-btn svg path {
+          fill: #e5e5e5 !important;
+        }
+
+        /* Override any group setting colors in dark mode for hamburger icon */
+        .pingbash-dark-mode .pingbash-hamburger-btn svg {
+          color: #e5e5e5 !important;
+        }
+
+        /* Dark Mode Hamburger Menu Items Fix */
+        /* When in dark mode, hamburger menu items should use #e5e5e5 color instead of group setting colors */
+        .pingbash-dark-mode .pingbash-hamburger-dropdown .pingbash-menu-item {
+          color: #e5e5e5 !important;
+        }
+
+        .pingbash-dark-mode .pingbash-hamburger-dropdown .pingbash-menu-item svg {
+          color: #e5e5e5 !important;
+        }
+
+        .pingbash-dark-mode .pingbash-hamburger-dropdown .pingbash-menu-item svg path {
+          fill: #e5e5e5 !important;
+        }
+
+        /* Override any group setting colors for hamburger menu item text and icons */
+        .pingbash-dark-mode .pingbash-hamburger-dropdown .pingbash-menu-item * {
+          color: #e5e5e5 !important;
+        }
+
+        /* Animation keyframes for modals */
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+
+        @keyframes slideInScale {
+          from {
+            opacity: 0;
+            transform: translateY(-30px) scale(0.95);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+          }
         }
       `;
   
