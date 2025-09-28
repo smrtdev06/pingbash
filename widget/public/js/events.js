@@ -2282,7 +2282,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
           } else {
             // Other users' messages
             if (groupData.msg_bg_color) {
-              message.style.backgroundColor = groupData.msg_bg_color;
+              //message.style.backgroundColor = groupData.msg_bg_color;
             }
           }
           
