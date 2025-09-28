@@ -672,22 +672,18 @@ module.exports = (socket, users) => {
             }
             // Delete message from the database
             await Controller.deleteGroupMsg(msgId);
-            const receivers = await Controller.getReceiverIdsOfGroup(groupId);
-            // Find the receiver's and sender's socket IDs
-            const receiveUsers = users.filter(user => receivers.find(receiverId => receiverId == user.ID));
-            // const sender = users.find(user => user.ID === senderId);
             
-            // const senderSocketId = sender?.Socket;
-            const receiverSocketIds = receiveUsers.map(user => user?.Socket);
-
-            // const senderSocket = sockets[senderSocketId];
-            const receiverSockets = receiverSocketIds.map(socketId => sockets[socketId]);
-
-            // if (senderSocket) {
-            //     senderSocket.emit(chatCode.DELETE_GROUP_MSG, msgId);
-            // }
-            safeEmitToSockets(receiverSockets, chatCode.DELETE_GROUP_MSG, msgId);
-            console.log(`✅ Message ${msgId} deleted and notification sent to all group members`);
+            // Use Socket.IO rooms to broadcast to ALL users (authenticated + anonymous) in the group
+            const roomName = `group_${groupId}`;
+            console.log(`🗑️ [BROADCAST] Sending delete message event to room: ${roomName}`);
+            
+            // Broadcast to all sockets in the group room (except sender)
+            socket.to(roomName).emit(chatCode.DELETE_GROUP_MSG, msgId);
+            
+            // Also send to the sender
+            socket.emit(chatCode.DELETE_GROUP_MSG, msgId);
+            
+            console.log(`✅ Message ${msgId} deleted and notification sent to all group members via room broadcast`);
         } catch (error) {
             console.error("Error deleting message:", error);
             socket.emit(chatCode.SERVER_ERROR, httpCode.SERVER_ERROR);

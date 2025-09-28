@@ -1338,34 +1338,70 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
         }
       }
       
-      // Update Banned Users menu item (only group owner can access)
+      // Update Banned Users menu item (group owner OR moderators with ban permission can access)
       const bannedUsersItem = this.dialog.querySelector('.pingbash-menu-item[data-action="banned-users"]');
       if (bannedUsersItem) {
         const currentUserId = this.getCurrentUserId();
         const isGroupOwner = this.group && currentUserId === this.group.creater_id;
         
-        if (isGroupOwner) {
+        // Check if user is moderator with ban permission
+        const myMemInfo = this.group?.members?.find(user => user.id === currentUserId);
+        const canBanUsers = (myMemInfo?.role_id === 2 && myMemInfo?.ban_user === true);
+        const hasAccessToBannedUsers = isGroupOwner || canBanUsers;
+        
+        if( window.isDebugging ) console.log('👥 [Widget] Banned Users visibility check:', {
+          bannedUsersItem: !!bannedUsersItem,
+          currentUserId: currentUserId,
+          groupCreatorId: this.group?.creater_id,
+          isGroupOwner: isGroupOwner,
+          canBanUsers: canBanUsers,
+          hasAccessToBannedUsers: hasAccessToBannedUsers,
+          myMemInfo: myMemInfo,
+          hasGroup: !!this.group
+        });
+        
+        if (hasAccessToBannedUsers) {
           bannedUsersItem.style.display = 'flex';
-          if( window.isDebugging ) console.log('👥 [Widget] Showing Banned Users menu item for group owner');
+          if( window.isDebugging ) console.log('👥 [Widget] ✅ Showing Banned Users menu item (has ban permissions)');
         } else {
           bannedUsersItem.style.display = 'none';
-          if( window.isDebugging ) console.log('👥 [Widget] Hiding Banned Users menu item');
+          if( window.isDebugging ) console.log('👥 [Widget] ❌ Hiding Banned Users menu item (no ban permissions)');
         }
+      } else {
+        if( window.isDebugging ) console.log('👥 [Widget] ❌ Banned Users menu item not found in DOM');
       }
       
-      // Update IP Bans menu item (only group owner can access)
+      // Update IP Bans menu item (group owner OR moderators with ban permission can access)
       const ipBansItem = this.dialog.querySelector('.pingbash-menu-item[data-action="ip-bans"]');
       if (ipBansItem) {
         const currentUserId = this.getCurrentUserId();
         const isGroupOwner = this.group && currentUserId === this.group.creater_id;
         
-        if (isGroupOwner) {
+        // Check if user is moderator with ban permission (reuse same logic as banned users)
+        const myMemInfo = this.group?.members?.find(user => user.id === currentUserId);
+        const canBanUsers = (myMemInfo?.role_id === 2 && myMemInfo?.ban_user === true);
+        const hasAccessToIpBans = isGroupOwner || canBanUsers;
+        
+        if( window.isDebugging ) console.log('🌐 [Widget] IP Bans visibility check:', {
+          ipBansItem: !!ipBansItem,
+          currentUserId: currentUserId,
+          groupCreatorId: this.group?.creater_id,
+          isGroupOwner: isGroupOwner,
+          canBanUsers: canBanUsers,
+          hasAccessToIpBans: hasAccessToIpBans,
+          myMemInfo: myMemInfo,
+          hasGroup: !!this.group
+        });
+        
+        if (hasAccessToIpBans) {
           ipBansItem.style.display = 'flex';
-          if( window.isDebugging ) console.log('👥 [Widget] Showing IP Bans menu item for group owner');
+          if( window.isDebugging ) console.log('🌐 [Widget] ✅ Showing IP Bans menu item (has ban permissions)');
         } else {
           ipBansItem.style.display = 'none';
-          if( window.isDebugging ) console.log('👥 [Widget] Hiding IP Bans menu item');
+          if( window.isDebugging ) console.log('🌐 [Widget] ❌ Hiding IP Bans menu item (no ban permissions)');
         }
+      } else {
+        if( window.isDebugging ) console.log('🌐 [Widget] ❌ IP Bans menu item not found in DOM');
       }
       
       // Show/hide send notification option (group creators only)
@@ -1384,17 +1420,32 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
       // Show/hide settings container based on permissions
       const settingsContainer = this.dialog.querySelector('.pingbash-settings-container');
       if (settingsContainer) {
+        const isGroupCreator = this.group && this.getCurrentUserId() === this.group.creater_id;
         const hasAnyPermission = canManageModeratorPermission || canManageChatLimitations || 
-                                 canManageChat || canManageCensoredContent || 
-                                 (this.group && this.getCurrentUserId() === this.group.creater_id);
+                                 canManageChat || canManageCensoredContent || isGroupCreator;
+        
+        if( window.isDebugging ) console.log('⚙️ [Widget] Settings container visibility check:', {
+          settingsContainer: !!settingsContainer,
+          currentUserId: this.getCurrentUserId(),
+          groupCreatorId: this.group?.creater_id,
+          isGroupCreator: isGroupCreator,
+          canManageModeratorPermission: canManageModeratorPermission,
+          canManageChatLimitations: canManageChatLimitations,
+          canManageChat: canManageChat,
+          canManageCensoredContent: canManageCensoredContent,
+          hasAnyPermission: hasAnyPermission,
+          currentDisplay: settingsContainer.style.display
+        });
         
         if (hasAnyPermission) {
           settingsContainer.style.display = 'flex';
-          if( window.isDebugging ) console.log('⚙️ [Widget] Showing settings container (user has admin permissions)');
+          if( window.isDebugging ) console.log('⚙️ [Widget] ✅ Showing settings container (user has admin permissions)');
         } else {
           settingsContainer.style.display = 'none';
-          if( window.isDebugging ) console.log('⚙️ [Widget] Hiding settings container (no admin permissions)');
+          if( window.isDebugging ) console.log('⚙️ [Widget] ❌ Hiding settings container (no admin permissions)');
         }
+      } else {
+        if( window.isDebugging ) console.log('⚙️ [Widget] ❌ Settings container not found in DOM');
       }
       
       // Update hamburger menu items based on user state
@@ -1435,6 +1486,21 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
         // Hide favorites for anonymous users
         if (favoritesToggle) favoritesToggle.style.display = 'none';
         if( window.isDebugging ) console.log('⭐ [Widget] Hiding favorites option for anonymous user');
+      }
+      
+      // Edit Chat Style (only for group creators)
+      const editChatStyleItem = this.dialog.querySelector('.pingbash-menu-item[data-action="edit-chat-style"]');
+      if (editChatStyleItem) {
+        const currentUserId = this.getCurrentUserId();
+        const isGroupCreator = this.group && currentUserId === this.group.creater_id;
+        
+        if (isGroupCreator) {
+          editChatStyleItem.style.display = 'flex';
+          if( window.isDebugging ) console.log('🎨 [Widget] Showing Edit Chat Style menu item for group creator');
+        } else {
+          editChatStyleItem.style.display = 'none';
+          if( window.isDebugging ) console.log('🎨 [Widget] Hiding Edit Chat Style menu item (not group creator)');
+        }
       }
       
       // Login / Logout buttons
@@ -3021,9 +3087,12 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
     showEditChatStyleModal() {
       if( window.isDebugging ) console.log('🎨 [Widget] Opening Edit Chat Style modal');
       
-      // Check permissions - only group creator or admins can edit style
-      if (!this.canManageChat()) {
-        if( window.isDebugging ) console.log('🎨 [Widget] User does not have permission to edit chat style');
+      // Check permissions - only group creator can edit style
+      const currentUserId = this.getCurrentUserId();
+      const isGroupCreator = this.group && currentUserId === this.group.creater_id;
+      
+      if (!isGroupCreator) {
+        if( window.isDebugging ) console.log('🎨 [Widget] User does not have permission to edit chat style (not group creator)');
         return;
       }
       

@@ -345,7 +345,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
                   </svg>
                   Manage Chat
                 </div>
-                <div class="pingbash-menu-item" data-action="edit-chat-style">
+                <div class="pingbash-menu-item" data-action="edit-chat-style" style="display: none;">
                   <svg viewBox="0 0 24 24" width="16" height="16">
                     <path fill="currentColor" d="M12,2A2,2 0 0,1 14,4C14,4.74 13.6,5.39 13,5.73V7A1,1 0 0,0 14,8H18A1,1 0 0,0 19,7V5.73C18.4,5.39 18,4.74 18,4A2,2 0 0,1 20,2A2,2 0 0,1 22,4C22,4.74 21.6,5.39 21,5.73V7A3,3 0 0,1 18,10H14A3,3 0 0,1 11,7V5.73C10.4,5.39 10,4.74 10,4A2,2 0 0,1 12,2Z"/>
                   </svg>
