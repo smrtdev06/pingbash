@@ -229,10 +229,20 @@ module.exports = async (http) => {
                     try {
                         const chatRules = await Controller.getChatRules(data.groupId);
                         if (chatRules) {
+                            // For anonymous users, determine if they're the creator by checking the actual user ID
+                            let isCreator = false;
+                            if (res.user?.isAnonymous && data.token && data.token.includes('anonuser')) {
+                                // Anonymous user - never the creator
+                                isCreator = false;
+                            } else {
+                                // Authenticated user - check if they're the creator
+                                isCreator = chatRules.creater_id === res.user?.id;
+                            }
+                            
                             socket.emit(chatCode.GET_CHAT_RULES, {
                                 chatRules: chatRules.chat_rules || '',
                                 showChatRules: chatRules.show_chat_rules || false,
-                                isCreator: chatRules.creater_id === res.user?.id
+                                isCreator: isCreator
                             });
                         } else {
                             socket.emit(chatCode.GET_CHAT_RULES, {
@@ -575,7 +585,7 @@ module.exports = async (http) => {
                         // Join socket room for real-time updates (chat limitations, clear chat, etc.)
                         try {
                             socket.join(`group_${data.groupId}`);
-                            console.log(`🔗 [GET_MSG] User ${loggedId} joined socket room: group_${data.groupId}`);
+                            console.log(`🔗 [GET_MSG] User ${loggedId} (${isAnonymousUser ? 'anonymous' : 'authenticated'}) joined socket room: group_${data.groupId}`);
                         } catch (error) {
                             console.log(`🔗 [GET_MSG] Failed to join socket room for user ${loggedId}:`, error.message);
                         }
@@ -583,11 +593,11 @@ module.exports = async (http) => {
                         // Retrieve group messages
                         const groupMessages = await Controller.getGroupMsg(data.groupId);
 
-                        // Also send updated group data to ensure timeout status is current
+                        // Send updated group data for styling and settings (IMPORTANT for anonymous users)
                         const updatedGroup = await Controller.getGroup(data.groupId);
                         if (updatedGroup) {
                             socket.emit(chatCode.GROUP_UPDATED, updatedGroup);
-                            console.log(`🔄 [GET_MSG] Updated group data sent to user ${loggedId} for group ${data.groupId}`);
+                            console.log(`🔄 [GET_MSG] Group data sent to ${isAnonymousUser ? 'anonymous' : 'authenticated'} user ${loggedId} for styling and settings`);
                         }
 
                         // Emit GET_GROUP_MSG event with messages list to the socket

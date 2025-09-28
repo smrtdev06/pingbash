@@ -427,6 +427,8 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         avatar.style.display = groupData.show_user_img !== false ? 'block' : 'none';
       }
       
+      // Apply reply indicator styling in light mode - handled by CSS injection now
+      
       if( window.isDebugging ) console.log('🎨 [Widget] Applied styling to new message:', messageEl.getAttribute('data-message-id'));
     },
 

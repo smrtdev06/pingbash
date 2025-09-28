@@ -283,6 +283,22 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         this.group = group;
         this.groupMembers = group?.members || [];
 
+        // Apply group styling to chat dialog (for both authenticated and anonymous users)
+        if (group && this.applyGroupSettingsToChatDialog) {
+          if( window.isDebugging ) console.log('🎨 [Widget] Group updated - applying group styling for user type:', this.isAuthenticated ? 'authenticated' : 'anonymous');
+          this.applyGroupSettingsToChatDialog(group);
+        }
+
+        // Inject reply indicator CSS when group data is updated
+        if (group?.reply_msg_color && !this.widget?.classList.contains('pingbash-dark-mode')) {
+          if( window.isDebugging ) console.log('🎨 [Widget] Group updated - injecting reply indicator CSS with color:', group.reply_msg_color);
+          if (this.injectReplyIndicatorCSS) {
+            this.injectReplyIndicatorCSS(group.reply_msg_color);
+          } else {
+            if( window.isDebugging ) console.log('🎨 [Widget] injectReplyIndicatorCSS method not available yet');
+          }
+        }
+
         // Update chat limitation UI when group data changes
         this.onGroupDataUpdated();
         

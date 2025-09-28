@@ -2226,6 +2226,12 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         // Also refresh styling on all existing messages
         this.refreshAllMessagesStyling(actualChatDialog, groupData);
         
+        // Ensure reply indicator CSS is injected (backup call)
+        if (groupData.reply_msg_color && !this.widget?.classList.contains('pingbash-dark-mode')) {
+          if( window.isDebugging ) console.log('🎨 [Widget] Backup CSS injection for reply indicator with color:', groupData.reply_msg_color);
+          this.injectReplyIndicatorCSS(groupData.reply_msg_color);
+        }
+        
         if( window.isDebugging ) console.log('🎨 [Widget] ✅ Applied ALL chat style settings to dialog');
       },
 
@@ -2314,6 +2320,8 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
           if (avatar) {
             avatar.style.display = groupData.show_user_img !== false ? 'block' : 'none';
           }
+          
+          // Apply reply indicator styling in light mode - handled by CSS injection now
         });
         
         // Apply send button styling
@@ -2333,7 +2341,84 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
           }
         });
         
+        // Inject dynamic CSS for reply indicator styling in light mode
+        if (groupData.reply_msg_color && !this.widget?.classList.contains('pingbash-dark-mode')) {
+          this.injectReplyIndicatorCSS(groupData.reply_msg_color);
+        }
+        
         if( window.isDebugging ) console.log('🎨 [Widget] Applied detailed styling to chat elements');
+      },
+
+      // NEW METHOD - Inject CSS for reply indicator styling
+      injectReplyIndicatorCSS(replyColor) {
+        if( window.isDebugging ) console.log('🎨 [Widget] injectReplyIndicatorCSS called with color:', replyColor);
+        
+        // Remove existing reply indicator CSS if it exists
+        const existingStyle = document.getElementById('pingbash-reply-indicator-custom-css');
+        if (existingStyle) {
+          if( window.isDebugging ) console.log('🎨 [Widget] Removing existing reply indicator CSS');
+          existingStyle.remove();
+        }
+        
+        // Convert hex to rgba
+        const hexToRgba = (hex, alpha) => {
+          const r = parseInt(hex.slice(1, 3), 16);
+          const g = parseInt(hex.slice(3, 5), 16);
+          const b = parseInt(hex.slice(5, 7), 16);
+          return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+        };
+        
+        // Create dynamic CSS
+        const css = `
+          /* Custom reply indicator styling for light mode */
+          .pingbash-chat-dialog:not(.pingbash-dark-mode) .pingbash-reply-indicator {
+            background: ${hexToRgba(replyColor, 0.5)} !important;
+            border-left-color: ${replyColor} !important;
+          }
+          
+          .pingbash-chat-dialog:not(.pingbash-dark-mode) .pingbash-reply-indicator:hover {
+            background: ${hexToRgba(replyColor, 0.3)} !important;
+          }
+          
+          .pingbash-chat-dialog:not(.pingbash-dark-mode) .pingbash-reply-line {
+            background: ${replyColor} !important;
+          }
+          
+          .pingbash-chat-dialog:not(.pingbash-dark-mode) .pingbash-reply-sender {
+            color: ${replyColor} !important;
+          }
+          
+          /* Don't override own message reply indicators 
+          .pingbash-chat-dialog:not(.pingbash-dark-mode) .pingbash-message.own .pingbash-reply-indicator {
+            background: rgba(255, 255, 255, 0.2) !important;
+            border-left-color: rgba(255, 255, 255, 0.8) !important;
+          }
+          
+          .pingbash-chat-dialog:not(.pingbash-dark-mode) .pingbash-message.own .pingbash-reply-line {
+            background: rgba(255, 255, 255, 0.8) !important;
+          }
+          
+          .pingbash-chat-dialog:not(.pingbash-dark-mode) .pingbash-message.own .pingbash-reply-sender {
+            color: rgba(255, 255, 255, 0.9) !important;
+          }*/
+        `;
+        
+        // Inject the CSS
+        const style = document.createElement('style');
+        style.id = 'pingbash-reply-indicator-custom-css';
+        style.textContent = css;
+        document.head.appendChild(style);
+        
+        if( window.isDebugging ) console.log('🎨 [Widget] Injected custom reply indicator CSS with color:', replyColor);
+        if( window.isDebugging ) console.log('🎨 [Widget] CSS content:', css);
+        if( window.isDebugging ) console.log('🎨 [Widget] Style element added to head:', document.getElementById('pingbash-reply-indicator-custom-css'));
+      },
+
+      // TEST METHOD - Manual CSS injection for testing
+      testReplyIndicatorCSS(color = '#ff0000') {
+        console.log('🧪 [Widget] Testing reply indicator CSS injection with color:', color);
+        this.injectReplyIndicatorCSS(color);
+        console.log('🧪 [Widget] Test complete - check if reply indicators changed color');
       },
 
       // NEW METHOD - Refresh styling on all existing messages
