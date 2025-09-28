@@ -168,13 +168,8 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
         console.error('📋 [Widget] [Chat Rules] Edit button not found in DOM');
       }
   
-      // Load current rules if authenticated
-      if (this.isAuthenticated) {
-        this.getChatRules();
-      } else {
-        // Show default message for anonymous users
-        this.displayChatRules('');
-      }
+      // Load current rules for both authenticated and anonymous users
+      this.getChatRules();
   
       // Show the popup
       const popup = this.dialog.querySelector('.pingbash-chat-rules-popup');
