@@ -249,14 +249,14 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
           // Hide loading state on permissions save button if it exists
           const saveBtn = this.dialog.querySelector('.pingbash-mod-permissions-save');
           if (saveBtn && this.setButtonLoading) {
-            this.setButtonLoading(saveBtn, false);
+          this.setButtonLoading(saveBtn, false);
           }
           
           // Hide permissions popup if it's open
           const permissionsPopup = this.dialog.querySelector('.pingbash-mod-permissions-popup');
           if (permissionsPopup && permissionsPopup.style.display === 'flex') {
             if (this.hideModeratorPermissionsPopup) {
-              this.hideModeratorPermissionsPopup();
+          this.hideModeratorPermissionsPopup();
             }
           }
         }
@@ -766,11 +766,11 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
           
           // Refresh pinned messages view if open (with delay to ensure state is updated)
           setTimeout(() => {
-            const pinnedView = this.dialog.querySelector('.pingbash-pinned-messages-view');
-            if (pinnedView && pinnedView.style.display !== 'none') {
+          const pinnedView = this.dialog.querySelector('.pingbash-pinned-messages-view');
+          if (pinnedView && pinnedView.style.display !== 'none') {
               if( window.isDebugging ) console.log('📌 [Widget] Refreshing pinned messages view after unpin');
-              this.loadPinnedMessages();
-            }
+            this.loadPinnedMessages();
+          }
           }, 100);
           
           if( window.isDebugging ) console.log('📌 [Widget] Message unpinned successfully');
@@ -1910,7 +1910,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         
         // Disable input and send button during timeout
         if (this.updateTimeoutUI) {
-          this.updateTimeoutUI(true, expiresAt);
+        this.updateTimeoutUI(true, expiresAt);
         }
         
         // Set up timeout expiry check

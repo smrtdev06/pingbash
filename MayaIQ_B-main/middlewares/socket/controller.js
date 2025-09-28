@@ -65,7 +65,7 @@ const sendPrivateMessageEmailNotification = async (senderId, receiverId, message
 
         // Get receiver information (always required)
         const receiverResult = await PG_query(`SELECT "Name", "Email" FROM "Users" WHERE "Id" = ${receiverId}`);
-        
+
         console.log(`📧 [EMAIL] Receiver query result: ${receiverResult.rows.length} rows`);
 
         if (receiverResult.rows.length === 0) {
@@ -74,7 +74,7 @@ const sendPrivateMessageEmailNotification = async (senderId, receiverId, message
         }
 
         const receiver = receiverResult.rows[0];
-        
+
         // Handle sender information (could be authenticated user or anonymous)
         let sender = { Name: null, Email: null };
         const isAnonymousSender = senderId > 100000000; // Anonymous users have high IDs
@@ -1252,13 +1252,13 @@ const updateGroupModerators = async (groupId, senderId, modIds) => {
                 WHERE group_id = ${groupId};`)
         } else {
             console.log(`👥 [Backend] Updating moderators for group ${groupId}, new moderator IDs: [${modIds.join(', ')}]`);
-            await PG_query(`UPDATE group_users
-                SET role_id = CASE
-                    WHEN role_id = 1 THEN role_id
-                    WHEN user_id = ANY(ARRAY[${modIds}]) THEN 2
-                    ELSE NULL
-                END
-                WHERE group_id = ${groupId};`)
+        await PG_query(`UPDATE group_users
+            SET role_id = CASE
+                WHEN role_id = 1 THEN role_id
+                WHEN user_id = ANY(ARRAY[${modIds}]) THEN 2
+                ELSE NULL
+            END
+            WHERE group_id = ${groupId};`)
         }
     } catch (error) {
         console.log(error);

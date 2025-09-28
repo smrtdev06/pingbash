@@ -87,9 +87,9 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
           if( window.isDebugging ) console.log('🔍 [Widget] Page visible - adding messages immediately');
           if( window.isDebugging ) console.log('🔍 [Widget] Before processing - existing:', this.messages?.length || 0, 'new:', data.length);
   
-                    // Don't merge here - let displayMessages handle the logic
+          // Don't merge here - let displayMessages handle the logic
           this.displayMessages(data);
-
+  
           // Play notification sound for new messages
           this.playMessageSound(data);
 
@@ -369,14 +369,14 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
       `;
   
   
-            messagesList.appendChild(messageEl);
+      messagesList.appendChild(messageEl);
       if( window.isDebugging ) console.log('🔍 [Widget] ✅ Message element appended to DOM, total messages now:', messagesList.children.length);
 
       // Apply current group styling to the new message
       if (this.group) {
         this.applyStyleToMessage(messageEl, this.group, isOwn);
       }
-
+  
       // Remove animation class after animation completes
       if (isNewMessage) {
         setTimeout(() => {
@@ -2102,8 +2102,11 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         this.lastSoundTime = now;
         
         try {
-          // Use the same sound file path as the F and W versions
-          const audio = new Audio('/sounds/sound_bell.wav');
+          // Get the base URL from the widget script and construct sound path
+          const baseUrl = this.getWidgetBaseUrl();
+          const soundPath = `${baseUrl}sounds/sound_bell.wav`;
+          if( window.isDebugging ) console.log('🔊 [Widget] Loading sound from:', soundPath);
+          const audio = new Audio(soundPath);
           audio.volume = soundSetting === 'low' ? 0.3 : soundSetting === 'medium' ? 0.6 : 1.0;
           
           const playPromise = audio.play();

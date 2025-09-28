@@ -310,7 +310,7 @@ module.exports = (socket, users) => {
                 }
             } else {
                 // Regular message (public or 1-on-1)
-                await Controller.saveGroupMsg(senderId, content, groupId, receiverId, data.parent_id);
+            await Controller.saveGroupMsg(senderId, content, groupId, receiverId, data.parent_id);
                 
                 // Send email notification for 1-on-1 messages to offline users
                 if (receiverId && receiverId !== -1) {
@@ -393,7 +393,7 @@ module.exports = (socket, users) => {
             // For Mods mode messages, sender doesn't get their message back since they were excluded from recipients
             const shouldSendBackToSender = !(receiverId === -1 && modAdminIds && modAdminIds.includes(senderId));
             if (shouldSendBackToSender) {
-                socket.emit(chatCode.SEND_GROUP_MSG, msgList);
+            socket.emit(chatCode.SEND_GROUP_MSG, msgList);
                 console.log(`📋 [BROADCAST] ✅ Message sent back to sender ${senderId}`);
             } else {
                 console.log(`📋 [BROADCAST] ⏭️ Skipping send-back to sender ${senderId} (Mods mode - sender excluded)`);
@@ -485,7 +485,7 @@ module.exports = (socket, users) => {
                 }
             } else {
                 // Regular message (public or 1-on-1)
-                await Controller.saveGroupMsg(anonId, content, groupId, receiverId, data.parent_id);
+            await Controller.saveGroupMsg(anonId, content, groupId, receiverId, data.parent_id);
                 
                 // Send email notification for 1-on-1 messages to offline users from anonymous senders
                 if (receiverId && receiverId !== -1) {
@@ -808,7 +808,7 @@ module.exports = (socket, users) => {
                     console.log(`✅ Ban notification sent to user ${targetUserId}`);
                 }
             }
-
+            
             const group = await Controller.getGroup(groupId);
             if (receiverSockets && receiverSockets.length > 0) {
                 receiverSockets.forEach(receiverSocket => {
@@ -1002,8 +1002,8 @@ module.exports = (socket, users) => {
             if (!groupInfo) {
                 console.log(`Timeout attempt blocked: Group ${groupId} not found`);
                 socket.emit(chatCode.FORBIDDEN, "Group not found");
-                return;
-            }
+            return;
+        }
 
             // Check if sender is group creator
             const isGroupCreator = groupInfo.creater_id === senderId;
@@ -1517,7 +1517,7 @@ module.exports = (socket, users) => {
                         }
                     } catch (error) {
                         console.log(`📌 [Backend] Failed to send unpinned messages to user ${index + 1}:`, error.message);
-                    }
+                    }                    
                 });                
             }
             

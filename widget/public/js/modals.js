@@ -1277,7 +1277,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
           const modsOption = this.dialog.querySelector('.pingbash-mods-option');
           if (modsOption) {
             if (this.isModeratorOrAdmin()) {
-              modsOption.style.display = 'block';
+            modsOption.style.display = 'block';
               if( window.isDebugging ) console.log('🔍 [Widget] Enabling mods option for admin/moderator');
             } else {
               modsOption.style.display = 'none';
@@ -2515,7 +2515,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
           if( window.isDebugging ) console.log('📌 [Widget] Pinned messages view closed automatically, returned to menu');
         } else {
           // Fallback: show empty state if we can't close the view
-          container.innerHTML = '<div class="pingbash-no-pinned">No pinned messages found</div>';
+        container.innerHTML = '<div class="pingbash-no-pinned">No pinned messages found</div>';
           if( window.isDebugging ) console.log('📌 [Widget] Could not auto-close view, showing empty state instead');
         }
         
@@ -3898,7 +3898,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
        this.showModeStatus(1);
        
        if( window.isDebugging ) console.log('🔍 [Widget] 1-on-1 mode activated with user:', user.name);
-     },
+    },
 
-   });
-  }
+  });
+}

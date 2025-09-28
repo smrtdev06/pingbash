@@ -60,12 +60,29 @@ const { init } = require("./db");
 // Middlewares
 // app.use(bodyParser.json());
 const corsOptions = {
-   origin: '*', // Allow only this origin to access your server
+   origin: '*', // Allow all origins to access your server
    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE', // Allow these HTTP methods
-   allowedHeaders: 'Content-Type,Authorization', // Allow these headers
+   allowedHeaders: 'Content-Type,Authorization,X-Requested-With', // Allow these headers
+   credentials: false // Don't require credentials for cross-origin requests
 };
 
 app.use('*', cors(corsOptions));
+
+// Additional CORS headers for preflight requests
+app.use((req, res, next) => {
+   res.header('Access-Control-Allow-Origin', '*');
+   res.header('Access-Control-Allow-Methods', 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS');
+   res.header('Access-Control-Allow-Headers', 'Content-Type,Authorization,X-Requested-With');
+   res.header('Access-Control-Max-Age', '86400'); // Cache preflight for 24 hours
+   
+   // Handle preflight requests
+   if (req.method === 'OPTIONS') {
+       res.sendStatus(200);
+   } else {
+       next();
+   }
+});
+
 app.use(express.json());
 // app.use(limiter);
 

@@ -177,9 +177,9 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
                               <div class="pingbash-menu-item pingbash-favorites-toggle" data-action="toggle-favorites" style="display: none;">
                 <svg viewBox="0 0 24 24" width="16" height="16" class="pingbash-favorites-icon">
                   <path fill="currentColor" d="M12,21.35L10.55,20.03C5.4,15.36 2,12.27 2,8.5C2,5.41 4.42,3 7.5,3C9.24,3 10.91,3.81 12,5.08C13.09,3.81 14.76,3 16.5,3C19.58,3 22,5.41 22,8.5C22,12.27 18.6,15.36 13.45,20.03L12,21.35Z"/>
-                </svg>
+                  </svg>
                 <span class="pingbash-favorites-text">Add to Favorites</span>
-              </div>
+                </div>
                 <div class="pingbash-menu-item" data-action="hide-chat">
                   <svg viewBox="0 0 24 24" width="16" height="16">
                     <path fill="currentColor" d="M11.83,9L15,12.16C15,12.11 15,12.05 15,12A3,3 0 0,0 12,9C11.94,9 11.89,9 11.83,9M7.53,9.8L9.08,11.35C9.03,11.56 9,11.77 9,12A3,3 0 0,0 12,15C12.22,15 12.44,14.97 12.65,14.92L14.2,16.47C13.53,16.8 12.79,17 12,17A5,5 0 0,1 7,12C7,11.21 7.2,10.47 7.53,9.8M2,4.27L4.28,6.55L4.73,7C3.08,8.3 1.78,10 1,12C2.73,16.39 7,19.5 12,19.5C13.55,19.5 15.03,19.2 16.38,18.66L16.81,19.09L19.73,22L21,20.73L3.27,3M12,7A5,5 0 0,1 17,12C17,12.64 16.87,13.26 16.64,13.82L19.57,16.75C21.07,15.5 22.27,13.86 23,12C21.27,7.61 17,4.5 12,4.5C10.6,4.5 9.26,4.75 8,5.2L10.17,7.35C10.76,7.13 11.36,7 12,7Z"/>
@@ -268,24 +268,24 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
           <div class="pingbash-controls-left">
             <button class="pingbash-control-btn pingbash-image-btn" title="Send image">
               <svg viewBox="0 0 24 24" width="18" height="18">
-                <path fill="currentColor" d="M8.5,13.5L11,16.5L14.5,12L19,18H5M21,19V5C21,3.89 20.1,3 19,3H5A2,2 0 0,0 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19Z"/>
-              </svg>
-            </button>
+                  <path fill="currentColor" d="M8.5,13.5L11,16.5L14.5,12L19,18H5M21,19V5C21,3.89 20.1,3 19,3H5A2,2 0 0,0 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19Z"/>
+                </svg>
+              </button>
             <button class="pingbash-control-btn pingbash-file-btn" title="Attach file">
               <svg viewBox="0 0 24 24" width="18" height="18">
-                <path fill="currentColor" d="M16.5,6V17.5A4,4 0 0,1 12.5,21.5A4,4 0 0,1 8.5,17.5V5A2.5,2.5 0 0,1 11,2.5A2.5,2.5 0 0,1 13.5,5V15.5A1,1 0 0,1 12.5,16.5A1,1 0 0,1 11.5,15.5V6H10V15.5A2.5,2.5 0 0,0 12.5,18A2.5,2.5 0 0,0 15,15.5V5A4,4 0 0,0 11,1A4,4 0 0,0 7,5V17.5A5.5,5.5 0 0,0 12.5,23A5.5,5.5 0 0,0 18,17.5V6H16.5Z"/>
-              </svg>
-            </button>
+                  <path fill="currentColor" d="M16.5,6V17.5A4,4 0 0,1 12.5,21.5A4,4 0 0,1 8.5,17.5V5A2.5,2.5 0 0,1 11,2.5A2.5,2.5 0 0,1 13.5,5V15.5A1,1 0 0,1 12.5,16.5A1,1 0 0,1 11.5,15.5V6H10V15.5A2.5,2.5 0 0,0 12.5,18A2.5,2.5 0 0,0 15,15.5V5A4,4 0 0,0 11,1A4,4 0 0,0 7,5V17.5A5.5,5.5 0 0,0 12.5,23A5.5,5.5 0 0,0 18,17.5V6H16.5Z"/>
+                </svg>
+              </button>
             <button class="pingbash-control-btn pingbash-emoji-btn" title="Add emoji">
               <svg viewBox="0 0 24 24" width="18" height="18">
-                <path fill="currentColor" d="M12,2C6.486,2,2,6.486,2,12s4.486,10,10,10s10-4.486,10-10S17.514,2,12,2z M8.5,9C9.328,9,10,9.672,10,10.5 S9.328,12,8.5,12S7,11.328,7,10.5S7.672,9,8.5,9z M12,18c-4,0-5-3-5-3h10C17,15,16,18,12,18z M15.5,12C14.672,12,14,11.328,14,10.5 S14.672,9,15.5,9S17,9.672,17,10.5S16.328,12,15.5,12z"/>
-              </svg>
-            </button>
+                  <path fill="currentColor" d="M12,2C6.486,2,2,6.486,2,12s4.486,10,10,10s10-4.486,10-10S17.514,2,12,2z M8.5,9C9.328,9,10,9.672,10,10.5 S9.328,12,8.5,12S7,11.328,7,10.5S7.672,9,8.5,9z M12,18c-4,0-5-3-5-3h10C17,15,16,18,12,18z M15.5,12C14.672,12,14,11.328,14,10.5 S14.672,9,15.5,9S17,9.672,17,10.5S16.328,12,15.5,12z"/>
+                </svg>
+              </button>
             <button class="pingbash-control-btn pingbash-sound-btn" title="Sound settings">
               <svg viewBox="0 0 24 24" width="18" height="18">
-                <path fill="currentColor" d="M14,3.23V5.29C16.89,6.15 19,8.83 19,12C19,15.17 16.89,17.85 14,18.71V20.77C18,19.86 21,16.28 21,12C21,7.72 18,4.14 14,3.23M16.5,12C16.5,10.23 15.5,8.71 14,7.97V16C15.5,15.29 16.5,13.76 16.5,12M3,9V15H7L12,20V4L7,9H3Z"/>
-              </svg>
-            </button>
+                  <path fill="currentColor" d="M14,3.23V5.29C16.89,6.15 19,8.83 19,12C19,15.17 16.89,17.85 14,18.71V20.77C18,19.86 21,16.28 21,12C21,7.72 18,4.14 14,3.23M16.5,12C16.5,10.23 15.5,8.71 14,7.97V16C15.5,15.29 16.5,13.76 16.5,12M3,9V15H7L12,20V4L7,9H3Z"/>
+                </svg>
+              </button>
           </div>
           
           <!-- Right side: Chat controls -->
@@ -312,9 +312,9 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
                     <label for="filter-mods">Mods Mode</label>
                   </div>
                 </div>
-              </div>
             </div>
-            
+          </div>
+          
             <!-- Online Users Badge -->
             <div class="pingbash-online-users-container">
               <button class="pingbash-control-btn pingbash-online-users-icon" title="Online Users">
@@ -1008,7 +1008,7 @@ Example:
                     <button class="pingbash-emoji-tab" data-category="symbols">❤️</button>
                     <button class="pingbash-emoji-tab" data-category="flags">🏁</button>
                     <button class="pingbash-emoji-tab" data-category="gifs">GIF</button>
-                  </div>
+                </div>
                   
                   <!-- Emoji/GIF Content Area -->
                   <div class="pingbash-emoji-content">

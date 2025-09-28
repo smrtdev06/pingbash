@@ -524,5 +524,23 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
             }
         },
 
+        // Get the base URL for widget assets (sounds, etc.)
+        getWidgetBaseUrl() {
+            // Try to get base URL from the widget script
+            const scripts = document.querySelectorAll('script[src]');
+            for (let script of scripts) {
+                if (script.src.includes('widget-split.js') || script.src.includes('widget.js')) {
+                    const baseUrl = script.src.replace(/[^/]*\.js$/, '');
+                    if( window.isDebugging ) console.log('🔊 [Widget] Found base URL:', baseUrl);
+                    return baseUrl;
+                }
+            }
+            
+            // Fallback to current domain + path
+            const fallbackUrl = window.location.origin + '/';
+            if( window.isDebugging ) console.log('🔊 [Widget] Using fallback URL:', fallbackUrl);
+            return fallbackUrl;
+        },
+
     });
 }
