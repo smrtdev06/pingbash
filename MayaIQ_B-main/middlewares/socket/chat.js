@@ -294,15 +294,15 @@ module.exports = (socket, users) => {
                     
                     if (recipientIds.length > 0) {
                         for (const modAdminId of recipientIds) {
-                            await Controller.saveGroupMsg(senderId, content, groupId, modAdminId, data.parent_id);
+                            await Controller.saveGroupMsg(senderId, content, groupId, modAdminId, data.parent_id, 2); // Mode 2 = Mods
                             console.log(`📋 [MODS-MODE] ✅ Message saved for moderator/admin ${modAdminId} (receiver: ${modAdminId})`);
                         }
                         console.log(`📋 [MODS-MODE] ✅ Total messages created: ${recipientIds.length}`);
                     } else {
                         console.log(`📋 [MODS-MODE] ⚠️ No other moderators/admins to send to (sender ${senderId} is the only mod/admin)`);
-                        // Save as public message since there are no other mods/admins
-                        await Controller.saveGroupMsg(senderId, content, groupId, null, data.parent_id);
-                        console.log(`📋 [MODS-MODE] ✅ Saved as public message instead`);
+                        // Save as mods message even if there's only one mod (sender)
+                        await Controller.saveGroupMsg(senderId, content, groupId, senderId, data.parent_id, 2); // Mode 2 = Mods, sent to self
+                        console.log(`📋 [MODS-MODE] ✅ Saved as mods message to self`);
                     }
                 } else {
                     console.log(`📋 [MODS-MODE] No moderators/admins found, saving as regular group message`);
@@ -310,7 +310,8 @@ module.exports = (socket, users) => {
                 }
             } else {
                 // Regular message (public or 1-on-1)
-            await Controller.saveGroupMsg(senderId, content, groupId, receiverId, data.parent_id);
+                const messageMode = receiverId === null ? 0 : 1; // 0 = Public, 1 = Private
+                await Controller.saveGroupMsg(senderId, content, groupId, receiverId, data.parent_id, messageMode);
                 
                 // Send email notification for 1-on-1 messages to offline users
                 if (receiverId && receiverId !== -1) {
@@ -476,16 +477,17 @@ module.exports = (socket, users) => {
                 if (modAdminIds.length > 0) {
                     // Anonymous users can send to all moderators/admins (they're not mods themselves)
                     for (const modAdminId of modAdminIds) {
-                        await Controller.saveGroupMsg(anonId, content, groupId, modAdminId, data.parent_id);
+                        await Controller.saveGroupMsg(anonId, content, groupId, modAdminId, data.parent_id, 2); // Mode 2 = Mods
                         console.log(`📋 [ANON-MODS-MODE] Message saved for moderator/admin ${modAdminId}`);
                     }
                 } else {
                     console.log(`📋 [ANON-MODS-MODE] No moderators/admins found, saving as regular group message`);
-                    await Controller.saveGroupMsg(anonId, content, groupId, null, data.parent_id);
+                    await Controller.saveGroupMsg(anonId, content, groupId, null, data.parent_id, 0); // Mode 0 = Public
                 }
             } else {
                 // Regular message (public or 1-on-1)
-            await Controller.saveGroupMsg(anonId, content, groupId, receiverId, data.parent_id);
+                const messageMode = receiverId === null ? 0 : 1; // 0 = Public, 1 = Private
+                await Controller.saveGroupMsg(anonId, content, groupId, receiverId, data.parent_id, messageMode);
                 
                 // Send email notification for 1-on-1 messages to offline users from anonymous senders
                 if (receiverId && receiverId !== -1) {

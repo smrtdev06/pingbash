@@ -698,10 +698,20 @@ const deleteMsg = async (msgId, sender_id, receiver_id) => {
 };
 
 // To save the new group message
-const saveGroupMsg = async (sender_id, content, group_id, receiverId, parent_id) => {
+const saveGroupMsg = async (sender_id, content, group_id, receiverId, parent_id, messageMode = null) => {
     try {
-        await PG_query(`INSERT INTO "Messages" ("Receiver_Id", "Sender_Id", "Send_Time", "Content", "group_id", "History_Iden", "parent_id")
-         VALUES (${receiverId}, ${sender_id}, CURRENT_TIMESTAMP, '${content}', ${group_id}, 1, ${parent_id == undefined ? null : parent_id});`)
+        // Determine message mode if not explicitly provided
+        let mode = messageMode;
+        if (mode === null) {
+            if (receiverId === null) {
+                mode = 0; // Public message
+            } else {
+                mode = 1; // Private/1-on-1 message (default)
+            }
+        }
+        
+        await PG_query(`INSERT INTO "Messages" ("Receiver_Id", "Sender_Id", "Send_Time", "Content", "group_id", "History_Iden", "parent_id", "message_mode")
+         VALUES (${receiverId}, ${sender_id}, CURRENT_TIMESTAMP, '${content}', ${group_id}, 1, ${parent_id == undefined ? null : parent_id}, ${mode});`)
 
     } catch (err) {
         console.log(err)

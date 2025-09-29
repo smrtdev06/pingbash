@@ -1564,13 +1564,17 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         if (this.isAuthenticated) {
           // Send as authenticated user (exact W version format)
           const safeMessage = this.makeTextSafe(censoredMessage);
+          const receiverId = this.getCurrentReceiverId();
           const payload = {
             groupId: parseInt(this.groupId),  // Ensure groupId is a number
             msg: safeMessage,
             token: this.userId,
-            receiverId: this.getCurrentReceiverId(),
+            receiverId: receiverId,
             parent_id: this.replyingTo ? this.replyingTo.id : null
           };
+          
+          // No need to track mods messages anymore - using message_mode in database
+          
           if( window.isDebugging ) console.log('📤 [Widget] Sending as authenticated user');
           if( window.isDebugging ) console.log('📤 [Widget] Token (first 20 chars):', this.userId.substring(0, 20) + '...');
           if( window.isDebugging ) console.log('📤 [Widget] Full payload:', payload);

@@ -1111,100 +1111,123 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         const filterMode = this.filterMode || 0;
         const currentUserId = this.getCurrentUserId();
         
-        if( window.isDebugging ) console.log('🔍 [Widget] Applying filter mode:', filterMode, 'for user:', currentUserId);
+        if( window.isDebugging ) console.log('🔍 [Widget] ===== APPLYING FILTER MODE =====');
+        if( window.isDebugging ) console.log('🔍 [Widget] Filter Mode:', filterMode, 'User:', currentUserId, 'Total messages:', messages.length);
+        if( window.isDebugging ) console.log('🔍 [Widget] Selected user for 1-on-1:', this.filteredUser?.id, this.filteredUser?.name);
+        if( window.isDebugging ) console.log('🔍 [Widget] Raw message data for analysis:', messages.map(m => ({
+          id: m.Id,
+          content: m.Content?.substring(0, 20),
+          from: m.Sender_Id,
+          to: m.Receiver_Id,
+          mode: m.message_mode,
+          timestamp: m.Send_Time
+        })));
+        
+        // Log all messages by mode for debugging
+        if( window.isDebugging ) {
+          const publicMsgs = messages.filter(m => m.message_mode === 0);
+          const privateMsgs = messages.filter(m => m.message_mode === 1);
+          const modsMsgs = messages.filter(m => m.message_mode === 2);
+          console.log('📊 [Widget] Messages by mode:', {
+            'Public (mode 0)': publicMsgs.length,
+            'Private (mode 1)': privateMsgs.length,
+            'Mods (mode 2)': modsMsgs.length,
+            publicMsgs: publicMsgs.map(m => ({ id: m.Id, content: m.Content?.substring(0, 15) })),
+            privateMsgs: privateMsgs.map(m => ({ id: m.Id, content: m.Content?.substring(0, 15), from: m.Sender_Id, to: m.Receiver_Id })),
+            modsMsgs: modsMsgs.map(m => ({ id: m.Id, content: m.Content?.substring(0, 15), from: m.Sender_Id, to: m.Receiver_Id }))
+          });
+        }
 
         switch (filterMode) {
-          case 0: // Public Mode - show public messages (receiver_id = null) + private messages to current user
+          case 0: // Public Mode - show all relevant messages for this user
             return messages.filter(msg => {
-              const isPublic = msg.Receiver_Id == null;
+              const isPublic = msg.message_mode === 0; // Public messages (mode 0)
               const isOwnMessage = msg.Sender_Id == currentUserId;
               const isToCurrentUser = msg.Receiver_Id == currentUserId;
+              const isFromCurrentUser = msg.Sender_Id == currentUserId;
               
-              // 🔒 IMPORTANT: Even admins/mods should NOT see 1:1 messages between other users
-              // Only show: public messages, own messages, and private messages TO current user
-              const shouldShow = isPublic || isOwnMessage || isToCurrentUser;
+              // Show:
+              // 1. All public messages (message_mode = 0)
+              // 2. Private messages TO current user (message_mode = 1, receiver = current user)
+              // 3. Mods messages involving current user (message_mode = 2, sender or receiver = current user)
+              const shouldShow = isPublic || 
+                               (msg.message_mode === 1 && isToCurrentUser) || 
+                               (msg.message_mode === 1 && isFromCurrentUser) ||
+                               (msg.message_mode === 2 && (isToCurrentUser || isFromCurrentUser));
               
-              // Debug: Log filtered out private messages between other users
-              if (msg.Receiver_Id && msg.Receiver_Id !== currentUserId && msg.Sender_Id !== currentUserId) {
-                if( window.isDebugging ) console.log('🔒 [Widget] Hiding private message between other users (admin cannot see):', {
+              if( window.isDebugging ) {
+                console.log('🔍 [Widget] Public mode filter:', {
                   msgId: msg.Id,
+                  mode: msg.message_mode,
                   from: msg.Sender_Id,
                   to: msg.Receiver_Id,
-                  currentUser: currentUserId
+                  content: msg.Content?.substring(0, 20),
+                  isPublic,
+                  isOwnMessage,
+                  isToCurrentUser,
+                  shouldShow
                 });
               }
               
-              if (isToCurrentUser) {
-                if( window.isDebugging ) console.log('🔍 [Widget] Private message to current user in public mode:', {
-                  msgId: msg.Id,
-                  from: msg.Sender_Id,
-                  to: msg.Receiver_Id,
-                  content: msg.Content?.substring(0, 50) + '...'
-                });
-              }
               return shouldShow;
             });
 
-          case 1: // 1 on 1 Mode - show private messages with selected user + public messages
+          case 1: // 1-on-1 Mode - show ONLY private messages between current user and selected user
             if (!this.filteredUser) {
               if( window.isDebugging ) console.log('🔍 [Widget] 1-on-1 mode but no user selected');
               return [];
             }
             
             const selectedUserId = this.filteredUser.id;
-            if( window.isDebugging ) console.log('🔍 [Widget] 1-on-1 mode with user:', selectedUserId, 'current user:', currentUserId, '(includes public messages)');
+            if( window.isDebugging ) console.log('🔍 [Widget] 1-ON-1 MODE: Current user:', currentUserId, 'Selected user:', selectedUserId);
             
             return messages.filter(msg => {
-              const isToSelectedUser = msg.Receiver_Id == selectedUserId && msg.Sender_Id == currentUserId;
-              const isFromSelectedUser = msg.Sender_Id == selectedUserId && msg.Receiver_Id == currentUserId;
-              const isPublicMessage = msg.Receiver_Id == null; // Include public messages (anonymous users)
-              const isOwnMessage = msg.Sender_Id == currentUserId;
+              // ONLY show message_mode = 1 (private) messages between these two specific users
+              const isPrivateMessage = msg.message_mode === 1;
+              const isToSelectedUser = (msg.Receiver_Id == selectedUserId && msg.Sender_Id == currentUserId);
+              const isFromSelectedUser = (msg.Sender_Id == selectedUserId && msg.Receiver_Id == currentUserId);
+              const isDirectMessage = isPrivateMessage && (isToSelectedUser || isFromSelectedUser);
               
-              // Exclude mods-mode messages from 1on1 view (prevent duplication)
-              const isModsMessage = this.isModsMessage(msg, currentUserId);
-              
-              // Show direct messages between users + public messages + own messages (but NOT mods messages)
-              const shouldShow = (isToSelectedUser || isFromSelectedUser || isPublicMessage || isOwnMessage) && !isModsMessage;
-              if (isToSelectedUser || isFromSelectedUser) {
-                if( window.isDebugging ) console.log('🔍 [Widget] 1-on-1 private message:', {
-                  msgId: msg.Id,
+              if( window.isDebugging && isDirectMessage) {
+                console.log('🔍 [Widget] 1-on-1 private message:', {
+                  id: msg.Id,
+                  mode: msg.message_mode,
                   from: msg.Sender_Id,
                   to: msg.Receiver_Id,
-                  content: msg.Content?.substring(0, 50) + '...'
+                  content: msg.Content?.substring(0, 30),
+                  toSelected: isToSelectedUser,
+                  fromSelected: isFromSelectedUser
                 });
               }
-              return shouldShow;
+              
+              return isDirectMessage;
             });
 
-          case 2: // Mods Mode - show messages to moderators/admins and public messages
-            // Only available for moderators/admins (same as F version)
+          case 2: // Mods Mode - show ONLY mods messages (message_mode = 2)
             if (!this.isModeratorOrAdmin()) {
               if( window.isDebugging ) console.log('🔍 [Widget] Mods mode not available for regular user');
-              return messages.filter(msg => {
-                const isPublic = msg.Receiver_Id == null;
-                const isOwnMessage = msg.Sender_Id == currentUserId;
-                return isPublic || isOwnMessage;
-              });
+              return [];
             }
             
+            if( window.isDebugging ) console.log('🔍 [Widget] MODS MODE: Showing mods-only messages for user:', currentUserId);
+            
             return messages.filter(msg => {
-              const isToCurrentUser = msg.Receiver_Id == currentUserId; // Messages sent in mods mode to this moderator/admin
-              const isOwnMessage = msg.Sender_Id == currentUserId;
-              const isPublic = msg.Receiver_Id == null;
+              // Only show messages with message_mode = 2 (mods messages)
+              const isModsMessage = msg.message_mode === 2;
+              const isReceivedByCurrentUser = msg.Receiver_Id == currentUserId;
+              const isSentByCurrentUser = msg.Sender_Id == currentUserId;
               
-              // 🔒 IMPORTANT: In mods mode, show:
-              // - Public messages (receiver_id = null)
-              // - Own messages (sent by current user)  
-              // - Messages sent to current user (including mods-mode messages)
-              const shouldShow = isPublic || isOwnMessage || isToCurrentUser;
+              // Only show mods messages that involve the current user (as sender or receiver)
+              const shouldShow = isModsMessage && (isReceivedByCurrentUser || isSentByCurrentUser);
               
-              // Debug: Log what we're showing/hiding
-              if (isToCurrentUser) {
-                if( window.isDebugging ) console.log('📋 [Widget] Showing mods-mode message to current user:', {
-                  msgId: msg.Id,
+              if( window.isDebugging && shouldShow) {
+                console.log('🔍 [Widget] Mods mode message:', {
+                  id: msg.Id,
+                  mode: msg.message_mode,
                   from: msg.Sender_Id,
                   to: msg.Receiver_Id,
-                  content: msg.Content?.substring(0, 50) + '...'
+                  content: msg.Content?.substring(0, 30),
+                  timestamp: msg.Send_Time
                 });
               }
               
@@ -1212,6 +1235,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
             });
 
           default:
+            if( window.isDebugging ) console.log('🔍 [Widget] DEFAULT MODE: Showing all messages');
             return messages;
         }
       },
@@ -1254,57 +1278,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         return null;
       },
 
-      // Helper method to detect mods-mode messages
-      isModsMessage(msg, currentUserId) {
-        if (!msg || !this.group || !this.group.members) return false;
-        
-        // If message has no receiver (public), it's not a mods message
-        if (!msg.Receiver_Id) return false;
-        
-        // Check if receiver is a moderator or admin (role_id 1 or 2)
-        const receiverInfo = this.group.members.find(member => member.id === msg.Receiver_Id);
-        const isReceiverMod = receiverInfo && (receiverInfo.role_id === 1 || receiverInfo.role_id === 2);
-        
-        // Check if sender is a moderator or admin (role_id 1 or 2) 
-        const senderInfo = this.group.members.find(member => member.id === msg.Sender_Id);
-        const isSenderMod = senderInfo && (senderInfo.role_id === 1 || senderInfo.role_id === 2);
-        
-        // If we're currently viewing in Mods mode (filterMode = 2), all relevant messages should show
-        if (this.filterMode === 2) {
-          return false; // Don't exclude any messages in mods mode
-        }
-        
-        // Enhanced detection: Check if this looks like a mods mode message sent to multiple recipients
-        if (isReceiverMod && isSenderMod && this.messages) {
-          // Look for messages with same content, sender, and similar timestamp (within 5 seconds)
-          const sameContentMessages = this.messages.filter(m => 
-            m.Content === msg.Content && 
-            m.Sender_Id === msg.Sender_Id && 
-            m.Receiver_Id !== msg.Receiver_Id && // Different receiver
-            Math.abs(new Date(m.Send_Time) - new Date(msg.Send_Time)) < 5000 // Within 5 seconds
-          );
-          
-          // If we find multiple messages with same content sent to different mods at similar time, it's a mods message
-          if (sameContentMessages.length > 0) {
-            const otherReceivers = sameContentMessages.map(m => m.Receiver_Id);
-            const areOtherReceiversMods = otherReceivers.every(receiverId => {
-              const receiverInfo = this.group.members.find(member => member.id === receiverId);
-              return receiverInfo && (receiverInfo.role_id === 1 || receiverInfo.role_id === 2);
-            });
-            
-            if (areOtherReceiversMods) {
-              if( window.isDebugging ) console.log('🔍 [Widget] Detected mods message by correlation:', {
-                msgId: msg.Id,
-                content: msg.Content?.substring(0, 30),
-                correlatedMessages: sameContentMessages.length
-              });
-              return true;
-            }
-          }
-        }
-        
-        return false; // Default to not excluding messages to avoid over-filtering
-      },
+
 
       getFilterModeText(message) {
         // Display filter mode text on messages

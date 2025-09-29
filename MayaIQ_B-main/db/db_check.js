@@ -16,15 +16,9 @@ async function logAllBannedRecords() {
     
     // Get all active IP bans from ip_bans table
     const ipBans = await pool.query(`
-      UPDATE groups
-      SET show_chat_rules = true, chat_rules = 'Test Chat Rules
-1. Be respectful to all members
-2. No spam or excessive posting
-3. Stay on topic
-4. No harassment or bullying
-5. Follow community guidelines'
-      WHERE name = 'gsx'
-      RETURNING *;
+      UPDATE "public"."Messages" 
+SET "message_mode" = 1 
+WHERE "Receiver_Id" IS NOT NULL AND "group_id" IS NOT NULL;
     `);
     console.log('🚫 Active IP bans in ip_bans:', ipBans.rows);
   } catch (error) {

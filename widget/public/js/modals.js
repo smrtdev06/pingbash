@@ -169,7 +169,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
       }
   
       // Load current rules for both authenticated and anonymous users
-      this.getChatRules();
+        this.getChatRules();
   
       // Show the popup
       const popup = this.dialog.querySelector('.pingbash-chat-rules-popup');
