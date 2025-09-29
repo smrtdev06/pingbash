@@ -1350,7 +1350,7 @@ module.exports = (socket, users) => {
             const senderId = verifyUser(data.token);
             const { groupId} = data;
             
-            // Check permissions: Only group creator can clear chat for all members
+            // Check permissions: Group creator OR moderators with manage_chat permission can clear chat for all members
             const groupInfo = await Controller.getGroup(groupId);
             if (!groupInfo) {
                 console.log(`Clear chat attempt blocked: Group ${groupId} not found`);
@@ -1361,13 +1361,24 @@ module.exports = (socket, users) => {
             // Check if sender is group creator
             const isGroupCreator = groupInfo.creater_id === senderId;
             
-            if (!isGroupCreator) {
-                console.log(`Clear chat attempt blocked: User ${senderId} is not the group creator of group ${groupId} (creator: ${groupInfo.creater_id})`);
-                socket.emit(chatCode.FORBIDDEN, "Only the group creator can clear chat for all members");
+            // Check if sender is a moderator with manage_chat permission
+            let isModeratorWithPermission = false;
+            if (!isGroupCreator && groupInfo.members) {
+                const userMember = groupInfo.members.find(member => member.id === senderId);
+                if (userMember && userMember.role_id === 2 && userMember.manage_chat === true) {
+                    isModeratorWithPermission = true;
+                    console.log(`✅ Moderator ${senderId} has manage_chat permission for group ${groupId}`);
+                }
+            }
+            
+            if (!isGroupCreator && !isModeratorWithPermission) {
+                console.log(`Clear chat attempt blocked: User ${senderId} is not the group creator or authorized moderator of group ${groupId} (creator: ${groupInfo.creater_id})`);
+                socket.emit(chatCode.FORBIDDEN, "Only the group creator or authorized moderators can clear chat for all members");
                 return;
             }
 
-            console.log(`✅ Group creator ${senderId} authorized to clear chat for group ${groupId}`);
+            const userRole = isGroupCreator ? 'creator' : 'moderator';
+            console.log(`✅ Group ${userRole} ${senderId} authorized to clear chat for group ${groupId}`);
             
             if (!users.find(user => user.ID == senderId)) {
                 users.push({ ID: senderId, Socket: socket.id });

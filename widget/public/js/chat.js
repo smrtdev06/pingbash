@@ -1269,13 +1269,41 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         const senderInfo = this.group.members.find(member => member.id === msg.Sender_Id);
         const isSenderMod = senderInfo && (senderInfo.role_id === 1 || senderInfo.role_id === 2);
         
-        // Fallback: if receiver is mod/admin and we're viewing in Mods mode (filterMode = 2), assume it's a Mods message
+        // If we're currently viewing in Mods mode (filterMode = 2), all relevant messages should show
         if (this.filterMode === 2) {
-          return isReceiverMod && isSenderMod;
+          return false; // Don't exclude any messages in mods mode
         }
         
-        // More sophisticated check: if both sender and receiver are mods/admins, it's likely a mods message
-        return isReceiverMod && isSenderMod;
+        // Enhanced detection: Check if this looks like a mods mode message sent to multiple recipients
+        if (isReceiverMod && isSenderMod && this.messages) {
+          // Look for messages with same content, sender, and similar timestamp (within 5 seconds)
+          const sameContentMessages = this.messages.filter(m => 
+            m.Content === msg.Content && 
+            m.Sender_Id === msg.Sender_Id && 
+            m.Receiver_Id !== msg.Receiver_Id && // Different receiver
+            Math.abs(new Date(m.Send_Time) - new Date(msg.Send_Time)) < 5000 // Within 5 seconds
+          );
+          
+          // If we find multiple messages with same content sent to different mods at similar time, it's a mods message
+          if (sameContentMessages.length > 0) {
+            const otherReceivers = sameContentMessages.map(m => m.Receiver_Id);
+            const areOtherReceiversMods = otherReceivers.every(receiverId => {
+              const receiverInfo = this.group.members.find(member => member.id === receiverId);
+              return receiverInfo && (receiverInfo.role_id === 1 || receiverInfo.role_id === 2);
+            });
+            
+            if (areOtherReceiversMods) {
+              if( window.isDebugging ) console.log('🔍 [Widget] Detected mods message by correlation:', {
+                msgId: msg.Id,
+                content: msg.Content?.substring(0, 30),
+                correlatedMessages: sameContentMessages.length
+              });
+              return true;
+            }
+          }
+        }
+        
+        return false; // Default to not excluding messages to avoid over-filtering
       },
 
       getFilterModeText(message) {

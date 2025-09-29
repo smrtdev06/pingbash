@@ -1102,36 +1102,21 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
     },
 
     canManageModerators() {
-      // Check if user is group creator or mod with manage_mods permission
+      // ONLY group creator (admin) can manage moderator permissions - moderators cannot manage other moderators
       const currentUserId = this.getCurrentUserId();
       
       if( window.isDebugging ) console.log('🔍 [Debug] canManageModerators:', {
         currentUserId,
         groupCreaterId: this.group?.creater_id,
-        isAuthenticated: !!this.config?.token,
-        groupMembers: this.group?.members?.map(m => ({ id: m.id, role_id: m.role_id, manage_mods: m.manage_mods }))
+        isAuthenticated: !!this.config?.token
       });
       
-      // Group creator can always manage moderators
-      if (this.group?.creater_id && currentUserId === parseInt(this.group.creater_id)) {
-        if( window.isDebugging ) console.log('🔍 [Debug] User is group creator - moderator management allowed');
-        return true;
-      }
+      // Only group creator can manage moderators
+      const isGroupCreator = this.group?.creater_id && currentUserId === parseInt(this.group.creater_id);
       
-      // Check if user is a moderator with manage_mods permission
-      const userMember = this.group?.members?.find(member => member.id === currentUserId);
-      const hasPermission = userMember && userMember.role_id === 2 && userMember.manage_mods === true;
+      if( window.isDebugging ) console.log('🔍 [Debug] User is group creator - moderator management allowed:', isGroupCreator);
       
-      if( window.isDebugging ) console.log('🔍 [Debug] Moderator management check:', {
-        userMember,
-        roleId: userMember?.role_id,
-        manageMods: userMember?.manage_mods,
-        manageModsType: typeof userMember?.manage_mods,
-        hasPermission,
-        strictCheck: !!(userMember && userMember.role_id === 2 && userMember.manage_mods === true)
-      });
-      
-      return !!hasPermission;
+      return !!isGroupCreator;
     },
 
     canManageChatLimitations() {

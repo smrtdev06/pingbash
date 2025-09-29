@@ -3,7 +3,7 @@
  * Loads all split modules and initializes the widget
  * EXACT functionality from original widget.js
  */
-window.isDebugging = false;
+window.isDebugging = true;
 (function () {
   'use strict';
 
