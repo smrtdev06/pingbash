@@ -1653,10 +1653,35 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
       unbanUser(userId) {
         if( window.isDebugging ) console.log('✅ [Widget] Unban user clicked:', userId);
         
-        // Check permissions (only group creator can unban)
+        // Check permissions (group creator OR moderators with ban_user permission can unban)
         const currentUserId = this.getCurrentUserId();
-        if (this.group?.creater_id !== currentUserId) {
-          ////alert("Only the group creator can unban users");
+        const isGroupCreator = this.group?.creater_id === currentUserId;
+        
+        // Check if user is a moderator with ban_user permission
+        let isModerator = false;
+        let hasBanPermission = false;
+        
+        if (!isGroupCreator && this.group?.members) {
+          const userMember = this.group.members.find(m => m.id === currentUserId);
+          if (userMember && userMember.role_id === 2) {
+            isModerator = true;
+            hasBanPermission = userMember.ban_user === true;
+          }
+        }
+        
+        const canUnban = isGroupCreator || (isModerator && hasBanPermission);
+        
+        if( window.isDebugging ) console.log('✅ [Widget] Unban permission check:', {
+          currentUserId,
+          isGroupCreator,
+          isModerator,
+          hasBanPermission,
+          canUnban
+        });
+        
+        if (!canUnban) {
+          if( window.isDebugging ) console.log('❌ [Widget] User not authorized to unban');
+          ////alert("Only the group creator or moderators with ban permission can unban users");
           return;
         }
         
@@ -1675,7 +1700,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
           return;
         }
         
-        if( window.isDebugging ) console.log(`✅ [Widget] Group Master ${currentUserId} attempting to unban user ${userId}`);
+        if( window.isDebugging ) console.log(`✅ [Widget] User ${currentUserId} (Creator: ${isGroupCreator}, Mod: ${isModerator}) attempting to unban user ${userId}`);
         
         // Emit unban event (same as W version)
         this.socket.emit('unban group users', {
