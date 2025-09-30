@@ -2071,12 +2071,19 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         
         // Check if sound setting is "mention" only
         if (soundSetting === 'mention') {
-          // Get current user name/ID
-          const userName = this.getUserName(currentUserId);
+          // Get current user name from all messages (find a message from current user)
+          let userName = '';
+          
+          // Try to find current user's name from their own messages in the full messages list
+          const ownMessage = this.messages?.find(m => m.Sender_Id == currentUserId && m.sender_name);
+          if (ownMessage) {
+            userName = ownMessage.sender_name;
+          }
           
           if( window.isDebugging ) console.log('🔊 [Widget] Checking for mentions:', {
             userName,
             userId: currentUserId,
+            foundOwnMessage: !!ownMessage,
             messagesToCheck: otherMessages.map(m => ({ 
               id: m.Id, 
               content: m.Content?.substring(0, 50),
@@ -2095,7 +2102,9 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
                 msgId: msg.Id,
                 content: content.substring(0, 50),
                 hasUsernameMention,
-                hasIdMention
+                hasIdMention,
+                userName,
+                searchPattern: userName ? `@${userName.toLowerCase()}` : 'N/A'
               });
               return true;
             }
@@ -2167,25 +2176,47 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
 
       // NEW METHOD - Get user name for mention detection
       getUserName(userId) {
-        if (!userId) return '';
+        if (!userId) {
+          if( window.isDebugging ) console.log('🔊 [Widget] getUserName: no userId provided');
+          return '';
+        }
+        
+        if( window.isDebugging ) console.log('🔊 [Widget] getUserName called for userId:', userId, {
+          isAuth: this.isAuthenticated,
+          currentUserId: this.currentUserId,
+          hasCurrentUser: !!this.currentUser,
+          currentUserName: this.currentUser?.Name,
+          hasGroup: !!this.group,
+          hasMembersList: !!this.group?.members,
+          membersCount: this.group?.members?.length
+        });
         
         // Try to get from authenticated user data
         if (this.isAuthenticated && userId == this.currentUserId) {
           // Check if we have user data
           if (this.currentUser && this.currentUser.Name) {
+            if( window.isDebugging ) console.log('🔊 [Widget] getUserName: Found from currentUser:', this.currentUser.Name);
             return this.currentUser.Name;
           }
         }
         
         // Try to get from group members
         if (this.group && this.group.members) {
+          if( window.isDebugging ) console.log('🔊 [Widget] getUserName: Searching in members:', this.group.members.map(m => ({id: m.id, Name: m.Name})));
           const member = this.group.members.find(m => m.id == userId);
-          if (member && member.Name) {
-            return member.Name;
+          if (member) {
+            if( window.isDebugging ) console.log('🔊 [Widget] getUserName: Found member:', member);
+            if (member.Name) {
+              if( window.isDebugging ) console.log('🔊 [Widget] getUserName: Returning member.Name:', member.Name);
+              return member.Name;
+            }
+          } else {
+            if( window.isDebugging ) console.log('🔊 [Widget] getUserName: Member not found for userId:', userId);
           }
         }
         
         // Fallback to empty string
+        if( window.isDebugging ) console.log('🔊 [Widget] getUserName: No name found, returning empty string');
         return '';
       },
 
