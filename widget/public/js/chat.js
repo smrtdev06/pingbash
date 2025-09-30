@@ -83,15 +83,23 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         if( window.isDebugging ) console.log('🔍 [Widget] ✅ Messages for current group');
         if( window.isDebugging ) console.log('🔍 [Widget] Page visible:', this.pageVisible);
   
-        if (this.pageVisible) {
+                if (this.pageVisible) {
           if( window.isDebugging ) console.log('🔍 [Widget] Page visible - adding messages immediately');
           if( window.isDebugging ) console.log('🔍 [Widget] Before processing - existing:', this.messages?.length || 0, 'new:', data.length);
-  
+
+          // Identify truly NEW messages by comparing with existing messages
+          const existingIds = new Set((this.messages || []).map(m => m.Id));
+          const trulyNewMessages = data.filter(msg => !existingIds.has(msg.Id));
+          
+          if( window.isDebugging ) console.log('🔍 [Widget] Truly new messages:', trulyNewMessages.length, 'out of', data.length);
+
           // Don't merge here - let displayMessages handle the logic
           this.displayMessages(data);
-  
-          // Play notification sound for new messages
-          this.playMessageSound(data);
+
+          // Play notification sound for ONLY the truly new messages
+          if (trulyNewMessages.length > 0) {
+            this.playMessageSound(trulyNewMessages);
+          }
 
           if( window.isDebugging ) console.log('🔍 [Widget] ✅ Messages updated and displayed immediately');
         } else {
@@ -2045,9 +2053,17 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
           return;
         }
         
-        // Don't play sound for own messages
+        // Don't play sound for own messages - filter to only messages from others
         const currentUserId = this.getCurrentUserId();
         const otherMessages = newMessages.filter(msg => msg.Sender_Id != currentUserId);
+        
+        if( window.isDebugging ) console.log('🔊 [Widget] Sound check:', {
+          total: newMessages.length,
+          fromOthers: otherMessages.length,
+          setting: soundSetting,
+          currentUserId
+        });
+        
         if (otherMessages.length === 0) {
           if( window.isDebugging ) console.log('🔊 [Widget] Not playing sound - all messages are from current user');
           return;
@@ -2058,20 +2074,40 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
           // Get current user name/ID
           const userName = this.getUserName(currentUserId);
           
-          // Check if any message mentions the current user
+          if( window.isDebugging ) console.log('🔊 [Widget] Checking for mentions:', {
+            userName,
+            userId: currentUserId,
+            messagesToCheck: otherMessages.map(m => ({ 
+              id: m.Id, 
+              content: m.Content?.substring(0, 50),
+              from: m.Sender_Id
+            }))
+          });
+          
+          // Check if any NEW message from others mentions the current user
           const hasMention = otherMessages.some(msg => {
             const content = msg.Content || '';
-            // Check for @username mention (case insensitive)
-            return content.toLowerCase().includes(`@${userName}`.toLowerCase()) ||
-                   content.toLowerCase().includes(`@${currentUserId}`);
+            const hasUsernameMention = userName && content.toLowerCase().includes(`@${userName.toLowerCase()}`);
+            const hasIdMention = content.includes(`@${currentUserId}`);
+            
+            if (hasUsernameMention || hasIdMention) {
+              if( window.isDebugging ) console.log('🔊 [Widget] Found mention in message:', {
+                msgId: msg.Id,
+                content: content.substring(0, 50),
+                hasUsernameMention,
+                hasIdMention
+              });
+              return true;
+            }
+            return false;
           });
           
           if (!hasMention) {
-            if( window.isDebugging ) console.log('🔊 [Widget] Sound setting is "mention only" but no mentions found, not playing sound');
+            if( window.isDebugging ) console.log('🔊 [Widget] Sound setting is "mention only" but no mentions found in new messages, not playing sound');
             return;
           }
           
-          if( window.isDebugging ) console.log('🔊 [Widget] Mention detected, playing sound');
+          if( window.isDebugging ) console.log('🔊 [Widget] Mention detected in new messages, playing sound');
         }
         
         // Play sound when window is not active OR when window is active (both cases)
