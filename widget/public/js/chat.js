@@ -2133,7 +2133,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
             <h3>Image Preview</h3>
             <button class="pingbash-popup-close">&times;</button>
           </div>
-          <div class="pingbash-popup-body" style="padding: 0; display: flex; align-items: center; justify-content: center; min-height: 300px; max-height: calc(90vh - 80px); overflow: auto;">
+          <div class="pingbash-popup-body" style="padding: 0; display: flex; align-items: center; justify-content: center; min-height: 300px; max-height: calc(90vh - 121px); overflow: auto;">
             <img src="${imageSrc}" alt="Full size image" style="max-width: 100%; max-height: 100%; object-fit: contain; display: block;" />
           </div>
           <div class="pingbash-popup-footer">
