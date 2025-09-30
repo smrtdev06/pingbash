@@ -819,15 +819,39 @@ module.exports = (socket, users) => {
             const senderId = verifyUser(data.token);
             const { userId, groupId } = data;
 
-            // Only Group Master (creator) can unban users
+            // RULE: Group creator OR moderators with ban_user permission can unban users
             const groupInfo = await Controller.getGroup(groupId);
-            if (!groupInfo || groupInfo.creater_id !== senderId) {
-                console.log(`Unban attempt blocked: User ${senderId} is not the group master of group ${groupId} (creator: ${groupInfo?.creater_id})`);
-                socket.emit(chatCode.FORBIDDEN, "Only the group creator can unban users");
+            if (!groupInfo) {
+                console.log(`Unban attempt blocked: Group ${groupId} not found`);
+                socket.emit(chatCode.FORBIDDEN, "Group not found");
                 return;
             }
 
-            console.log(`✅ [UNIFIED-UNBAN] Group Master ${senderId} unbanning user ${userId} from group ${groupId}`);
+            // Check if sender is group creator
+            const isGroupCreator = groupInfo.creater_id === senderId;
+            
+            // Check if sender is a moderator with ban_user permission
+            let isModerator = false;
+            let hasBanPermission = false;
+            
+            if (!isGroupCreator && groupInfo.members) {
+                // Find sender in group members
+                const senderMember = groupInfo.members.find(member => member.id === senderId);
+                if (senderMember && senderMember.role_id === 2) {
+                    isModerator = true;
+                    hasBanPermission = senderMember.ban_user === true;
+                }
+            }
+            
+            const canUnban = isGroupCreator || (isModerator && hasBanPermission);
+            
+            if (!canUnban) {
+                console.log(`Unban attempt blocked: User ${senderId} is not authorized to unban users in group ${groupId}. Creator: ${isGroupCreator}, Moderator: ${isModerator}, HasBanPerm: ${hasBanPermission}`);
+                socket.emit(chatCode.FORBIDDEN, "Only the group creator or moderators with ban permission can unban users");
+                return;
+            }
+
+            console.log(`✅ [UNIFIED-UNBAN] User ${senderId} authorized to unban users in group ${groupId} (Creator: ${isGroupCreator}, Moderator: ${isModerator})`);
 
             if (!users.find(user => user.ID == senderId)) {
                 users.push({ ID: senderId, Socket: socket.id });
@@ -904,15 +928,39 @@ module.exports = (socket, users) => {
             const senderId = verifyUser(data.token);
             const { userIds, groupId} = data;
 
-            // Only Group Master (creator) can unban users
+            // RULE: Group creator OR moderators with ban_user permission can unban users
             const groupInfo = await Controller.getGroup(groupId);
-            if (!groupInfo || groupInfo.creater_id !== senderId) {
-                console.log(`Bulk unban attempt blocked: User ${senderId} is not the group master of group ${groupId} (creator: ${groupInfo?.creater_id})`);
-                socket.emit(chatCode.FORBIDDEN, "Only the group creator can unban users");
+            if (!groupInfo) {
+                console.log(`Bulk unban attempt blocked: Group ${groupId} not found`);
+                socket.emit(chatCode.FORBIDDEN, "Group not found");
                 return;
             }
 
-            console.log(`Bulk unban request: Group Master ${senderId} unbanning users [${userIds}] in group ${groupId}`);
+            // Check if sender is group creator
+            const isGroupCreator = groupInfo.creater_id === senderId;
+            
+            // Check if sender is a moderator with ban_user permission
+            let isModerator = false;
+            let hasBanPermission = false;
+            
+            if (!isGroupCreator && groupInfo.members) {
+                // Find sender in group members
+                const senderMember = groupInfo.members.find(member => member.id === senderId);
+                if (senderMember && senderMember.role_id === 2) {
+                    isModerator = true;
+                    hasBanPermission = senderMember.ban_user === true;
+                }
+            }
+            
+            const canUnban = isGroupCreator || (isModerator && hasBanPermission);
+            
+            if (!canUnban) {
+                console.log(`Bulk unban attempt blocked: User ${senderId} is not authorized to unban users in group ${groupId}. Creator: ${isGroupCreator}, Moderator: ${isModerator}, HasBanPerm: ${hasBanPermission}`);
+                socket.emit(chatCode.FORBIDDEN, "Only the group creator or moderators with ban permission can unban users");
+                return;
+            }
+
+            console.log(`✅ [BULK-UNBAN] User ${senderId} authorized to unban users [${userIds}] in group ${groupId} (Creator: ${isGroupCreator}, Moderator: ${isModerator})`);
 
             if (!users.find(user => user.ID == senderId)) {
                 users.push({ ID: senderId, Socket: socket.id });
