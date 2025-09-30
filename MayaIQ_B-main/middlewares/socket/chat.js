@@ -678,7 +678,7 @@ module.exports = (socket, users) => {
             // Use Socket.IO rooms to broadcast to ALL users (authenticated + anonymous) in the group
             const roomName = `group_${groupId}`;
             console.log(`🗑️ [BROADCAST] Sending delete message event to room: ${roomName}`);
-            
+
             // Broadcast to all sockets in the group room (except sender)
             socket.to(roomName).emit(chatCode.DELETE_GROUP_MSG, msgId);
             

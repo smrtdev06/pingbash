@@ -142,7 +142,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
       
       // Apply Chat Mode filter (same as F version)
       let filteredMessages = this.applyFilterMode(preFilteredMessages);
-      if( window.isDebugging ) console.log('🔍 [Widget] After filter mode:', filteredMessages.length, 'messages (mode:', this.filterMode || 0, ')');
+      if( window.isDebugging ) console.log('🔍 [Widget] After permission-based filtering:', filteredMessages.length, 'messages (with mode tags)');
       
       // Filter out messages from blocked users
       if (this.blockedUsers && this.blockedUsers.size > 0) {
@@ -660,33 +660,32 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
   // EXACT COPY from widget.js - renderMessageContent method
     renderMessageContent(content) {
       if (!content) return '';
-  
-      if( window.isDebugging ) console.log('🖼️ [Widget] renderMessageContent called with:', {
-        content: content,
-        contentType: typeof content,
-        contentLength: content.length,
+
+      // Log content analysis for debugging
+      if( window.isDebugging ) console.log('🔍 [Widget] Content analysis:', {
+        content: content.substring(0, 100),
         hasImg: content.includes('<img'),
         hasLink: content.includes('<a'),
         hasGif: content.includes('gif::'),
         hasSticker: content.includes('sticker::'),
-        hasDirectGif: content.includes('.gif') && content.includes('https://') && !content.includes(' ')
+        isDirectGif: content.includes('.gif') && content.includes('https://') && !content.includes(' ')
       });
       if( window.isDebugging ) console.log("******************************", content, content.includes('<img'), content.includes('<a'), content.includes('gif::'), content.includes('sticker::'), content.includes('.gif') && content.includes('https://') && !content.includes(' '));
       // Check if content contains HTML tags (images, links, etc.)
       if (content.includes('<img') || content.includes('<a') || content.includes('gif::') || content.includes('sticker::')) {
         if( window.isDebugging ) console.log('🖼️ [Widget] Detected HTML/special content, processing...');
-  
+
         // Handle different content types (same as W version)
         if (content.includes('<img')) {
           if( window.isDebugging ) console.log('🖼️ [Widget] Processing <img> tag content:', content);
-          // Image content - render as HTML
-          return content;
+          // Image content - make clickable for zoom
+          return this.makeImageClickable(content);
         } else if (content.includes('gif::https://')) {
           if( window.isDebugging ) console.log('🖼️ [Widget] Processing gif:: content');
           // GIF content
           const gifUrl = content.slice('gif::'.length);
-          const result = `<img src="${gifUrl}" style="width: 160px;" />`;
-          if( window.isDebugging ) console.log('🖼️ [Widget] Created gif HTML:', result);
+          const result = `<img src="${gifUrl}" style="width: 160px; cursor: pointer;" onclick="window.pingbashWidget.openImageModal('${gifUrl}')" title="Click to view full size" />`;
+          if( window.isDebugging ) console.log('🖼️ [Widget] Created clickable gif HTML:', result);
           return result;
         } else if (content.includes('sticker::')) {
           if( window.isDebugging ) console.log('🖼️ [Widget] Processing sticker:: content');
@@ -697,25 +696,57 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         } else if (content.includes('.gif') && content.includes('https://') && !content.includes(' ')) {
           if( window.isDebugging ) console.log('🖼️ [Widget] Processing direct GIF URL');
           // Direct GIF URL
-          const result = `<img src="${content}" style="width: 160px;" />`;
-          if( window.isDebugging ) console.log('🖼️ [Widget] Created direct GIF HTML:', result);
+          const result = `<img src="${content}" style="width: 160px; cursor: pointer;" onclick="window.pingbashWidget.openImageModal('${content}')" title="Click to view full size" />`;
+          if( window.isDebugging ) console.log('🖼️ [Widget] Created clickable direct GIF HTML:', result);
           return result;
         } else {
           if( window.isDebugging ) console.log('🖼️ [Widget] Processing other HTML content');
           // Other HTML content
           return content;
         }
-      } else {
-        if( window.isDebugging ) console.log('🖼️ [Widget] Processing plain text content');
-        // Plain text - escape HTML and convert URLs to links
-        const escaped = this.escapeHtml(content);
-        const result = escaped.replace(
-          /(https?:\/\/[^\s]+)/g,
-          '<a href="$1" target="_blank" rel="noopener noreferrer" style="color: #000000; text-decoration: underline;">$1</a>'
-        );
-        if( window.isDebugging ) console.log('🖼️ [Widget] Plain text result:', result);
-        return result;
       }
+
+      // Regular text content - escape HTML and convert URLs to links
+      return this.makeTextSafe(content);
+    },
+
+    // NEW METHOD - Make existing image HTML clickable
+    makeImageClickable(imageHtml) {
+      if( window.isDebugging ) console.log('🖼️ [Widget] Making image clickable:', imageHtml);
+      
+      // Extract src from existing img tag
+      const srcMatch = imageHtml.match(/src="([^"]+)"/);
+      if (!srcMatch) {
+        if( window.isDebugging ) console.log('🖼️ [Widget] No src found in image HTML');
+        return imageHtml;
+      }
+      
+      const imageSrc = srcMatch[1];
+      
+      // Add click handler and cursor pointer to existing img tag
+      let clickableHtml = imageHtml;
+      
+      // Add cursor pointer style if not already present
+      if (!clickableHtml.includes('cursor:')) {
+        if (clickableHtml.includes('style="')) {
+          clickableHtml = clickableHtml.replace('style="', 'style="cursor: pointer; ');
+        } else {
+          clickableHtml = clickableHtml.replace('<img ', '<img style="cursor: pointer;" ');
+        }
+      }
+      
+      // Add click handler if not already present
+      if (!clickableHtml.includes('onclick=')) {
+        clickableHtml = clickableHtml.replace('<img ', `<img onclick="window.pingbashWidget.openImageModal('${imageSrc}')" `);
+      }
+      
+      // Add title for better UX if not already present
+      if (!clickableHtml.includes('title=')) {
+        clickableHtml = clickableHtml.replace('<img ', '<img title="Click to view full size" ');
+      }
+      
+      if( window.isDebugging ) console.log('🖼️ [Widget] Clickable image HTML:', clickableHtml);
+      return clickableHtml;
     },
 
   // EXACT COPY from widget.js - scrollToBottom method
@@ -1102,18 +1133,17 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         }
       },
 
-      // Chat Mode Filter Logic (same as F version)
+      // Chat Mode Filter Logic - Show messages with proper filtering and mode tags
       applyFilterMode(messages) {
         if (!messages || !Array.isArray(messages)) {
           return [];
         }
 
-        const filterMode = this.filterMode || 0;
         const currentUserId = this.getCurrentUserId();
+        const isModeratorOrAdmin = this.isModeratorOrAdmin();
         
-        if( window.isDebugging ) console.log('🔍 [Widget] ===== APPLYING FILTER MODE =====');
-        if( window.isDebugging ) console.log('🔍 [Widget] Filter Mode:', filterMode, 'User:', currentUserId, 'Total messages:', messages.length);
-        if( window.isDebugging ) console.log('🔍 [Widget] Selected user for 1-on-1:', this.filteredUser?.id, this.filteredUser?.name);
+        if( window.isDebugging ) console.log('🔍 [Widget] ===== FILTERING MESSAGES WITH MODE TAGS =====');
+        if( window.isDebugging ) console.log('🔍 [Widget] User:', currentUserId, 'Is Mod/Admin:', isModeratorOrAdmin, 'Total messages:', messages.length);
         if( window.isDebugging ) console.log('🔍 [Widget] Raw message data for analysis:', messages.map(m => ({
           id: m.Id,
           content: m.Content?.substring(0, 20),
@@ -1138,106 +1168,49 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
           });
         }
 
-        switch (filterMode) {
-          case 0: // Public Mode - show all relevant messages for this user
-            return messages.filter(msg => {
-              const isPublic = msg.message_mode === 0; // Public messages (mode 0)
-              const isOwnMessage = msg.Sender_Id == currentUserId;
-              const isToCurrentUser = msg.Receiver_Id == currentUserId;
-              const isFromCurrentUser = msg.Sender_Id == currentUserId;
+        // Filter messages based on user permissions and message mode
+        return messages.filter(msg => {
+          const isOwnMessage = msg.Sender_Id == currentUserId;
+          const isToCurrentUser = msg.Receiver_Id == currentUserId;
+          
+          switch (msg.message_mode) {
+            case 0: // Public messages - visible to everyone
+              return true;
               
-              // Show:
-              // 1. All public messages (message_mode = 0)
-              // 2. Private messages TO current user (message_mode = 1, receiver = current user)
-              // 3. Mods messages involving current user (message_mode = 2, sender or receiver = current user)
-              const shouldShow = isPublic || 
-                               (msg.message_mode === 1 && isToCurrentUser) || 
-                               (msg.message_mode === 1 && isFromCurrentUser) ||
-                               (msg.message_mode === 2 && (isToCurrentUser || isFromCurrentUser));
-              
-              if( window.isDebugging ) {
-                console.log('🔍 [Widget] Public mode filter:', {
+            case 1: // Private/1-on-1 messages - only visible to sender and receiver
+              const shouldShowPrivate = isOwnMessage || isToCurrentUser;
+              if( window.isDebugging && shouldShowPrivate ) {
+                console.log('🔍 [Widget] 1-on-1 message visible:', {
                   msgId: msg.Id,
-                  mode: msg.message_mode,
                   from: msg.Sender_Id,
                   to: msg.Receiver_Id,
                   content: msg.Content?.substring(0, 20),
-                  isPublic,
-                  isOwnMessage,
-                  isToCurrentUser,
-                  shouldShow
+                  isOwn: isOwnMessage,
+                  isToMe: isToCurrentUser
                 });
               }
+              return shouldShowPrivate;
               
-              return shouldShow;
-            });
-
-          case 1: // 1-on-1 Mode - show ONLY private messages between current user and selected user
-            if (!this.filteredUser) {
-              if( window.isDebugging ) console.log('🔍 [Widget] 1-on-1 mode but no user selected');
-              return [];
-            }
-            
-            const selectedUserId = this.filteredUser.id;
-            if( window.isDebugging ) console.log('🔍 [Widget] 1-ON-1 MODE: Current user:', currentUserId, 'Selected user:', selectedUserId);
-            
-            return messages.filter(msg => {
-              // ONLY show message_mode = 1 (private) messages between these two specific users
-              const isPrivateMessage = msg.message_mode === 1;
-              const isToSelectedUser = (msg.Receiver_Id == selectedUserId && msg.Sender_Id == currentUserId);
-              const isFromSelectedUser = (msg.Sender_Id == selectedUserId && msg.Receiver_Id == currentUserId);
-              const isDirectMessage = isPrivateMessage && (isToSelectedUser || isFromSelectedUser);
-              
-              if( window.isDebugging && isDirectMessage) {
-                console.log('🔍 [Widget] 1-on-1 private message:', {
-                  id: msg.Id,
-                  mode: msg.message_mode,
+            case 2: // Mods messages - only visible to admins and moderators
+              const shouldShowMods = isModeratorOrAdmin && (isOwnMessage || isToCurrentUser);
+              if( window.isDebugging && shouldShowMods ) {
+                console.log('🔍 [Widget] Mods message visible:', {
+                  msgId: msg.Id,
                   from: msg.Sender_Id,
                   to: msg.Receiver_Id,
-                  content: msg.Content?.substring(0, 30),
-                  toSelected: isToSelectedUser,
-                  fromSelected: isFromSelectedUser
+                  content: msg.Content?.substring(0, 20),
+                  isOwn: isOwnMessage,
+                  isToMe: isToCurrentUser,
+                  isMod: isModeratorOrAdmin
                 });
               }
+              return shouldShowMods;
               
-              return isDirectMessage;
-            });
-
-          case 2: // Mods Mode - show ONLY mods messages (message_mode = 2)
-            if (!this.isModeratorOrAdmin()) {
-              if( window.isDebugging ) console.log('🔍 [Widget] Mods mode not available for regular user');
-              return [];
-            }
-            
-            if( window.isDebugging ) console.log('🔍 [Widget] MODS MODE: Showing mods-only messages for user:', currentUserId);
-            
-            return messages.filter(msg => {
-              // Only show messages with message_mode = 2 (mods messages)
-              const isModsMessage = msg.message_mode === 2;
-              const isReceivedByCurrentUser = msg.Receiver_Id == currentUserId;
-              const isSentByCurrentUser = msg.Sender_Id == currentUserId;
-              
-              // Only show mods messages that involve the current user (as sender or receiver)
-              const shouldShow = isModsMessage && (isReceivedByCurrentUser || isSentByCurrentUser);
-              
-              if( window.isDebugging && shouldShow) {
-                console.log('🔍 [Widget] Mods mode message:', {
-                  id: msg.Id,
-                  mode: msg.message_mode,
-                  from: msg.Sender_Id,
-                  to: msg.Receiver_Id,
-                  content: msg.Content?.substring(0, 30),
-                  timestamp: msg.Send_Time
-                });
-              }
-              
-              return shouldShow;
-            });
-
-          default:
-            if( window.isDebugging ) console.log('🔍 [Widget] DEFAULT MODE: Showing all messages');
-            return messages;
-        }
+            default:
+              // Unknown mode - show only if it involves current user
+              return isOwnMessage || isToCurrentUser;
+          }
+        });
       },
 
       isModeratorOrAdmin() {
@@ -1281,41 +1254,33 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
 
 
       getFilterModeText(message) {
-        // Display filter mode text on messages
-        if (!message.Receiver_Id) {
-          return ''; // Public message - no text needed
+        // Display mode tags based on message_mode field from database
+        if (!message.message_mode) {
+          return ''; // No mode or public message - no tag needed
         }
 
         const currentUserId = this.getCurrentUserId();
 
-        // Check if this is a Mods mode message
-        const modAdminIds = this.getModeratorAndAdminIds();
-        const isReceiverModAdmin = modAdminIds.includes(message.Receiver_Id);
-        const isCurrentUserModAdmin = this.isModeratorOrAdmin();
-        
-        if (isReceiverModAdmin && isCurrentUserModAdmin) {
-          // Additional check: see if there are other similar messages to other mods/admins
-          if (this.isModsMessage(message)) {
-            return '<span class="pingbash-filter-mode-text">Mod</span>';
-          } else {
-            // Fallback: if receiver is mod/admin and we're viewing in Mods mode (filterMode = 2), assume it's a Mods message
-            if (this.filterMode === 2) {
-              return '<span class="pingbash-filter-mode-text">Mod</span>';
+        switch (message.message_mode) {
+          case 0: // Public message
+            return ''; // No tag for public messages
+            
+          case 1: // Private/1-on-1 message
+            if (message.Receiver_Id == currentUserId) {
+              return '<span class="pingbash-filter-mode-text">1 on 1</span>';
+            } else if (message.Sender_Id == currentUserId) {
+              // Find receiver name from group members
+              const receiverName = this.getReceiverName(message.Receiver_Id);
+              return `<span class="pingbash-filter-mode-text">1 on 1: ${receiverName}</span>`;
             }
-          }
-        }
-        
-        if (message.Receiver_Id > 0) {
-          if (message.Receiver_Id == currentUserId) {
             return '<span class="pingbash-filter-mode-text">1 on 1</span>';
-          } else {
-            // Find receiver name from group members
-            const receiverName = this.getReceiverName(message.Receiver_Id);
-            return `<span class="pingbash-filter-mode-text">1 on 1: ${receiverName}</span>`;
-          }
+            
+          case 2: // Mods message
+            return '<span class="pingbash-filter-mode-text">Mod</span>';
+            
+          default:
+            return '';
         }
-
-        return '';
       },
 
       isModsMessage(message) {
@@ -2108,7 +2073,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         try {
           // Get the base URL from the widget script and construct sound path
           const baseUrl = this.getWidgetBaseUrl();
-          const soundPath = `${baseUrl}sounds/sound_bell.wav`;
+          const soundPath = `https://widget.pingbash.com/sounds/sound_bell.wav`;
           if( window.isDebugging ) console.log('🔊 [Widget] Loading sound from:', soundPath);
           const audio = new Audio(soundPath);
           audio.volume = soundSetting === 'low' ? 0.3 : soundSetting === 'medium' ? 0.6 : 1.0;
@@ -2147,6 +2112,76 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         // Default to medium
         return 'medium';
       },
+
+          // NEW METHOD - Open image in modal for zoom/full size viewing (styled like create group dialog)
+    openImageModal(imageSrc) {
+      if( window.isDebugging ) console.log('🖼️ [Widget] Opening image modal for:', imageSrc);
+      
+      // Remove any existing image modal from body
+      const existingModal = document.body.querySelector('.pingbash-image-modal');
+      if (existingModal) {
+        existingModal.remove();
+      }
+      
+      // Create modal using same structure as create group dialog (body-attached)
+      const modal = document.createElement('div');
+      modal.className = 'pingbash-image-modal pingbash-sound-popup';
+      modal.innerHTML = `
+        <div class="pingbash-popup-overlay"></div>
+        <div class="pingbash-popup-content" style="max-width: 90vw; max-height: 90vh; width: auto; overflow: hidden;">
+          <div class="pingbash-popup-header">
+            <h3>Image Preview</h3>
+            <button class="pingbash-popup-close">&times;</button>
+          </div>
+          <div class="pingbash-popup-body" style="padding: 0; display: flex; align-items: center; justify-content: center; min-height: 300px; max-height: calc(90vh - 80px); overflow: auto;">
+            <img src="${imageSrc}" alt="Full size image" style="max-width: 100%; max-height: 100%; object-fit: contain; display: block;" />
+          </div>
+          <div class="pingbash-popup-footer">
+            <button class="pingbash-sound-ok-btn" onclick="window.open('${imageSrc}', '_blank')" title="Open in new tab">
+              🔗 Open in New Tab
+            </button>
+          </div>
+        </div>
+      `;
+      
+      // Position modal fixed to cover entire viewport (same as create group modal)
+      modal.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 2147483648;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      `;
+      
+      // Add click handlers
+      const overlay = modal.querySelector('.pingbash-popup-overlay');
+      const closeBtn = modal.querySelector('.pingbash-popup-close');
+      
+      const closeModal = () => {
+        modal.remove();
+        document.removeEventListener('keydown', handleKeydown);
+      };
+      
+      overlay.addEventListener('click', closeModal);
+      closeBtn.addEventListener('click', closeModal);
+      
+      // Add keyboard support (ESC to close)
+      const handleKeydown = (e) => {
+        if (e.key === 'Escape') {
+          closeModal();
+        }
+      };
+      document.addEventListener('keydown', handleKeydown);
+      
+      // Add to document body (same as create group modal)
+      document.body.appendChild(modal);
+      
+      if( window.isDebugging ) console.log('🖼️ [Widget] Image modal created and added to document body with popup styling');
+    },
 
   });
 }

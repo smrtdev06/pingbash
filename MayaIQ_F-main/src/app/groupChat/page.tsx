@@ -239,7 +239,7 @@ const ChatsContent: React.FC = () => {
 
   const [replyMsg, setReplyMsg] = useState<MessageUnit | null | undefined>();
   const [showMsgReplyView, setShowMsgReplyView] = useState<boolean | null>(null);
-  const playBell = useSound("/sounds/sound_bell.wav");
+  const playBell = useSound("https://widget.pingbash.com/sounds/sound_bell.wav");
   const [tabIndex, setTabIndex] = useState(0);
 
   const [openNewGroupPop, setOpenNewGroupPop] = useState(false);

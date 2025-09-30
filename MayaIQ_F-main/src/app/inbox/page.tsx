@@ -108,7 +108,7 @@ const ChatsContent: React.FC = () => {
   const [showMsgReplyView, setShowMsgReplyView] = useState<boolean | null>(null);
   const [tabIndex, setTabIndex] = useState(0);
   const [menuOptions, setMenuOptions] = useState<any[]>([]);
-  const playBell = useSound("/sounds/sound_bell.wav");
+  const playBell = useSound("https://widget.pingbash.com/sounds/sound_bell.wav");
 
   const soundMenuPopoverRef = useRef<HTMLImageElement>(null);
   const [showChatBox, setShowChatBox] = useState(true)
