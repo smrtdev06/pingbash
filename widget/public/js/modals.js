@@ -376,6 +376,20 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
   // EXACT COPY from widget.js - showSoundSettings method
     showSoundSettings() {
       const popup = this.dialog.querySelector('.pingbash-sound-popup');
+      
+      // Load current setting and pre-select the correct radio button
+      const currentSetting = this.getSoundSetting();
+      if( window.isDebugging ) console.log('🔊 [Widget] Loading sound setting for popup:', currentSetting);
+      
+      // Find and check the correct radio button
+      const radioButtons = popup.querySelectorAll('input[name="sound"]');
+      radioButtons.forEach(radio => {
+        radio.checked = (radio.value === currentSetting);
+        if( window.isDebugging && radio.checked ) {
+          console.log('🔊 [Widget] Pre-selected radio button:', radio.value);
+        }
+      });
+      
       popup.style.display = 'flex';
     },
 
