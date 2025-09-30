@@ -1174,7 +1174,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
           const isToCurrentUser = msg.Receiver_Id == currentUserId;
           
           switch (msg.message_mode) {
-            case 0: // Public messages - visible to everyone
+            case 0: // Public messages - visible to everyone (receiver_id = null)
               return true;
               
             case 1: // Private/1-on-1 messages - only visible to sender and receiver
@@ -1191,16 +1191,14 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
               }
               return shouldShowPrivate;
               
-            case 2: // Mods messages - only visible to admins and moderators
-              const shouldShowMods = isModeratorOrAdmin && (isOwnMessage || isToCurrentUser);
+            case 2: // Mods messages - only visible to admins and moderators (receiver_id = null, like public)
+              const shouldShowMods = isModeratorOrAdmin;
               if( window.isDebugging && shouldShowMods ) {
                 console.log('🔍 [Widget] Mods message visible:', {
                   msgId: msg.Id,
                   from: msg.Sender_Id,
                   to: msg.Receiver_Id,
                   content: msg.Content?.substring(0, 20),
-                  isOwn: isOwnMessage,
-                  isToMe: isToCurrentUser,
                   isMod: isModeratorOrAdmin
                 });
               }

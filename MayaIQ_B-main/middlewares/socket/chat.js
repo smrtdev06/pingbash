@@ -283,31 +283,10 @@ module.exports = (socket, users) => {
                 modAdminIds = await Controller.getGroupModeratorsAndAdmins(groupId);
                 console.log(`📋 [MODS-MODE] Found ${modAdminIds.length} moderators/admins:`, modAdminIds);
                 
-                if (modAdminIds.length > 0) {
-                    console.log(`📋 [MODS-MODE] All mod/admin IDs:`, modAdminIds);
-                    console.log(`📋 [MODS-MODE] Sender ID:`, senderId);
-                    
-                    // Save the message for each moderator/admin EXCEPT the sender
-                    const recipientIds = modAdminIds.filter(id => id !== senderId);
-                    console.log(`📋 [MODS-MODE] Filtered recipients (excluding sender ${senderId}):`, recipientIds);
-                    console.log(`📋 [MODS-MODE] Original count: ${modAdminIds.length}, After filtering: ${recipientIds.length}`);
-                    
-                    if (recipientIds.length > 0) {
-                        for (const modAdminId of recipientIds) {
-                            await Controller.saveGroupMsg(senderId, content, groupId, modAdminId, data.parent_id, 2); // Mode 2 = Mods
-                            console.log(`📋 [MODS-MODE] ✅ Message saved for moderator/admin ${modAdminId} (receiver: ${modAdminId})`);
-                        }
-                        console.log(`📋 [MODS-MODE] ✅ Total messages created: ${recipientIds.length}`);
-                    } else {
-                        console.log(`📋 [MODS-MODE] ⚠️ No other moderators/admins to send to (sender ${senderId} is the only mod/admin)`);
-                        // Save as mods message even if there's only one mod (sender)
-                        await Controller.saveGroupMsg(senderId, content, groupId, senderId, data.parent_id, 2); // Mode 2 = Mods, sent to self
-                        console.log(`📋 [MODS-MODE] ✅ Saved as mods message to self`);
-                    }
-                } else {
-                    console.log(`📋 [MODS-MODE] No moderators/admins found, saving as regular group message`);
-                    await Controller.saveGroupMsg(senderId, content, groupId, null, data.parent_id);
-                }
+                // Save ONE message with receiver_id = null and message_mode = 2 (Mods)
+                // Frontend will filter to show only to mods/admins
+                await Controller.saveGroupMsg(senderId, content, groupId, null, data.parent_id, 2); // Mode 2 = Mods, receiver = null
+                console.log(`📋 [MODS-MODE] ✅ Saved single mods message (receiver_id = null, message_mode = 2)`);
             } else {
                 // Regular message (public or 1-on-1)
                 const messageMode = receiverId === null ? 0 : 1; // 0 = Public, 1 = Private
