@@ -2071,19 +2071,12 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         
         // Check if sound setting is "mention" only
         if (soundSetting === 'mention') {
-          // Get current user name from all messages (find a message from current user)
-          let userName = '';
-          
-          // Try to find current user's name from their own messages in the full messages list
-          const ownMessage = this.messages?.find(m => m.Sender_Id == currentUserId && m.sender_name);
-          if (ownMessage) {
-            userName = ownMessage.sender_name;
-          }
+          // Get current user name/ID
+          const userName = this.getUserName(currentUserId);
           
           if( window.isDebugging ) console.log('🔊 [Widget] Checking for mentions:', {
             userName,
             userId: currentUserId,
-            foundOwnMessage: !!ownMessage,
             messagesToCheck: otherMessages.map(m => ({ 
               id: m.Id, 
               content: m.Content?.substring(0, 50),
@@ -2102,9 +2095,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
                 msgId: msg.Id,
                 content: content.substring(0, 50),
                 hasUsernameMention,
-                hasIdMention,
-                userName,
-                searchPattern: userName ? `@${userName.toLowerCase()}` : 'N/A'
+                hasIdMention
               });
               return true;
             }
