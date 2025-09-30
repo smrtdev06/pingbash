@@ -498,11 +498,11 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
                     this.soundSetting = savedSetting;
                     if( window.isDebugging ) console.log('🔊 [Widget] Sound setting loaded from localStorage:', this.soundSetting);
                 } else {
-                    this.soundSetting = 'medium'; // Default
+                    this.soundSetting = 'all'; // Default
                     if( window.isDebugging ) console.log('🔊 [Widget] Using default sound setting:', this.soundSetting);
                 }
             } catch (error) {
-                this.soundSetting = 'medium'; // Fallback
+                this.soundSetting = 'all'; // Fallback
                 if( window.isDebugging ) console.log('🔊 [Widget] Error loading sound setting, using default:', error);
             }
         },

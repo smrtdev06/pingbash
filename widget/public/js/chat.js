@@ -2047,17 +2047,35 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         
         // Don't play sound for own messages
         const currentUserId = this.getCurrentUserId();
-        const hasOwnMessages = newMessages.some(msg => msg.Sender_Id === currentUserId);
-        if (hasOwnMessages && newMessages.length === 1) {
-          if( window.isDebugging ) console.log('🔊 [Widget] Not playing sound for own message');
+        const otherMessages = newMessages.filter(msg => msg.Sender_Id != currentUserId);
+        if (otherMessages.length === 0) {
+          if( window.isDebugging ) console.log('🔊 [Widget] Not playing sound - all messages are from current user');
           return;
         }
         
-        // Check if page is visible (don't spam sounds when page is hidden)
-        if (!this.pageVisible) {
-          if( window.isDebugging ) console.log('🔊 [Widget] Page not visible, not playing sound');
-          return;
+        // Check if sound setting is "mention" only
+        if (soundSetting === 'mention') {
+          // Get current user name/ID
+          const userName = this.getUserName(currentUserId);
+          
+          // Check if any message mentions the current user
+          const hasMention = otherMessages.some(msg => {
+            const content = msg.Content || '';
+            // Check for @username mention (case insensitive)
+            return content.toLowerCase().includes(`@${userName}`.toLowerCase()) ||
+                   content.toLowerCase().includes(`@${currentUserId}`);
+          });
+          
+          if (!hasMention) {
+            if( window.isDebugging ) console.log('🔊 [Widget] Sound setting is "mention only" but no mentions found, not playing sound');
+            return;
+          }
+          
+          if( window.isDebugging ) console.log('🔊 [Widget] Mention detected, playing sound');
         }
+        
+        // Play sound when window is not active OR when window is active (both cases)
+        // Note: Removed pageVisible check - sound should play regardless of window focus
         
         // Throttle sounds to prevent spam
         const now = Date.now();
@@ -2072,9 +2090,9 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
           // Get the base URL from the widget script and construct sound path
           const baseUrl = this.getWidgetBaseUrl();
           const soundPath = `https://widget.pingbash.com/sounds/sound_bell.wav`;
-          if( window.isDebugging ) console.log('🔊 [Widget] Loading sound from:', soundPath);
+          if( window.isDebugging ) console.log('🔊 [Widget] Loading sound from:', soundPath, 'Page visible:', this.pageVisible, 'Window focused:', document.hasFocus());
           const audio = new Audio(soundPath);
-          audio.volume = soundSetting === 'low' ? 0.3 : soundSetting === 'medium' ? 0.6 : 1.0;
+          audio.volume = 0.6; // Fixed volume
           
           const playPromise = audio.play();
           if (playPromise !== undefined) {
@@ -2107,8 +2125,32 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
           return this.soundSetting;
         }
         
-        // Default to medium
-        return 'medium';
+        // Default to all
+        return 'all';
+      },
+
+      // NEW METHOD - Get user name for mention detection
+      getUserName(userId) {
+        if (!userId) return '';
+        
+        // Try to get from authenticated user data
+        if (this.isAuthenticated && userId == this.currentUserId) {
+          // Check if we have user data
+          if (this.currentUser && this.currentUser.Name) {
+            return this.currentUser.Name;
+          }
+        }
+        
+        // Try to get from group members
+        if (this.group && this.group.members) {
+          const member = this.group.members.find(m => m.id == userId);
+          if (member && member.Name) {
+            return member.Name;
+          }
+        }
+        
+        // Fallback to empty string
+        return '';
       },
 
           // NEW METHOD - Open image in modal for zoom/full size viewing (styled like create group dialog)

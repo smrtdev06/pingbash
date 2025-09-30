@@ -535,15 +535,15 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
             <div class="pingbash-popup-body">
               <div class="pingbash-sound-option">
                 <input type="radio" id="sound-all" name="sound" value="all" checked>
-                <label for="sound-all">All sounds</label>
+                <label for="sound-all">All Sounds</label>
               </div>
               <div class="pingbash-sound-option">
-                <input type="radio" id="sound-mentions" name="sound" value="mentions">
-                <label for="sound-mentions">Only mentions</label>
+                <input type="radio" id="sound-mention" name="sound" value="mention">
+                <label for="sound-mention">Only Mention</label>
               </div>
               <div class="pingbash-sound-option">
-                <input type="radio" id="sound-none" name="sound" value="none">
-                <label for="sound-none">No sounds</label>
+                <input type="radio" id="sound-off" name="sound" value="off">
+                <label for="sound-off">No sounds</label>
               </div>
             </div>
             <div class="pingbash-popup-footer">
