@@ -208,32 +208,36 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
             touch-action: none !important;
           }
           
-          /* Resize handle - larger and more visible on mobile */
+          /* Large touchable resize handle for mobile */
           .pingbash-chat-dialog::after {
-            content: '⋰';
+            content: '';
             position: absolute;
             bottom: 0;
             right: 0;
-            width: 50px;
-            height: 50px;
-            font-size: 32px;
-            color: #007bff;
-            background: linear-gradient(135deg, transparent 50%, rgba(0,123,255,0.1) 50%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            pointer-events: none;
-            line-height: 1;
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, transparent 50%, rgba(0,123,255,0.3) 50%);
+            cursor: nwse-resize;
+            pointer-events: auto;
             border-bottom-right-radius: 12px;
+            z-index: 10;
           }
           
-          /* Make the actual browser resize handle larger */
-          .pingbash-chat-dialog::-webkit-resizer {
-            background: transparent;
-            border: 3px solid #007bff;
-            border-top: none;
-            border-left: none;
-            border-bottom-right-radius: 12px;
+          /* Visual indicator lines in the resize handle */
+          .pingbash-chat-dialog::before {
+            content: '';
+            position: absolute;
+            bottom: 8px;
+            right: 8px;
+            width: 20px;
+            height: 20px;
+            background-image: 
+              linear-gradient(45deg, transparent 40%, #007bff 40%, #007bff 45%, transparent 45%),
+              linear-gradient(45deg, transparent 50%, #007bff 50%, #007bff 55%, transparent 55%),
+              linear-gradient(45deg, transparent 60%, #007bff 60%, #007bff 65%, transparent 65%);
+            background-size: 100% 100%;
+            pointer-events: none;
+            z-index: 11;
           }
           
           /* Allow child elements to shrink below their normal minimums on mobile */
