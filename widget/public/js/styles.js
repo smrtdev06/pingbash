@@ -208,16 +208,32 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
             touch-action: none !important;
           }
           
-          /* Resize handle more visible on mobile */
+          /* Resize handle - larger and more visible on mobile */
           .pingbash-chat-dialog::after {
             content: '⋰';
             position: absolute;
-            bottom: 2px;
-            right: 2px;
-            font-size: 16px;
-            color: #999;
+            bottom: 0;
+            right: 0;
+            width: 50px;
+            height: 50px;
+            font-size: 32px;
+            color: #007bff;
+            background: linear-gradient(135deg, transparent 50%, rgba(0,123,255,0.1) 50%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
             pointer-events: none;
             line-height: 1;
+            border-bottom-right-radius: 12px;
+          }
+          
+          /* Make the actual browser resize handle larger */
+          .pingbash-chat-dialog::-webkit-resizer {
+            background: transparent;
+            border: 3px solid #007bff;
+            border-top: none;
+            border-left: none;
+            border-bottom-right-radius: 12px;
           }
           
           /* Allow child elements to shrink below their normal minimums on mobile */
