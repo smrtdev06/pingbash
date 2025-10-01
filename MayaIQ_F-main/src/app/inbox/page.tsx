@@ -283,6 +283,26 @@ const ChatsContent: React.FC = () => {
       dispatch(setMessageList(data))
     })
     socket.on(ChatConst.SEND_MSG, handleSendMsg)
+    // Also listen to group messages for 1-on-1 messages sent from widget
+    socket.on(ChatConst.SEND_GROUP_MSG, (data) => {
+      console.log('📨 [Inbox] Received SEND_GROUP_MSG event:', data?.length, 'messages');
+      if (data && data.length > 0) {
+        // Filter for 1-on-1 messages that involve the current user
+        const latestMessage = data[data.length - 1];
+        const currentUserId = getCurrentUserId();
+        
+        // Check if this is a 1-on-1 message (has a receiver_id that's not null)
+        if (latestMessage.Receiver_Id !== null && latestMessage.Receiver_Id !== undefined) {
+          console.log('📨 [Inbox] Found 1-on-1 message in group event:', {
+            sender: latestMessage.Sender_Id,
+            receiver: latestMessage.Receiver_Id,
+            currentUser: currentUserId
+          });
+          // Handle it like a regular private message
+          handleSendMsg(data);
+        }
+      }
+    })
 
     // Cleanup to avoid memory leaks and invalid state updates
     return () => {
@@ -294,6 +314,7 @@ const ChatsContent: React.FC = () => {
         dispatch(setMessageList(data))
       })
       socket.off(ChatConst.SEND_MSG, handleSendMsg)
+      socket.off(ChatConst.SEND_GROUP_MSG)
     };
   }, [selectedUser, msgList, mySoundOptionId, blockedUsers]);
 
