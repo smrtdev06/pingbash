@@ -221,6 +221,34 @@ const ChatsContent: React.FC = () => {
         if (oppositeUserId !== currentUserId) {
           console.log("📢 [Inbox] Adding notification sender to inbox:", oppositeUserId);
           
+          // Create a pseudo-message object for the notification
+          const notificationMessage: MessageUnit = {
+            Id: Date.now(), // Temporary ID
+            Sender_Id: oppositeUserId,
+            sender_name: data.senderName,
+            sender_avatar: data.senderAvatar,
+            Content: `[Group Notification from ${data.groupName}] ${data.message}`,
+            Receiver_Id: currentUserId,
+            Send_Time: new Date().toISOString(),
+            Read_Time: null,
+            Opposite_Photo_Name: data.senderAvatar,
+            group_id: null,
+            sender_banned: null,
+            sender_unban_request: null,
+            parent_id: null
+          };
+          
+          console.log("📢 [Inbox] Created notification message:", notificationMessage);
+          
+          // If this chat is currently selected, add the message to the message list
+          if (selectedUser && selectedUser.Opposite_Id === oppositeUserId) {
+            console.log("📢 [Inbox] This user's chat is currently open - adding notification to message list");
+            dispatch(setMessageList([...msgList, notificationMessage]));
+          } else {
+            console.log("📢 [Inbox] Chat not currently open - only updating inbox list");
+          }
+          
+          // Update inbox list
           setInboxUsers(prevUsers => {
             // Find the user in the list
             const userIndex = prevUsers.findIndex(u => u.Opposite_Id === oppositeUserId);
