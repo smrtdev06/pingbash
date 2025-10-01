@@ -559,7 +559,7 @@ const getGroupMsg = async (groupId) => {
         let msgList = []
         msgList = await PG_query(`SELECT 
                 m.*, 
-                u."Name" AS sender_name, 
+                COALESCE(u."Name", CASE WHEN m."Sender_Id" >= 1000000 THEN 'anon' || RIGHT(m."Sender_Id"::TEXT, 3) ELSE 'User ' || m."Sender_Id" END) AS sender_name,
                 u."Photo_Name" AS sender_avatar,
                 gu.banned AS sender_banned,
                 gu.unban_request AS sender_unban_request
@@ -620,7 +620,7 @@ const getGroupHistory = async (groupId, limit) => {
         let historyList = []
         historyList = await PG_query(`SELECT 
                 m.*, 
-                u."Name" AS sender_name, 
+                COALESCE(u."Name", CASE WHEN m."Sender_Id" >= 1000000 THEN 'anon' || RIGHT(m."Sender_Id"::TEXT, 3) ELSE 'User ' || m."Sender_Id" END) AS sender_name,
                 u."Photo_Name" AS sender_avatar,
                 gu.banned AS sender_banned,
                 gu.unban_request AS sender_unban_request
