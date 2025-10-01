@@ -1854,23 +1854,30 @@ module.exports = (socket, users) => {
                 // Find ALL sockets for this user (they might have multiple tabs open)
                 const userSockets = users.filter(user => user.ID === receiverId);
                 
+                console.log(`📢 [NOTIFY] User ${receiverId}: Found ${userSockets.length} socket(s)`);
+                
                 if (userSockets.length > 0) {
-                    // Send to the first active socket only
-                    const firstSocket = userSockets[0];
-                    if (sockets[firstSocket.Socket]) {
-                        // Send notification directly to this user's socket
-                        sockets[firstSocket.Socket].emit(chatCode.SEND_GROUP_NOTIFY, {
-                            message: message,
-                            senderName: senderName,
-                            senderAvatar: senderAvatar,
-                            groupId: groupId,
-                            groupName: groupName,
-                            senderId: senderId
-                        });
-                        notifiedUsers.add(receiverId);
-                        sentCount++;
-                        console.log(`📢 [NOTIFY] Sent to user ${receiverId} (${userSockets.length} socket(s), using first: ${firstSocket.Socket})`);
-                    }
+                    // Send to ALL sockets for this user (not just first - user might have multiple tabs)
+                    userSockets.forEach(userSocket => {
+                        if (sockets[userSocket.Socket]) {
+                            // Send notification directly to this user's socket
+                            sockets[userSocket.Socket].emit(chatCode.SEND_GROUP_NOTIFY, {
+                                message: message,
+                                senderName: senderName,
+                                senderAvatar: senderAvatar,
+                                groupId: groupId,
+                                groupName: groupName,
+                                senderId: senderId
+                            });
+                            console.log(`📢 [NOTIFY] ✅ Sent to user ${receiverId} socket: ${userSocket.Socket}`);
+                        } else {
+                            console.log(`📢 [NOTIFY] ❌ Socket ${userSocket.Socket} not found for user ${receiverId}`);
+                        }
+                    });
+                    notifiedUsers.add(receiverId);
+                    sentCount++;
+                } else {
+                    console.log(`📢 [NOTIFY] ⚠️ User ${receiverId} not found in users array (offline or not logged in)`);
                 }
             });
 

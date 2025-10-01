@@ -189,7 +189,11 @@ const ChatsContent: React.FC = () => {
     }
 
     const handleSendGroupNotify = (data: any) => {
-      console.log("📢 [Inbox] Received SEND_GROUP_NOTIFY event:", data);
+      console.log("📢 [Inbox] ========================================");
+      console.log("📢 [Inbox] RECEIVED SEND_GROUP_NOTIFY EVENT");
+      console.log("📢 [Inbox] Data:", data);
+      console.log("📢 [Inbox] Data type:", typeof data);
+      console.log("📢 [Inbox] ========================================");
       
       // Check if this is the sender's confirmation (string) or actual notification (object)
       if (typeof data === 'string') {
@@ -378,7 +382,7 @@ const ChatsContent: React.FC = () => {
       socket.off(ChatConst.SEND_GROUP_NOTIFY, handleSendGroupNotify)
       socket.off(ChatConst.SEND_GROUP_MSG)
     };
-  }, [selectedUser, msgList, mySoundOptionId, blockedUsers]);
+  }, [selectedUser, msgList, mySoundOptionId, blockedUsers, inBoxUsers]);
 
   const handleGetBlockedUsers = (data: User[]) => {
     dispatch(setIsLoading(false));
