@@ -1209,20 +1209,33 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
           const isOwnMessage = msg.Sender_Id == currentUserId;
           const isToCurrentUser = msg.Receiver_Id == currentUserId;
           
+          // Handle messages without message_mode field (legacy or malformed)
+          if (msg.message_mode === undefined || msg.message_mode === null) {
+            // Fallback: determine mode from receiver_id
+            if (msg.Receiver_Id === null) {
+              msg.message_mode = 0; // Public
+            } else {
+              msg.message_mode = 1; // Private
+            }
+            if( window.isDebugging ) console.log('⚠️ [Widget] Message missing message_mode, inferred:', msg.message_mode, 'for msg:', msg.Id);
+          }
+          
           switch (msg.message_mode) {
             case 0: // Public messages - visible to everyone (receiver_id = null)
               return true;
               
             case 1: // Private/1-on-1 messages - only visible to sender and receiver
               const shouldShowPrivate = isOwnMessage || isToCurrentUser;
-              if( window.isDebugging && shouldShowPrivate ) {
-                console.log('🔍 [Widget] 1-on-1 message visible:', {
+              if( window.isDebugging) {
+                console.log('🔍 [Widget] 1-on-1 message filter check:', {
                   msgId: msg.Id,
                   from: msg.Sender_Id,
                   to: msg.Receiver_Id,
+                  currentUser: currentUserId,
                   content: msg.Content?.substring(0, 20),
                   isOwn: isOwnMessage,
-                  isToMe: isToCurrentUser
+                  isToMe: isToCurrentUser,
+                  visible: shouldShowPrivate
                 });
               }
               return shouldShowPrivate;
@@ -1242,6 +1255,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
               
             default:
               // Unknown mode - show only if it involves current user
+              if( window.isDebugging ) console.log('⚠️ [Widget] Unknown message_mode:', msg.message_mode, 'for msg:', msg.Id);
               return isOwnMessage || isToCurrentUser;
           }
         });

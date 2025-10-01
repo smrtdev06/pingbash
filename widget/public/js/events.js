@@ -2721,7 +2721,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
       },
 
       getGroupMembers() {
-        // Get all group members for 1-on-1 messaging (not just online users)
+        // Get all group members for 1-on-1 messaging (includes both registered members AND online anonymous users)
         if( window.isDebugging ) console.log('👥 [Widget] Getting all group members for 1-on-1 search');
         
         const currentUserId = this.getCurrentUserId();
@@ -2755,11 +2755,33 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
               };
             });
           
-          if( window.isDebugging ) console.log('👥 [Widget] Available group members for 1-on-1 search:', allMembers.length);
-          if( window.isDebugging ) console.log('👥 [Widget] Group members:', allMembers.map(m => ({ id: m.id, name: m.name })));
+          if( window.isDebugging ) console.log('👥 [Widget] Registered members:', allMembers.length);
         } else {
-          if( window.isDebugging ) console.log('👥 [Widget] No group members available for search');
+          if( window.isDebugging ) console.log('👥 [Widget] No registered group members available');
         }
+        
+        // ALSO include online anonymous users (they're not in group.members from DB)
+        const onlineUsers = this.getOnlineUsers();
+        if( window.isDebugging ) console.log('👥 [Widget] Online users for merge:', onlineUsers.length);
+        
+        onlineUsers.forEach(onlineUser => {
+          // Only add anonymous users (ID >= 1000000) and users not already in the list
+          if (onlineUser.id >= 1000000 && onlineUser.id !== currentUserId) {
+            const alreadyExists = allMembers.some(m => m.id === onlineUser.id);
+            if (!alreadyExists) {
+              if( window.isDebugging ) console.log('👥 [Widget] Adding online anonymous user:', onlineUser.id, onlineUser.name);
+              allMembers.push({
+                id: onlineUser.id,
+                name: onlineUser.name, // Already formatted as "anonXXX" by getOnlineUsers
+                avatar: onlineUser.avatar,
+                email: onlineUser.email
+              });
+            }
+          }
+        });
+        
+        if( window.isDebugging ) console.log('👥 [Widget] Total members available for 1-on-1 search:', allMembers.length);
+        if( window.isDebugging ) console.log('👥 [Widget] All members:', allMembers.map(m => ({ id: m.id, name: m.name })));
         
         return allMembers;
       },
