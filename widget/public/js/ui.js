@@ -1714,11 +1714,6 @@ Example:
                     </div>
                     
                     <!-- Demo Background Text -->
-                    <div class="pingbash-preview-demo-text">
-                      <h2>PingBash Group Creating</h2>
-                      <p>Drag the chat box around and resize it!</p>
-                      <p>Configure colors and settings in the left panel</p>
-                    </div>
                   </div>
                 </div>
               </div>
