@@ -663,7 +663,30 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
 
   // EXACT COPY from widget.js - makeTextSafe method
     makeTextSafe(str) {
-      return str ? str.replace(/\\/g, '\\\\').replace(/'/g, "\\'") : "";
+      if (!str) return "";
+      
+      // Escape special characters
+      let escaped = str.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+      
+      // Only convert URLs to links if the content does NOT contain HTML tags
+      // (to avoid interfering with <img>, <a> tags from images/files)
+      if (!escaped.includes('<img') && !escaped.includes('<a') && !escaped.includes('<video') && !escaped.includes('<iframe')) {
+        // Convert URLs to clickable links with underline styling
+        // Match http://, https://, and www. URLs
+        const urlRegex = /(https?:\/\/[^\s<>"{}|\\^`\[\]]+|www\.[^\s<>"{}|\\^`\[\]]+)/gi;
+        
+        escaped = escaped.replace(urlRegex, (url) => {
+          // Remove trailing punctuation (period, comma, exclamation, etc.)
+          let cleanUrl = url.replace(/[.,!?;:]+$/, '');
+          
+          // Ensure URL has protocol
+          const href = cleanUrl.startsWith('www.') ? 'http://' + cleanUrl : cleanUrl;
+          
+          return `<a href="${href}" target="_blank" rel="noopener noreferrer" style="color: inherit; text-decoration: underline; text-underline-offset: 2px;">${cleanUrl}</a>`;
+        });
+      }
+      
+      return escaped;
     },
 
   // EXACT COPY from widget.js - renderMessageContent method
@@ -708,6 +731,10 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
           const result = `<img src="${content}" style="width: 160px; cursor: pointer;" onclick="window.pingbashWidget.openImageModal('${content}')" title="Click to view full size" />`;
           if( window.isDebugging ) console.log('🖼️ [Widget] Created clickable direct GIF HTML:', result);
           return result;
+        } else if (content.includes('<a')) {
+          if( window.isDebugging ) console.log('🔗 [Widget] Content already contains <a> tags (files/links), preserving as-is');
+          // Content already has anchor tags (files, existing links) - preserve as-is
+          return content;
         } else {
           if( window.isDebugging ) console.log('🖼️ [Widget] Processing other HTML content');
           // Other HTML content
@@ -715,7 +742,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         }
       }
 
-      // Regular text content - escape HTML and convert URLs to links
+      // Regular text content - convert URLs to clickable links
       return this.makeTextSafe(content);
     },
 
