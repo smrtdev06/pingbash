@@ -191,7 +191,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
             max-height: calc(100vh - 20px) !important;
             /* Enable resize on mobile */
             resize: both !important;
-            overflow: hidden !important;
+            overflow: hidden !important; 
             border-radius: 12px !important;
             border: 1px solid #e0e0e0 !important;
             z-index: 2147483647;
@@ -205,7 +205,17 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
           .pingbash-header {
             cursor: move !important;
             user-select: none !important;
-            touch-action: none !important;
+            /* Don't use touch-action: none - it blocks clicks on buttons/menu */
+          }
+          
+          /* Allow touch interactions on buttons and interactive elements */
+          .pingbash-header button,
+          .pingbash-header .pingbash-hamburger-btn,
+          .pingbash-header .pingbash-hamburger-container,
+          .pingbash-hamburger-dropdown,
+          .pingbash-menu-item {
+            touch-action: auto !important;
+            pointer-events: auto !important;
           }
           
           /* Large touchable resize handle for mobile */

@@ -70,8 +70,18 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         };
         
         const handleMouseDown = (e) => {
-          // Only drag when dialog is open and clicking on header elements, not buttons
-          if (!this.isOpen || e.target.closest('button')) {
+          // Prevent drag when clicking on interactive elements
+          if (!this.isOpen) return;
+          
+          // Check if clicking on button, hamburger menu, or any interactive element
+          if (e.target.closest('button') || 
+              e.target.closest('.pingbash-hamburger-btn') ||
+              e.target.closest('.pingbash-hamburger-container') ||
+              e.target.closest('.pingbash-hamburger-dropdown') ||
+              e.target.closest('input') ||
+              e.target.closest('select') ||
+              e.target.closest('textarea')) {
+            if( window.isDebugging ) console.log('👆 [Widget] Click on interactive element, not dragging');
             return;
           }
           
@@ -82,8 +92,18 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         };
         
         const handleTouchStart = (e) => {
-          // Only drag when dialog is open and clicking on header elements, not buttons
-          if (!this.isOpen || e.target.closest('button')) {
+          // Prevent drag when touching interactive elements
+          if (!this.isOpen) return;
+          
+          // Check if touching button, hamburger menu, or any interactive element
+          if (e.target.closest('button') || 
+              e.target.closest('.pingbash-hamburger-btn') ||
+              e.target.closest('.pingbash-hamburger-container') ||
+              e.target.closest('.pingbash-hamburger-dropdown') ||
+              e.target.closest('input') ||
+              e.target.closest('select') ||
+              e.target.closest('textarea')) {
+            if( window.isDebugging ) console.log('👆 [Widget] Touch on interactive element, not dragging');
             return;
           }
           
