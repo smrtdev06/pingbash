@@ -106,6 +106,17 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         // Initial message load - replace all messages
         this.displayMessages(messages || []);
         
+        // Remove banned user messages from DOM after messages are rendered
+        if (this.bannedUsersPendingRemoval && this.bannedUsersPendingRemoval.size > 0) {
+          if( window.isDebugging ) console.log('🗑️ [Widget] Processing pending banned user removals after message load:', Array.from(this.bannedUsersPendingRemoval));
+          // Use setTimeout to ensure DOM is fully rendered
+          setTimeout(() => {
+            this.bannedUsersPendingRemoval.forEach(userId => {
+              this.removeBannedUserMessagesFromDOM(userId);
+            });
+          }, 100);
+        }
+        
         // Update menu visibility when messages are loaded (group is ready)
         setTimeout(() => {
           if (this.updateMenuVisibility) {
@@ -591,37 +602,22 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         if (groupId === this.groupId) {
           if( window.isDebugging ) console.log(`🗑️ [Widget] Removing messages from user ${userId} in current group`);
           
+          // Store the banned user ID for deferred removal
+          if (!this.bannedUsersPendingRemoval) {
+            this.bannedUsersPendingRemoval = new Set();
+          }
+          this.bannedUsersPendingRemoval.add(parseInt(userId));
+          
           // Remove messages from this.messages array
           const beforeCount = this.messages?.length || 0;
           this.messages = (this.messages || []).filter(msg => msg.Sender_Id != userId);
           const afterCount = this.messages?.length || 0;
           const removedCount = beforeCount - afterCount;
           
-          if( window.isDebugging ) console.log(`🗑️ [Widget] Removed ${removedCount} messages from UI (${beforeCount} -> ${afterCount})`);
+          if( window.isDebugging ) console.log(`🗑️ [Widget] Removed ${removedCount} messages from array (${beforeCount} -> ${afterCount})`);
           
-          // Remove messages from DOM
-          const messageElements = this.messagesContainer?.querySelectorAll('.pingbash-message');
-          let removedFromDOM = 0;
-          messageElements?.forEach(el => {
-            const msgId = el.getAttribute('data-message-id');
-            const msg = this.messages?.find(m => m.Id == msgId);
-            // If message not found in filtered array, it was from banned user
-            const fullMsgList = (this.messages || []).concat([...messageElements].map(e => ({
-              Id: e.getAttribute('data-message-id'),
-              Sender_Id: e.getAttribute('data-sender-id')
-            })));
-            
-            const senderIdAttr = el.getAttribute('data-sender-id');
-            if (senderIdAttr && senderIdAttr == userId) {
-              el.remove();
-              removedFromDOM++;
-            }
-          });
-          
-          if( window.isDebugging ) console.log(`🗑️ [Widget] Removed ${removedFromDOM} message elements from DOM`);
-          
-          // Refresh the display
-          this.displayMessages(this.messages);
+          // Try to remove from DOM immediately
+          this.removeBannedUserMessagesFromDOM(userId);
         }
       });
 
@@ -2332,6 +2328,36 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         
         // Add modal to body
         document.body.insertAdjacentHTML('beforeend', modalHtml);
+      },
+
+      // NEW METHOD - Remove banned user messages from DOM
+      removeBannedUserMessagesFromDOM(userId) {
+        if( window.isDebugging ) console.log(`🗑️ [Widget] Attempting to remove messages from DOM for user ${userId}`);
+        
+        const messageElements = this.messagesContainer?.querySelectorAll('.pingbash-message');
+        
+        if (!messageElements || messageElements.length === 0) {
+          if( window.isDebugging ) console.log(`🗑️ [Widget] No message elements found in DOM (container exists: ${!!this.messagesContainer})`);
+          return;
+        }
+        
+        let removedFromDOM = 0;
+        if( window.isDebugging ) console.log(`🗑️ [Widget] Checking ${messageElements.length} message elements in DOM`);
+        
+        messageElements.forEach(el => {
+          const senderIdAttr = el.getAttribute('data-sender-id');
+          if( window.isDebugging ) console.log(`🗑️ [Widget] Message element - sender_id: ${senderIdAttr}, target: ${userId}`);
+          
+          if (senderIdAttr && parseInt(senderIdAttr) === parseInt(userId)) {
+            if( window.isDebugging ) console.log(`🗑️ [Widget] ✅ Removing message element from banned user ${userId}`);
+            el.remove();
+            removedFromDOM++;
+          }
+        });
+        
+        if( window.isDebugging ) console.log(`🗑️ [Widget] Removed ${removedFromDOM} message elements from DOM for user ${userId}`);
+        
+        return removedFromDOM;
       },
 
   });
