@@ -194,7 +194,16 @@ const ChatsContent: React.FC = () => {
       let currentUser = selectedUser?.Opposite_Id
       const latestMessage = data?.length && data[data.length - 1];
       const currentUserId = getCurrentUserId();
+      
+      console.log('📨 [Inbox] Received SEND_MSG:', {
+        sender,
+        receiver,
+        currentUserId,
+        selectedUser: currentUser,
+        messageContent: latestMessage && typeof latestMessage === 'object' ? latestMessage.Content?.substring(0, 50) : ''
+      });
 
+      // Update message list if this message is for the currently selected chat
       if (receiver === currentUser || sender === currentUser) {
         const newList = mergeArrays(msgList, data);
         const prevLength = msgList == null ? 0 : msgList.length;
@@ -219,11 +228,14 @@ const ChatsContent: React.FC = () => {
         dispatch(setMessageList([...newList]))
       }
       
-      // Update inbox user list: update the user's last message and move to top
-      if (latestMessage) {
+      // ALWAYS update inbox user list for ANY message involving current user
+      // (not just for selected chat)
+      if (latestMessage && (latestMessage.Sender_Id === currentUserId || latestMessage.Receiver_Id === currentUserId)) {
         const oppositeUserId = latestMessage.Sender_Id === currentUserId 
           ? latestMessage.Receiver_Id 
           : latestMessage.Sender_Id;
+        
+        console.log('📨 [Inbox] Updating inbox list for user:', oppositeUserId);
         
         // Update the inbox users list
         setInboxUsers(prevUsers => {
@@ -240,6 +252,8 @@ const ChatsContent: React.FC = () => {
               Receiver_Id: latestMessage.Receiver_Id
             };
             
+            console.log('📨 [Inbox] User found at index', userIndex, '- moving to top with new message');
+            
             const newUsers = [
               updatedUser,
               ...prevUsers.filter((_, idx) => idx !== userIndex)
@@ -248,6 +262,7 @@ const ChatsContent: React.FC = () => {
             return newUsers;
           } else {
             // User doesn't exist - they might be a new conversation
+            console.log('📨 [Inbox] User not found in inbox - requesting refresh');
             // Request full user list refresh
             getUsers(localStorage.getItem(TOKEN_KEY));
             return prevUsers;
@@ -280,7 +295,7 @@ const ChatsContent: React.FC = () => {
       })
       socket.off(ChatConst.SEND_MSG, handleSendMsg)
     };
-  }, [selectedUser]);
+  }, [selectedUser, msgList, mySoundOptionId, blockedUsers]);
 
   const handleGetBlockedUsers = (data: User[]) => {
     dispatch(setIsLoading(false));
