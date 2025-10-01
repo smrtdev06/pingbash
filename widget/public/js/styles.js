@@ -171,31 +171,125 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
           flex-direction: column;
         }
         
-        /* Mobile: Full screen chat dialog */
+        /* Mobile: Resizable and draggable chat dialog */
         @media (max-width: 768px) {
           .pingbash-chat-dialog {
             position: fixed !important;
-            top: 0 !important;
-            left: 0 !important;
-            right: 0 !important;
-            bottom: 0 !important;
-            width: 100vw !important;
-            min-width: 100vw !important;
-            max-width: 100vw !important;
-            border-radius: 0 !important;
-            border: none !important;
-            transform: translateY(${this.config.position.includes('top') ? '-' : ''}100vh);
+            /* Start in center of screen */
+            top: 50% !important;
+            left: 50% !important;
+            transform: translate(-50%, -50%) scale(0.8);
+            /* Default size - smaller on mobile but resizable */
+            width: 90vw !important;
+            height: 70vh !important;
+            /* Minimum size: 100x100 as requested */
+            min-width: 100px !important;
+            min-height: 100px !important;
+            /* Maximum size: almost full screen with padding */
+            max-width: calc(100vw - 20px) !important;
+            max-height: calc(100vh - 20px) !important;
+            /* Enable resize on mobile */
+            resize: both !important;
+            overflow: hidden !important;
+            border-radius: 12px !important;
+            border: 1px solid #e0e0e0 !important;
             z-index: 2147483647;
           }
           
           .pingbash-chat-dialog.open {
-            transform: translateY(0) !important;
+            transform: translate(-50%, -50%) scale(1) !important;
           }
           
-          /* Mobile: Header not draggable */
+          /* Mobile: Header IS draggable */
           .pingbash-header {
-            cursor: default !important;
-            user-select: auto !important;
+            cursor: move !important;
+            user-select: none !important;
+            touch-action: none !important;
+          }
+          
+          /* Resize handle more visible on mobile */
+          .pingbash-chat-dialog::after {
+            content: '⋰';
+            position: absolute;
+            bottom: 2px;
+            right: 2px;
+            font-size: 16px;
+            color: #999;
+            pointer-events: none;
+            line-height: 1;
+          }
+          
+          /* Allow child elements to shrink below their normal minimums on mobile */
+          .pingbash-header {
+            padding: 8px 12px !important;
+            min-height: auto !important;
+            flex-shrink: 0;
+          }
+          
+          .pingbash-header-left {
+            gap: 8px !important;
+            min-width: 0 !important;
+          }
+          
+          .pingbash-logo {
+            width: 32px !important;
+            height: 26px !important;
+            flex-shrink: 0;
+          }
+          
+          .pingbash-header-title {
+            font-size: 12px !important;
+            min-width: 0 !important;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+          }
+          
+          .pingbash-messages-area {
+            padding: 8px !important;
+            min-height: 20px !important;
+          }
+          
+          .pingbash-messages-container {
+            min-height: 20px !important;
+          }
+          
+          .pingbash-messages-list {
+            min-height: 20px !important;
+          }
+          
+          .pingbash-input-bar {
+            padding: 6px 10px !important;
+            min-height: auto !important;
+            flex-shrink: 0;
+          }
+          
+          .pingbash-controls-bar {
+            padding: 4px 8px !important;
+            min-height: auto !important;
+            gap: 6px !important;
+          }
+          
+          .pingbash-input-wrapper {
+            min-width: 30px !important;
+          }
+          
+          .pingbash-textarea {
+            min-height: 24px !important;
+            padding: 6px !important;
+            font-size: 12px !important;
+          }
+          
+          .pingbash-control-btn {
+            width: 24px !important;
+            height: 24px !important;
+            padding: 4px !important;
+          }
+          
+          .pingbash-btn {
+            padding: 4px 8px !important;
+            font-size: 12px !important;
+            min-height: auto !important;
           }
         }
         

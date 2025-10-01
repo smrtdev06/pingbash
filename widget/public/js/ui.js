@@ -44,21 +44,27 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
     setupDragFunctionality() {
       if (!this.dialog) return;
       
-      // Check if device is mobile (disable drag on mobile)
-      const isMobile = window.innerWidth <= 768;
-      if (isMobile) {
-        if( window.isDebugging ) console.log('📱 [Widget] Mobile device detected - disabling drag functionality');
-        return;
-      }
+      // Enable drag on ALL devices including mobile
+      if( window.isDebugging ) console.log('👆 [Widget] Enabling drag functionality for all devices');
       
       let isDragging = false;
       let dragOffset = { x: 0, y: 0 };
       
-      // Make header draggable (only when dialog is open and not on mobile)
+      // Make header draggable (works on mobile and desktop)
       const header = this.dialog.querySelector('.pingbash-header');
       if (header) {
         header.style.cursor = 'move';
         header.style.userSelect = 'none';
+        
+        const startDrag = (clientX, clientY) => {
+          isDragging = true;
+          const rect = this.dialog.getBoundingClientRect();
+          dragOffset.x = clientX - rect.left;
+          dragOffset.y = clientY - rect.top;
+          
+          header.style.cursor = 'grabbing';
+          this.dialog.classList.add('dragging');
+        };
         
         const handleMouseDown = (e) => {
           // Only drag when dialog is open and clicking on header elements, not buttons
@@ -66,28 +72,30 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
             return;
           }
           
-          // Double-check mobile status at interaction time
-          if (window.innerWidth <= 768) {
-            return;
-          }
-          
-          isDragging = true;
-          const rect = this.dialog.getBoundingClientRect();
-          dragOffset.x = e.clientX - rect.left;
-          dragOffset.y = e.clientY - rect.top;
-          
-          header.style.cursor = 'grabbing';
-          this.dialog.classList.add('dragging');
+          startDrag(e.clientX, e.clientY);
           document.addEventListener('mousemove', handleMouseMove);
           document.addEventListener('mouseup', handleMouseUp);
           e.preventDefault();
         };
         
-        const handleMouseMove = (e) => {
-          if (!isDragging || window.innerWidth <= 768) return;
+        const handleTouchStart = (e) => {
+          // Only drag when dialog is open and clicking on header elements, not buttons
+          if (!this.isOpen || e.target.closest('button')) {
+            return;
+          }
           
-          const newX = e.clientX - dragOffset.x;
-          const newY = e.clientY - dragOffset.y;
+          const touch = e.touches[0];
+          startDrag(touch.clientX, touch.clientY);
+          document.addEventListener('touchmove', handleTouchMove, { passive: false });
+          document.addEventListener('touchend', handleTouchEnd);
+          e.preventDefault();
+        };
+        
+        const moveDrag = (clientX, clientY) => {
+          if (!isDragging) return;
+          
+          const newX = clientX - dragOffset.x;
+          const newY = clientY - dragOffset.y;
           
           // Keep dialog within viewport bounds
           const maxX = window.innerWidth - this.dialog.offsetWidth;
@@ -102,24 +110,37 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
           this.dialog.style.transform = 'none';
         };
         
-        const handleMouseUp = () => {
+        const handleMouseMove = (e) => {
+          moveDrag(e.clientX, e.clientY);
+        };
+        
+        const handleTouchMove = (e) => {
+          const touch = e.touches[0];
+          moveDrag(touch.clientX, touch.clientY);
+          e.preventDefault();
+        };
+        
+        const endDrag = () => {
           isDragging = false;
-          header.style.cursor = window.innerWidth <= 768 ? 'default' : 'move';
+          header.style.cursor = 'move';
           this.dialog.classList.remove('dragging');
+        };
+        
+        const handleMouseUp = () => {
+          endDrag();
           document.removeEventListener('mousemove', handleMouseMove);
           document.removeEventListener('mouseup', handleMouseUp);
         };
         
-        header.addEventListener('mousedown', handleMouseDown);
+        const handleTouchEnd = () => {
+          endDrag();
+          document.removeEventListener('touchmove', handleTouchMove);
+          document.removeEventListener('touchend', handleTouchEnd);
+        };
         
-        // Update cursor on window resize
-        window.addEventListener('resize', () => {
-          if (window.innerWidth <= 768) {
-            header.style.cursor = 'default';
-          } else if (!isDragging) {
-            header.style.cursor = 'move';
-          }
-        });
+        // Add both mouse and touch event listeners
+        header.addEventListener('mousedown', handleMouseDown);
+        header.addEventListener('touchstart', handleTouchStart, { passive: false });
       }
     },
 
@@ -1013,7 +1034,7 @@ Example:
                   <!-- Emoji/GIF Content Area -->
                   <div class="pingbash-emoji-content">
                     <!-- Emoji Grid -->
-                    <div class="pingbash-emoji-grid">
+                  <div class="pingbash-emoji-grid">
                       <!-- Smileys & Emotion -->
                       <span class="pingbash-emoji" data-emoji="😀" data-keywords="grinning face happy smile" data-category="smileys">😀</span>
                       <span class="pingbash-emoji" data-emoji="😃" data-keywords="grinning face with big eyes happy smile">😃</span>
