@@ -2274,7 +2274,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
                       ">
                         <div style="flex: 1;">
                           <div><strong>IP:</strong> ${ban.ip_address}</div>
-                          <div><strong>User:</strong> ${ban.banned_user_name || (isAnonymousUser ? `Anonymous User #${ban.user_id || 'Unknown'}` : `User ${ban.user_id}`)}</div>
+                          <div><strong>User:</strong> ${ban.banned_user_name || (isAnonymousUser ? `anon${String(ban.user_id).slice(-3)}` : `User ${ban.user_id}`)}</div>
                           <div><strong>Banned by:</strong> ${ban.banned_by_name || `User ${ban.banned_by}`}</div>
                           <div><strong>Date:</strong> ${new Date(ban.banned_at).toLocaleString()}</div>
                           ${isAnonymousUser ? '<div style="color: #856404; font-weight: bold;">🎭 Anonymous User IP Ban</div>' : ''}

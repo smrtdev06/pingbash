@@ -2734,12 +2734,26 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
           // Convert to consistent format and exclude current user
           allMembers = membersSource
             .filter(member => member.id !== currentUserId) // Don't include self in 1-on-1 search
-            .map(member => ({
-              id: member.id,
-              name: member.name || `User ${member.id}`,
-              avatar: member.avatar,
-              email: member.email
-            }));
+            .map(member => {
+              // For anonymous users (ID >= 1000000), show "anon" + last 3 digits
+              let displayName = member.name;
+              if (!displayName) {
+                if (member.id >= 1000000) {
+                  // Anonymous user - show "anon" + last 3 digits
+                  displayName = `anon${String(member.id).slice(-3)}`;
+                } else {
+                  // Regular user without name
+                  displayName = `User ${member.id}`;
+                }
+              }
+              
+              return {
+                id: member.id,
+                name: displayName,
+                avatar: member.avatar,
+                email: member.email
+              };
+            });
           
           if( window.isDebugging ) console.log('👥 [Widget] Available group members for 1-on-1 search:', allMembers.length);
           if( window.isDebugging ) console.log('👥 [Widget] Group members:', allMembers.map(m => ({ id: m.id, name: m.name })));

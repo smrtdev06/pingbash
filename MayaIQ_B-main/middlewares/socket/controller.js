@@ -82,7 +82,7 @@ const sendPrivateMessageEmailNotification = async (senderId, receiverId, message
         if (isAnonymousSender) {
             // Anonymous sender
             const last3Digits = String(senderId).slice(-3);
-            sender.Name = `Anonymous User #${last3Digits}`;
+            sender.Name = `anon${last3Digits}`;
             sender.Email = null;
             console.log(`📧 [EMAIL] Anonymous sender: ${sender.Name} (ID: ${senderId})`);
         } else {
@@ -356,7 +356,7 @@ const getGroup = async (groupId) => {
             JSONB_AGG(DISTINCT 
                 JSONB_BUILD_OBJECT(
                     'id', COALESCE(u."Id", gu2.user_id),
-                    'name', COALESCE(u."Name", 'Anonymous User #' || gu2.user_id),
+                    'name', COALESCE(u."Name", 'anon' || RIGHT(gu2.user_id::TEXT, 3)),
                     'email', COALESCE(u."Email", 'anon' || gu2.user_id || '@anonymous.local'),
                     'avatar', u."Photo_Name",
                     'gender', u.gender,
@@ -406,7 +406,7 @@ const getMyGroups = async (loggedId) => {
             JSONB_AGG(DISTINCT 
                 JSONB_BUILD_OBJECT(
                     'id', COALESCE(u."Id", gu2.user_id),
-                    'name', COALESCE(u."Name", 'Anonymous User #' || gu2.user_id),
+                    'name', COALESCE(u."Name", 'anon' || RIGHT(gu2.user_id::TEXT, 3)),
                     'email', COALESCE(u."Email", 'anon' || gu2.user_id || '@anonymous.local'),
                     'avatar', u."Photo_Name",
                     'gender', u.gender,
@@ -459,7 +459,7 @@ const getFavGroups = async (loggedId) => {
             JSONB_AGG(DISTINCT 
                 JSONB_BUILD_OBJECT(
                     'id', COALESCE(u."Id", gu2.user_id),
-                    'name', COALESCE(u."Name", 'Anonymous User #' || gu2.user_id),
+                    'name', COALESCE(u."Name", 'anon' || RIGHT(gu2.user_id::TEXT, 3)),
                     'email', COALESCE(u."Email", 'anon' || gu2.user_id || '@anonymous.local'),
                     'avatar', u."Photo_Name",
                     'gender', u.gender,
