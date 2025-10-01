@@ -1522,17 +1522,22 @@ const updateGroupModPriorities = async (
 
 const sendGroupNotification = async (senderId, groupId, message) => {
     try {
-        await PG_query(`INSERT INTO "Messages" ("Content", "Sender_Id", "Receiver_Id")
+        // Insert notification messages with History_Iden = 1 so they appear in inbox
+        await PG_query(`INSERT INTO "Messages" ("Content", "Sender_Id", "Receiver_Id", "History_Iden", "Send_Time")
             SELECT 
                 '${message}' AS "Content",
                 ${senderId} AS "Sender_Id",
-                gu.user_id AS "Receiver_Id"
+                gu.user_id AS "Receiver_Id",
+                1 AS "History_Iden",
+                NOW() AS "Send_Time"
             FROM group_users gu
             WHERE gu.group_id = ${groupId}
             AND gu.user_id <> ${senderId}
             AND gu.user_id < 1000000;`);
+        
+        console.log(`📢 [DB] Saved group notification to Messages table for all group members`);
     } catch (error) {
-        console.log(error)
+        console.log('❌ [DB] Error saving group notification:', error);
     }
 }
 
