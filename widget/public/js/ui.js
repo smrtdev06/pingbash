@@ -1162,15 +1162,15 @@ Example:
               </div>
             </div>
           </div>
-              </div>
-    `;
-
-    this.widget.appendChild(this.dialog);
+        </div>
+      `;
+  
+      this.widget.appendChild(this.dialog);
     
     // Store reference to messages container for DOM operations
     this.messagesContainer = this.dialog.querySelector('.pingbash-messages-list');
     if( window.isDebugging ) console.log('🔍 [Widget] Messages container reference stored:', !!this.messagesContainer);
-  },
+    },
 
   // EXACT COPY from widget.js - updatePosition method
     updatePosition(position) {

@@ -188,6 +188,25 @@ const ChatsContent: React.FC = () => {
       setSearchedUsers(data);
     }
 
+    const handleSendGroupNotify = (data: any) => {
+      console.log("📢 [Inbox] Received SEND_GROUP_NOTIFY event:", data);
+      
+      // Check if this is the sender's confirmation (string) or actual notification (object)
+      if (typeof data === 'string') {
+        // Sender's confirmation
+        console.log("📢 [Inbox] Notification sent confirmation:", data);
+        toast.success(data);
+      } else if (data && typeof data === 'object') {
+        // Actual group notification (only received if user is in the group room)
+        console.log("📢 [Inbox] Group notification received:", {
+          from: data.senderName,
+          message: data.message,
+          groupId: data.groupId
+        });
+        toast(`${data.senderName}: ${data.message}`);
+      }
+    }
+
     const handleSendMsg = (data: MessageUnit[]) => {
       const receiver = data?.length && data[data.length - 1].Receiver_Id
       const sender = data?.length && data[data.length - 1].Sender_Id
@@ -283,6 +302,7 @@ const ChatsContent: React.FC = () => {
       dispatch(setMessageList(data))
     })
     socket.on(ChatConst.SEND_MSG, handleSendMsg)
+    socket.on(ChatConst.SEND_GROUP_NOTIFY, handleSendGroupNotify)
     // Also listen to group messages for 1-on-1 messages sent from widget
     socket.on(ChatConst.SEND_GROUP_MSG, (data) => {
       console.log('📨 [Inbox] Received SEND_GROUP_MSG event:', data?.length, 'messages');
@@ -314,6 +334,7 @@ const ChatsContent: React.FC = () => {
         dispatch(setMessageList(data))
       })
       socket.off(ChatConst.SEND_MSG, handleSendMsg)
+      socket.off(ChatConst.SEND_GROUP_NOTIFY, handleSendGroupNotify)
       socket.off(ChatConst.SEND_GROUP_MSG)
     };
   }, [selectedUser, msgList, mySoundOptionId, blockedUsers]);
