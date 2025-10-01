@@ -192,6 +192,8 @@ const ChatsContent: React.FC = () => {
       const receiver = data?.length && data[data.length - 1].Receiver_Id
       const sender = data?.length && data[data.length - 1].Sender_Id
       let currentUser = selectedUser?.Opposite_Id
+      const latestMessage = data?.length && data[data.length - 1];
+      const currentUserId = getCurrentUserId();
 
       if (receiver === currentUser || sender === currentUser) {
         const newList = mergeArrays(msgList, data);
@@ -215,6 +217,42 @@ const ChatsContent: React.FC = () => {
         }
         setPrevMsgList(msgList);
         dispatch(setMessageList([...newList]))
+      }
+      
+      // Update inbox user list: update the user's last message and move to top
+      if (latestMessage) {
+        const oppositeUserId = latestMessage.Sender_Id === currentUserId 
+          ? latestMessage.Receiver_Id 
+          : latestMessage.Sender_Id;
+        
+        // Update the inbox users list
+        setInboxUsers(prevUsers => {
+          // Find the user in the list
+          const userIndex = prevUsers.findIndex(u => u.Opposite_Id === oppositeUserId);
+          
+          if (userIndex !== -1) {
+            // User exists - update their last message and move to top
+            const updatedUser = {
+              ...prevUsers[userIndex],
+              Content: latestMessage.Content,
+              Send_Time: latestMessage.Send_Time,
+              Sender_Id: latestMessage.Sender_Id,
+              Receiver_Id: latestMessage.Receiver_Id
+            };
+            
+            const newUsers = [
+              updatedUser,
+              ...prevUsers.filter((_, idx) => idx !== userIndex)
+            ];
+            
+            return newUsers;
+          } else {
+            // User doesn't exist - they might be a new conversation
+            // Request full user list refresh
+            getUsers(localStorage.getItem(TOKEN_KEY));
+            return prevUsers;
+          }
+        });
       }
     }
 
