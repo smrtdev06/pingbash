@@ -37,6 +37,7 @@ module.exports = {
   READ_GROUP_MSG: "read group msg",
   DELETE_GROUP_MSG: "delete group msg",
   BAN_GROUP_USER: "ban group user",
+  REMOVE_BANNED_USER_MESSAGES: "remove banned user messages",
   UNBAN_GROUP_USER: "unban group user",
   UNBAN_GROUP_USERS: "unban group users",
   ADD_LISTENER_GROUP: "add listener to group",

@@ -1746,6 +1746,24 @@ const timeoutIpAddressHelper = async (groupId, userId, ipAddress, durationSecond
     }
 };
 
+// Delete all messages from a banned user in a specific group
+const deleteBannedUserMessages = async (groupId, userId) => {
+    try {
+        console.log(`🗑️ [DELETE-MESSAGES] Deleting all messages from user ${userId} in group ${groupId}`);
+        
+        const result = await PG_query(`
+            DELETE FROM "Messages"
+            WHERE group_id = ${groupId} AND "Sender_Id" = ${userId}
+        `);
+        
+        console.log(`✅ [DELETE-MESSAGES] Deleted ${result.rowCount} messages from user ${userId} in group ${groupId}`);
+        return result.rowCount;
+    } catch (error) {
+        console.log("❌ [DELETE-MESSAGES] Error deleting banned user messages:", error);
+        return 0;
+    }
+}
+
 module.exports = {
     sendNotificationEamil,
     sendPrivateMessageEmailNotification,
@@ -1813,5 +1831,6 @@ module.exports = {
     unbanIpAddress,
     unbanUserIpAddress,
     timeoutIpAddressHelper,
-    getGroupModeratorsAndAdmins
+    getGroupModeratorsAndAdmins,
+    deleteBannedUserMessages
 }

@@ -582,6 +582,49 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         //alert(`${userType} ${userId} has been banned successfully`);
       });
 
+      // Listen for message removal after ban
+      this.socket.on('remove banned user messages', (data) => {
+        if( window.isDebugging ) console.log('🗑️ [Widget] Removing messages from banned user:', data);
+        const { groupId, userId } = data;
+        
+        // Only remove if it's for the current group
+        if (groupId === this.groupId) {
+          if( window.isDebugging ) console.log(`🗑️ [Widget] Removing messages from user ${userId} in current group`);
+          
+          // Remove messages from this.messages array
+          const beforeCount = this.messages?.length || 0;
+          this.messages = (this.messages || []).filter(msg => msg.Sender_Id != userId);
+          const afterCount = this.messages?.length || 0;
+          const removedCount = beforeCount - afterCount;
+          
+          if( window.isDebugging ) console.log(`🗑️ [Widget] Removed ${removedCount} messages from UI (${beforeCount} -> ${afterCount})`);
+          
+          // Remove messages from DOM
+          const messageElements = this.messagesContainer?.querySelectorAll('.pingbash-message');
+          let removedFromDOM = 0;
+          messageElements?.forEach(el => {
+            const msgId = el.getAttribute('data-message-id');
+            const msg = this.messages?.find(m => m.Id == msgId);
+            // If message not found in filtered array, it was from banned user
+            const fullMsgList = (this.messages || []).concat([...messageElements].map(e => ({
+              Id: e.getAttribute('data-message-id'),
+              Sender_Id: e.getAttribute('data-sender-id')
+            })));
+            
+            const senderIdAttr = el.getAttribute('data-sender-id');
+            if (senderIdAttr && senderIdAttr == userId) {
+              el.remove();
+              removedFromDOM++;
+            }
+          });
+          
+          if( window.isDebugging ) console.log(`🗑️ [Widget] Removed ${removedFromDOM} message elements from DOM`);
+          
+          // Refresh the display
+          this.displayMessages(this.messages);
+        }
+      });
+
       this.socket.on('unban group user', (userId) => {
         if( window.isDebugging ) console.log('✅ [Widget] Backend confirmed unban for user:', userId);
         const isAnonymous = parseInt(userId) > 100000;

@@ -328,6 +328,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
       const messageEl = document.createElement('div');
       messageEl.className = `pingbash-message ${isOwn ? 'own' : ''} ${isNewMessage ? 'new-message' : ''}`;
       messageEl.setAttribute('data-message-id', message.Id);
+      messageEl.setAttribute('data-sender-id', message.Sender_Id);
   
       if( window.isDebugging ) console.log('🔍 [Widget] Creating message element with class:', messageEl.className, 'ID:', message.Id);
   

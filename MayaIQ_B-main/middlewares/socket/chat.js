@@ -765,6 +765,10 @@ module.exports = (socket, users) => {
                 await Controller.banGroupUser(groupId, targetUserId);
             }
 
+            // Delete all messages from the banned user
+            const deletedCount = await Controller.deleteBannedUserMessages(groupId, targetUserId);
+            console.log(`🗑️ [BAN] Deleted ${deletedCount} messages from banned user ${targetUserId}`);
+
             const receivers = await Controller.getReceiverIdsOfGroup(groupId);
             // Find the receiver's and sender's socket IDs
             const receiveUsers = users.filter(user => receivers.find(receiverId => receiverId == user.ID));
@@ -792,11 +796,16 @@ module.exports = (socket, users) => {
                     if (receiverSocket && typeof receiverSocket.emit === 'function') {
                         receiverSocket.emit(chatCode.BAN_GROUP_USER, userId);
                         receiverSocket.emit(chatCode.GROUP_UPDATED, group);
+                        // Notify clients to remove all messages from the banned user
+                        receiverSocket.emit(chatCode.REMOVE_BANNED_USER_MESSAGES, {
+                            groupId: groupId,
+                            userId: targetUserId
+                        });
                     }
                 });
             }
 
-            console.log(`Ban completed successfully for user ${userId} by ${senderId}`);
+            console.log(`Ban completed successfully for user ${userId} by ${senderId} - ${deletedCount} messages removed`);
         } catch (error) {
             console.error("Error banning user:", error);
             socket.emit(chatCode.SERVER_ERROR, httpCode.SERVER_ERROR);
