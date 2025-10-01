@@ -176,12 +176,13 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
           .pingbash-chat-dialog {
             position: fixed !important;
             /* Start in center of screen */
-            top: 50% !important;
-            left: 50% !important;
-            transform: translate(-50%, -50%) scale(0.8);
-            /* Default size - smaller on mobile but resizable */
-            width: 90vw !important;
-            height: 70vh !important;
+            top: 10px;
+            left: 10px;
+            /*transform: translate(-50%, -50%) scale(0.8);*/
+            /* Fixed default size (not responsive) - user can resize */
+            /* Use min() to handle very small screens gracefully */
+            width: min(350px, calc(100vw - 40px)) ;
+            height: min(500px, calc(100vh - 40px)) ;
             /* Minimum size: 100x100 as requested */
             min-width: 100px !important;
             min-height: 100px !important;
@@ -197,7 +198,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
           }
           
           .pingbash-chat-dialog.open {
-            transform: translate(-50%, -50%) scale(1) !important;
+            /*transform: translate(-50%, -50%) scale(1) !important;*/
           }
           
           /* Mobile: Header IS draggable */
@@ -2859,10 +2860,8 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
         
         /* Mobile responsive */
         @media (max-width: 768px) {
-          .pingbash-chat-dialog {
-            width: calc(100vw) !important;
-            height: calc(100vh - 100px) !important;
-          }
+          /* Dialog size is controlled by the main mobile media query at line ~175 */
+          /* Do NOT override width/height here - keep it fixed 350x500 */
           
           .pingbash-message-content {
             max-width: 100%;

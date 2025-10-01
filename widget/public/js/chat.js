@@ -14,21 +14,41 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
   
       // Use ResizeObserver to monitor height changes
       if (window.ResizeObserver) {
+        // Debounce to prevent excessive scrolling during resize
+        let resizeTimeout;
+        let lastScrollTop = 0;
+        
         this.resizeObserver = new ResizeObserver((entries) => {
-          for (let entry of entries) {
-            // Check if we should auto-scroll (user is at bottom)
-            const element = entry.target;
-            const isAtBottom = element.scrollTop >= (element.scrollHeight - element.clientHeight - 50);
-            
-            if (isAtBottom) {
-              if( window.isDebugging ) console.log('📜 [Widget] Height changed, auto-scrolling to bottom');
-              this.scrollToBottom();
+          // Clear previous timeout
+          clearTimeout(resizeTimeout);
+          
+          // Debounce: wait 100ms after resize stops
+          resizeTimeout = setTimeout(() => {
+            // Skip if user is actively dragging/resizing
+            if (this.isUserInteracting) {
+              if( window.isDebugging ) console.log('📜 [Widget] User interacting, skipping auto-scroll');
+              return;
             }
-          }
+            
+            for (let entry of entries) {
+              // Check if we should auto-scroll (user is at bottom)
+              const element = entry.target;
+              const isAtBottom = element.scrollTop >= (element.scrollHeight - element.clientHeight - 50);
+              
+              // Only scroll if position actually changed significantly (not just 1-2px differences)
+              const scrollDifference = Math.abs(element.scrollTop - lastScrollTop);
+              
+              if (isAtBottom && scrollDifference > 10) {
+                if( window.isDebugging ) console.log('📜 [Widget] Height changed, auto-scrolling to bottom');
+                this.scrollToBottom();
+                lastScrollTop = element.scrollTop;
+              }
+            }
+          }, 100); // 100ms debounce
         });
         
         this.resizeObserver.observe(messagesList);
-        if( window.isDebugging ) console.log('📜 [Widget] Auto-scroll monitoring enabled');
+        if( window.isDebugging ) console.log('📜 [Widget] Auto-scroll monitoring enabled (with debounce)');
       }
   
       // Also monitor for new child elements (MutationObserver)

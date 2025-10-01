@@ -64,6 +64,9 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
           
           header.style.cursor = 'grabbing';
           this.dialog.classList.add('dragging');
+          
+          // Set flag to disable auto-scroll during drag
+          this.isUserInteracting = true;
         };
         
         const handleMouseDown = (e) => {
@@ -124,6 +127,11 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
           isDragging = false;
           header.style.cursor = 'move';
           this.dialog.classList.remove('dragging');
+          
+          // Re-enable auto-scroll after a delay
+          setTimeout(() => {
+            this.isUserInteracting = false;
+          }, 500);
         };
         
         const handleMouseUp = () => {

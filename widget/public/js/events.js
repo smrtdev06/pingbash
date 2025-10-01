@@ -2283,7 +2283,20 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         });
         
         // Apply size settings (frame dimensions)
-        if (groupData.size_mode === 'fixed' && groupData.frame_width && groupData.frame_height) {
+        // On mobile (≤768px), skip inline size styles - let CSS media query handle it
+        const isMobile = window.innerWidth <= 768;
+        
+        if (isMobile) {
+          // Mobile: Don't apply inline styles - let CSS media query control size
+          actualChatDialog.style.width = '';
+          actualChatDialog.style.height = '';
+          actualChatDialog.style.minWidth = '';
+          actualChatDialog.style.minHeight = '';
+          actualChatDialog.style.maxWidth = '';
+          actualChatDialog.style.maxHeight = '';
+          if( window.isDebugging ) console.log('📱 [Widget] Mobile detected - using CSS media query sizing (350x500 fixed)');
+        } else if (groupData.size_mode === 'fixed' && groupData.frame_width && groupData.frame_height) {
+          // Desktop: Apply fixed size from group data
           actualChatDialog.style.width = groupData.frame_width + 'px';
           actualChatDialog.style.height = groupData.frame_height + 'px';
           actualChatDialog.style.minWidth = groupData.frame_width + 'px';
@@ -2292,12 +2305,12 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
           actualChatDialog.style.maxHeight = 'none';
           if( window.isDebugging ) console.log('🎨 [Widget] Applied fixed size:', groupData.frame_width + 'x' + groupData.frame_height);
         } else if (groupData.frame_width && groupData.frame_height) {
-          // Fallback for older format without size_mode
+          // Desktop: Fallback for older format without size_mode
           actualChatDialog.style.width = groupData.frame_width + 'px';
           actualChatDialog.style.height = groupData.frame_height + 'px';
           if( window.isDebugging ) console.log('🎨 [Widget] Applied legacy size:', groupData.frame_width + 'x' + groupData.frame_height);
         } else {
-          // Responsive mode - reset to default responsive behavior
+          // Desktop: Responsive mode - reset to default responsive behavior
           actualChatDialog.style.width = '';
           actualChatDialog.style.height = '';
           actualChatDialog.style.minWidth = '';

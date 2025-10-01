@@ -58,9 +58,10 @@
     top: 50% !important;
     left: 50% !important;
     transform: translate(-50%, -50%) scale(0.8);
-    /* Default size - smaller on mobile but resizable */
-    width: 90vw !important;
-    height: 70vh !important;
+    /* Fixed default size (not responsive to viewport) */
+    /* Use min() to handle very small screens gracefully */
+    width: min(350px, calc(100vw - 40px)) !important;
+    height: min(500px, calc(100vh - 40px)) !important;
     /* Minimum size: 100x100 as requested */
     min-width: 100px !important;
     min-height: 100px !important;
@@ -101,13 +102,16 @@
 ```
 
 **Key Changes:**
-- ✅ Dialog starts centered at 90vw × 70vh (instead of full screen)
+- ✅ Dialog has **fixed size: 350px × 500px** (not responsive to viewport - user must resize manually)
+- ✅ Uses `min()` function to handle very small screens (e.g., 320px phones)
 - ✅ Minimum size: 100px × 100px (as requested)
 - ✅ Maximum size: Full screen minus 20px padding
 - ✅ `resize: both !important` - Enables browser's native resize handle
 - ✅ Visual resize indicator (⋰ symbol) in bottom-right corner
 - ✅ Header cursor: `move` (indicates draggable)
 - ✅ `touch-action: none` - Prevents default touch scrolling during drag
+
+**Important:** The dialog is **NOT responsive** - it opens at 350×500px and stays that size unless the user manually resizes it. This provides consistent, predictable behavior.
 
 ---
 
@@ -207,13 +211,15 @@ header.addEventListener('touchstart', handleTouchStart, { passive: false });
 ## Result
 
 ### Mobile Behavior (≤768px):
-- ✅ Dialog opens centered at 90vw × 70vh (not full screen)
+- ✅ Dialog opens at **fixed size: 350px × 500px** (not responsive)
+- ✅ On very small screens (<370px), automatically adjusts to fit with 40px margin
 - ✅ Can be **dragged** by touching and moving the header
 - ✅ Can be **resized** by dragging the bottom-right corner (native browser resize handle)
 - ✅ Minimum size: 100px × 100px
 - ✅ Maximum size: Almost full screen (with 20px padding)
 - ✅ Stays within viewport bounds while dragging
 - ✅ Smooth animations (scale + translate)
+- ✅ **NOT responsive** - size is fixed unless user manually resizes
 
 ### Desktop Behavior (>768px):
 - ✅ No changes - works as before
@@ -229,7 +235,8 @@ header.addEventListener('touchstart', handleTouchStart, { passive: false });
 1. **Open Chat Dialog:**
    - Click the chat button
    - Verify dialog opens **centered** (not full screen)
-   - Verify dialog is approximately 90% viewport width and 70% height
+   - Verify dialog is **exactly 350px wide × 500px tall** (fixed size, not responsive)
+   - On small screens (<370px), verify it fits with margins
 
 2. **Test Dragging:**
    - Touch and hold the header (title bar)
@@ -352,6 +359,50 @@ header.addEventListener('touchstart', handleTouchStart, { passive: false });
 ```
 
 **Result:** Now the dialog can actually resize down to 100px × 100px with all elements scaling proportionally.
+
+---
+
+## Additional Fix - JavaScript Inline Styles Override
+
+**Issue:** Even with CSS media query set to fixed `350px × 500px`, the dialog was still responsive because JavaScript was applying inline styles from `groupData.frame_width` and `frame_height` which override CSS `!important`.
+
+**Root Cause:** In `widget/public/js/events.js` (lines 2285-2308), the code was setting inline styles:
+```javascript
+actualChatDialog.style.width = groupData.frame_width + 'px';
+actualChatDialog.style.height = groupData.frame_height + 'px';
+```
+
+These inline styles have **higher specificity** than CSS (even with `!important`).
+
+**Solution:** Modified the code to **skip inline style application on mobile**:
+
+```javascript
+// Apply size settings (frame dimensions)
+// On mobile (≤768px), skip inline size styles - let CSS media query handle it
+const isMobile = window.innerWidth <= 768;
+
+if (isMobile) {
+  // Mobile: Don't apply inline styles - let CSS media query control size
+  actualChatDialog.style.width = '';
+  actualChatDialog.style.height = '';
+  actualChatDialog.style.minWidth = '';
+  actualChatDialog.style.minHeight = '';
+  actualChatDialog.style.maxWidth = '';
+  actualChatDialog.style.maxHeight = '';
+  console.log('📱 Mobile detected - using CSS media query sizing (350x500 fixed)');
+} else if (groupData.size_mode === 'fixed' && groupData.frame_width && groupData.frame_height) {
+  // Desktop: Apply fixed size from group data
+  actualChatDialog.style.width = groupData.frame_width + 'px';
+  actualChatDialog.style.height = groupData.frame_height + 'px';
+  // ...
+}
+```
+
+**Result:** 
+- ✅ On mobile: CSS media query controls size → **fixed 350×500px**
+- ✅ On desktop: JavaScript inline styles control size → from group settings
+- ✅ No inline style override on mobile
+- ✅ Dialog is truly fixed size on mobile now
 
 ---
 
