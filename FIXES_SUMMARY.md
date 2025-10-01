@@ -155,13 +155,63 @@
 
 ---
 
+### 3. Anonymous Users Not Appearing in 1-on-1 User Selection Dialog
+
+**Problem:** Anonymous users (like "anon071") appear in the "online users" list but do NOT appear in the "Select User for 1-on-1 Chat" dialog.
+
+**Root Cause:**
+- When anonymous users join a group, they're added to the **in-memory `users` array** on the backend (for real-time messaging)
+- However, they're **NOT added to the `group_users` database table** (because they don't exist in the `Users` table due to foreign key constraints)
+- The 1-on-1 user selection dialog was only using `group.members` from the database, which doesn't include anonymous users
+- The "online users" sidebar uses the real-time socket data, which DOES include anonymous users
+
+**Files Modified:**
+
+#### Frontend (`widget/public/js/events.js`):
+
+11. **Lines 2723-2785** - Enhanced `getGroupMembers()` function:
+    ```javascript
+    // Before: Only used group.members from database
+    const membersSource = this.group?.members || this.groupMembers || [];
+    
+    // After: Also includes online anonymous users
+    // 1. Get registered members from database
+    const membersSource = this.group?.members || this.groupMembers || [];
+    allMembers = membersSource.filter(...).map(...);
+    
+    // 2. ALSO include online anonymous users (not in DB)
+    const onlineUsers = this.getOnlineUsers();
+    onlineUsers.forEach(onlineUser => {
+      // Only add anonymous users (ID >= 1000000) not already in list
+      if (onlineUser.id >= 1000000 && onlineUser.id !== currentUserId) {
+        const alreadyExists = allMembers.some(m => m.id === onlineUser.id);
+        if (!alreadyExists) {
+          allMembers.push({
+            id: onlineUser.id,
+            name: onlineUser.name, // Already formatted as "anonXXX"
+            avatar: onlineUser.avatar,
+            email: onlineUser.email
+          });
+        }
+      }
+    });
+    ```
+
+**Result:**
+- ✅ Anonymous users now appear in the 1-on-1 user selection dialog
+- ✅ Anonymous users show as "anon071", "anon432", etc. (consistent formatting)
+- ✅ Can now send 1-on-1 messages to anonymous users
+- ✅ No duplicate entries if an anonymous user is somehow in both lists
+
+---
+
 ## Testing Instructions
 
 ### 1. Anonymous User Names
 1. **Backend restart required** - The SQL query changes need a fresh backend instance
 2. Join a group as an anonymous user
 3. Verify the user shows as "anon671" (last 3 digits) in:
-   - 1-on-1 chat selection dialog
+   - 1-on-1 chat selection dialog ✅ **NEW**
    - Message sender names in chat
    - IP ban list (for admins)
    - Email notifications
@@ -178,14 +228,24 @@
    - Verify `visible: true` only for User A and B
    - Verify `visible: false` for User C
 
-### 3. Anonymous User 1-on-1 Chat
-1. Join as anonymous user (anon123)
-2. Open 1-on-1 chat selection dialog
-3. Select a user and send a message
+### 3. Anonymous User 1-on-1 Chat ✅ **NEW**
+1. Join as authenticated user (User A)
+2. Have another user join as anonymous (shows as "anon071" in online list)
+3. Click "Start 1-on-1 Chat" button
 4. Verify:
-   - ✅ Message is saved with `message_mode = 1`
-   - ✅ Only the anonymous user and recipient see the message
-   - ✅ Message shows sender as "anon123"
+   - ✅ "anon071" appears in the user selection dialog
+   - ✅ Can click on "anon071" to start a chat
+   - ✅ Messages sent to "anon071" are only visible to User A and anon071
+   - ✅ Message shows sender as "anon071" (not full ID)
+
+### 4. Anonymous-to-Anonymous 1-on-1 Chat ✅ **NEW**
+1. Join as anonymous user A (shows as "anon123")
+2. Join as anonymous user B (shows as "anon456")
+3. Both users open the 1-on-1 selection dialog
+4. Verify:
+   - ✅ Each anonymous user sees the other in the selection dialog
+   - ✅ Can send 1-on-1 messages to each other
+   - ✅ Messages are private (not visible to other users)
 
 ---
 
@@ -204,7 +264,13 @@
    - Verify database `Messages` table has `message_mode` column
    - Check if existing messages have NULL `message_mode` values
 
-3. **Database Migration (if needed):**
+3. **Anonymous users not in selection dialog:** ✅ **FIXED**
+   - Clear browser cache / hard reload (Ctrl+Shift+R)
+   - Check console logs for `👥 [Widget] Adding online anonymous user:` messages
+   - Verify anonymous user appears in online users sidebar first
+   - Check `👥 [Widget] Total members available for 1-on-1 search:` count
+
+4. **Database Migration (if needed):**
    ```sql
    -- Check for NULL message_mode values
    SELECT COUNT(*) FROM "Messages" WHERE message_mode IS NULL;
@@ -225,4 +291,6 @@
 - All changes are backward compatible
 - The fallback logic in `applyFilterMode()` handles legacy messages without breaking existing functionality
 - Anonymous user formatting uses last 3 digits for better readability while maintaining uniqueness within context
-- Enhanced debugging logs make it easier to diagnose future issues 
+- Enhanced debugging logs make it easier to diagnose future issues
+- Anonymous users are NOT stored in `group_users` table (by design) but are included in real-time features via socket connections
+- The merge logic ensures anonymous users appear in 1-on-1 dialogs without requiring database changes 

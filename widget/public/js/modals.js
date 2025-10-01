@@ -3323,11 +3323,6 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
                     </div>
                     
                     <!-- Demo Background Text -->
-                    <div class="pingbash-preview-demo-text">
-                      <h2>Chat Style Editor</h2>
-                      <p>Preview your chat style changes!</p>
-                      <p>Configure colors and settings in the left panel</p>
-                    </div>
                   </div>
                 </div>
               </div>
