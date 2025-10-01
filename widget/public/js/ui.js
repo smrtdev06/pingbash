@@ -1013,9 +1013,9 @@ Example:
                   <!-- Emoji/GIF Content Area -->
                   <div class="pingbash-emoji-content">
                     <!-- Emoji Grid -->
-                    <div class="pingbash-emoji-grid" data-category="smileys">
+                    <div class="pingbash-emoji-grid">
                       <!-- Smileys & Emotion -->
-                      <span class="pingbash-emoji" data-emoji="😀" data-keywords="grinning face happy smile">😀</span>
+                      <span class="pingbash-emoji" data-emoji="😀" data-keywords="grinning face happy smile" data-category="smileys">😀</span>
                       <span class="pingbash-emoji" data-emoji="😃" data-keywords="grinning face with big eyes happy smile">😃</span>
                       <span class="pingbash-emoji" data-emoji="😄" data-keywords="grinning face with smiling eyes happy laugh">😄</span>
                       <span class="pingbash-emoji" data-emoji="😁" data-keywords="beaming face with smiling eyes happy laugh">😁</span>
@@ -1095,7 +1095,241 @@ Example:
                       <span class="pingbash-emoji" data-emoji="🤧" data-keywords="sneezing face sick">🤧</span>
                       <span class="pingbash-emoji" data-emoji="😷" data-keywords="face with medical mask sick">😷</span>
                       <span class="pingbash-emoji" data-emoji="🤒" data-keywords="face with thermometer sick fever">🤒</span>
-                      <span class="pingbash-emoji" data-emoji="🤕" data-keywords="face with head-bandage hurt injured">🤕</span>
+                      <span class="pingbash-emoji" data-emoji="🤕" data-keywords="face with head-bandage hurt injured" data-category="smileys">🤕</span>
+                      
+                      <!-- People & Body -->
+                      <span class="pingbash-emoji" data-emoji="👋" data-keywords="waving hand hello hi bye" data-category="people">👋</span>
+                      <span class="pingbash-emoji" data-emoji="🤚" data-keywords="raised back of hand" data-category="people">🤚</span>
+                      <span class="pingbash-emoji" data-emoji="🖐️" data-keywords="hand with fingers splayed" data-category="people">🖐️</span>
+                      <span class="pingbash-emoji" data-emoji="✋" data-keywords="raised hand stop" data-category="people">✋</span>
+                      <span class="pingbash-emoji" data-emoji="🖖" data-keywords="vulcan salute spock" data-category="people">🖖</span>
+                      <span class="pingbash-emoji" data-emoji="👌" data-keywords="ok hand okay" data-category="people">👌</span>
+                      <span class="pingbash-emoji" data-emoji="🤏" data-keywords="pinching hand small" data-category="people">🤏</span>
+                      <span class="pingbash-emoji" data-emoji="✌️" data-keywords="victory hand peace" data-category="people">✌️</span>
+                      <span class="pingbash-emoji" data-emoji="🤞" data-keywords="crossed fingers luck" data-category="people">🤞</span>
+                      <span class="pingbash-emoji" data-emoji="🤟" data-keywords="love-you gesture" data-category="people">🤟</span>
+                      <span class="pingbash-emoji" data-emoji="🤘" data-keywords="sign of the horns rock" data-category="people">🤘</span>
+                      <span class="pingbash-emoji" data-emoji="🤙" data-keywords="call me hand" data-category="people">🤙</span>
+                      <span class="pingbash-emoji" data-emoji="👈" data-keywords="backhand index pointing left" data-category="people">👈</span>
+                      <span class="pingbash-emoji" data-emoji="👉" data-keywords="backhand index pointing right" data-category="people">👉</span>
+                      <span class="pingbash-emoji" data-emoji="👆" data-keywords="backhand index pointing up" data-category="people">👆</span>
+                      <span class="pingbash-emoji" data-emoji="👇" data-keywords="backhand index pointing down" data-category="people">👇</span>
+                      <span class="pingbash-emoji" data-emoji="☝️" data-keywords="index pointing up" data-category="people">☝️</span>
+                      <span class="pingbash-emoji" data-emoji="👍" data-keywords="thumbs up yes good like" data-category="people">👍</span>
+                      <span class="pingbash-emoji" data-emoji="👎" data-keywords="thumbs down no bad dislike" data-category="people">👎</span>
+                      <span class="pingbash-emoji" data-emoji="✊" data-keywords="raised fist power" data-category="people">✊</span>
+                      <span class="pingbash-emoji" data-emoji="👊" data-keywords="oncoming fist punch" data-category="people">👊</span>
+                      <span class="pingbash-emoji" data-emoji="🤛" data-keywords="left-facing fist" data-category="people">🤛</span>
+                      <span class="pingbash-emoji" data-emoji="🤜" data-keywords="right-facing fist" data-category="people">🤜</span>
+                      <span class="pingbash-emoji" data-emoji="👏" data-keywords="clapping hands applause" data-category="people">👏</span>
+                      <span class="pingbash-emoji" data-emoji="🙌" data-keywords="raising hands celebration" data-category="people">🙌</span>
+                      <span class="pingbash-emoji" data-emoji="👐" data-keywords="open hands" data-category="people">👐</span>
+                      <span class="pingbash-emoji" data-emoji="🤲" data-keywords="palms up together" data-category="people">🤲</span>
+                      <span class="pingbash-emoji" data-emoji="🙏" data-keywords="folded hands please thanks prayer" data-category="people">🙏</span>
+                      <span class="pingbash-emoji" data-emoji="💪" data-keywords="flexed biceps strong muscle" data-category="people">💪</span>
+                      
+                      <!-- Nature & Animals -->
+                      <span class="pingbash-emoji" data-emoji="🌿" data-keywords="herb plant" data-category="nature">🌿</span>
+                      <span class="pingbash-emoji" data-emoji="☘️" data-keywords="shamrock clover" data-category="nature">☘️</span>
+                      <span class="pingbash-emoji" data-emoji="🍀" data-keywords="four leaf clover luck" data-category="nature">🍀</span>
+                      <span class="pingbash-emoji" data-emoji="🌱" data-keywords="seedling plant grow" data-category="nature">🌱</span>
+                      <span class="pingbash-emoji" data-emoji="🌲" data-keywords="evergreen tree pine" data-category="nature">🌲</span>
+                      <span class="pingbash-emoji" data-emoji="🌳" data-keywords="deciduous tree" data-category="nature">🌳</span>
+                      <span class="pingbash-emoji" data-emoji="🌴" data-keywords="palm tree tropical" data-category="nature">🌴</span>
+                      <span class="pingbash-emoji" data-emoji="🌵" data-keywords="cactus desert" data-category="nature">🌵</span>
+                      <span class="pingbash-emoji" data-emoji="🌾" data-keywords="sheaf of rice grain" data-category="nature">🌾</span>
+                      <span class="pingbash-emoji" data-emoji="🌸" data-keywords="cherry blossom flower" data-category="nature">🌸</span>
+                      <span class="pingbash-emoji" data-emoji="🌺" data-keywords="hibiscus flower" data-category="nature">🌺</span>
+                      <span class="pingbash-emoji" data-emoji="🌻" data-keywords="sunflower" data-category="nature">🌻</span>
+                      <span class="pingbash-emoji" data-emoji="🌹" data-keywords="rose flower love" data-category="nature">🌹</span>
+                      <span class="pingbash-emoji" data-emoji="🌷" data-keywords="tulip flower" data-category="nature">🌷</span>
+                      <span class="pingbash-emoji" data-emoji="🐶" data-keywords="dog face puppy" data-category="nature">🐶</span>
+                      <span class="pingbash-emoji" data-emoji="🐱" data-keywords="cat face kitty" data-category="nature">🐱</span>
+                      <span class="pingbash-emoji" data-emoji="🐭" data-keywords="mouse face" data-category="nature">🐭</span>
+                      <span class="pingbash-emoji" data-emoji="🐹" data-keywords="hamster face" data-category="nature">🐹</span>
+                      <span class="pingbash-emoji" data-emoji="🐰" data-keywords="rabbit face bunny" data-category="nature">🐰</span>
+                      <span class="pingbash-emoji" data-emoji="🦊" data-keywords="fox face" data-category="nature">🦊</span>
+                      <span class="pingbash-emoji" data-emoji="🐻" data-keywords="bear face" data-category="nature">🐻</span>
+                      <span class="pingbash-emoji" data-emoji="🐼" data-keywords="panda face" data-category="nature">🐼</span>
+                      <span class="pingbash-emoji" data-emoji="🐨" data-keywords="koala face" data-category="nature">🐨</span>
+                      <span class="pingbash-emoji" data-emoji="🐯" data-keywords="tiger face" data-category="nature">🐯</span>
+                      <span class="pingbash-emoji" data-emoji="🦁" data-keywords="lion face" data-category="nature">🦁</span>
+                      
+                      <!-- Food & Drink -->
+                      <span class="pingbash-emoji" data-emoji="🍕" data-keywords="pizza food" data-category="food">🍕</span>
+                      <span class="pingbash-emoji" data-emoji="🍔" data-keywords="hamburger burger food" data-category="food">🍔</span>
+                      <span class="pingbash-emoji" data-emoji="🍟" data-keywords="french fries food" data-category="food">🍟</span>
+                      <span class="pingbash-emoji" data-emoji="🌭" data-keywords="hot dog food" data-category="food">🌭</span>
+                      <span class="pingbash-emoji" data-emoji="🍿" data-keywords="popcorn snack" data-category="food">🍿</span>
+                      <span class="pingbash-emoji" data-emoji="🥓" data-keywords="bacon food" data-category="food">🥓</span>
+                      <span class="pingbash-emoji" data-emoji="🥚" data-keywords="egg food" data-category="food">🥚</span>
+                      <span class="pingbash-emoji" data-emoji="🍳" data-keywords="cooking fried egg" data-category="food">🍳</span>
+                      <span class="pingbash-emoji" data-emoji="🥐" data-keywords="croissant bread" data-category="food">🥐</span>
+                      <span class="pingbash-emoji" data-emoji="🍞" data-keywords="bread food" data-category="food">🍞</span>
+                      <span class="pingbash-emoji" data-emoji="🥖" data-keywords="baguette bread" data-category="food">🥖</span>
+                      <span class="pingbash-emoji" data-emoji="🥨" data-keywords="pretzel food" data-category="food">🥨</span>
+                      <span class="pingbash-emoji" data-emoji="🧀" data-keywords="cheese wedge food" data-category="food">🧀</span>
+                      <span class="pingbash-emoji" data-emoji="🍗" data-keywords="poultry leg chicken" data-category="food">🍗</span>
+                      <span class="pingbash-emoji" data-emoji="🍖" data-keywords="meat on bone food" data-category="food">🍖</span>
+                      <span class="pingbash-emoji" data-emoji="🌮" data-keywords="taco food mexican" data-category="food">🌮</span>
+                      <span class="pingbash-emoji" data-emoji="🌯" data-keywords="burrito food mexican" data-category="food">🌯</span>
+                      <span class="pingbash-emoji" data-emoji="🥙" data-keywords="stuffed flatbread food" data-category="food">🥙</span>
+                      <span class="pingbash-emoji" data-emoji="🍝" data-keywords="spaghetti pasta food" data-category="food">🍝</span>
+                      <span class="pingbash-emoji" data-emoji="🍕" data-keywords="pizza food" data-category="food">🍕</span>
+                      <span class="pingbash-emoji" data-emoji="🍰" data-keywords="shortcake cake dessert" data-category="food">🍰</span>
+                      <span class="pingbash-emoji" data-emoji="🎂" data-keywords="birthday cake celebration" data-category="food">🎂</span>
+                      <span class="pingbash-emoji" data-emoji="🍦" data-keywords="soft ice cream" data-category="food">🍦</span>
+                      <span class="pingbash-emoji" data-emoji="🍧" data-keywords="shaved ice" data-category="food">🍧</span>
+                      <span class="pingbash-emoji" data-emoji="🍨" data-keywords="ice cream dessert" data-category="food">🍨</span>
+                      <span class="pingbash-emoji" data-emoji="🍩" data-keywords="doughnut donut dessert" data-category="food">🍩</span>
+                      <span class="pingbash-emoji" data-emoji="🍪" data-keywords="cookie dessert" data-category="food">🍪</span>
+                      <span class="pingbash-emoji" data-emoji="🍫" data-keywords="chocolate bar dessert" data-category="food">🍫</span>
+                      <span class="pingbash-emoji" data-emoji="🍬" data-keywords="candy sweet" data-category="food">🍬</span>
+                      <span class="pingbash-emoji" data-emoji="🍭" data-keywords="lollipop candy" data-category="food">🍭</span>
+                      
+                      <!-- Activities & Sports -->
+                      <span class="pingbash-emoji" data-emoji="⚽" data-keywords="soccer ball football sport" data-category="activities">⚽</span>
+                      <span class="pingbash-emoji" data-emoji="🏀" data-keywords="basketball sport" data-category="activities">🏀</span>
+                      <span class="pingbash-emoji" data-emoji="🏈" data-keywords="american football sport" data-category="activities">🏈</span>
+                      <span class="pingbash-emoji" data-emoji="⚾" data-keywords="baseball sport" data-category="activities">⚾</span>
+                      <span class="pingbash-emoji" data-emoji="🥎" data-keywords="softball sport" data-category="activities">🥎</span>
+                      <span class="pingbash-emoji" data-emoji="🎾" data-keywords="tennis sport" data-category="activities">🎾</span>
+                      <span class="pingbash-emoji" data-emoji="🏐" data-keywords="volleyball sport" data-category="activities">🏐</span>
+                      <span class="pingbash-emoji" data-emoji="🏉" data-keywords="rugby football sport" data-category="activities">🏉</span>
+                      <span class="pingbash-emoji" data-emoji="🎱" data-keywords="pool 8 ball billiards" data-category="activities">🎱</span>
+                      <span class="pingbash-emoji" data-emoji="🏓" data-keywords="ping pong table tennis" data-category="activities">🏓</span>
+                      <span class="pingbash-emoji" data-emoji="🏸" data-keywords="badminton sport" data-category="activities">🏸</span>
+                      <span class="pingbash-emoji" data-emoji="🥅" data-keywords="goal net sport" data-category="activities">🥅</span>
+                      <span class="pingbash-emoji" data-emoji="🏒" data-keywords="ice hockey stick sport" data-category="activities">🏒</span>
+                      <span class="pingbash-emoji" data-emoji="🏏" data-keywords="cricket game sport" data-category="activities">🏏</span>
+                      <span class="pingbash-emoji" data-emoji="🥊" data-keywords="boxing glove sport" data-category="activities">🥊</span>
+                      <span class="pingbash-emoji" data-emoji="🥋" data-keywords="martial arts uniform sport" data-category="activities">🥋</span>
+                      <span class="pingbash-emoji" data-emoji="⛳" data-keywords="flag in hole golf" data-category="activities">⛳</span>
+                      <span class="pingbash-emoji" data-emoji="🏹" data-keywords="bow and arrow archery" data-category="activities">🏹</span>
+                      <span class="pingbash-emoji" data-emoji="🎣" data-keywords="fishing pole" data-category="activities">🎣</span>
+                      <span class="pingbash-emoji" data-emoji="🎮" data-keywords="video game controller gaming" data-category="activities">🎮</span>
+                      <span class="pingbash-emoji" data-emoji="🎯" data-keywords="direct hit target bullseye" data-category="activities">🎯</span>
+                      <span class="pingbash-emoji" data-emoji="🎲" data-keywords="game die dice" data-category="activities">🎲</span>
+                      <span class="pingbash-emoji" data-emoji="🎰" data-keywords="slot machine gambling" data-category="activities">🎰</span>
+                      <span class="pingbash-emoji" data-emoji="🎳" data-keywords="bowling sport" data-category="activities">🎳</span>
+                      
+                      <!-- Travel & Places -->
+                      <span class="pingbash-emoji" data-emoji="🚗" data-keywords="automobile car vehicle" data-category="travel">🚗</span>
+                      <span class="pingbash-emoji" data-emoji="🚕" data-keywords="taxi cab vehicle" data-category="travel">🚕</span>
+                      <span class="pingbash-emoji" data-emoji="🚙" data-keywords="sport utility vehicle suv" data-category="travel">🚙</span>
+                      <span class="pingbash-emoji" data-emoji="🚌" data-keywords="bus vehicle" data-category="travel">🚌</span>
+                      <span class="pingbash-emoji" data-emoji="🚎" data-keywords="trolleybus vehicle" data-category="travel">🚎</span>
+                      <span class="pingbash-emoji" data-emoji="🏎️" data-keywords="racing car fast" data-category="travel">🏎️</span>
+                      <span class="pingbash-emoji" data-emoji="🚓" data-keywords="police car" data-category="travel">🚓</span>
+                      <span class="pingbash-emoji" data-emoji="🚑" data-keywords="ambulance emergency" data-category="travel">🚑</span>
+                      <span class="pingbash-emoji" data-emoji="🚒" data-keywords="fire engine truck" data-category="travel">🚒</span>
+                      <span class="pingbash-emoji" data-emoji="🚐" data-keywords="minibus vehicle" data-category="travel">🚐</span>
+                      <span class="pingbash-emoji" data-emoji="🚚" data-keywords="delivery truck vehicle" data-category="travel">🚚</span>
+                      <span class="pingbash-emoji" data-emoji="🚛" data-keywords="articulated lorry truck" data-category="travel">🚛</span>
+                      <span class="pingbash-emoji" data-emoji="🚜" data-keywords="tractor vehicle farm" data-category="travel">🚜</span>
+                      <span class="pingbash-emoji" data-emoji="🏍️" data-keywords="motorcycle vehicle" data-category="travel">🏍️</span>
+                      <span class="pingbash-emoji" data-emoji="🛵" data-keywords="motor scooter vehicle" data-category="travel">🛵</span>
+                      <span class="pingbash-emoji" data-emoji="🚲" data-keywords="bicycle bike" data-category="travel">🚲</span>
+                      <span class="pingbash-emoji" data-emoji="🛴" data-keywords="kick scooter" data-category="travel">🛴</span>
+                      <span class="pingbash-emoji" data-emoji="✈️" data-keywords="airplane plane flight" data-category="travel">✈️</span>
+                      <span class="pingbash-emoji" data-emoji="🚁" data-keywords="helicopter" data-category="travel">🚁</span>
+                      <span class="pingbash-emoji" data-emoji="🚂" data-keywords="locomotive train" data-category="travel">🚂</span>
+                      <span class="pingbash-emoji" data-emoji="🚆" data-keywords="train vehicle" data-category="travel">🚆</span>
+                      <span class="pingbash-emoji" data-emoji="🚇" data-keywords="metro subway" data-category="travel">🚇</span>
+                      <span class="pingbash-emoji" data-emoji="🚊" data-keywords="tram vehicle" data-category="travel">🚊</span>
+                      <span class="pingbash-emoji" data-emoji="🚝" data-keywords="monorail train" data-category="travel">🚝</span>
+                      <span class="pingbash-emoji" data-emoji="🚄" data-keywords="high-speed train" data-category="travel">🚄</span>
+                      <span class="pingbash-emoji" data-emoji="🚅" data-keywords="bullet train" data-category="travel">🚅</span>
+                      <span class="pingbash-emoji" data-emoji="🚢" data-keywords="ship boat" data-category="travel">🚢</span>
+                      <span class="pingbash-emoji" data-emoji="⛵" data-keywords="sailboat boat" data-category="travel">⛵</span>
+                      <span class="pingbash-emoji" data-emoji="🚤" data-keywords="speedboat boat" data-category="travel">🚤</span>
+                      <span class="pingbash-emoji" data-emoji="🛳️" data-keywords="passenger ship cruise" data-category="travel">🛳️</span>
+                      
+                      <!-- Objects -->
+                      <span class="pingbash-emoji" data-emoji="💡" data-keywords="light bulb idea" data-category="objects">💡</span>
+                      <span class="pingbash-emoji" data-emoji="🔦" data-keywords="flashlight torch" data-category="objects">🔦</span>
+                      <span class="pingbash-emoji" data-emoji="🕯️" data-keywords="candle light" data-category="objects">🕯️</span>
+                      <span class="pingbash-emoji" data-emoji="💻" data-keywords="laptop computer" data-category="objects">💻</span>
+                      <span class="pingbash-emoji" data-emoji="⌨️" data-keywords="keyboard computer" data-category="objects">⌨️</span>
+                      <span class="pingbash-emoji" data-emoji="🖥️" data-keywords="desktop computer" data-category="objects">🖥️</span>
+                      <span class="pingbash-emoji" data-emoji="🖨️" data-keywords="printer" data-category="objects">🖨️</span>
+                      <span class="pingbash-emoji" data-emoji="🖱️" data-keywords="computer mouse" data-category="objects">🖱️</span>
+                      <span class="pingbash-emoji" data-emoji="📱" data-keywords="mobile phone smartphone" data-category="objects">📱</span>
+                      <span class="pingbash-emoji" data-emoji="📞" data-keywords="telephone receiver phone" data-category="objects">📞</span>
+                      <span class="pingbash-emoji" data-emoji="☎️" data-keywords="telephone phone" data-category="objects">☎️</span>
+                      <span class="pingbash-emoji" data-emoji="📟" data-keywords="pager beeper" data-category="objects">📟</span>
+                      <span class="pingbash-emoji" data-emoji="📠" data-keywords="fax machine" data-category="objects">📠</span>
+                      <span class="pingbash-emoji" data-emoji="📺" data-keywords="television tv" data-category="objects">📺</span>
+                      <span class="pingbash-emoji" data-emoji="📻" data-keywords="radio" data-category="objects">📻</span>
+                      <span class="pingbash-emoji" data-emoji="🔔" data-keywords="bell notification" data-category="objects">🔔</span>
+                      <span class="pingbash-emoji" data-emoji="🔕" data-keywords="bell with slash mute" data-category="objects">🔕</span>
+                      <span class="pingbash-emoji" data-emoji="📢" data-keywords="loudspeaker announcement" data-category="objects">📢</span>
+                      <span class="pingbash-emoji" data-emoji="📣" data-keywords="megaphone announcement" data-category="objects">📣</span>
+                      <span class="pingbash-emoji" data-emoji="📯" data-keywords="postal horn" data-category="objects">📯</span>
+                      <span class="pingbash-emoji" data-emoji="🔋" data-keywords="battery power" data-category="objects">🔋</span>
+                      <span class="pingbash-emoji" data-emoji="🔌" data-keywords="electric plug power" data-category="objects">🔌</span>
+                      <span class="pingbash-emoji" data-emoji="💰" data-keywords="money bag cash" data-category="objects">💰</span>
+                      <span class="pingbash-emoji" data-emoji="💵" data-keywords="dollar banknote money" data-category="objects">💵</span>
+                      <span class="pingbash-emoji" data-emoji="💳" data-keywords="credit card payment" data-category="objects">💳</span>
+                      <span class="pingbash-emoji" data-emoji="💎" data-keywords="gem stone diamond" data-category="objects">💎</span>
+                      <span class="pingbash-emoji" data-emoji="🔨" data-keywords="hammer tool" data-category="objects">🔨</span>
+                      <span class="pingbash-emoji" data-emoji="🔧" data-keywords="wrench tool" data-category="objects">🔧</span>
+                      <span class="pingbash-emoji" data-emoji="🔩" data-keywords="nut and bolt tool" data-category="objects">🔩</span>
+                      <span class="pingbash-emoji" data-emoji="⚙️" data-keywords="gear settings" data-category="objects">⚙️</span>
+                      
+                      <!-- Symbols -->
+                      <span class="pingbash-emoji" data-emoji="❤️" data-keywords="red heart love" data-category="symbols">❤️</span>
+                      <span class="pingbash-emoji" data-emoji="🧡" data-keywords="orange heart love" data-category="symbols">🧡</span>
+                      <span class="pingbash-emoji" data-emoji="💛" data-keywords="yellow heart love" data-category="symbols">💛</span>
+                      <span class="pingbash-emoji" data-emoji="💚" data-keywords="green heart love" data-category="symbols">💚</span>
+                      <span class="pingbash-emoji" data-emoji="💙" data-keywords="blue heart love" data-category="symbols">💙</span>
+                      <span class="pingbash-emoji" data-emoji="💜" data-keywords="purple heart love" data-category="symbols">💜</span>
+                      <span class="pingbash-emoji" data-emoji="🖤" data-keywords="black heart love" data-category="symbols">🖤</span>
+                      <span class="pingbash-emoji" data-emoji="🤍" data-keywords="white heart love" data-category="symbols">🤍</span>
+                      <span class="pingbash-emoji" data-emoji="🤎" data-keywords="brown heart love" data-category="symbols">🤎</span>
+                      <span class="pingbash-emoji" data-emoji="💔" data-keywords="broken heart sad" data-category="symbols">💔</span>
+                      <span class="pingbash-emoji" data-emoji="❣️" data-keywords="heart exclamation love" data-category="symbols">❣️</span>
+                      <span class="pingbash-emoji" data-emoji="💕" data-keywords="two hearts love" data-category="symbols">💕</span>
+                      <span class="pingbash-emoji" data-emoji="💞" data-keywords="revolving hearts love" data-category="symbols">💞</span>
+                      <span class="pingbash-emoji" data-emoji="💓" data-keywords="beating heart love" data-category="symbols">💓</span>
+                      <span class="pingbash-emoji" data-emoji="💗" data-keywords="growing heart love" data-category="symbols">💗</span>
+                      <span class="pingbash-emoji" data-emoji="💖" data-keywords="sparkling heart love" data-category="symbols">💖</span>
+                      <span class="pingbash-emoji" data-emoji="💘" data-keywords="heart with arrow love cupid" data-category="symbols">💘</span>
+                      <span class="pingbash-emoji" data-emoji="💝" data-keywords="heart with ribbon love gift" data-category="symbols">💝</span>
+                      <span class="pingbash-emoji" data-emoji="⭐" data-keywords="star favorite" data-category="symbols">⭐</span>
+                      <span class="pingbash-emoji" data-emoji="🌟" data-keywords="glowing star favorite" data-category="symbols">🌟</span>
+                      <span class="pingbash-emoji" data-emoji="✨" data-keywords="sparkles shine" data-category="symbols">✨</span>
+                      <span class="pingbash-emoji" data-emoji="⚡" data-keywords="high voltage lightning fast" data-category="symbols">⚡</span>
+                      <span class="pingbash-emoji" data-emoji="🔥" data-keywords="fire hot flame" data-category="symbols">🔥</span>
+                      <span class="pingbash-emoji" data-emoji="💯" data-keywords="hundred points perfect" data-category="symbols">💯</span>
+                      <span class="pingbash-emoji" data-emoji="✔️" data-keywords="check mark correct" data-category="symbols">✔️</span>
+                      <span class="pingbash-emoji" data-emoji="✅" data-keywords="check mark button correct done" data-category="symbols">✅</span>
+                      <span class="pingbash-emoji" data-emoji="❌" data-keywords="cross mark wrong" data-category="symbols">❌</span>
+                      <span class="pingbash-emoji" data-emoji="❎" data-keywords="cross mark button wrong" data-category="symbols">❎</span>
+                      <span class="pingbash-emoji" data-emoji="➕" data-keywords="plus add" data-category="symbols">➕</span>
+                      <span class="pingbash-emoji" data-emoji="➖" data-keywords="minus subtract" data-category="symbols">➖</span>
+                      
+                      <!-- Flags -->
+                      <span class="pingbash-emoji" data-emoji="🏁" data-keywords="chequered flag racing finish" data-category="flags">🏁</span>
+                      <span class="pingbash-emoji" data-emoji="🚩" data-keywords="triangular flag" data-category="flags">🚩</span>
+                      <span class="pingbash-emoji" data-emoji="🎌" data-keywords="crossed flags celebration" data-category="flags">🎌</span>
+                      <span class="pingbash-emoji" data-emoji="🏴" data-keywords="black flag" data-category="flags">🏴</span>
+                      <span class="pingbash-emoji" data-emoji="🏳️" data-keywords="white flag surrender" data-category="flags">🏳️</span>
+                      <span class="pingbash-emoji" data-emoji="🏳️‍🌈" data-keywords="rainbow flag pride lgbtq" data-category="flags">🏳️‍🌈</span>
+                      <span class="pingbash-emoji" data-emoji="🇺🇸" data-keywords="flag united states america usa" data-category="flags">🇺🇸</span>
+                      <span class="pingbash-emoji" data-emoji="🇬🇧" data-keywords="flag united kingdom uk britain" data-category="flags">🇬🇧</span>
+                      <span class="pingbash-emoji" data-emoji="🇨🇦" data-keywords="flag canada" data-category="flags">🇨🇦</span>
+                      <span class="pingbash-emoji" data-emoji="🇦🇺" data-keywords="flag australia" data-category="flags">🇦🇺</span>
+                      <span class="pingbash-emoji" data-emoji="🇫🇷" data-keywords="flag france" data-category="flags">🇫🇷</span>
+                      <span class="pingbash-emoji" data-emoji="🇩🇪" data-keywords="flag germany" data-category="flags">🇩🇪</span>
+                      <span class="pingbash-emoji" data-emoji="🇮🇹" data-keywords="flag italy" data-category="flags">🇮🇹</span>
+                      <span class="pingbash-emoji" data-emoji="🇪🇸" data-keywords="flag spain" data-category="flags">🇪🇸</span>
+                      <span class="pingbash-emoji" data-emoji="🇯🇵" data-keywords="flag japan" data-category="flags">🇯🇵</span>
+                      <span class="pingbash-emoji" data-emoji="🇨🇳" data-keywords="flag china" data-category="flags">🇨🇳</span>
+                      <span class="pingbash-emoji" data-emoji="🇰🇷" data-keywords="flag south korea" data-category="flags">🇰🇷</span>
+                      <span class="pingbash-emoji" data-emoji="🇮🇳" data-keywords="flag india" data-category="flags">🇮🇳</span>
+                      <span class="pingbash-emoji" data-emoji="🇧🇷" data-keywords="flag brazil" data-category="flags">🇧🇷</span>
+                      <span class="pingbash-emoji" data-emoji="🇲🇽" data-keywords="flag mexico" data-category="flags">🇲🇽</span>
                     </div>
                     
                     <!-- GIF Grid (placeholder) -->

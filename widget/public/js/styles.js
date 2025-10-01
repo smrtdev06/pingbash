@@ -2317,20 +2317,26 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
         }
   
         .pingbash-emoji-picker {
-          width: 300px !important;
-          max-width: none !important;
-          max-height: none !important;
+          width: 100% !important;
+          max-width: 420px !important;
+          max-height: 600px !important;
+          height: 90vh !important;
+          display: flex !important;
+          flex-direction: column !important;
           overflow: hidden !important;
+          background: white !important;
+          border-radius: 12px !important;
+          box-shadow: 0 10px 40px rgba(0,0,0,0.2) !important;
         }
   
         .pingbash-emoji-grid {
           display: grid !important;
-          grid-template-columns: repeat(5, 1fr) !important;
+          grid-template-columns: repeat(auto-fill, minmax(45px, 1fr)) !important;
           gap: 4px !important;
-          padding: 16px !important;
-          height: 100% !important;
+          padding: 12px !important;
           overflow-y: auto !important;
           overflow-x: hidden !important;
+          max-height: 400px !important;
         }
         
         .pingbash-emoji {
@@ -2352,8 +2358,11 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
         /* Enhanced Emoji Picker Styles */
         .pingbash-emoji-popup-content {
           max-width: 420px !important;
-          width: 90vw !important;
-          max-height: 500px !important;
+          width: 95vw !important;
+          max-height: 90vh !important;
+          height: auto !important;
+          display: flex !important;
+          flex-direction: column !important;
         }
         
         .pingbash-emoji-header {
@@ -2437,7 +2446,8 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
         .pingbash-emoji-content {
           flex: 1 !important;
           overflow-y: auto !important;
-          padding: 12px !important;
+          overflow-x: hidden !important;
+          min-height: 0 !important;
         }
         
         .pingbash-gif-grid {
@@ -2448,6 +2458,53 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
           height: 100% !important;
           text-align: center !important;
           color: #666 !important;
+          padding: 20px !important;
+        }
+        
+        /* Responsive Styles for Emoji Modal */
+        @media (max-width: 480px) {
+          .pingbash-emoji-picker {
+            max-width: 100% !important;
+            height: 100vh !important;
+            max-height: 100vh !important;
+            border-radius: 0 !important;
+          }
+          
+          .pingbash-emoji-popup-content {
+            max-width: 100% !important;
+            width: 100% !important;
+            height: 100vh !important;
+            max-height: 100vh !important;
+            border-radius: 0 !important;
+          }
+          
+          .pingbash-emoji-grid {
+            grid-template-columns: repeat(auto-fill, minmax(40px, 1fr)) !important;
+            max-height: calc(100vh - 200px) !important;
+          }
+          
+          .pingbash-emoji {
+            font-size: 20px !important;
+            padding: 6px !important;
+          }
+          
+          .pingbash-emoji-tab {
+            font-size: 16px !important;
+            min-width: 40px !important;
+            height: 40px !important;
+            padding: 6px 10px !important;
+          }
+        }
+        
+        @media (max-width: 360px) {
+          .pingbash-emoji-grid {
+            grid-template-columns: repeat(auto-fill, minmax(35px, 1fr)) !important;
+          }
+          
+          .pingbash-emoji {
+            font-size: 18px !important;
+            padding: 4px !important;
+          }
         }
         
         .pingbash-gif-placeholder p {

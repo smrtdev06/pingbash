@@ -1322,84 +1322,181 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
 
       // NEW - Setup enhanced emoji search functionality
       setupEmojiSearch() {
-        const searchInput = this.dialog.querySelector('.pingbash-emoji-search');
-        if (!searchInput) return;
-
-        // Remove existing listener
-        searchInput.removeEventListener('input', this.handleEmojiSearch);
+        if( window.isDebugging ) console.log('😀 [Widget] Setting up emoji search');
         
-        // Add search listener
-        searchInput.addEventListener('input', (e) => {
+        const searchInput = this.dialog.querySelector('.pingbash-emoji-search');
+        if (!searchInput) {
+          if( window.isDebugging ) console.log('😀 [Widget] Search input not found');
+          return;
+        }
+
+        // Remove existing listener by cloning
+        const newSearchInput = searchInput.cloneNode(true);
+        searchInput.parentNode.replaceChild(newSearchInput, searchInput);
+        
+        // Add search listener to the new element
+        newSearchInput.addEventListener('input', (e) => {
           const query = e.target.value.toLowerCase().trim();
+          if( window.isDebugging ) console.log('😀 [Widget] Search query:', query);
           this.filterEmojis(query);
         });
+        
+        if( window.isDebugging ) console.log('😀 [Widget] Emoji search setup complete');
       },
 
       // NEW - Setup emoji category tabs
       setupEmojiTabs() {
+        if( window.isDebugging ) console.log('😀 [Widget] Setting up emoji tabs');
+        
         const tabs = this.dialog.querySelectorAll('.pingbash-emoji-tab');
-        tabs.forEach(tab => {
+        
+        if( window.isDebugging ) console.log('😀 [Widget] Found tabs:', tabs.length);
+        
+        // Remove existing listeners by cloning (same approach as emoji elements)
+        tabs.forEach((tab, index) => {
+          const newTab = tab.cloneNode(true);
+          tab.parentNode.replaceChild(newTab, tab);
+        });
+        
+        // Re-query tabs after cloning
+        const newTabs = this.dialog.querySelectorAll('.pingbash-emoji-tab');
+        
+        newTabs.forEach((tab, index) => {
+          if( window.isDebugging ) console.log('😀 [Widget] Adding listener to tab', index, 'category:', tab.dataset.category);
+          
           tab.addEventListener('click', (e) => {
-            const category = e.target.dataset.category;
+            const category = e.currentTarget.dataset.category;
+            if( window.isDebugging ) console.log('😀 [Widget] Tab clicked, category:', category);
+            
             this.switchEmojiCategory(category);
             
             // Update active tab
-            tabs.forEach(t => t.classList.remove('active'));
-            e.target.classList.add('active');
+            newTabs.forEach(t => t.classList.remove('active'));
+            e.currentTarget.classList.add('active');
           });
         });
 
         // Close button in header
         const closeBtn = this.dialog.querySelector('.pingbash-emoji-close');
-        closeBtn?.addEventListener('click', () => this.hideEmojiPicker());
+        if (closeBtn) {
+          const newCloseBtn = closeBtn.cloneNode(true);
+          closeBtn.parentNode.replaceChild(newCloseBtn, closeBtn);
+          newCloseBtn.addEventListener('click', () => {
+            if( window.isDebugging ) console.log('😀 [Widget] Close button clicked');
+            this.hideEmojiPicker();
+          });
+        }
+        
+        if( window.isDebugging ) console.log('😀 [Widget] Emoji tabs setup complete');
       },
 
       // NEW - Filter emojis based on search
       filterEmojis(query) {
-        const emojis = this.dialog.querySelectorAll('.pingbash-emoji');
+        if( window.isDebugging ) console.log('😀 [Widget] Filtering emojis with query:', query);
+        
+        const emojiGrid = this.dialog.querySelector('.pingbash-emoji-grid');
+        if (!emojiGrid) {
+          if( window.isDebugging ) console.log('😀 [Widget] Emoji grid not found');
+          return;
+        }
+        
+        const emojis = emojiGrid.querySelectorAll('.pingbash-emoji');
+        if( window.isDebugging ) console.log('😀 [Widget] Found emojis to filter:', emojis.length);
+        
         let hasResults = false;
         
-        emojis.forEach(emoji => {
+        emojis.forEach((emoji, index) => {
           const keywords = emoji.dataset.keywords || '';
           const emojiChar = emoji.dataset.emoji || '';
           
-          if (query === '' || 
+          const matches = query === '' || 
               keywords.toLowerCase().includes(query) || 
-              emojiChar.includes(query)) {
-            emoji.style.display = 'flex';
+              emojiChar.includes(query);
+          
+          if (matches) {
+            emoji.style.setProperty('display', 'inline-flex', 'important');
             hasResults = true;
           } else {
-            emoji.style.display = 'none';
+            emoji.style.setProperty('display', 'none', 'important');
+          }
+          
+          if( window.isDebugging && index < 3) {
+            console.log(`😀 [Widget] Emoji ${index}: ${emojiChar}, keywords: "${keywords}", matches: ${matches}`);
           }
         });
 
+        if( window.isDebugging ) console.log('😀 [Widget] Filter complete, hasResults:', hasResults);
+
         // Show "no results" message if needed
         if (!hasResults && query !== '') {
-          // Could add a "no results" message here
           if( window.isDebugging ) console.log('😀 [Widget] No emojis found for:', query);
         }
       },
 
       // NEW - Switch emoji category
       switchEmojiCategory(category) {
+        if( window.isDebugging ) console.log('😀 [Widget] Switching to category:', category);
+        
         const emojiGrid = this.dialog.querySelector('.pingbash-emoji-grid');
         const gifGrid = this.dialog.querySelector('.pingbash-gif-grid');
+        
+        if (!emojiGrid || !gifGrid) {
+          if( window.isDebugging ) console.log('😀 [Widget] Emoji or GIF grid not found');
+          return;
+        }
         
         if (category === 'gifs') {
           emojiGrid.style.display = 'none';
           gifGrid.style.display = 'flex';
-          if( window.isDebugging ) console.log('😀 [Widget] Switched to GIFs');
+          if( window.isDebugging ) console.log('😀 [Widget] ✅ Switched to GIFs, hiding emoji grid');
         } else {
+          // Show emoji grid, hide GIF grid
           emojiGrid.style.display = 'grid';
           gifGrid.style.display = 'none';
+          
+          if( window.isDebugging ) console.log('😀 [Widget] ✅ Showing emoji grid, hiding GIF grid');
           
           // Clear search when switching categories
           const searchInput = this.dialog.querySelector('.pingbash-emoji-search');
           if (searchInput) {
             searchInput.value = '';
-            this.filterEmojis('');
+            if( window.isDebugging ) console.log('😀 [Widget] Cleared search input');
           }
-          if( window.isDebugging ) console.log('😀 [Widget] Switched to category:', category);
+          
+          // Filter emojis by category
+          this.filterEmojisByCategory(category);
+        }
+        
+        if( window.isDebugging ) console.log('😀 [Widget] Category switch complete');
+      },
+      
+      // NEW - Filter emojis by category
+      filterEmojisByCategory(category) {
+        if( window.isDebugging ) console.log('😀 [Widget] Filtering by category:', category);
+        
+        const emojiGrid = this.dialog.querySelector('.pingbash-emoji-grid');
+        if (!emojiGrid) return;
+        
+        const emojis = emojiGrid.querySelectorAll('.pingbash-emoji');
+        let visibleCount = 0;
+        
+        emojis.forEach(emoji => {
+          const emojiCategory = emoji.dataset.category || 'smileys';
+          
+          // Show emoji if it matches the category, or show all if category is 'smileys' (default)
+          if (emojiCategory === category || category === 'smileys') {
+            emoji.style.setProperty('display', 'inline-flex', 'important');
+            visibleCount++;
+          } else {
+            emoji.style.setProperty('display', 'none', 'important');
+          }
+        });
+        
+        if( window.isDebugging ) console.log('😀 [Widget] Category filter complete. Visible emojis:', visibleCount, '/', emojis.length);
+        
+        // If no emojis in this category, show a message
+        if (visibleCount === 0) {
+          if( window.isDebugging ) console.log('😀 [Widget] ⚠️ No emojis found for category:', category);
         }
       },
 
