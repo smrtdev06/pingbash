@@ -1764,6 +1764,25 @@ const deleteBannedUserMessages = async (groupId, userId) => {
     }
 }
 
+// Get user information by ID
+const getUserInfo = async (userId) => {
+    try {
+        const result = await PG_query(`
+            SELECT "Id", "Name", "Email", "Photo_Name", "Profession", "Address"
+            FROM "Users"
+            WHERE "Id" = ${userId}
+        `);
+        
+        if (result.rows.length > 0) {
+            return result.rows[0];
+        }
+        return null;
+    } catch (error) {
+        console.log("Error getting user info:", error);
+        return null;
+    }
+}
+
 module.exports = {
     sendNotificationEamil,
     sendPrivateMessageEmailNotification,
@@ -1832,5 +1851,6 @@ module.exports = {
     unbanUserIpAddress,
     timeoutIpAddressHelper,
     getGroupModeratorsAndAdmins,
-    deleteBannedUserMessages
+    deleteBannedUserMessages,
+    getUserInfo
 }

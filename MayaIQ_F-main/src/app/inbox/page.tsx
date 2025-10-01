@@ -197,13 +197,54 @@ const ChatsContent: React.FC = () => {
         console.log("📢 [Inbox] Notification sent confirmation:", data);
         toast.success(data);
       } else if (data && typeof data === 'object') {
-        // Actual group notification (only received if user is in the group room)
+        // Actual group notification received
         console.log("📢 [Inbox] Group notification received:", {
           from: data.senderName,
+          senderId: data.senderId,
           message: data.message,
-          groupId: data.groupId
+          groupId: data.groupId,
+          groupName: data.groupName
         });
-        toast(`${data.senderName}: ${data.message}`);
+        
+        // Show toast notification
+        toast(`${data.groupName}: ${data.message}`);
+        
+        // Update inbox list - add/move sender to top with notification message
+        const currentUserId = getCurrentUserId();
+        const oppositeUserId = data.senderId;
+        
+        // Only update if it's not from the current user
+        if (oppositeUserId !== currentUserId) {
+          console.log("📢 [Inbox] Adding notification sender to inbox:", oppositeUserId);
+          
+          setInboxUsers(prevUsers => {
+            // Find the user in the list
+            const userIndex = prevUsers.findIndex(u => u.Opposite_Id === oppositeUserId);
+            
+            if (userIndex !== -1) {
+              // User exists - update their last message and move to top
+              const updatedUser = {
+                ...prevUsers[userIndex],
+                Content: `[Group Notification] ${data.message}`,
+                Send_Time: new Date().toISOString(),
+                Sender_Id: oppositeUserId,
+                Receiver_Id: currentUserId
+              };
+              
+              console.log("📢 [Inbox] Moving sender to top of inbox");
+              
+              return [
+                updatedUser,
+                ...prevUsers.filter((_, idx) => idx !== userIndex)
+              ];
+            } else {
+              // User doesn't exist - request full user list refresh to add them
+              console.log("📢 [Inbox] Sender not in inbox - requesting refresh");
+              getUsers(localStorage.getItem(TOKEN_KEY));
+              return prevUsers;
+            }
+          });
+        }
       }
     }
 

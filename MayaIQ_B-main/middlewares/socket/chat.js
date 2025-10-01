@@ -1815,42 +1815,66 @@ module.exports = (socket, users) => {
                 groupId, 
                 message 
             } = data;
+            
+            // Get sender's name from database
+            const senderInfo = await Controller.getUserInfo(senderId);
+            const senderName = senderInfo?.Name || 'Group Admin';
+            const senderAvatar = senderInfo?.Photo_Name || null;
+            
+            console.log(`📢 [NOTIFY] Sending group notification from ${senderName} (ID: ${senderId}) to group ${groupId}`);
+            console.log(`📢 [NOTIFY] Message: ${message}`);
+            
             // Save message to the database
             await Controller.sendGroupNotification(
                 senderId,
                 groupId, 
                 message
             );
-            // Get sender name for the notification (simplified)
-            const senderName = 'Group Admin'; // Could be enhanced to get actual user name
-
-            console.log(`📢 [NOTIFY] Sending group notification to all members of group ${groupId}`);
-            console.log(`📢 [NOTIFY] Message: ${message}`);
 
             // Get all group member IDs
             const receiverIds = await Controller.getReceiverIdsOfGroup(groupId);
             console.log(`📢 [NOTIFY] Found ${receiverIds.length} group members`);
 
-            // Send notification to each group member individually (not via room)
+            // Get group info for notification
+            const groupInfo = await Controller.getGroup(groupId);
+            const groupName = groupInfo?.name || 'Group';
+
+            // Track which users we've already sent to (to avoid duplicates from multiple sockets)
+            const notifiedUsers = new Set();
             let sentCount = 0;
+
+            // Send notification to each group member individually (not via room)
             receiverIds.forEach(receiverId => {
-                // Find the user's socket
-                const userSocket = users.find(user => user.ID === receiverId);
+                // Skip if we've already notified this user
+                if (notifiedUsers.has(receiverId)) {
+                    console.log(`📢 [NOTIFY] Skipping duplicate for user ${receiverId}`);
+                    return;
+                }
                 
-                if (userSocket && sockets[userSocket.Socket]) {
-                    // Send notification directly to this user's socket
-                    sockets[userSocket.Socket].emit(chatCode.SEND_GROUP_NOTIFY, {
-                        message: message,
-                        senderName: senderName,
-                        groupId: groupId,
-                        senderId: senderId
-                    });
-                    sentCount++;
-                    console.log(`📢 [NOTIFY] Sent to user ${receiverId} (socket: ${userSocket.Socket})`);
+                // Find ALL sockets for this user (they might have multiple tabs open)
+                const userSockets = users.filter(user => user.ID === receiverId);
+                
+                if (userSockets.length > 0) {
+                    // Send to the first active socket only
+                    const firstSocket = userSockets[0];
+                    if (sockets[firstSocket.Socket]) {
+                        // Send notification directly to this user's socket
+                        sockets[firstSocket.Socket].emit(chatCode.SEND_GROUP_NOTIFY, {
+                            message: message,
+                            senderName: senderName,
+                            senderAvatar: senderAvatar,
+                            groupId: groupId,
+                            groupName: groupName,
+                            senderId: senderId
+                        });
+                        notifiedUsers.add(receiverId);
+                        sentCount++;
+                        console.log(`📢 [NOTIFY] Sent to user ${receiverId} (${userSockets.length} socket(s), using first: ${firstSocket.Socket})`);
+                    }
                 }
             });
 
-            console.log(`📢 [NOTIFY] Notification sent to ${sentCount}/${receiverIds.length} online members`);
+            console.log(`📢 [NOTIFY] Notification sent to ${sentCount}/${receiverIds.length} unique online members`);
 
             // Send success response to sender
             socket.emit(chatCode.SEND_GROUP_NOTIFY, "Sent Notification successfully.")
