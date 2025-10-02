@@ -241,7 +241,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
             pointer-events: auto !important;
           }
           
-          /* Large touchable resize handle for mobile */
+          /* Large visual resize handle for mobile - visual only, not interactive */
           .pingbash-chat-dialog::after {
             content: '';
             position: absolute;
@@ -251,7 +251,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
             height: 40px;
             background: linear-gradient(135deg, transparent 50%, rgba(0,123,255,0.3) 50%);
             cursor: nwse-resize;
-            pointer-events: auto;
+            pointer-events: none !important; /* Let clicks pass through to native resize */
             border-bottom-right-radius: 12px;
             z-index: 10;
           }
@@ -269,8 +269,13 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
               linear-gradient(45deg, transparent 50%, #007bff 50%, #007bff 55%, transparent 55%),
               linear-gradient(45deg, transparent 60%, #007bff 60%, #007bff 65%, transparent 65%);
             background-size: 100% 100%;
-            pointer-events: none;
+            pointer-events: none !important;
             z-index: 11;
+          }
+          
+          /* Ensure the native browser resize corner is visible and touchable in popout mode */
+          .pingbash-chat-dialog.popout-mode {
+            overflow: auto; /* Ensures native resize handle appears */
           }
           
           /* Allow child elements to shrink below their normal minimums on mobile */
