@@ -181,9 +181,9 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
             right: 0;
             bottom: 0;
             width: 100vw;
-            height: 100vh;
+            height: calc(100vh - 100px);
             max-width: 100vw !important;
-            max-height: 100vh !important;
+            max-height: calc(100vh - 100px) !important;
             border-radius: 0 !important;
             border: none !important;
             /* Disable resize in full-screen mode */
