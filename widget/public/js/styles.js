@@ -247,8 +247,8 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
             position: absolute;
             bottom: 0;
             right: 0;
-            width: 80px;
-            height: 80px;
+            width: 40px;
+            height: 40px;
             background: linear-gradient(135deg, transparent 50%, rgba(0,123,255,0.3) 50%);
             cursor: nwse-resize;
             pointer-events: none !important; /* Let clicks pass through to native resize */
