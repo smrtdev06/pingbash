@@ -317,6 +317,24 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
             min-height: 20px !important;
           }
           
+          /* Mobile: Position time at right end of message text */
+          .pingbash-message-body {
+            position: relative !important;
+          }
+          
+          .pingbash-message-time {
+            position: absolute !important;
+            bottom: 4px !important;
+            right: 8px !important;
+            font-size: 9px !important;
+            opacity: 0.8 !important;
+          }
+          
+          .pingbash-message-text {
+            padding-right: 60px !important; /* Space for timestamp */
+            padding-bottom: 2px !important;
+          }
+          
           .pingbash-input-bar {
             padding: 6px 10px !important;
             min-height: auto !important;
