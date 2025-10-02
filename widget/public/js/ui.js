@@ -172,6 +172,103 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         header.addEventListener('mousedown', handleMouseDown);
         header.addEventListener('touchstart', handleTouchStart, { passive: false });
       }
+      
+      // Setup custom resize handle (mobile only)
+      this.makeResizable();
+    },
+    
+    makeResizable() {
+      const resizeHandle = this.dialog.querySelector('.pingbash-resize-handle');
+      if (!resizeHandle) return;
+      
+      let isResizing = false;
+      let startX, startY, startWidth, startHeight;
+      
+      const startResize = (clientX, clientY) => {
+        isResizing = true;
+        startX = clientX;
+        startY = clientY;
+        const rect = this.dialog.getBoundingClientRect();
+        startWidth = rect.width;
+        startHeight = rect.height;
+        
+        this.isUserInteracting = true;
+        resizeHandle.style.opacity = '1';
+        if( window.isDebugging ) console.log('📏 [Widget] Resize started');
+      };
+      
+      const doResize = (clientX, clientY) => {
+        if (!isResizing) return;
+        
+        const deltaX = clientX - startX;
+        const deltaY = clientY - startY;
+        
+        let newWidth = startWidth + deltaX;
+        let newHeight = startHeight + deltaY;
+        
+        // Apply min/max constraints
+        const minWidth = 100;
+        const minHeight = 100;
+        const maxWidth = window.innerWidth - 20;
+        const maxHeight = window.innerHeight - 20;
+        
+        newWidth = Math.max(minWidth, Math.min(newWidth, maxWidth));
+        newHeight = Math.max(minHeight, Math.min(newHeight, maxHeight));
+        
+        this.dialog.style.width = newWidth + 'px';
+        this.dialog.style.height = newHeight + 'px';
+      };
+      
+      const endResize = () => {
+        if (!isResizing) return;
+        isResizing = false;
+        resizeHandle.style.opacity = '';
+        
+        setTimeout(() => {
+          this.isUserInteracting = false;
+        }, 500);
+        
+        if( window.isDebugging ) console.log('📏 [Widget] Resize ended');
+      };
+      
+      // Mouse events
+      resizeHandle.addEventListener('mousedown', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        startResize(e.clientX, e.clientY);
+        
+        const handleMouseMove = (e) => doResize(e.clientX, e.clientY);
+        const handleMouseUp = () => {
+          endResize();
+          document.removeEventListener('mousemove', handleMouseMove);
+          document.removeEventListener('mouseup', handleMouseUp);
+        };
+        
+        document.addEventListener('mousemove', handleMouseMove);
+        document.addEventListener('mouseup', handleMouseUp);
+      });
+      
+      // Touch events
+      resizeHandle.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const touch = e.touches[0];
+        startResize(touch.clientX, touch.clientY);
+        
+        const handleTouchMove = (e) => {
+          const touch = e.touches[0];
+          doResize(touch.clientX, touch.clientY);
+          e.preventDefault();
+        };
+        const handleTouchEnd = () => {
+          endResize();
+          document.removeEventListener('touchmove', handleTouchMove);
+          document.removeEventListener('touchend', handleTouchEnd);
+        };
+        
+        document.addEventListener('touchmove', handleTouchMove, { passive: false });
+        document.addEventListener('touchend', handleTouchEnd);
+      }, { passive: false });
     },
 
   // EXACT COPY from widget.js - createChatButton method
@@ -1458,6 +1555,13 @@ Example:
               </div>
             </div>
           </div>
+        </div>
+        
+        <!-- Custom Resize Handle (mobile only) -->
+        <div class="pingbash-resize-handle" style="display: none;">
+          <svg viewBox="0 0 24 24" width="20" height="20">
+            <path fill="currentColor" d="M22,22H20V20H22V22M22,18H20V16H22V18M18,22H16V20H18V22M18,18H16V16H18V18M14,22H12V20H14V22M22,14H20V12H22V14Z"/>
+          </svg>
         </div>
       `;
   
