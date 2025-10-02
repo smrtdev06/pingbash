@@ -37,9 +37,10 @@ const Header: React.FC = () => {
       {/* Button for Navbar show/close */}
       <span onClick={() => setIsNavbarOpen(true)} className="mx-3 hidden max-[1135px]:inline-block cursor-pointer">
         {/* {isNavbarOpen ? "" : <FontAwesomeIcon icon={faBars} className="text-xl" />} */}
-        <Link href="/auth?Collection=login&Role=Customer" className="py-1 px-3 border bg-indigo-900 bg-opacity-40 border-white rounded-full inline-block max-[640px]:py-2 ">
+        {/*<Link href="/auth?Collection=login&Role=Customer" className="py-1 px-3 border bg-indigo-900 bg-opacity-40 border-white rounded-full inline-block max-[640px]:py-2 ">
             Sign in
           </Link>
+          */}
       </span>
       <div onClick={() => setIsNavbarOpen(false)} className={`${!isNavbarOpen ? "hidden" : ""} top-0 left-0 max-[1135px]:fixed z-20 max-[650px]:w-screen max-[1135px]:h-screen`}></div>
     </div>
