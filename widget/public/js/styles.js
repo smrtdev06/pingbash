@@ -171,34 +171,49 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
           flex-direction: column;
         }
         
-        /* Mobile: Resizable and draggable chat dialog */
+                /* Mobile: Full-screen by default, popout mode when button clicked */
         @media (max-width: 768px) {
           .pingbash-chat-dialog {
             position: fixed !important;
-            /* Start in center of screen */
-            top: 10px;
-            left: 10px;
-            /*transform: translate(-50%, -50%) scale(0.8);*/
-            /* Fixed default size (not responsive) - user can resize */
-            /* Use min() to handle very small screens gracefully */
-            width: min(350px, calc(100vw - 40px)) ;
-            height: min(500px, calc(100vh - 40px)) ;
-            /* Minimum size: 100x100 as requested */
+            /* Full-screen mode (default on mobile) */
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            width: 100vw;
+            height: 100vh;
+            max-width: 100vw !important;
+            max-height: 100vh !important;
+            border-radius: 0 !important;
+            border: none !important;
+            /* Disable resize in full-screen mode */
+            resize: none !important;
+            overflow: hidden !important;
+            z-index: 2147483647;
+            transition: all 0.3s ease;
+          }
+          
+          /* Popout mode - activated by button click */
+          .pingbash-chat-dialog.popout-mode {
+            top: 0px;
+            left: 0;
+            right: auto !important;
+            bottom: auto !important;
+            width: 350px;
+            height: 500px;
             min-width: 100px !important;
             min-height: 100px !important;
-            /* Maximum size: almost full screen with padding */
             max-width: calc(100vw - 20px) !important;
             max-height: calc(100vh - 20px) !important;
-            /* Enable resize on mobile */
-            resize: both !important;
-            overflow: hidden !important; 
             border-radius: 12px !important;
             border: 1px solid #e0e0e0 !important;
-            z-index: 2147483647;
+            resize: both !important;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3) !important;
           }
           
           .pingbash-chat-dialog.open {
-            /*transform: translate(-50%, -50%) scale(1) !important;*/
+            opacity: 1;
+            visibility: visible;
           }
           
           /* Mobile: Header IS draggable */
@@ -208,10 +223,18 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
             /* Don't use touch-action: none - it blocks clicks on buttons/menu */
           }
           
+          /* Show popout button only on mobile */
+          .pingbash-popout-btn {
+            display: flex !important;
+          }
+          
+          /* Keep popout button visible in popout mode (icon will change) */
+          
           /* Allow touch interactions on buttons and interactive elements */
           .pingbash-header button,
           .pingbash-header .pingbash-hamburger-btn,
           .pingbash-header .pingbash-hamburger-container,
+          .pingbash-header .pingbash-popout-btn,
           .pingbash-hamburger-dropdown,
           .pingbash-menu-item {
             touch-action: auto !important;
@@ -498,6 +521,33 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
           border-radius: 10px;
           margin: 0 4px;
           font-weight: normal;
+        }
+        
+        .pingbash-popout-btn {
+          background: none;
+          border: none;
+          color: #666;
+          cursor: pointer;
+          padding: 4px;
+          border-radius: 4px;
+          transition: all 0.2s ease;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin-right: 4px;
+          position: relative;
+        }
+        
+        .pingbash-popout-btn:hover {
+          background: rgba(0,123,255,0.1);
+          color: #007bff;
+        }
+        
+        /* Icon positioning - both icons in same button */
+        .pingbash-popout-icon,
+        .pingbash-fullscreen-icon {
+          display: block;
+          transition: opacity 0.2s ease;
         }
         
         .pingbash-hamburger-btn {

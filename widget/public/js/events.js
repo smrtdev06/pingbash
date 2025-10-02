@@ -59,6 +59,13 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
           // User search now handled by modal - no inline search needed
         }
 
+        // Popout button (mobile only)
+        const popoutBtn = this.dialog.querySelector('.pingbash-popout-btn');
+        popoutBtn?.addEventListener('click', (e) => {
+          e.stopPropagation();
+          this.togglePopoutMode();
+        });
+
         // Hamburger menu
         const hamburgerBtn = this.dialog.querySelector('.pingbash-hamburger-btn');
         const hamburgerDropdown = this.dialog.querySelector('.pingbash-hamburger-dropdown');
@@ -705,6 +712,51 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
       hideHamburgerMenu() {
         const dropdown = this.dialog.querySelector('.pingbash-hamburger-dropdown');
         dropdown.style.display = 'none';
+      },
+
+      // Toggle popout mode (mobile only)
+      togglePopoutMode() {
+        if( window.isDebugging ) console.log('📱 [Widget] Toggling popout mode');
+        
+        const isMobile = window.innerWidth <= 768;
+        if (!isMobile) {
+          if( window.isDebugging ) console.log('📱 [Widget] Not mobile, ignoring popout');
+          return;
+        }
+        
+        const isPopout = this.dialog.classList.contains('popout-mode');
+        const popoutIcon = this.dialog.querySelector('.pingbash-popout-icon');
+        const fullscreenIcon = this.dialog.querySelector('.pingbash-fullscreen-icon');
+        const popoutBtn = this.dialog.querySelector('.pingbash-popout-btn');
+        
+        if (isPopout) {
+          // Exit popout mode - back to full screen
+          this.dialog.classList.remove('popout-mode');
+          
+          // Reset position to 0,0 for full-screen
+          this.dialog.style.left = '0';
+          this.dialog.style.top = '0';
+          this.dialog.style.width = '100vw';
+          this.dialog.style.height = '100vh';
+          this.dialog.style.transform = '';
+          
+          // Change icon: show popout icon (minimize), hide fullscreen icon
+          if (popoutIcon) popoutIcon.style.display = 'block';
+          if (fullscreenIcon) fullscreenIcon.style.display = 'none';
+          if (popoutBtn) popoutBtn.title = 'Popout Mode';
+          
+          if( window.isDebugging ) console.log('📱 [Widget] Exited popout mode - back to full screen (0,0)');
+        } else {
+          // Enter popout mode - 350x500 resizable
+          this.dialog.classList.add('popout-mode');
+          
+          // Change icon: hide popout icon, show fullscreen icon (expand)
+          if (popoutIcon) popoutIcon.style.display = 'none';
+          if (fullscreenIcon) fullscreenIcon.style.display = 'block';
+          if (popoutBtn) popoutBtn.title = 'Full Screen Mode';
+          
+          if( window.isDebugging ) console.log('📱 [Widget] Entered popout mode - 350x500 resizable');
+        }
       },
 
       // Settings menu methods

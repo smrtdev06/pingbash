@@ -73,11 +73,12 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
           // Prevent drag when clicking on interactive elements
           if (!this.isOpen) return;
           
-          // Check if clicking on button, hamburger menu, or any interactive element
+          // Check if clicking on button, hamburger menu, popout button, or any interactive element
           if (e.target.closest('button') || 
               e.target.closest('.pingbash-hamburger-btn') ||
               e.target.closest('.pingbash-hamburger-container') ||
               e.target.closest('.pingbash-hamburger-dropdown') ||
+              e.target.closest('.pingbash-popout-btn') ||
               e.target.closest('input') ||
               e.target.closest('select') ||
               e.target.closest('textarea')) {
@@ -95,11 +96,12 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
           // Prevent drag when touching interactive elements
           if (!this.isOpen) return;
           
-          // Check if touching button, hamburger menu, or any interactive element
+          // Check if touching button, hamburger menu, popout button, or any interactive element
           if (e.target.closest('button') || 
               e.target.closest('.pingbash-hamburger-btn') ||
               e.target.closest('.pingbash-hamburger-container') ||
               e.target.closest('.pingbash-hamburger-dropdown') ||
+              e.target.closest('.pingbash-popout-btn') ||
               e.target.closest('input') ||
               e.target.closest('select') ||
               e.target.closest('textarea')) {
@@ -202,6 +204,17 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
           </div>
           <div class="pingbash-header-right">
             
+            <!-- Popout button (mobile only) - toggles between popout and fullscreen -->
+            <button class="pingbash-popout-btn" title="Popout Mode" style="display: none;">
+              <!-- Icon for full-screen mode: popout/minimize icon -->
+              <svg class="pingbash-popout-icon" viewBox="0 0 24 24" width="22" height="22">
+                <path fill="currentColor" d="M14,14H19V16H16V19H14V14M5,14H10V19H8V16H5V14M8,5H10V10H5V8H8V5M19,8V10H14V5H16V8H19Z"/>
+              </svg>
+              <!-- Icon for popout mode: fullscreen/expand icon -->
+              <svg class="pingbash-fullscreen-icon" viewBox="0 0 24 24" width="22" height="22" style="display: none;">
+                <path fill="currentColor" d="M5,5H10V7H7V10H5V5M14,5H19V10H17V7H14V5M17,14H19V19H14V17H17V14M10,17V19H5V14H7V17H10Z"/>
+              </svg>
+            </button>
             
             <div class="pingbash-hamburger-container">
               <button class="pingbash-hamburger-btn" title="Menu">
