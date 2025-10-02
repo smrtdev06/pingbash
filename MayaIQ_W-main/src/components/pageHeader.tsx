@@ -85,7 +85,7 @@ const PageHeader: React.FC = () => {
         </a>
         <div className="flex gap-[12px] items-center whitespace-nowrap">
           <Image src={'/logo-orange.png'} alt="" width={100} height={100} style={{ width: "56px", height: "56px" }} priority />
-          <span className="text-[23px] font-semibold">Chatgram</span>
+          <span className="text-[23px] font-semibold">Pingbash</span>
         </div>
       </div>
       {!isMobile && 
@@ -96,7 +96,7 @@ const PageHeader: React.FC = () => {
               ? <span className=" max-sm:opacity-0">Explorer</span>
               : <span className=" max-sm:opacity-0">Customer</span>
             : path === "/assistant"
-              ? <span className=" max-sm:hidden">Chatgram</span>
+              ? <span className=" max-sm:hidden">Pingbash</span>
               : path.slice(1)[0].toUpperCase() + path.slice(2)}
         </h1>
 

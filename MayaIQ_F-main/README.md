@@ -1,2 +1,2 @@
 # chatgram_front
-Chatgram project Frontend code
+Pingbash project Frontend code

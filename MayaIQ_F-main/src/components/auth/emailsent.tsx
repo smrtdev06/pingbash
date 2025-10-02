@@ -25,8 +25,6 @@ const EmailSent: React.FC = () => {
             <Image src="/emailsent.png" alt="email sent" width={100} height={100} style={{ width: "auto", height: "auto" }}/>
             <p className="title text-2xl max-[320px]:text-xl font-bold">Email Sent</p>
             <p className="description pt-4 text-sm">
-              Lorem ipsum dolor sit amet consectetur. Risus enim scelerisque
-              fermentum fermentum. Risus enim scelerisque.
             </p>
           </div>
 

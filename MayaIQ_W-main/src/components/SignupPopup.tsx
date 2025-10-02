@@ -92,7 +92,7 @@ export const SignupPopup: React.FC<Props> = ({ isOpen, onClose, onSignup, goToSi
         <input
             ref={nameRef}
             type="text"
-            placeholder="Full Name"
+            placeholder="User Name"
             value={name}
             onChange={(e) => setName(e.target.value)}
             className="border p-2 w-full mb-2 rounded"

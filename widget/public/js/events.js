@@ -2376,8 +2376,8 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
             if( window.isDebugging ) console.log('🖥️ [Widget] Desktop - preserving user resized size:', actualChatDialog.style.width, 'x', actualChatDialog.style.height);
           } else if (groupData.size_mode === 'fixed' && groupData.frame_width && groupData.frame_height) {
             // Desktop: Apply fixed size from group data (first load)
-            actualChatDialog.style.width = groupData.frame_width + 'px';
-            actualChatDialog.style.height = groupData.frame_height + 'px';
+          actualChatDialog.style.width = groupData.frame_width + 'px';
+          actualChatDialog.style.height = groupData.frame_height + 'px';
             actualChatDialog.style.minWidth = '100px';
             actualChatDialog.style.minHeight = '100px';
             actualChatDialog.style.maxWidth = 'none';

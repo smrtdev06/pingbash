@@ -26,10 +26,6 @@ const HowItWorks: React.FC = () => {
             </div>
             <hr className="border border-[#7749e2]" />
             <div className="content-text text-[#9CA3AF] text-[16px] leading-[24px]">
-              Lorem ipsum dolor sit amet consectetur. Quis arcu accumsan enim
-              sem phasellus dis ullamcorper. Lorem ipsum dolor sit amet
-              consectetur. Quis arcu accumsan enim sem phasellus dis
-              ullamcorper.
             </div>
           </div>
 
@@ -41,10 +37,6 @@ const HowItWorks: React.FC = () => {
             </div>
             <hr className="border border-[#7749e2]" />
             <div className="content-text text-[#9CA3AF] text-[16px] leading-[24px]">
-              Lorem ipsum dolor sit amet consectetur. Quis arcu accumsan enim
-              sem phasellus dis ullamcorper. Lorem ipsum dolor sit amet
-              consectetur. Quis arcu accumsan enim sem phasellus dis
-              ullamcorper.
             </div>
           </div>
 

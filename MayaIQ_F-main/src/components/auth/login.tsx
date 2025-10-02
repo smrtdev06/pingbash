@@ -82,7 +82,6 @@ const Login: React.FC = () => {
           <div className="welcomeback pt-4">
             <p className="title text-2xl font-bold  max-[320px]:text-md">Welcome Back!</p>
             <p className="description pt-4 text-sm">
-              Lorem ipsum dolor sit amet consectetur. Risus enim scelerisque fermentum fermentum. Risus enim scelerisque.
             </p>
           </div>
 

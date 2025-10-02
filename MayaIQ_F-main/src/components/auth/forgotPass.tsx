@@ -73,7 +73,6 @@
          <div className="forgotPassword pt-4">
            <p className="title text-2xl font-bold">Forgot Password</p>
            <p className="description pt-4 text-sm">
-             Lorem ipsum dolor sit amet consectetur. Risus enim scelerisque fermentum fermentum. Risus enim scelerisque.
            </p>
          </div>
  

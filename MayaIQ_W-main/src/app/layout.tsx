@@ -12,8 +12,8 @@ config.autoAddCss = false;
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Chatgram | Home",
-  description: "Your 24/7 Leading Chatgram",
+  title: "Pingbash | Home",
+  description: "Your 24/7 Leading Pingbash",
 };
 
 export default function RootLayout({

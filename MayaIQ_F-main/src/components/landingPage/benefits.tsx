@@ -9,9 +9,6 @@ const Benefits: React.FC = () => {
         <div className="flex flex-col gap-[13px]">
           <h1 className="text-[60px] max-[1135px]:text-[40px] leading-[66px] max-[1135px]:leading-[44px] text-white font-semibold">Benefits</h1>
           <p className="text-[16px] leading-[24px] text-[#9CA3AF] w-full">
-            Lorem ipsum dolor sit amet consectetur. Lacus faucibus vivamus
-            ut nunc commodo massa diam amet. Consequat eu nibh aliquam diam
-            eget mauris tempor posuere.
           </p>
         </div>
         <Image className="sss w-full rounded-[40px] max-[1135px]:h-[230px] max-[650px]:w-[230px] max-[1135px]:object-cover" src="/images/chatbot.png" alt="Chatbot image" width={1000} height={1000} />
@@ -25,8 +22,6 @@ const Benefits: React.FC = () => {
               AI Driven Business Growth
             </h4>
             <p className="text-[16px] leading-[24px] text-[#9CA3AF] ">
-              Lorem ipsum dolor sit amet consectetur. Quis arcu accumsan
-              enim sem phasellus dis ullamcorper.
             </p>
           </div>
         </div>
@@ -37,8 +32,6 @@ const Benefits: React.FC = () => {
           <div className="flex flex-col gap-[8px] w-full">
             <h4 className="text-[24px] max-[1135px]:text-[20px] leading-[29.05px] max-[1135px]:leading-[24.2px]">Save Time</h4>
             <p className="text-[16px] leading-[24px] text-[#9CA3AF]">
-              Lorem ipsum dolor sit amet consectetur. Quis arcu accumsan
-              enim sem phasellus dis ullamcorper.
             </p>
           </div>
         </div>
@@ -51,8 +44,6 @@ const Benefits: React.FC = () => {
               Super Fast AI Response
             </h4>
             <p className="text-[16px] leading-[24px] text-[#9CA3AF]">
-              Lorem ipsum dolor sit amet consectetur. Quis arcu accumsan
-              enim sem phasellus dis ullamcorper.
             </p>
           </div>
         </div>
@@ -65,8 +56,6 @@ const Benefits: React.FC = () => {
               Best Quality Services
             </h4>
             <p className="text-[16px] leading-[24px] text-[#9CA3AF]">
-              Lorem ipsum dolor sit amet consectetur. Quis arcu accumsan
-              enim sem phasellus dis ullamcorper.
             </p>
           </div>
         </div>

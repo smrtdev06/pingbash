@@ -306,11 +306,11 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
               <!-- Icon for full-screen mode: popout/minimize icon -->
               <svg class="pingbash-popout-icon" viewBox="0 0 24 24" width="22" height="22">
                 <path fill="currentColor" d="M14,14H19V16H16V19H14V14M5,14H10V19H8V16H5V14M8,5H10V10H5V8H8V5M19,8V10H14V5H16V8H19Z"/>
-              </svg>
+                </svg>
               <!-- Icon for popout mode: fullscreen/expand icon -->
               <svg class="pingbash-fullscreen-icon" viewBox="0 0 24 24" width="22" height="22" style="display: none;">
                 <path fill="currentColor" d="M5,5H10V7H7V10H5V5M14,5H19V10H17V7H14V5M17,14H19V19H14V17H17V14M10,17V19H5V14H7V17H10Z"/>
-              </svg>
+                </svg>
             </button>
             
             <div class="pingbash-hamburger-container">
@@ -592,7 +592,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
                   <input type="email" id="signup-email" class="pingbash-form-input" placeholder="Enter your email">
                 </div>
                 <div class="pingbash-form-group">
-                  <label for="signup-name">Full Name:</label>
+                  <label for="signup-name">User Name:</label>
                   <input type="text" id="signup-name" class="pingbash-form-input" placeholder="Enter your full name">
                 </div>
                 <div class="pingbash-form-group">
@@ -1524,7 +1524,7 @@ Example:
                 <div class="pingbash-popup-header">
                   <h3>📢 Send Group Notification</h3>
                   <button class="pingbash-popup-close">×</button>
-                </div>
+          </div>
                 <div class="pingbash-popup-body">
                   <div class="pingbash-notification-form">
                     <div class="pingbash-form-group">

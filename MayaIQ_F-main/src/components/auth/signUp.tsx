@@ -234,8 +234,6 @@ const SignUp: React.FC = () => {
           <div className="welcomeback pt-4">
             <p className="title text-2xl font-bold max-[320px]:text-center">Signup and Discover the Magic</p>
             <p className="description pt-4 text-sm">
-              Lorem ipsum dolor sit amet consectetur. Risus enim scelerisque
-              fermentum fermentum. Risus enim scelerisque.
             </p>
           </div>
 
@@ -264,7 +262,7 @@ const SignUp: React.FC = () => {
 
           {/* Input Full Name Field */}
           <div className="fullname_area pt-4 max-[320px]:text-sm">
-            <p className="font-bold">Full Name *</p>
+            <p className="font-bold">User Name *</p>
             <input type="text" ref={nameRef} placeholder="Enter your Name" autoComplete="off"
               className="w-full border border-gray-500 bg-gray-100 rounded-full  py-2 px-5" />
           </div>
