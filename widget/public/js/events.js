@@ -754,6 +754,8 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
           if (popoutIcon) popoutIcon.style.display = 'none';
           if (fullscreenIcon) fullscreenIcon.style.display = 'block';
           if (popoutBtn) popoutBtn.title = 'Full Screen Mode';
+          this.dialog.style.width = '350px';
+          this.dialog.style.height = '500px';
           
           if( window.isDebugging ) console.log('📱 [Widget] Entered popout mode - 350x500 resizable');
         }
