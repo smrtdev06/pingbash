@@ -6305,6 +6305,24 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
           color: #e5e5e5 !important;
         }
 
+        /* Dark Mode Popout/Fullscreen Button Fix */
+        /* When in dark mode, popout button should use same color as hamburger icon */
+        .pingbash-dark-mode .pingbash-popout-btn {
+          color: #e5e5e5 !important;
+        }
+
+        .pingbash-dark-mode .pingbash-popout-btn svg path {
+          fill: #e5e5e5 !important;
+        }
+
+        .pingbash-dark-mode .pingbash-popout-btn svg {
+          color: #e5e5e5 !important;
+        }
+
+        .pingbash-dark-mode .pingbash-popout-btn:hover {
+          background: rgba(255,255,255,0.1) !important;
+        }
+
         /* Dark Mode Hamburger Menu Items Fix */
         /* When in dark mode, hamburger menu items should use #e5e5e5 color instead of group setting colors */
         .pingbash-dark-mode .pingbash-hamburger-dropdown .pingbash-menu-item {
