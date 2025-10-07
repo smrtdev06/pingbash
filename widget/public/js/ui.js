@@ -73,13 +73,15 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
           // Prevent drag when clicking on interactive elements
           if (!this.isOpen) return;
           
-          // Check if clicking on button, hamburger menu, popout button, inbox icon, or any interactive element
+          // Check if clicking on button, hamburger menu, popout button, inbox icon, ad, or any interactive element
           if (e.target.closest('button') || 
               e.target.closest('.pingbash-hamburger-btn') ||
               e.target.closest('.pingbash-hamburger-container') ||
               e.target.closest('.pingbash-hamburger-dropdown') ||
               e.target.closest('.pingbash-popout-btn') ||
               e.target.closest('.pingbash-header-inbox-icon') ||
+              e.target.closest('.pingbash-header-ad') ||
+              e.target.closest('.pingbash-ad-link') ||
               e.target.closest('input') ||
               e.target.closest('select') ||
               e.target.closest('textarea')) {
@@ -97,13 +99,15 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
           // Prevent drag when touching interactive elements
           if (!this.isOpen) return;
           
-          // Check if touching button, hamburger menu, popout button, inbox icon, or any interactive element
+          // Check if touching button, hamburger menu, popout button, inbox icon, ad, or any interactive element
           if (e.target.closest('button') || 
               e.target.closest('.pingbash-hamburger-btn') ||
               e.target.closest('.pingbash-hamburger-container') ||
               e.target.closest('.pingbash-hamburger-dropdown') ||
               e.target.closest('.pingbash-popout-btn') ||
               e.target.closest('.pingbash-header-inbox-icon') ||
+              e.target.closest('.pingbash-header-ad') ||
+              e.target.closest('.pingbash-ad-link') ||
               e.target.closest('input') ||
               e.target.closest('select') ||
               e.target.closest('textarea')) {
@@ -294,11 +298,22 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
       this.dialog = document.createElement('div');
       this.dialog.className = 'pingbash-chat-dialog';
       this.dialog.innerHTML = `
-        <!-- W Version Header: Logo + Group Name + Hamburger Menu -->
+        <!-- W Version Header: Logo + Ad Space + Hamburger Menu -->
         <nav class="pingbash-header">
           <div class="pingbash-header-left">
             <div class="pingbash-header-logo-section">
               <img class="pingbash-logo" src="https://pingbash.com/logo-orange.png" alt="Pingbash" title="Click to create a new group" />
+            </div>
+          </div>
+          <div class="pingbash-header-center">
+            <!-- Ad Space -->
+            <div class="pingbash-header-ad">
+              <a href="https://example.com" target="_blank" rel="noopener noreferrer" class="pingbash-ad-link">
+                <div class="pingbash-ad-content">
+                  <span class="pingbash-ad-text">🎉 Special Offer!</span>
+                  <span class="pingbash-ad-label">Ad</span>
+                </div>
+              </a>
             </div>
           </div>
           <div class="pingbash-header-right">

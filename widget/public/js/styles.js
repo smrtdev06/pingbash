@@ -228,6 +228,32 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
             display: flex !important;
           }
           
+          /* Mobile: Hide or adjust ad space */
+          .pingbash-header-center {
+            display: none !important;
+          }
+          
+          /* Alternative: Make ad more compact on mobile */
+          /* Uncomment if you want to show ad on mobile instead of hiding */
+          /*
+          .pingbash-header-center {
+            padding: 0 8px !important;
+          }
+          
+          .pingbash-ad-content {
+            padding: 4px 8px !important;
+          }
+          
+          .pingbash-ad-text {
+            font-size: 11px !important;
+          }
+          
+          .pingbash-ad-label {
+            font-size: 8px !important;
+            padding: 1px 4px !important;
+          }
+          */
+          
           /* Keep popout button visible in popout mode (icon will change) */
           
           /* Allow touch interactions on buttons and interactive elements */
@@ -440,6 +466,66 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
           display: flex;
           align-items: center;
           gap: 15px;
+        }
+        
+        /* Header Center - Ad Space */
+        .pingbash-header-center {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex: 1;
+          padding: 0 15px;
+        }
+        
+        .pingbash-header-ad {
+          max-width: 250px;
+          width: 100%;
+        }
+        
+        .pingbash-ad-link {
+          display: block;
+          text-decoration: none;
+          color: inherit;
+          transition: transform 0.2s ease;
+        }
+        
+        .pingbash-ad-link:hover {
+          transform: scale(1.02);
+        }
+        
+        .pingbash-ad-content {
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          color: white;
+          padding: 6px 12px;
+          border-radius: 6px;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 8px;
+          box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+          transition: box-shadow 0.2s ease;
+        }
+        
+        .pingbash-ad-link:hover .pingbash-ad-content {
+          box-shadow: 0 4px 12px rgba(102, 126, 234, 0.5);
+        }
+        
+        .pingbash-ad-text {
+          font-size: 13px;
+          font-weight: 600;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+        
+        .pingbash-ad-label {
+          font-size: 9px;
+          font-weight: 700;
+          text-transform: uppercase;
+          background: rgba(255, 255, 255, 0.3);
+          padding: 2px 6px;
+          border-radius: 3px;
+          letter-spacing: 0.5px;
         }
   
         .pingbash-online-users-container {
@@ -730,6 +816,20 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
         
         .pingbash-dark-mode .pingbash-group-name {
           color: var(--dark-text-primary) !important;
+        }
+        
+        /* Ad Space Dark Mode */
+        .pingbash-dark-mode .pingbash-ad-content {
+          background: linear-gradient(135deg, #5568d3 0%, #6941a0 100%) !important;
+          box-shadow: 0 2px 8px rgba(85, 104, 211, 0.4) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-ad-link:hover .pingbash-ad-content {
+          box-shadow: 0 4px 12px rgba(85, 104, 211, 0.6) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-ad-label {
+          background: rgba(255, 255, 255, 0.2) !important;
         }
         
         /* Messages Area Dark Mode */
