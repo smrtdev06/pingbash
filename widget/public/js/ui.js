@@ -73,12 +73,13 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
           // Prevent drag when clicking on interactive elements
           if (!this.isOpen) return;
           
-          // Check if clicking on button, hamburger menu, popout button, or any interactive element
+          // Check if clicking on button, hamburger menu, popout button, inbox icon, or any interactive element
           if (e.target.closest('button') || 
               e.target.closest('.pingbash-hamburger-btn') ||
               e.target.closest('.pingbash-hamburger-container') ||
               e.target.closest('.pingbash-hamburger-dropdown') ||
               e.target.closest('.pingbash-popout-btn') ||
+              e.target.closest('.pingbash-header-inbox-icon') ||
               e.target.closest('input') ||
               e.target.closest('select') ||
               e.target.closest('textarea')) {
@@ -96,12 +97,13 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
           // Prevent drag when touching interactive elements
           if (!this.isOpen) return;
           
-          // Check if touching button, hamburger menu, popout button, or any interactive element
+          // Check if touching button, hamburger menu, popout button, inbox icon, or any interactive element
           if (e.target.closest('button') || 
               e.target.closest('.pingbash-hamburger-btn') ||
               e.target.closest('.pingbash-hamburger-container') ||
               e.target.closest('.pingbash-hamburger-dropdown') ||
               e.target.closest('.pingbash-popout-btn') ||
+              e.target.closest('.pingbash-header-inbox-icon') ||
               e.target.closest('input') ||
               e.target.closest('select') ||
               e.target.closest('textarea')) {
