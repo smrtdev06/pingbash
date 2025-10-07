@@ -403,6 +403,25 @@ module.exports = async (http) => {
                         await Controller.readMSG(data.id, receiver);
                         // Emit REFRESH event to the connected socket
                         socket.emit(chatCode.REFRESH);
+                        
+                        // Send updated unread count to all user's sockets (F version + widget)
+                        try {
+                            const unreadCount = await Controller.getTotalUnreadCount(receiver);
+                            
+                            // Find all sockets for this user
+                            const userSockets = users.filter(u => u.ID === receiver);
+                            console.log(`📬 [READ_MSG] Found ${userSockets.length} sockets for user ${receiver}`);
+                            
+                            userSockets.forEach(userSocket => {
+                                const socketObj = sockets[userSocket.Socket];
+                                if (socketObj && socketObj.connected) {
+                                    socketObj.emit(chatCode.GET_INBOX_UNREAD_COUNT, unreadCount);
+                                    console.log(`📬 [READ_MSG] Sent updated unread count (${unreadCount}) to socket ${userSocket.Socket}`);
+                                }
+                            });
+                        } catch (error) {
+                            console.error('📬 [READ_MSG] Failed to send unread count:', error);
+                        }
                     } catch (error) {
                         console.error(error);
                     }

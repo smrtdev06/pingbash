@@ -164,6 +164,57 @@ window.isDebugging = true;
           }
           if( window.isDebugging ) console.log('📬 [Widget] Updated inbox unread count:', this.inboxUnreadCount);
         }
+        
+        // Toggle dialog header logo/inbox icon
+        this.toggleDialogHeaderIcon(this.inboxUnreadCount);
+      };
+      
+      // Toggle between logo and inbox icon in dialog header
+      this.toggleDialogHeaderIcon = (count) => {
+        const logo = this.dialog?.querySelector('.pingbash-logo');
+        let inboxIcon = this.dialog?.querySelector('.pingbash-header-inbox-icon');
+        
+        // Create inbox icon if it doesn't exist
+        if (!inboxIcon) {
+          const logoSection = this.dialog?.querySelector('.pingbash-header-logo-section');
+          if (logoSection) {
+            const inboxIconHTML = `
+              <div class="pingbash-header-inbox-icon" style="display: none; position: relative; cursor: pointer;" title="View Inbox">
+                <svg viewBox="0 0 24 24" width="32" height="32">
+                  <path fill="currentColor" d="M19,15H15A3,3 0 0,1 12,18A3,3 0 0,1 9,15H5V5H19M19,3H5C3.89,3 3,3.9 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5A2,2 0 0,0 19,3Z"/>
+                </svg>
+                <span class="pingbash-header-inbox-badge" style="position: absolute; top: -5px; right: -5px; background: #ff4444; color: white; border-radius: 50%; min-width: 18px; height: 18px; font-size: 11px; font-weight: bold; display: flex; align-items: center; justify-content: center; padding: 0 4px;">0</span>
+              </div>
+            `;
+            logoSection.insertAdjacentHTML('beforeend', inboxIconHTML);
+            inboxIcon = logoSection.querySelector('.pingbash-header-inbox-icon');
+            
+            // Add click handler to redirect to inbox
+            if (inboxIcon) {
+              inboxIcon.addEventListener('click', () => {
+                if( window.isDebugging ) console.log('📬 [Widget] Dialog inbox icon clicked - redirecting to pingbash.com/inbox');
+                window.open('https://pingbash.com/inbox', '_blank');
+              });
+            }
+          }
+        }
+        
+        const headerInboxBadge = this.dialog?.querySelector('.pingbash-header-inbox-badge');
+        
+        if (count > 0) {
+          // Show inbox icon, hide logo
+          if (logo) logo.style.display = 'none';
+          if (inboxIcon) inboxIcon.style.display = 'block';
+          if (headerInboxBadge) {
+            headerInboxBadge.textContent = count > 99 ? '99+' : count;
+          }
+          if( window.isDebugging ) console.log('📬 [Widget] Showing inbox icon with count:', count);
+        } else {
+          // Show logo, hide inbox icon
+          if (logo) logo.style.display = 'block';
+          if (inboxIcon) inboxIcon.style.display = 'none';
+          if( window.isDebugging ) console.log('📬 [Widget] Showing logo (no unread messages)');
+        }
       };
       
 

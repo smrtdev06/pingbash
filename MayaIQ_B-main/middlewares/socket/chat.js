@@ -184,6 +184,15 @@ module.exports = (socket, users) => {
                 // Receiver is online - send inbox notification via socket
                 receiverSocket.emit(chatCode.SEND_MSG, msgList);
                 console.log(`📨 [PRIVATE] Inbox notification sent to online user ${receiverId}`);
+                
+                // Send updated unread count to receiver in real-time
+                try {
+                    const unreadCount = await Controller.getTotalUnreadCount(receiverId);
+                    receiverSocket.emit(chatCode.GET_INBOX_UNREAD_COUNT, unreadCount);
+                    console.log(`📬 [INBOX] Real-time unread count sent to receiver ${receiverId}: ${unreadCount}`);
+                } catch (error) {
+                    console.error(`📬 [INBOX] Failed to send unread count to receiver:`, error);
+                }
             } else {
                 // Receiver is offline - send both inbox and email notification
                 console.log(`📨 [PRIVATE] Receiver ${receiverId} is offline - sending email notification`);
@@ -319,6 +328,18 @@ module.exports = (socket, users) => {
                         });
                     } else {
                         console.log(`📧 [EMAIL-CHECK] User ${receiverId} is online, skipping email notification`);
+                        
+                        // Send updated unread count to online receiver in real-time
+                        try {
+                            const receiverSocketObj = sockets[targetUserSocket.Socket];
+                            if (receiverSocketObj) {
+                                const unreadCount = await Controller.getTotalUnreadCount(receiverId);
+                                receiverSocketObj.emit(chatCode.GET_INBOX_UNREAD_COUNT, unreadCount);
+                                console.log(`📬 [INBOX] Real-time unread count sent to receiver ${receiverId}: ${unreadCount}`);
+                            }
+                        } catch (error) {
+                            console.error(`📬 [INBOX] Failed to send unread count to receiver:`, error);
+                        }
                     }
                 }
             }
