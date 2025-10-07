@@ -76,6 +76,23 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
             this.requestOnlineUsers();
           }, 60000);
         }, 1000);
+
+        // Request inbox unread count after connecting (for authenticated users)
+        setTimeout(() => {
+          if (this.requestInboxUnreadCount) {
+            this.requestInboxUnreadCount();
+          }
+
+          // Set up periodic refresh of inbox unread count (every 30 seconds)
+          if (this.inboxUnreadInterval) {
+            clearInterval(this.inboxUnreadInterval);
+          }
+          this.inboxUnreadInterval = setInterval(() => {
+            if (this.requestInboxUnreadCount) {
+              this.requestInboxUnreadCount();
+            }
+          }, 30000);
+        }, 1500);
       });
 
       this.socket.on('disconnect', () => {
@@ -395,6 +412,14 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
 
         // Update the online user count badge
         this.updateOnlineUserCount(this.onlineUserIds.length);
+      });
+
+      // Listen for inbox unread count (from backend)
+      this.socket.on('get inbox unread count', (count) => {
+        if( window.isDebugging ) console.log('📬 [Widget] Inbox unread count from backend:', count);
+        if (this.updateInboxUnreadCount) {
+          this.updateInboxUnreadCount(count);
+        }
       });
 
       // Listen for real-time user login/logout events

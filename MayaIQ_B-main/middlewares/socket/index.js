@@ -412,6 +412,29 @@ module.exports = async (http) => {
             }
         });
 
+        // Event handler to get total unread message count
+        socket.on(chatCode.GET_INBOX_UNREAD_COUNT, async (data) => {
+            if (!data.token) {
+                socket.emit(chatCode.FORBIDDEN, httpCode.FORBIDDEN);
+            } else {
+                const res = isExpired(socket, data, chatCode.GET_INBOX_UNREAD_COUNT);
+                if (!res.expired) {
+                    try {
+                        const loggedId = verifyUser(data.token);
+                        const unreadCount = await Controller.getTotalUnreadCount(loggedId);
+                        
+                        console.log(`📬 [INBOX] Total unread count for user ${loggedId}:`, unreadCount);
+                        socket.emit(chatCode.GET_INBOX_UNREAD_COUNT, unreadCount);
+                    } catch (error) {
+                        console.error("Error getting inbox unread count:", error);
+                        socket.emit(chatCode.GET_INBOX_UNREAD_COUNT, 0);
+                    }
+                } else {
+                    socket.emit(chatCode.EXPIRED);
+                }
+            }
+        });
+
         // Event handler to fetch user's created groups
         socket.on(chatCode.GET_MY_GROUPS, async (data) => {
             if (!data.token) {

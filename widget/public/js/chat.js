@@ -113,6 +113,18 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
           
           if( window.isDebugging ) console.log('🔍 [Widget] Truly new messages:', trulyNewMessages.length, 'out of', data.length);
   
+          // Request fresh inbox unread count from backend when new messages arrive
+          // This ensures widget shows accurate count from F version database
+          if (trulyNewMessages.length > 0) {
+            if( window.isDebugging ) console.log('📬 [Widget] New messages arrived - requesting fresh inbox unread count from backend');
+            if (this.requestInboxUnreadCount) {
+              // Small delay to let backend process the message
+              setTimeout(() => {
+                this.requestInboxUnreadCount();
+              }, 500);
+            }
+          }
+  
           // Don't merge here - let displayMessages handle the logic
           this.displayMessages(data);
   
@@ -131,6 +143,48 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         }
       } else {
         if( window.isDebugging ) console.log('🔍 [Widget] ❌ Messages not for current group, ignoring');
+      }
+    },
+    
+    // NEW METHOD - Track inbox unread messages (1-on-1 and mentions)
+    trackInboxUnreadMessages(newMessages) {
+      const currentUserId = this.getCurrentUserId();
+      let unreadToAdd = 0;
+      
+      // Get current user name to check for mentions
+      let userName = '';
+      const ownMessage = this.messages?.find(m => m.Sender_Id == currentUserId && m.sender_name);
+      if (ownMessage) {
+        userName = ownMessage.sender_name;
+      }
+      
+      newMessages.forEach(msg => {
+        // Skip own messages
+        if (msg.Sender_Id == currentUserId) return;
+        
+        // Check if it's a 1-on-1 message (has receiver_id and it's to current user)
+        const is1on1 = msg.Receiver_Id && msg.Receiver_Id == currentUserId;
+        
+        // Check if it's a mention
+        const content = msg.Content || '';
+        const hasUsernameMention = userName && content.toLowerCase().includes(`@${userName.toLowerCase()}`);
+        const hasIdMention = content.includes(`@${currentUserId}`);
+        const isMention = hasUsernameMention || hasIdMention;
+        
+        if (is1on1 || isMention) {
+          unreadToAdd++;
+          if( window.isDebugging ) console.log('📬 [Widget] Inbox unread message detected:', {
+            msgId: msg.Id,
+            is1on1,
+            isMention,
+            from: msg.sender_name
+          });
+        }
+      });
+      
+      if (unreadToAdd > 0) {
+        this.updateInboxUnreadCount(this.inboxUnreadCount + unreadToAdd);
+        if( window.isDebugging ) console.log('📬 [Widget] Added', unreadToAdd, 'to inbox unread count. Total:', this.inboxUnreadCount);
       }
     },
 

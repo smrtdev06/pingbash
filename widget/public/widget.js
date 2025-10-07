@@ -36,6 +36,10 @@ class PingbashChatWidget {
     this.blockedUsers = [];
     this.pinnedMessages = [];
     this.unreadCount = 0;
+    
+    // Inbox unread tracking (for 1-on-1 and mentions)
+    this.inboxUnreadCount = 0;
+    this.lastSeenMessageId = null;
 
     // Authentication state
     this.isAuthenticated = false;
@@ -141,6 +145,54 @@ class PingbashChatWidget {
       console.log('👥 [Widget] Updated online user count badge:', count);
     }
   };
+  
+  // Update inbox unread count badge
+  this.updateInboxUnreadCount = (count) => {
+    this.inboxUnreadCount = count || 0;
+    const badge = this.dialog?.querySelector('.pingbash-inbox-badge');
+    if (badge) {
+      badge.textContent = this.inboxUnreadCount;
+      if (this.inboxUnreadCount > 0) {
+        badge.style.display = 'inline-block';
+      } else {
+        badge.style.display = 'none';
+      }
+      if( window.isDebugging ) console.log('📬 [Widget] Updated inbox unread count:', this.inboxUnreadCount);
+    }
+    
+    // Persist to localStorage
+    try {
+      localStorage.setItem('pingbash_inbox_unread', this.inboxUnreadCount.toString());
+    } catch (e) {
+      console.error('📬 [Widget] Failed to save inbox unread count:', e);
+    }
+  };
+  
+  // Clear inbox unread count
+  this.clearInboxUnreadCount = () => {
+    if( window.isDebugging ) console.log('📬 [Widget] Clearing inbox unread count');
+    this.updateInboxUnreadCount(0);
+    
+    // Update last seen message ID
+    if (this.messages && this.messages.length > 0) {
+      this.lastSeenMessageId = this.messages[this.messages.length - 1].Id;
+      if( window.isDebugging ) console.log('📬 [Widget] Updated last seen message ID:', this.lastSeenMessageId);
+    }
+  };
+  
+  // Load inbox unread count from localStorage
+  this.loadInboxUnreadCount = () => {
+    try {
+      const saved = localStorage.getItem('pingbash_inbox_unread');
+      if (saved) {
+        this.inboxUnreadCount = parseInt(saved) || 0;
+        this.updateInboxUnreadCount(this.inboxUnreadCount);
+        if( window.isDebugging ) console.log('📬 [Widget] Loaded inbox unread count from localStorage:', this.inboxUnreadCount);
+      }
+    } catch (e) {
+      console.error('📬 [Widget] Failed to load inbox unread count:', e);
+    }
+  };
 
   // Show online users method
   this.showOnlineUsers = () => {
@@ -164,6 +216,10 @@ class PingbashChatWidget {
 
     this.createWidget();
     this.applyStyles();
+    
+    // Load inbox unread count from localStorage
+    this.loadInboxUnreadCount();
+    
     await this.loadSocketIO();
 
     // Setup page visibility tracking (same as W version)

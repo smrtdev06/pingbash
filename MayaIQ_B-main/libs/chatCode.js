@@ -35,6 +35,7 @@ module.exports = {
   REFRESH: "refresh",
   READ_MSG: "read msg",
   READ_GROUP_MSG: "read group msg",
+  GET_INBOX_UNREAD_COUNT: "get inbox unread count",
   DELETE_GROUP_MSG: "delete group msg",
   BAN_GROUP_USER: "ban group user",
   REMOVE_BANNED_USER_MESSAGES: "remove banned user messages",

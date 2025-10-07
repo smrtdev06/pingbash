@@ -1587,6 +1587,23 @@ const joinToGroup = async (groupId, userId) => {
     }
 };
 
+// To get total unread message count for a user
+const getTotalUnreadCount = async (loggedId) => {
+    try {
+        const result = await PG_query(`
+            SELECT COUNT(*) AS "total_unread"
+            FROM "Messages"
+            WHERE "Receiver_Id" = ${loggedId}
+            AND "Read_Time" IS NULL
+            AND "History_Iden" = 1;
+        `);
+        return result.rows[0]?.total_unread || 0;
+    } catch (error) {
+        console.log('Error getting total unread count:', error);
+        return 0;
+    }
+}
+
 // To handle the message read function
 const readMSG = async (sender, receiver) => {
     try {
@@ -1816,6 +1833,7 @@ module.exports = {
     getHistory,
     getGroupHistory,
     readMSG,
+    getTotalUnreadCount,
     getReceiverIdsOfGroup,
     getReceiverEmailsOfGroup,
     joinToGroup,

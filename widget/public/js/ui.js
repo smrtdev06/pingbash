@@ -320,6 +320,13 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
                 </svg>
               </button>
               <div class="pingbash-hamburger-dropdown" style="display: none;">
+                <div class="pingbash-menu-item" data-action="inbox" style="position: relative;">
+                  <svg viewBox="0 0 24 24" width="16" height="16">
+                    <path fill="currentColor" d="M19,15H15A3,3 0 0,1 12,18A3,3 0 0,1 9,15H5V5H19M19,3H5C3.89,3 3,3.9 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5A2,2 0 0,0 19,3Z"/>
+                  </svg>
+                  Inbox
+                  <span class="pingbash-inbox-badge" style="display: none; position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: #ff4444; color: white; border-radius: 10px; padding: 2px 6px; font-size: 11px; font-weight: bold; min-width: 18px; text-align: center;">0</span>
+                </div>
                 <div class="pingbash-menu-item" data-action="chat-rules">
                   <svg viewBox="0 0 24 24" width="16" height="16">
                     <path fill="currentColor" d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>

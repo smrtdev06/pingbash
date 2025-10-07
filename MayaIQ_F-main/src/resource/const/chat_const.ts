@@ -20,6 +20,7 @@ export default {
   REFRESH: "refresh",
   READ_MSG: "read msg",
   READ_GROUP_MSG: "read group msg",
+  GET_INBOX_UNREAD_COUNT: "get inbox unread count",
   DELETE_MSG: "delete msg",
   DELETE_GROUP_MSG: "delete group msg",
   BAN_GROUP_USER: "ban group user",

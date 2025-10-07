@@ -789,6 +789,11 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
 
         switch (action) {
           // Hamburger menu actions (general)
+          case 'inbox':
+            if( window.isDebugging ) console.log('📬 [Widget] Inbox clicked - redirecting to pingbash.com/inbox');
+            // Redirect to F version inbox
+            window.open('https://pingbash.com/inbox', '_blank');
+            break;
           case 'chat-rules':
             this.showChatRules();
             break;
@@ -1310,6 +1315,28 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         if( window.isDebugging ) console.log('👥 [Widget] Requesting online users for group:', this.groupId, '(public endpoint)');
         // No token needed - endpoint is now public
         this.socket.emit('get group online users', { groupId: parseInt(this.groupId) });
+      },
+
+      // NEW METHOD - Request inbox unread count (only for authenticated users)
+      requestInboxUnreadCount() {
+        if (!this.socket || !this.isConnected) {
+          if( window.isDebugging ) console.log('📬 [Widget] Cannot request unread count - socket not connected');
+          return;
+        }
+
+        // Only request for authenticated users (not anonymous)
+        const token = localStorage.getItem('pingbash_token');
+        if (!token || token.includes('anonuser')) {
+          if( window.isDebugging ) console.log('📬 [Widget] Skipping unread count - user is anonymous');
+          // Clear badge for anonymous users
+          if (this.updateInboxUnreadCount) {
+            this.updateInboxUnreadCount(0);
+          }
+          return;
+        }
+
+        if( window.isDebugging ) console.log('📬 [Widget] Requesting inbox unread count');
+        this.socket.emit('get inbox unread count', { token });
       },
 
       // EXACT COPY from widget.js - getOnlineUsers method

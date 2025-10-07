@@ -41,6 +41,10 @@ window.isDebugging = true;
       this.blockedUsers = new Set();
       this.pinnedMessages = [];
       this.unreadCount = 0;
+      
+      // Inbox unread tracking (for 1-on-1 and mentions)
+      this.inboxUnreadCount = 0;
+      this.lastSeenMessageId = null;
 
       // Authentication state
       this.isAuthenticated = false;
@@ -146,6 +150,22 @@ window.isDebugging = true;
           if( window.isDebugging ) console.log('👥 [Widget] Updated online user count badge:', count);
         }
       };
+      
+      // Update inbox unread count badge
+      this.updateInboxUnreadCount = (count) => {
+        this.inboxUnreadCount = count || 0;
+        const badge = this.dialog?.querySelector('.pingbash-inbox-badge');
+        if (badge) {
+          badge.textContent = this.inboxUnreadCount;
+          if (this.inboxUnreadCount > 0) {
+            badge.style.display = 'inline-block';
+          } else {
+            badge.style.display = 'none';
+          }
+          if( window.isDebugging ) console.log('📬 [Widget] Updated inbox unread count:', this.inboxUnreadCount);
+        }
+      };
+      
 
       // Show online users method
       this.showOnlineUsers = () => {
