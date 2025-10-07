@@ -235,10 +235,28 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
           .pingbash-header .pingbash-hamburger-btn,
           .pingbash-header .pingbash-hamburger-container,
           .pingbash-header .pingbash-popout-btn,
+          .pingbash-header .pingbash-header-inbox-icon,
+          .pingbash-header .pingbash-logo,
           .pingbash-hamburger-dropdown,
           .pingbash-menu-item {
             touch-action: auto !important;
             pointer-events: auto !important;
+          }
+          
+          /* Make inbox icon more tappable on mobile */
+          .pingbash-header-inbox-icon {
+            min-width: 44px !important;
+            min-height: 44px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            cursor: pointer !important;
+            -webkit-tap-highlight-color: rgba(0,0,0,0.1) !important;
+          }
+          
+          .pingbash-header-inbox-icon svg {
+            width: 36px !important;
+            height: 36px !important;
           }
           
                     /* Custom resize handle for mobile - draggable element */

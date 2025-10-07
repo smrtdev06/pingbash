@@ -42,9 +42,16 @@ window.isDebugging = true;
       this.pinnedMessages = [];
       this.unreadCount = 0;
       
-      // Inbox unread tracking (for 1-on-1 and mentions)
+      // Inbox unread tracking (from backend)
       this.inboxUnreadCount = 0;
       this.lastSeenMessageId = null;
+      
+      // Initialize inbox UI to 0 immediately
+      setTimeout(() => {
+        if (this.updateInboxUnreadCount) {
+          this.updateInboxUnreadCount(0);
+        }
+      }, 100);
 
       // Authentication state
       this.isAuthenticated = false;

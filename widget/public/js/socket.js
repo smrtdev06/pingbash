@@ -78,6 +78,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         }, 1000);
 
         // Request inbox unread count after connecting (for authenticated users)
+        // Use shorter delay to get fresh count quickly
         setTimeout(() => {
           if (this.requestInboxUnreadCount) {
             this.requestInboxUnreadCount();
@@ -92,7 +93,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
               this.requestInboxUnreadCount();
             }
           }, 30000);
-        }, 1500);
+        }, 500);
       });
 
       this.socket.on('disconnect', () => {
@@ -416,9 +417,11 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
 
       // Listen for inbox unread count (from backend)
       this.socket.on('get inbox unread count', (count) => {
-        if( window.isDebugging ) console.log('📬 [Widget] Inbox unread count from backend:', count);
+        console.log('📬 [Widget] Inbox unread count from backend:', count, '(previous:', this.inboxUnreadCount + ')');
         if (this.updateInboxUnreadCount) {
           this.updateInboxUnreadCount(count);
+        } else {
+          console.error('📬 [Widget] updateInboxUnreadCount method not available!');
         }
       });
 

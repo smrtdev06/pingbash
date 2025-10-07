@@ -1335,7 +1335,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
           return;
         }
 
-        if( window.isDebugging ) console.log('📬 [Widget] Requesting inbox unread count');
+        console.log('📬 [Widget] Requesting inbox unread count from backend (current:', this.inboxUnreadCount + ')');
         this.socket.emit('get inbox unread count', { token });
       },
 
