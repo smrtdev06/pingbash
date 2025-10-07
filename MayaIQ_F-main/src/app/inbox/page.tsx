@@ -76,12 +76,13 @@ const ChatsContent: React.FC = () => {
 //   const userList = useSelector((state: RootState) => state.msg.chatUserList)
 //   const selectedUser = useSelector((state: RootState) => state.msg.selectedChatUser)
 
-    const [inBoxUsers, setInboxUsers] = useState<User[]>([]);
-    const [friends, setFriends] = useState<User[]>([]);
-    const [blockedUsers, setBlockedUsers] = useState<User[]>([])
-    const [searchedUsers, setSearchedUsers] = useState<User[]>([]);
-    const [tableUsers, setTableUsers] = useState<User[]>([]);
-    const [selectedUser, setSelectedUser] = useState<User | null>(null)
+  const [inBoxUsers, setInboxUsers] = useState<User[]>([]);
+  const [friends, setFriends] = useState<User[]>([]);
+  const [blockedUsers, setBlockedUsers] = useState<User[]>([])
+  const [searchedUsers, setSearchedUsers] = useState<User[]>([]);
+  const [tableUsers, setTableUsers] = useState<User[]>([]);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null)
+  const [totalUnreadCount, setTotalUnreadCount] = useState<number>(0);
 
   const [prevMsgList, setPrevMsgList] = useState<MessageUnit[]>([]);
 
@@ -165,6 +166,18 @@ const ChatsContent: React.FC = () => {
     }
     return parseInt(userId);
   };
+
+  // Calculate total unread count whenever inbox users change
+  useEffect(() => {
+    const unreadTotal = inBoxUsers.reduce((sum, user) => {
+      const unreadCount = typeof user.Unread_Message_Count === 'number' 
+        ? user.Unread_Message_Count 
+        : parseInt(String(user.Unread_Message_Count)) || 0;
+      return sum + unreadCount;
+    }, 0);
+    setTotalUnreadCount(unreadTotal);
+    console.log('📬 [Inbox] Total unread count:', unreadTotal);
+  }, [inBoxUsers]);
 
   useEffect(() => {
     const handleGetUsers = (data: User[]) => {
@@ -255,15 +268,22 @@ const ChatsContent: React.FC = () => {
             
             if (userIndex !== -1) {
               // User exists - update their last message and move to top
+              // Increment unread count if chat is not currently open
+              const isChatOpen = selectedUser?.Opposite_Id === oppositeUserId;
+              const currentUnread = typeof prevUsers[userIndex].Unread_Message_Count === 'number'
+                ? prevUsers[userIndex].Unread_Message_Count
+                : parseInt(String(prevUsers[userIndex].Unread_Message_Count)) || 0;
+              
               const updatedUser = {
                 ...prevUsers[userIndex],
                 Content: `[Group Notification] ${data.message}`,
                 Send_Time: new Date().toISOString(),
                 Sender_Id: oppositeUserId,
-                Receiver_Id: currentUserId
+                Receiver_Id: currentUserId,
+                Unread_Message_Count: isChatOpen ? currentUnread : currentUnread + 1
               };
               
-              console.log("📢 [Inbox] Moving sender to top of inbox");
+              console.log("📢 [Inbox] Moving sender to top of inbox with unread count:", updatedUser.Unread_Message_Count);
               
               return [
                 updatedUser,
@@ -336,15 +356,28 @@ const ChatsContent: React.FC = () => {
           
           if (userIndex !== -1) {
             // User exists - update their last message and move to top
+            // Increment unread count if message is from opposite user and chat is not currently open
+            const isMessageFromOpposite = latestMessage.Sender_Id === oppositeUserId;
+            const isChatOpen = selectedUser?.Opposite_Id === oppositeUserId;
+            const shouldIncrementUnread = isMessageFromOpposite && !isChatOpen;
+            
+            const currentUnread = typeof prevUsers[userIndex].Unread_Message_Count === 'number'
+              ? prevUsers[userIndex].Unread_Message_Count
+              : parseInt(String(prevUsers[userIndex].Unread_Message_Count)) || 0;
+            
             const updatedUser = {
               ...prevUsers[userIndex],
               Content: latestMessage.Content,
               Send_Time: latestMessage.Send_Time,
               Sender_Id: latestMessage.Sender_Id,
-              Receiver_Id: latestMessage.Receiver_Id
+              Receiver_Id: latestMessage.Receiver_Id,
+              Unread_Message_Count: shouldIncrementUnread ? currentUnread + 1 : currentUnread
             };
             
-            console.log('📨 [Inbox] User found at index', userIndex, '- moving to top with new message');
+            console.log('📨 [Inbox] User found at index', userIndex, '- moving to top with new message', {
+              shouldIncrementUnread,
+              newUnreadCount: updatedUser.Unread_Message_Count
+            });
             
             const newUsers = [
               updatedUser,
@@ -555,9 +588,16 @@ const ChatsContent: React.FC = () => {
     // To call the function to send the socket function to make the Read_Time to set    
     readMsg(token, user.Opposite_Id);
 
-    // To remove the red badge
-    // const readList = userList.map((user) => user.Opposite_Id === Id ? { ...user, Unread_Message_Count: 0 } : user);
-    // dispatch(setChatUserList([...readList]));
+    // Reset unread count for this user in the inbox list
+    setInboxUsers(prevUsers => {
+      return prevUsers.map(u => 
+        u.Opposite_Id === user.Opposite_Id 
+          ? { ...u, Unread_Message_Count: 0 }
+          : u
+      );
+    });
+    
+    console.log('📬 [Inbox] Marked messages as read for user:', user.Opposite_Id);
   }  
 
   // To handle Image upload
@@ -905,7 +945,7 @@ const ChatsContent: React.FC = () => {
       {/* Chats Area Start */}
       <div className="content-wrapper w-full pl-[280px] max-lg:px-0 h-screen overflow-y-auto overflow-x-hidden">
         <div className="page-content w-full pt-[12px] flex flex-col px-[24px] pb-[24px] relative max-lg:px-[20px] max-lg:pt-0 max-lg:top-[102px] max-[810px]:pb-[20px]">
-          <PageHeader />
+          <PageHeader unreadCount={totalUnreadCount} />
           <div className={`flex justify-stretch gap-[20px] w-full relative ${isMobile ? "h-mob-chatbox" : "h-[85vh]"}`}>
             {/* Chat Left Side Start ---Chat Hisotry */}
             <aside className={`w-[360px] pr-[5px] flex flex-col overflow-y-auto overflow-x-hidden duration-500 ${(userNavShow ? "flex max-[810px]:w-full" : "max-[810px]:hidden")} max-[810px]:gap-0`}>
@@ -966,7 +1006,7 @@ const ChatsContent: React.FC = () => {
                     subtitle={`${user.Opposite_Profession == undefined ? user.Content ?? "" : user.Opposite_Profession}`}
                     className={`${selectedUser?.Opposite_Id === user.Opposite_Id ? "bg-[#3a7cff4d]" : ""}`}
                     dateString={chatDate(`${user.Send_Time}`)}
-                    unread={0} //Number(user.Unread_Message_Count)
+                    unread={Number(user.Unread_Message_Count) || 0}
                     isBlocked={blockedUsers.find(u => u.Opposite_Id == user.Opposite_Id) != null}
                     statusColor={user.Socket ? "bg-[#00BF63]" : "bg-gray-400"}
                     onUnblock={onUnblockUser}

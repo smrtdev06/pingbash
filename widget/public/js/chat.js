@@ -30,20 +30,20 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
               return;
             }
             
-            for (let entry of entries) {
-              // Check if we should auto-scroll (user is at bottom)
-              const element = entry.target;
-              const isAtBottom = element.scrollTop >= (element.scrollHeight - element.clientHeight - 50);
-              
+          for (let entry of entries) {
+            // Check if we should auto-scroll (user is at bottom)
+            const element = entry.target;
+            const isAtBottom = element.scrollTop >= (element.scrollHeight - element.clientHeight - 50);
+            
               // Only scroll if position actually changed significantly (not just 1-2px differences)
               const scrollDifference = Math.abs(element.scrollTop - lastScrollTop);
               
               if (isAtBottom && scrollDifference > 10) {
                 if( window.isDebugging ) console.log('📜 [Widget] Height changed, auto-scrolling to bottom');
-                this.scrollToBottom();
+              this.scrollToBottom();
                 lastScrollTop = element.scrollTop;
-              }
             }
+          }
           }, 100); // 100ms debounce
         });
         
@@ -103,7 +103,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         if( window.isDebugging ) console.log('🔍 [Widget] ✅ Messages for current group');
         if( window.isDebugging ) console.log('🔍 [Widget] Page visible:', this.pageVisible);
   
-                if (this.pageVisible) {
+        if (this.pageVisible) {
           if( window.isDebugging ) console.log('🔍 [Widget] Page visible - adding messages immediately');
           if( window.isDebugging ) console.log('🔍 [Widget] Before processing - existing:', this.messages?.length || 0, 'new:', data.length);
 
@@ -112,10 +112,10 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
           const trulyNewMessages = data.filter(msg => !existingIds.has(msg.Id));
           
           if( window.isDebugging ) console.log('🔍 [Widget] Truly new messages:', trulyNewMessages.length, 'out of', data.length);
-
+  
           // Don't merge here - let displayMessages handle the logic
           this.displayMessages(data);
-
+  
           // Play notification sound for ONLY the truly new messages
           if (trulyNewMessages.length > 0) {
             this.playMessageSound(trulyNewMessages);
@@ -712,7 +712,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
   // EXACT COPY from widget.js - renderMessageContent method
     renderMessageContent(content) {
       if (!content) return '';
-
+  
       // Log content analysis for debugging
       if( window.isDebugging ) console.log('🔍 [Widget] Content analysis:', {
         content: content.substring(0, 100),
@@ -726,7 +726,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
       // Check if content contains HTML tags (images, links, etc.)
       if (content.includes('<img') || content.includes('<a') || content.includes('gif::') || content.includes('sticker::')) {
         if( window.isDebugging ) console.log('🖼️ [Widget] Detected HTML/special content, processing...');
-
+  
         // Handle different content types (same as W version)
         if (content.includes('<img')) {
           if( window.isDebugging ) console.log('🖼️ [Widget] Processing <img> tag content:', content);
@@ -786,7 +786,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
       if (!clickableHtml.includes('cursor:')) {
         if (clickableHtml.includes('style="')) {
           clickableHtml = clickableHtml.replace('style="', 'style="cursor: pointer; ');
-        } else {
+      } else {
           clickableHtml = clickableHtml.replace('<img ', '<img style="cursor: pointer;" ');
         }
       }
@@ -1225,10 +1225,10 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         }
 
         // Filter messages based on user permissions and message mode
-        return messages.filter(msg => {
-          const isOwnMessage = msg.Sender_Id == currentUserId;
-          const isToCurrentUser = msg.Receiver_Id == currentUserId;
-          
+            return messages.filter(msg => {
+              const isOwnMessage = msg.Sender_Id == currentUserId;
+              const isToCurrentUser = msg.Receiver_Id == currentUserId;
+              
           // Handle messages without message_mode field (legacy or malformed)
           if (msg.message_mode === undefined || msg.message_mode === null) {
             // Fallback: determine mode from receiver_id
@@ -1334,20 +1334,20 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
             return ''; // No tag for public messages
             
           case 1: // Private/1-on-1 message
-            if (message.Receiver_Id == currentUserId) {
-              return '<span class="pingbash-filter-mode-text">1 on 1</span>';
-            } else if (message.Sender_Id == currentUserId) {
-              // Find receiver name from group members
-              const receiverName = this.getReceiverName(message.Receiver_Id);
-              return `<span class="pingbash-filter-mode-text">1 on 1: ${receiverName}</span>`;
-            }
+          if (message.Receiver_Id == currentUserId) {
             return '<span class="pingbash-filter-mode-text">1 on 1</span>';
-            
+            } else if (message.Sender_Id == currentUserId) {
+            // Find receiver name from group members
+            const receiverName = this.getReceiverName(message.Receiver_Id);
+            return `<span class="pingbash-filter-mode-text">1 on 1: ${receiverName}</span>`;
+          }
+            return '<span class="pingbash-filter-mode-text">1 on 1</span>';
+
           case 2: // Mods message
             return '<span class="pingbash-filter-mode-text">Mod</span>';
             
           default:
-            return '';
+        return '';
         }
       },
 

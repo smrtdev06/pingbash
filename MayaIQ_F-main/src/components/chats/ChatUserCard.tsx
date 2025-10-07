@@ -50,6 +50,11 @@ const ChatUserCard: React.FC<ChatUserCardProps> = ({
             <div className="text-[14px] ml-2 flex flex-col whitespace-normal break-words">{subtitle}</div>
         </div>
         {isBlocked && <div className="text-[16px] absolute bottom-[4px] right-2 cursor-pointer" onClick={() => onUnblock(id)}>Unblock</div>}
+        {!isBlocked && unread !== undefined && unread > 0 && (
+          <div className="absolute bottom-[4px] right-2 bg-red-500 text-white text-[12px] font-bold rounded-full min-w-[20px] h-[20px] flex items-center justify-center px-1">
+            {unread > 99 ? '99+' : unread}
+          </div>
+        )}
         <div className={`text-[12px] absolute top-[2px] right-2 w-[72px]`} >{dateString}</div>
     </div>
   );

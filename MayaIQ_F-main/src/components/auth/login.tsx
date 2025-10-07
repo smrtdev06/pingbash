@@ -72,7 +72,7 @@ const Login: React.FC = () => {
   return (
     <div className="Login bg-white flex flex-row justify-center items-center w-full">
       <div className="left-side flex items-center w-full md:w-1/2 pt-8 overflow-x-auto h-screen max-[320px]:h-full overflow-y-auto">
-        <div className="login_container mx-8 max-[320px]:mx-4">
+        <div className="login_container mx-8 max-[320px]:mx-4 w-full">
           <div className="top_mayaIq flex">
             <Link href="/">
               <Image src="/logo-orange.png" alt="logo" width={100} height={100} style={{ width: "auto", height: "auto" }} />

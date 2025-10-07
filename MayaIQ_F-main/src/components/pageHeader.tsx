@@ -17,7 +17,11 @@ import messages from "@/resource/const/messages";
 import { socket, userLoggedIn } from "@/resource/utils/chat";
 import ChatConst from "@/resource/const/chat_const";
 
-const PageHeader: React.FC = () => {
+interface PageHeaderProps {
+  unreadCount?: number;
+}
+
+const PageHeader: React.FC<PageHeaderProps> = ({ unreadCount = 0 }) => {
   const [name, setName] = useState<string | null>(null);
   const [avatar, setAvatar] = useState<string | null>(null);
 
@@ -115,8 +119,18 @@ const PageHeader: React.FC = () => {
         <a onClick={() => dispatch(setIsExpanded(true))}>
           <FontAwesomeIcon className="cursor-pointer hover:text-gray-700 w-[24px] h-[24px]" icon={faBars} />
         </a>
-        <div className="flex gap-[12px] items-center whitespace-nowrap">
-          <Image src={'/logo-orange.png'} alt="" width={100} height={100} style={{ width: "56px", height: "56px" }} priority />
+        <div className="flex gap-[12px] items-center whitespace-nowrap relative">
+          {unreadCount > 0 ? (
+            <div className="relative">
+              <div className="w-[56px] h-[56px] bg-red-500 rounded-full flex items-center justify-center">
+                <span className="text-white text-[20px] font-bold">
+                  {unreadCount > 99 ? '99+' : unreadCount}
+                </span>
+              </div>
+            </div>
+          ) : (
+            <Image src={'/logo-orange.png'} alt="" width={100} height={100} style={{ width: "56px", height: "56px" }} priority />
+          )}
           <span className="text-[23px] font-semibold">PingBash</span>
         </div>
       </div>
