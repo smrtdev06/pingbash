@@ -228,16 +228,15 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
             display: flex !important;
           }
           
-          /* Mobile: Hide or adjust ad space */
-          .pingbash-header-center {
-            display: none !important;
-          }
-          
-          /* Alternative: Make ad more compact on mobile */
-          /* Uncomment if you want to show ad on mobile instead of hiding */
-          /*
+          /* Mobile: Make ad more compact */
           .pingbash-header-center {
             padding: 0 8px !important;
+            flex: 1 !important;
+            min-width: 0 !important;
+          }
+          
+          .pingbash-header-ad {
+            max-width: 180px !important;
           }
           
           .pingbash-ad-content {
@@ -252,7 +251,6 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
             font-size: 8px !important;
             padding: 1px 4px !important;
           }
-          */
           
           /* Keep popout button visible in popout mode (icon will change) */
           

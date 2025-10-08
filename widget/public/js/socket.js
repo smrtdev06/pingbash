@@ -250,6 +250,12 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
       this.socket.on('group updated', (group) => {
         if( window.isDebugging ) console.log('🔍 [Widget] group updated:', group);
         
+        // IMPORTANT: Only apply updates if this is the current group
+        if (group && group.id && this.groupId && group.id !== this.groupId) {
+          if( window.isDebugging ) console.log('🔍 [Widget] Ignoring group update - not current group (received:', group.id, 'current:', this.groupId + ')');
+          return;
+        }
+        
         // Check if moderators changed
         const oldModerators = this.group?.members?.filter(m => m.role_id === 2) || [];
         const newModerators = group?.members?.filter(m => m.role_id === 2) || [];
