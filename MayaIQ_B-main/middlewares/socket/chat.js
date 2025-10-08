@@ -1860,45 +1860,42 @@ module.exports = (socket, users) => {
             const groupInfo = await Controller.getGroup(groupId);
             const groupName = groupInfo?.name || 'Group';
 
-            // Track which users we've already sent to (to avoid duplicates from multiple sockets)
+            // Track which users we've already sent to (to avoid duplicates)
             const notifiedUsers = new Set();
             let sentCount = 0;
 
             // Send notification to each group member individually (not via room)
-            receiverIds.forEach(receiverId => {
-                // Skip if we've already notified this user
+            // First, deduplicate receiverIds array to ensure no duplicate user IDs
+            const uniqueReceiverIds = [...new Set(receiverIds)];
+            console.log(`📢 [NOTIFY] Unique receivers: ${uniqueReceiverIds.length} (original: ${receiverIds.length})`);
+
+            uniqueReceiverIds.forEach(receiverId => {
+                // Skip if we've already notified this user (double-check)
                 if (notifiedUsers.has(receiverId)) {
                     console.log(`📢 [NOTIFY] Skipping duplicate for user ${receiverId}`);
                     return;
                 }
                 
-                // Find ALL sockets for this user (they might have multiple tabs open)
-                const userSockets = users.filter(user => user.ID === receiverId);
+                // Mark as notified IMMEDIATELY to prevent race conditions
+                notifiedUsers.add(receiverId);
                 
-                console.log(`📢 [NOTIFY] User ${receiverId}: Found ${userSockets.length} socket(s)`);
+                // Find FIRST socket for this user (only send to one socket per user)
+                const userSocket = users.find(user => user.ID === receiverId);
                 
-                if (userSockets.length > 0) {
-                    // Send to ALL sockets for this user (not just first - user might have multiple tabs)
-                    userSockets.forEach(userSocket => {
-                        if (sockets[userSocket.Socket]) {
-                            // Send notification directly to this user's socket
-                            sockets[userSocket.Socket].emit(chatCode.SEND_GROUP_NOTIFY, {
-                                message: message,
-                                senderName: senderName,
-                                senderAvatar: senderAvatar,
-                                groupId: groupId,
-                                groupName: groupName,
-                                senderId: senderId
-                            });
-                            console.log(`📢 [NOTIFY] ✅ Sent to user ${receiverId} socket: ${userSocket.Socket}`);
-                        } else {
-                            console.log(`📢 [NOTIFY] ❌ Socket ${userSocket.Socket} not found for user ${receiverId}`);
-                        }
+                if (userSocket && sockets[userSocket.Socket]) {
+                    // Send notification to ONE socket per user (prevents duplicates)
+                    sockets[userSocket.Socket].emit(chatCode.SEND_GROUP_NOTIFY, {
+                        message: message,
+                        senderName: senderName,
+                        senderAvatar: senderAvatar,
+                        groupId: groupId,
+                        groupName: groupName,
+                        senderId: senderId
                     });
-                    notifiedUsers.add(receiverId);
+                    console.log(`📢 [NOTIFY] ✅ Sent to user ${receiverId} socket: ${userSocket.Socket}`);
                     sentCount++;
                 } else {
-                    console.log(`📢 [NOTIFY] ⚠️ User ${receiverId} not found in users array (offline or not logged in)`);
+                    console.log(`📢 [NOTIFY] ⚠️ User ${receiverId} not found or socket not connected (offline)`);
                 }
             });
 
