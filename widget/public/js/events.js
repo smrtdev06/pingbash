@@ -783,8 +783,8 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         }
       },
 
-      // Update menu visibility based on authentication status
-      updateMenuVisibility() {
+      // Update auth menu visibility based on authentication status
+      updateAuthMenuVisibility() {
         const myProfileItem = this.dialog?.querySelector('[data-action="my-profile"]');
         const logoutItem = this.dialog?.querySelector('[data-action="logout"]');
         const loginItem = this.dialog?.querySelector('[data-action="login"]');

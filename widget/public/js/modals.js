@@ -1547,6 +1547,12 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
 
     updateMenuVisibility() {
       if( window.isDebugging ) console.log('🔍 [Debug] ===== UPDATING MENU VISIBILITY =====');
+      
+      // Update auth menu items (My Profile, Login, Logout)
+      if (this.updateAuthMenuVisibility) {
+        this.updateAuthMenuVisibility();
+      }
+      
       if( window.isDebugging ) console.log('🔍 [Debug] Current user data:', {
         currentUserId: this.getCurrentUserId(),
         isAuthenticated: this.isAuthenticated,
