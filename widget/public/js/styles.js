@@ -267,11 +267,11 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
             pointer-events: auto !important;
           }
           
-          /* Make inbox icon more tappable on mobile */
+          /* Make inbox icon more tappable on mobile (when visible) */
           .pingbash-header-inbox-icon {
             min-width: 44px !important;
             min-height: 44px !important;
-            display: flex !important;
+            /* Don't force display - let JavaScript control visibility based on unread count */
             align-items: center !important;
             justify-content: center !important;
             cursor: pointer !important;
