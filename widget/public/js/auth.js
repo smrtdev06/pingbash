@@ -33,6 +33,14 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
             this.pendingMessages = []; // Clear pending messages
           }
   
+          // Request fresh inbox unread count when page becomes visible
+          if (this.requestInboxUnreadCount) {
+            if( window.isDebugging ) console.log('📬 [Widget] Page became visible - requesting fresh inbox unread count');
+            setTimeout(() => {
+              this.requestInboxUnreadCount();
+            }, 300);
+          }
+  
           // Debounce polling to prevent rapid successive calls
           this.reloadTimeoutRef = setTimeout(() => {
             if( window.isDebugging ) console.log('🔍 [Widget] Polling for new messages - Socket connected:', this.socket?.connected, 'Group ID:', this.groupId);
