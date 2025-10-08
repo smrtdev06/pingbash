@@ -20,6 +20,322 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
       // TODO: Implement members modal
     },
 
+  // Show My Profile popup (same style as chat rules)
+    async showMyProfile() {
+      if( window.isDebugging ) console.log('👤 [Widget] Showing My Profile popup');
+      
+      if (!this.isAuthenticated) {
+        this.showErrorToast('Access Denied', 'Please sign in to view your profile');
+        return;
+      }
+
+      // Load user profile data
+      const profileData = await this.loadUserProfile();
+      if (!profileData) return;
+
+      // Create popup if it doesn't exist
+      let popup = this.dialog.querySelector('.pingbash-profile-popup');
+      if (!popup) {
+        const popupHTML = `
+          <div class="pingbash-profile-popup" style="display: none;">
+            <div class="pingbash-popup-overlay"></div>
+            <div class="pingbash-popup-content pingbash-profile-content">
+              <div class="pingbash-popup-header">
+                <h2>My Profile</h2>
+                <button class="pingbash-popup-close">&times;</button>
+              </div>
+              <div class="pingbash-popup-body">
+                <!-- Avatar Section -->
+                <div class="pingbash-profile-avatar-section">
+                  <div class="pingbash-profile-avatar-container">
+                    <img src="" alt="Avatar" class="pingbash-profile-avatar" />
+                    <input type="file" id="pingbash-avatar-upload" accept="image/*" style="display: none;" />
+                    <button class="pingbash-avatar-upload-btn" type="button">
+                      <svg viewBox="0 0 24 24" width="16" height="16">
+                        <path fill="currentColor" d="M9,16V10H5L12,3L19,10H15V16H9M5,20V18H19V20H5Z"/>
+                      </svg>
+                      Upload
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Profile Form -->
+                <div class="pingbash-profile-form">
+                  <div class="pingbash-form-row">
+                    <div class="pingbash-form-group">
+                      <label>First Name</label>
+                      <input type="text" id="pingbash-profile-firstname" placeholder="First Name" />
+                    </div>
+                    <div class="pingbash-form-group">
+                      <label>Last Name</label>
+                      <input type="text" id="pingbash-profile-lastname" placeholder="Last Name" />
+                    </div>
+                  </div>
+
+                  <div class="pingbash-form-group">
+                    <label>Email</label>
+                    <input type="email" id="pingbash-profile-email" placeholder="email@example.com" readonly />
+                  </div>
+
+                  <div class="pingbash-form-group">
+                    <label>Bio / Profession</label>
+                    <input type="text" id="pingbash-profile-bio" placeholder="Tell us about yourself..." />
+                  </div>
+
+                  <div class="pingbash-form-row">
+                    <div class="pingbash-form-group">
+                      <label>Country</label>
+                      <input type="text" id="pingbash-profile-country" placeholder="Country" />
+                    </div>
+                    <div class="pingbash-form-group">
+                      <label>Gender</label>
+                      <select id="pingbash-profile-gender">
+                        <option value="">Select Gender</option>
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                        <option value="Other">Other</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div class="pingbash-form-group">
+                    <label>Birthday</label>
+                    <input type="date" id="pingbash-profile-birthday" />
+                  </div>
+                </div>
+              </div>
+              <div class="pingbash-popup-footer">
+                <button class="pingbash-profile-cancel-btn">Cancel</button>
+                <button class="pingbash-profile-save-btn">Save Changes</button>
+              </div>
+            </div>
+          </div>
+        `;
+        this.dialog.insertAdjacentHTML('beforeend', popupHTML);
+        popup = this.dialog.querySelector('.pingbash-profile-popup');
+
+        // Attach event listeners
+        const overlay = popup.querySelector('.pingbash-popup-overlay');
+        const closeBtn = popup.querySelector('.pingbash-popup-close');
+        const cancelBtn = popup.querySelector('.pingbash-profile-cancel-btn');
+        const avatarUploadBtn = popup.querySelector('.pingbash-avatar-upload-btn');
+        const avatarInput = popup.querySelector('#pingbash-avatar-upload');
+
+        overlay.addEventListener('click', () => {
+          popup.style.display = 'none';
+        });
+        
+        closeBtn.addEventListener('click', () => {
+          popup.style.display = 'none';
+        });
+        
+        cancelBtn.addEventListener('click', () => {
+          popup.style.display = 'none';
+        });
+
+        // Avatar upload button handler
+        avatarUploadBtn.addEventListener('click', () => {
+          avatarInput.click();
+        });
+
+        // Avatar upload handler
+        avatarInput.addEventListener('change', async (e) => {
+          const file = e.target.files[0];
+          if (file) {
+            await this.uploadProfileAvatar(file);
+            // Refresh profile data
+            const newData = await this.loadUserProfile();
+            if (newData && newData.avatar) {
+              popup.querySelector('.pingbash-profile-avatar').src = newData.avatar;
+            }
+          }
+        });
+      }
+
+      // Save profile handler (attach every time to ensure it has access to current popup)
+      const saveBtn = popup.querySelector('.pingbash-profile-save-btn');
+      // Remove old listener by cloning
+      const newSaveBtn = saveBtn.cloneNode(true);
+      saveBtn.parentNode.replaceChild(newSaveBtn, saveBtn);
+      
+      newSaveBtn.addEventListener('click', async () => {
+        const firstName = popup.querySelector('#pingbash-profile-firstname').value.trim();
+        const lastName = popup.querySelector('#pingbash-profile-lastname').value.trim();
+        const email = popup.querySelector('#pingbash-profile-email').value.trim();
+        const bio = popup.querySelector('#pingbash-profile-bio').value.trim();
+        const country = popup.querySelector('#pingbash-profile-country').value.trim();
+        const gender = popup.querySelector('#pingbash-profile-gender').value;
+        const birthday = popup.querySelector('#pingbash-profile-birthday').value;
+
+        if (!firstName) {
+          this.showErrorToast('Validation Error', 'First name is required');
+          return;
+        }
+
+        if (!lastName) {
+          this.showErrorToast('Validation Error', 'Last name is required');
+          return;
+        }
+
+        if (!email) {
+          this.showErrorToast('Validation Error', 'Email is required');
+          return;
+        }
+
+        if (!birthday) {
+          this.showErrorToast('Validation Error', 'Birthday is required');
+          return;
+        }
+
+        const success = await this.updateUserProfile({
+          firstName,
+          lastName,
+          email,
+          bio,
+          country,
+          gender,
+          birthday
+        });
+
+        if (success) {
+          this.showSuccessToast('Success', 'Profile updated successfully');
+          popup.style.display = 'none';
+        }
+      });
+
+      // Populate form with profile data
+      popup.querySelector('.pingbash-profile-avatar').src = profileData.avatar || 'https://pingbash.com/logo-orange.png';
+      popup.querySelector('#pingbash-profile-firstname').value = profileData.firstName || '';
+      popup.querySelector('#pingbash-profile-lastname').value = profileData.lastName || '';
+      popup.querySelector('#pingbash-profile-email').value = profileData.email || '';
+      popup.querySelector('#pingbash-profile-bio').value = profileData.bio || '';
+      popup.querySelector('#pingbash-profile-country').value = profileData.country || '';
+      popup.querySelector('#pingbash-profile-gender').value = profileData.gender || '';
+      popup.querySelector('#pingbash-profile-birthday').value = profileData.birthday || '';
+
+      // Show the popup
+      popup.style.display = 'flex';
+    },
+
+    // Load user profile data
+    async loadUserProfile() {
+      try {
+        const token = localStorage.getItem('pingbash_token');
+        const apiUrl = this.config.apiUrl || this.config.serverUrl || 'https://pingbash.com';
+        const response = await fetch(`${apiUrl}/api/private/get/myProfile/detail`, {
+          method: 'POST',
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'Authorization': token
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to load profile');
+        }
+
+        const data = await response.json();
+        const personal = data.personal[0];
+        const nameParts = (personal.Name || '').split(' ');
+
+        // Format birthday for HTML date input (YYYY-MM-DD)
+        let formattedBirthday = '';
+        if (personal.birthday) {
+          try {
+            const date = new Date(personal.birthday);
+            if (!isNaN(date.getTime())) {
+              formattedBirthday = date.toISOString().split('T')[0];
+            }
+          } catch (e) {
+            console.error('Error parsing birthday:', e);
+          }
+        }
+
+        return {
+          firstName: nameParts[0] || '',
+          lastName: nameParts.slice(1).join(' ') || '',
+          email: personal.Email || '',
+          bio: personal.Profession || '',
+          country: personal.country || '',
+          gender: personal.gender || '',
+          birthday: formattedBirthday,
+          avatar: personal.Photo_Name ? `${apiUrl}/uploads/users/${personal.Photo_Name}` : null
+        };
+      } catch (error) {
+        console.error('Error loading profile:', error);
+        this.showErrorToast('Error', 'Failed to load profile data');
+        return null;
+      }
+    },
+
+    // Upload profile avatar
+    async uploadProfileAvatar(file) {
+      try {
+        const token = localStorage.getItem('pingbash_token');
+        const apiUrl = this.config.apiUrl || this.config.serverUrl || 'https://pingbash.com';
+        const formData = new FormData();
+        formData.append('Image', file);
+
+        const response = await fetch(`${apiUrl}/api/private/update/users/photo`, {
+          method: 'POST',
+          headers: {
+            'Authorization': token
+          },
+          body: formData
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to upload avatar');
+        }
+
+        this.showSuccessToast('Success', 'Avatar updated successfully');
+        return true;
+      } catch (error) {
+        console.error('Error uploading avatar:', error);
+        this.showErrorToast('Error', 'Failed to upload avatar');
+        return false;
+      }
+    },
+
+    // Update user profile
+    async updateUserProfile(profileData) {
+      try {
+        const token = localStorage.getItem('pingbash_token');
+        const apiUrl = this.config.apiUrl || this.config.serverUrl || 'https://pingbash.com';
+
+        const response = await fetch(`${apiUrl}/api/private/update/customer/detail`, {
+          method: 'POST',
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'Authorization': token
+          },
+          body: JSON.stringify({
+            FirstName: profileData.firstName,
+            LastName: profileData.lastName,
+            Email: profileData.email,
+            description: profileData.bio || '',
+            country: profileData.country || '',
+            gender: profileData.gender || '',
+            birthday: profileData.birthday || ''
+          })
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('Profile update failed:', errorText);
+          throw new Error('Failed to update profile');
+        }
+
+        return true;
+      } catch (error) {
+        console.error('Error updating profile:', error);
+        this.showErrorToast('Error', 'Failed to update profile');
+        return false;
+      }
+    },
+
   // EXACT COPY from widget.js - showBannedUsers method
     // 🔄 Show banned users dialog ONLY (separate from IP bans)
     showBannedUsers() {

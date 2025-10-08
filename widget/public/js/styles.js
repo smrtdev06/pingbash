@@ -281,8 +281,8 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
           }
           
           .pingbash-header-inbox-icon svg {
-            width: 36px !important;
-            height: 36px !important;
+            width: 28px !important;
+            height: 28px !important;
           }
           
                     /* Custom resize handle for mobile - draggable element */
@@ -447,8 +447,8 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
         }
         
         .pingbash-logo {
-          width: 48px;
-          height: 38px;
+          width: 28px;
+          height: 22px;
           flex-shrink: 0;
         }
         
@@ -6476,6 +6476,195 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
         /* Override any group setting colors for hamburger menu item text and icons */
         .pingbash-dark-mode .pingbash-hamburger-dropdown .pingbash-menu-item * {
           color: #e5e5e5 !important;
+        }
+
+        /* Profile Popup Styles (same as chat rules popup) */
+        .pingbash-profile-popup {
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          z-index: 10000;
+          display: none;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .pingbash-profile-content {
+          max-width: 500px;
+          width: 90%;
+          max-height: 90vh;
+          overflow-y: auto;
+        }
+
+        .pingbash-profile-avatar-section {
+          display: flex;
+          justify-content: center;
+          margin-bottom: 24px;
+        }
+
+        .pingbash-profile-avatar-container {
+          position: relative;
+          display: inline-block;
+        }
+
+        .pingbash-profile-avatar {
+          width: 120px;
+          height: 120px;
+          border-radius: 50%;
+          object-fit: cover;
+          border: 4px solid #e0e0e0;
+        }
+
+        .pingbash-avatar-upload-btn {
+          position: absolute;
+          bottom: 0;
+          right: 0;
+          background: #007bff;
+          color: white;
+          border: none;
+          border-radius: 20px;
+          padding: 8px 12px;
+          font-size: 12px;
+          font-weight: 600;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          gap: 4px;
+          box-shadow: 0 2px 8px rgba(0,123,255,0.3);
+          transition: all 0.2s ease;
+        }
+
+        .pingbash-avatar-upload-btn:hover {
+          background: #0056b3;
+          transform: scale(1.05);
+        }
+
+        .pingbash-avatar-upload-btn svg {
+          width: 16px;
+          height: 16px;
+        }
+
+        .pingbash-profile-form {
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+        }
+
+        .pingbash-form-row {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 12px;
+        }
+
+        .pingbash-form-group {
+          display: flex;
+          flex-direction: column;
+          gap: 6px;
+        }
+
+        .pingbash-form-group label {
+          font-size: 13px;
+          font-weight: 600;
+          color: #555;
+        }
+
+        .pingbash-form-group input,
+        .pingbash-form-group select {
+          padding: 10px 14px;
+          border: 1px solid #ddd;
+          border-radius: 8px;
+          font-size: 14px;
+          transition: border-color 0.2s ease;
+          background: white;
+        }
+
+        .pingbash-form-group input:focus,
+        .pingbash-form-group select:focus {
+          outline: none;
+          border-color: #007bff;
+        }
+
+        .pingbash-form-group input:read-only {
+          background: #f5f5f5;
+          cursor: not-allowed;
+        }
+
+        .pingbash-form-group select {
+          cursor: pointer;
+        }
+
+        /* Profile Popup Buttons */
+        .pingbash-profile-cancel-btn,
+        .pingbash-profile-save-btn {
+          padding: 8px 16px;
+          border: none;
+          border-radius: 4px;
+          cursor: pointer;
+          font-size: 14px;
+          font-weight: 500;
+          transition: all 0.2s ease;
+        }
+
+        .pingbash-profile-cancel-btn {
+          background: #6c757d;
+          color: white;
+          margin-right: 8px;
+        }
+
+        .pingbash-profile-cancel-btn:hover {
+          background: #5a6268;
+        }
+
+        .pingbash-profile-save-btn {
+          background: #28a745;
+          color: white;
+        }
+
+        .pingbash-profile-save-btn:hover {
+          background: #218838;
+        }
+
+        /* Dark Mode Profile Popup */
+        .pingbash-dark-mode .pingbash-profile-avatar {
+          border-color: #404040;
+        }
+
+        .pingbash-dark-mode .pingbash-form-group label {
+          color: #b8b8b8;
+        }
+
+        .pingbash-dark-mode .pingbash-form-group input,
+        .pingbash-dark-mode .pingbash-form-group select {
+          background: #252525;
+          border-color: #404040;
+          color: #e5e5e5;
+        }
+
+        .pingbash-dark-mode .pingbash-form-group input:read-only {
+          background: #1a1a1a;
+        }
+
+        .pingbash-dark-mode .pingbash-form-group select option {
+          background: #252525;
+          color: #e5e5e5;
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 600px) {
+          .pingbash-form-row {
+            grid-template-columns: 1fr;
+          }
+
+          .pingbash-profile-avatar {
+            width: 100px;
+            height: 100px;
+          }
+
+          .pingbash-profile-content {
+            width: 95%;
+          }
         }
 
         /* Animation keyframes for modals */

@@ -783,6 +783,25 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         }
       },
 
+      // Update menu visibility based on authentication status
+      updateMenuVisibility() {
+        const myProfileItem = this.dialog?.querySelector('[data-action="my-profile"]');
+        const logoutItem = this.dialog?.querySelector('[data-action="logout"]');
+        const loginItem = this.dialog?.querySelector('[data-action="login"]');
+
+        if (this.isAuthenticated) {
+          // Show profile and logout, hide login
+          if (myProfileItem) myProfileItem.style.display = 'flex';
+          if (logoutItem) logoutItem.style.display = 'flex';
+          if (loginItem) loginItem.style.display = 'none';
+        } else {
+          // Hide profile and logout, show login
+          if (myProfileItem) myProfileItem.style.display = 'none';
+          if (logoutItem) logoutItem.style.display = 'none';
+          if (loginItem) loginItem.style.display = 'flex';
+        }
+      },
+
       // EXACT COPY from widget.js - handleMenuAction method
       handleMenuAction(action) {
         if( window.isDebugging ) console.log('🍔 [Widget] Menu action:', action);
@@ -793,6 +812,10 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
             if( window.isDebugging ) console.log('📬 [Widget] Inbox clicked - redirecting to pingbash.com/inbox');
             // Redirect to F version inbox
             window.open('https://pingbash.com/inbox', '_blank');
+            break;
+          case 'my-profile':
+            if( window.isDebugging ) console.log('👤 [Widget] My Profile clicked');
+            this.showMyProfile();
             break;
           case 'chat-rules':
             this.showChatRules();
