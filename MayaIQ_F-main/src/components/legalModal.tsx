@@ -276,7 +276,7 @@ const LegalModal: React.FC<LegalModalProps> = ({ isOpen, onClose, type }) => {
           </div>
           
           {/* Content */}
-          <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
+          <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)] text-justify">
             {isPrivacy ? privacyContent : termsContent}
           </div>
           
