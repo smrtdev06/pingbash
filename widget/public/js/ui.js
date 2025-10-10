@@ -623,7 +623,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
                 </div>
                 <div class="pingbash-form-group">
                   <label for="signup-name">User Name:</label>
-                  <input type="text" id="signup-name" class="pingbash-form-input" placeholder="Enter your full name">
+                  <input type="text" id="signup-name" class="pingbash-form-input" placeholder="Enter your chat username">
                 </div>
                 <div class="pingbash-form-group">
                   <label for="signup-password">Password:</label>
@@ -668,8 +668,6 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
                   <input type="text" class="pingbash-otp-input" maxlength="1" data-index="1">
                   <input type="text" class="pingbash-otp-input" maxlength="1" data-index="2">
                   <input type="text" class="pingbash-otp-input" maxlength="1" data-index="3">
-                  <input type="text" class="pingbash-otp-input" maxlength="1" data-index="4">
-                  <input type="text" class="pingbash-otp-input" maxlength="1" data-index="5">
                 </div>
                 <div class="pingbash-verification-timer">
                   Code expires in <span class="pingbash-timer-display">05:00</span>
