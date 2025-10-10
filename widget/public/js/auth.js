@@ -609,14 +609,24 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
           // Show success message
           alert('Account verified successfully! Welcome to Pingbash!');
           
+          // Ensure sound settings are properly initialized for new users
+          this.initializeSoundSettings();
+          
           // Initialize socket with authenticated user
           if( window.isDebugging ) console.log('📧 [Widget] Initializing socket with verified user...');
           this.connectAsAuthenticated = true;
           this.authenticatedToken = result.token;
           
-          this.initializeSocket();
-          
-          this.triggerChatRulesAfterLogin(this.authenticatedToken, 'logged-in');
+          // Add a small delay to ensure token is properly set before socket operations
+          setTimeout(() => {
+            if( window.isDebugging ) console.log('📧 [Widget] Starting socket initialization after verification delay...');
+            this.initializeSocket();
+            
+            // Trigger chat rules after a short delay to ensure socket is ready
+            setTimeout(() => {
+              this.triggerChatRulesAfterLogin(this.authenticatedToken, 'logged-in');
+            }, 1000);
+          }, 500);
           
         } catch (error) {
           console.error('❌ [Widget] Email verification error:', error);
