@@ -306,14 +306,15 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
             </div>
           </div>
           <div class="pingbash-header-center">
-            <!-- Ad Space -->
-            <div class="pingbash-header-ad">
-              <a href="https://example.com" target="_blank" rel="noopener noreferrer" class="pingbash-ad-link">
-                <div class="pingbash-ad-content">
-                  <span class="pingbash-ad-text">🎉 Special Offer!</span>
-                  <span class="pingbash-ad-label">Ad</span>
-                </div>
-              </a>
+            <!-- Google AdSense Ad Space -->
+            <div class="pingbash-header-ad" id="pingbash-google-ad-container">
+              <!-- Google AdSense ad will be inserted here -->
+              <ins class="adsbygoogle pingbash-adsense-banner"
+                   style="display:inline-block;width:100%;max-width:250px;height:60px;"
+                   data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
+                   data-ad-slot="XXXXXXXXXX"
+                   data-ad-format="horizontal"
+                   data-full-width-responsive="false"></ins>
             </div>
           </div>
           <div class="pingbash-header-right">

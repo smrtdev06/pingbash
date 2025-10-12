@@ -24,6 +24,9 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
             // Initialize sound settings
             this.initializeSoundSettings();
             
+            // Initialize Google AdSense
+            this.initializeGoogleAds();
+            
             await this.loadSocketIO();
 
             // Setup page visibility tracking (same as W version)
@@ -506,6 +509,65 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
             } catch (error) {
                 this.soundSetting = 'all'; // Fallback
                 if( window.isDebugging ) console.log('🔊 [Widget] Error loading sound setting, using default:', error);
+            }
+        },
+
+        // Initialize Google AdSense
+        initializeGoogleAds() {
+            try {
+                if( window.isDebugging ) console.log('📢 [Widget] Initializing Google AdSense...');
+                
+                // Check if AdSense script is already loaded
+                if (window.adsbygoogle && Array.isArray(window.adsbygoogle)) {
+                    if( window.isDebugging ) console.log('📢 [Widget] AdSense script already loaded');
+                    this.pushGoogleAd();
+                    return;
+                }
+                
+                // Load AdSense script if not already loaded
+                const script = document.createElement('script');
+                script.async = true;
+                script.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js';
+                script.crossOrigin = 'anonymous';
+                script.setAttribute('data-ad-client', 'ca-pub-XXXXXXXXXXXXXXXX'); // Replace with your publisher ID
+                
+                script.onload = () => {
+                    if( window.isDebugging ) console.log('📢 [Widget] AdSense script loaded successfully');
+                    this.pushGoogleAd();
+                };
+                
+                script.onerror = (error) => {
+                    if( window.isDebugging ) console.log('📢 [Widget] Error loading AdSense script:', error);
+                };
+                
+                document.head.appendChild(script);
+            } catch (error) {
+                if( window.isDebugging ) console.log('📢 [Widget] Error initializing Google AdSense:', error);
+            }
+        },
+
+        // Push Google Ad to display
+        pushGoogleAd() {
+            try {
+                // Wait for the dialog to be created
+                setTimeout(() => {
+                    const adContainer = document.querySelector('.pingbash-adsense-banner');
+                    if (adContainer && window.adsbygoogle) {
+                        // Check if ad has already been pushed
+                        if (adContainer.getAttribute('data-ad-status') === 'filled') {
+                            if( window.isDebugging ) console.log('📢 [Widget] Ad already loaded');
+                            return;
+                        }
+                        
+                        if( window.isDebugging ) console.log('📢 [Widget] Pushing ad to AdSense...');
+                        (window.adsbygoogle = window.adsbygoogle || []).push({});
+                        if( window.isDebugging ) console.log('📢 [Widget] Ad pushed successfully');
+                    } else {
+                        if( window.isDebugging ) console.log('📢 [Widget] Ad container not found or AdSense not ready');
+                    }
+                }, 1000);
+            } catch (error) {
+                if( window.isDebugging ) console.log('📢 [Widget] Error pushing Google Ad:', error);
             }
         },
 

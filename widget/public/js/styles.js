@@ -424,7 +424,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
           color: var(--title-color, #333);
           box-shadow: 0 4px 12px rgba(0,0,0,0.1);
           border-bottom: 1px solid #e0e0e0;
-          padding: 16px 20px;
+          padding: 0px 20px;
           display: flex;
           align-items: center;
           justify-content: space-between;
@@ -6687,3 +6687,5 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
     },
 
 });
+
+
