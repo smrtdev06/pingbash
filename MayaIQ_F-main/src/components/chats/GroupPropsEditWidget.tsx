@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { ConfigPanel } from './ConfigPanel';
-import ChatBox from './ChatBox';
+import WidgetPreview from './WidgetPreview';
 import { Button } from './ui/button';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { 
@@ -175,25 +175,13 @@ export const GroupPropsEditWidget: React.FC<WidgetProps> = ({
         ref={containerRef}
         className="flex-1 relative overflow-auto flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800"
       >
-        {/* Chat Dialog Preview - Centered like widget version */}
-        <div
-          ref={chatRef}
-          className="shadow-2xl"
-          style={config.sizeMode === "fixed" ? {
-            width: `${config.width}px`,
-            height: `${config.height}px`,
-          } : {
-            width: "100%",
-            height: "100%",
-            maxWidth: "100%",
-            maxHeight: "100%"
-          }}
-        >
-          <ChatBox
+        {/* Widget-style Chat Dialog Preview */}
+        <div ref={chatRef}>
+          <WidgetPreview
             width={config.width}
             height={config.height}
             msgList={msgList}
-            isResponsive={config.sizeMode === 'responsive'}
+            sizeMode={config.sizeMode}
             colors={config.colors}
             settings={config.settings}
             groupName={groupName}
