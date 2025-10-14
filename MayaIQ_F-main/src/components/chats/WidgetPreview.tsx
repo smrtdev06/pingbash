@@ -48,12 +48,79 @@ const WidgetPreview: React.FC<WidgetPreviewProps> = ({
 }) => {
   const messagesRef = useRef<HTMLDivElement>(null);
 
+  // Sample messages for preview (same as old ChatBox)
+  const sampleMessages: MessageUnit[] = [
+    {
+      Opposite_Photo_Name: "shyvana.png",
+      Content: "I am the best champion of LOL",
+      Send_Time: "2025-07-24 06:01:11",
+      Receiver_Id: null,
+      Id: 1,
+      Sender_Id: 1,
+      Read_Time: null,
+      group_id: 10,
+      sender_name: "Shyvana",
+      sender_avatar: "shyvana.png",
+      sender_banned: null,
+      sender_unban_request: null,
+      parent_id: null
+    },
+    {
+      Opposite_Photo_Name: "lux.png",
+      Content: "I am the best Supporter of LOL",
+      Send_Time: "2025-07-24 06:02:11",
+      Receiver_Id: null,
+      Id: 2,
+      Sender_Id: 2,
+      Read_Time: null,
+      group_id: 10,
+      sender_name: "LUX",
+      sender_avatar: "lux.png",
+      sender_banned: null,
+      sender_unban_request: null,
+      parent_id: null
+    },
+    {
+      Opposite_Photo_Name: "garen.png",
+      Content: "I am the most powerful Champion of LOL",
+      Send_Time: "2025-07-24 06:03:11",
+      Receiver_Id: null,
+      Id: 3,
+      Sender_Id: 3,
+      Read_Time: null,
+      group_id: 10,
+      sender_name: "Garen",
+      sender_avatar: "garen.png",
+      sender_banned: null,
+      sender_unban_request: null,
+      parent_id: null
+    },
+    {
+      Opposite_Photo_Name: "teemo.png",
+      Content: "I am the best lovely Champion of LOL",
+      Send_Time: "2025-07-24 06:05:11",
+      Receiver_Id: null,
+      Id: 5,
+      Sender_Id: 5,
+      Read_Time: null,
+      group_id: 10,
+      sender_name: "Teemo",
+      sender_avatar: "teemo.png",
+      sender_banned: null,
+      sender_unban_request: null,
+      parent_id: null
+    }
+  ];
+
+  // Use sample messages if no real messages provided
+  const displayMessages = msgList && msgList.length > 0 ? msgList : sampleMessages;
+
   useEffect(() => {
     // Auto-scroll to bottom when messages change
     if (messagesRef.current) {
       messagesRef.current.scrollTop = messagesRef.current.scrollHeight;
     }
-  }, [msgList]);
+  }, [displayMessages]);
 
   const renderMessage = (message: MessageUnit, idx: number) => {
     const avatarUrl = message?.sender_avatar 
@@ -374,14 +441,7 @@ const WidgetPreview: React.FC<WidgetPreviewProps> = ({
 
       {/* Messages Area */}
       <article className="pingbash-messages-area" ref={messagesRef}>
-        {msgList && msgList.length > 0 ? (
-          msgList.map((message, idx) => renderMessage(message, idx))
-        ) : (
-          <div style={{ textAlign: 'center', color: colors.msgText, opacity: 0.5, padding: '40px 20px' }}>
-            <p>No messages yet</p>
-            <p style={{ fontSize: '12px', marginTop: '8px' }}>Preview of your chat widget</p>
-          </div>
-        )}
+        {displayMessages.map((message, idx) => renderMessage(message, idx))}
       </article>
 
       {/* Bottom Bar */}
