@@ -545,6 +545,12 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
 
       // Handle email verification
       async handleVerification() {
+        // Prevent double submission
+        if (this.isVerifying) {
+          if( window.isDebugging ) console.log('⚠️ [Widget] Verification already in progress, ignoring...');
+          return;
+        }
+        
         const inputs = this.dialog.querySelectorAll('.pingbash-otp-input');
         const otp = Array.from(inputs).map(input => input.value).join('');
         
@@ -556,6 +562,17 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         if (!this.verificationEmail) {
           alert('Email not found. Please try signing up again.');
           return;
+        }
+        
+        // Set verification flag to prevent double submission
+        this.isVerifying = true;
+        if( window.isDebugging ) console.log('📧 [Widget] Setting isVerifying flag to prevent double submission');
+        
+        // Disable verify button
+        const verifyBtn = this.dialog.querySelector('.pingbash-verify-btn');
+        if (verifyBtn) {
+          verifyBtn.disabled = true;
+          verifyBtn.textContent = 'Verifying...';
         }
         
         try {
@@ -583,25 +600,78 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
           if( window.isDebugging ) console.log('📧 [Widget] Verification Response text:', responseText);
           
           if (!response.ok) {
+            if (response.status === 403) {
+              // 403 usually means double submission - first request succeeded, second request found no OTP
+              if( window.isDebugging ) console.log('🚫 [Widget] Got 403 - this might be a double submission, checking if verification already succeeded...');
+              
+              // Wait a bit to give the first request time to save the token
+              await new Promise(resolve => setTimeout(resolve, 300));
+              
+              // Check if we already have a token saved (from a previous successful verification)
+              const savedToken = localStorage.getItem('pingbash_token');
+              const savedUserId = localStorage.getItem('pingbash_user_id');
+              
+              if( window.isDebugging ) console.log('🔍 [Widget] Checking localStorage after 403:', {
+                hasSavedToken: !!savedToken,
+                hasSavedUserId: !!savedUserId
+              });
+              
+              if (savedToken && savedUserId) {
+                if( window.isDebugging ) console.log('✅ [Widget] Found saved token - verification already succeeded, continuing with existing token');
+                
+                // Use the saved token instead of throwing error
+                this.userId = savedToken;
+                this.currentUserId = parseInt(savedUserId);
+                this.isAuthenticated = true;
+                this.connectAsAuthenticated = true;
+                this.authenticatedToken = savedToken;
+                
+                // Hide modal and continue
+                this.hideVerificationModal();
+                alert('Account verified successfully! Welcome to Pingbash!');
+                
+                // Initialize sound settings
+                this.initializeSoundSettings();
+                
+                // Initialize socket
+                setTimeout(() => {
+                  if( window.isDebugging ) console.log('📧 [Widget] Starting socket initialization with existing token...');
+                  this.initializeSocket();
+                  
+                  setTimeout(() => {
+                    this.triggerChatRulesAfterLogin(this.authenticatedToken, 'logged-in');
+                  }, 1500);
+                }, 800);
+                
+                return; // Exit successfully
+              }
+              
+              // If no saved token after waiting, throw the error
+              if( window.isDebugging ) console.log('❌ [Widget] No saved token found after 403 - this is a genuine error');
+              throw new Error(responseText || 'Verification code not found or expired');
+            }
+            
             if (response.status === 400) {
               throw new Error('Invalid verification code');
             } else if (response.status === 404) {
               throw new Error('Verification code expired or not found');
             }
-            throw new Error(`Verification failed: ${response.status} - ${responseText}`);
+            throw new Error(responseText || `Verification failed with status ${response.status}`);
           }
           
           const result = JSON.parse(responseText);
           if( window.isDebugging ) console.log('✅ [Widget] Email verification successful:', result);
           
-          // Store token and user info
+          // IMPORTANT: Save to localStorage FIRST before any UI updates or alerts
+          // This ensures that if there's a double submission, the second request can find the token
+          localStorage.setItem('pingbash_token', result.token);
+          localStorage.setItem('pingbash_user_id', result.id);
+          if( window.isDebugging ) console.log('✅ [Widget] Token saved to localStorage immediately');
+          
+          // Store token and user info in instance
           this.userId = result.token;
           this.currentUserId = result.id;
           this.isAuthenticated = true;
-          
-          // Save to localStorage
-          localStorage.setItem('pingbash_token', result.token);
-          localStorage.setItem('pingbash_user_id', result.id);
           
           // Hide verification modal
           this.hideVerificationModal();
@@ -617,20 +687,35 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
           this.connectAsAuthenticated = true;
           this.authenticatedToken = result.token;
           
-          // Add a small delay to ensure token is properly set before socket operations
+          // IMPORTANT: Disconnect existing socket first to avoid 403 errors
+          if (this.socket && this.socket.connected) {
+            if( window.isDebugging ) console.log('📧 [Widget] Disconnecting existing socket before reconnecting with verified token...');
+            this.socket.disconnect();
+            this.socket = null;
+          }
+          
+          // Add a delay to ensure old socket is fully disconnected and token is properly set
           setTimeout(() => {
             if( window.isDebugging ) console.log('📧 [Widget] Starting socket initialization after verification delay...');
             this.initializeSocket();
             
-            // Trigger chat rules after a short delay to ensure socket is ready
+            // Trigger chat rules after a longer delay to ensure socket is ready
             setTimeout(() => {
               this.triggerChatRulesAfterLogin(this.authenticatedToken, 'logged-in');
-            }, 1000);
-          }, 500);
+            }, 1500);
+          }, 800);
           
         } catch (error) {
           console.error('❌ [Widget] Email verification error:', error);
           alert(`Verification failed: ${error.message}`);
+          
+          // Reset verification flag and button on error
+          this.isVerifying = false;
+          const verifyBtn = this.dialog.querySelector('.pingbash-verify-btn');
+          if (verifyBtn) {
+            verifyBtn.disabled = false;
+            verifyBtn.textContent = 'Verify';
+          }
         }
       },
 
@@ -680,4 +765,5 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
 
   });
 }
+
 

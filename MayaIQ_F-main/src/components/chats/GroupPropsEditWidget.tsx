@@ -239,29 +239,91 @@ export const GroupPropsEditWidget: React.FC<WidgetProps> = ({
         />
       )}
 
-      {/* Chat Container */}
+      {/* Chat Container - Widget Style Preview */}
       <div 
         ref={containerRef}
-        className="flex-1 relative overflow-auto"
+        className="flex-1 relative overflow-auto bg-gray-100"
         style={{ 
-          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+          background: '#f5f5f5',
         }}
       >
-        {/* Chat Box */}
+        {/* Demo Webpage Content */}
+        <div className="absolute inset-0 p-8">
+          <div className="max-w-4xl mx-auto">
+            <h1 className="text-3xl font-bold text-gray-800 mb-4">Your Website</h1>
+            <p className="text-gray-600 mb-4">
+              This is how the PingBash chat widget will appear on your website. 
+              The chat button will be positioned in the bottom-right corner, and users can click it to open the chat dialog.
+            </p>
+            <div className="bg-white rounded-lg shadow-md p-6 mb-4">
+              <h2 className="text-xl font-semibold text-gray-800 mb-2">Sample Content</h2>
+              <p className="text-gray-600">
+                Your website content goes here. The chat widget floats above your content and can be positioned anywhere on the page.
+              </p>
+            </div>
+            <div className="bg-white rounded-lg shadow-md p-6">
+              <h2 className="text-xl font-semibold text-gray-800 mb-2">Features</h2>
+              <ul className="text-gray-600 space-y-2">
+                <li>• Real-time messaging</li>
+                <li>• Customizable colors and styles</li>
+                <li>• Easy to integrate</li>
+                <li>• Mobile responsive</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        {/* Widget Chat Button (Fixed Position - Bottom Right) */}
+        <div 
+          className="fixed"
+          style={{
+            bottom: '20px',
+            right: '20px',
+            zIndex: 9999,
+          }}
+        >
+          {/* Chat Button */}
+          <button
+            className="flex items-center justify-center rounded-full shadow-lg transition-transform hover:scale-110"
+            style={{
+              width: '60px',
+              height: '60px',
+              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            }}
+          >
+            <svg
+              width="28"
+              height="28"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="white"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+            </svg>
+          </button>
+        </div>
+
+        {/* Widget Chat Dialog (Positioned above button) */}
         <div
           ref={chatRef}
-          className={`absolute select-none ${isDragging ? 'cursor-grabbing' : 'cursor-grab'} ${!isDragging && !isResizing ? 'transition-all duration-150 ease-out' : ''}`}
+          className={`fixed shadow-2xl ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
           style={config.sizeMode == "fixed" ? {
-            left: `${chatPosition.x}px`,
-            top: `${chatPosition.y}px`,
-            zIndex: 10,
+            bottom: '100px',
+            right: '20px',
+            zIndex: 9998,
             userSelect: 'none'
           } : {
-            left: "0px",
-            top: "0px",
-            width: "100%",
-            height: "100%",
-            zIndex: 10,
+            left: "50%",
+            top: "50%",
+            transform: "translate(-50%, -50%)",
+            width: "90%",
+            height: "90%",
+            maxWidth: "800px",
+            maxHeight: "600px",
+            zIndex: 9998,
             userSelect: 'none'
           }}
           onMouseDown={handleMouseDown}
@@ -281,20 +343,20 @@ export const GroupPropsEditWidget: React.FC<WidgetProps> = ({
             <div
               className="resize-handle absolute bottom-0 right-0 w-4 h-4 cursor-se-resize"
               style={{
-                background: 'linear-gradient(-45deg, transparent 0%, transparent 40%, #ccc 40%, #ccc 60%, transparent 60%)',
-                backgroundSize: '4px 4px'
+                background: 'linear-gradient(-45deg, transparent 0%, transparent 40%, #666 40%, #666 60%, transparent 60%)',
+                backgroundSize: '4px 4px',
+                zIndex: 10
               }}
             />
           )}
         </div>
 
-        {/* Demo Content */}
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <div className="text-center text-white/50">
-            <h2 className="text-2xl font-bold mb-2">PingBash Group Creating</h2>
-            <p>Drag the chat box around and resize it!</p>
-            <p className="text-sm mt-2">Configure colors and settings in the left panel</p>
-          </div>
+        {/* Instructions Overlay */}
+        <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-white/90 backdrop-blur-sm px-6 py-3 rounded-lg shadow-lg pointer-events-none z-50">
+          <p className="text-sm text-gray-700 text-center">
+            <span className="font-semibold">Widget Preview:</span> Drag the chat dialog to reposition • 
+            {config.sizeMode === 'fixed' && ' Resize from bottom-right corner'}
+          </p>
         </div>
       </div>
     </div>

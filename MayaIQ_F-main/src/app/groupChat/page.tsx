@@ -8,10 +8,10 @@ import EmojiPicker from "@/components/chats/EmojiPicker";
 import Message from "@/components/chats/message";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import TabBar from "@/components/groups/TabBar";
-import { 
-  faArrowLeft, 
-  faArrowRight, 
-  faSearch, 
+import {
+  faArrowLeft,
+  faArrowRight,
+  faSearch,
   faPaperPlane,
   faBars,
   faUser,
@@ -26,14 +26,14 @@ import {
   faImages,
   faFaceSmile,
 } from "@fortawesome/free-regular-svg-icons";
-import { 
-  getGroupHistory, 
-  getUsers, 
-  sendGroupMsg, 
-  getGroupMessages, 
-  socket, 
-  readMsg, 
-  readGroupMsg, 
+import {
+  getGroupHistory,
+  getUsers,
+  sendGroupMsg,
+  getGroupMessages,
+  socket,
+  readMsg,
+  readGroupMsg,
   getMyGroups,
   getFavGroups,
   deleteGroupMsg,
@@ -62,7 +62,7 @@ import {
   unbanGroupIps,
   getChatRules,
   updateChatRules
- } from "@/resource/utils/chat";
+} from "@/resource/utils/chat";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Popover, PopoverTrigger, PopoverContent } from "@nextui-org/popover";
 import ChatConst from "@/resource/const/chat_const";
@@ -89,22 +89,22 @@ import { isValidGroupName } from "@/resource/utils/helpers";
 import { GroupPropsEditWidget } from "@/components/chats/GroupPropsEditWidget";
 import GroupCreatPopup from "@/components/groups/groupCreatPopup";
 import TimeoutNotification from "@/components/TimeoutNotification";
-import { 
-  ALLOW_USER_MSG_STYLE, 
-  BG_COLOR, 
-  BORDER_COLOR, 
-  CORNOR_RADIUS, 
-  FONT_SIZE, 
-  INPUT_BG_COLOR, 
-  MSG_BG_COLOR, 
-  MSG_COLOR, 
-  MSG_DATE_COLOR, 
-  OWNER_MSG_COLOR, 
-  REPLY_MGS_COLOR, 
-  ROUND_CORNORS, 
-  SCROLLBAR_COLOR, 
-  SHOW_USER_IMG, 
-  TITLE_COLOR 
+import {
+  ALLOW_USER_MSG_STYLE,
+  BG_COLOR,
+  BORDER_COLOR,
+  CORNOR_RADIUS,
+  FONT_SIZE,
+  INPUT_BG_COLOR,
+  MSG_BG_COLOR,
+  MSG_COLOR,
+  MSG_DATE_COLOR,
+  OWNER_MSG_COLOR,
+  REPLY_MGS_COLOR,
+  ROUND_CORNORS,
+  SCROLLBAR_COLOR,
+  SHOW_USER_IMG,
+  TITLE_COLOR
 } from '@/resource/const/const';
 import { darkenColor } from "@/resource/utils/colors";
 import SwitchButton from "@/components/SwitchButton";
@@ -173,7 +173,7 @@ const ChatsContent: React.FC = () => {
     const currentUserId = getCurrentUserId();
     const currentUserName = localStorage.getItem('userName') || 'Unknown';
     console.log("🔍 [F] socketConnected state updated:", socketConnected, "for user:", currentUserId, currentUserName);
-    
+
     // Add periodic socket health check for debugging
     if (socketConnected) {
       const healthCheck = setInterval(() => {
@@ -182,7 +182,7 @@ const ChatsContent: React.FC = () => {
           console.log("🔍 [F] Socket disconnected unexpectedly for user:", currentUserName);
         }
       }, 15000); // Check every 15 seconds
-      
+
       return () => clearInterval(healthCheck);
     }
   }, [socketConnected]);
@@ -203,7 +203,7 @@ const ChatsContent: React.FC = () => {
     }
   }, [pendingMessages]);
   const [showTimeoutNotification, setShowTimeoutNotification] = useState(false);
-  const [timeoutData, setTimeoutData] = useState<{timeoutMinutes: number; expiresAt: string} | null>(null);
+  const [timeoutData, setTimeoutData] = useState<{ timeoutMinutes: number; expiresAt: string } | null>(null);
   const hasShownGroupNotify = useRef(false);
 
   const myGroupList = useSelector((state: RootState) => state.msg.myGroupList);
@@ -223,8 +223,8 @@ const ChatsContent: React.FC = () => {
   const imageUploadRef = useRef<HTMLInputElement | null>(null)
   const fileUploadRef = useRef<HTMLInputElement | null>(null)
   const inputMsgRef = useRef<HTMLInputElement | null>(null)
-  const [isMobile, setIsMobile] = useState(false);  
-  
+  const [isMobile, setIsMobile] = useState(false);
+
   const [openUnbanReqConfirmPopup, setOpenUnbanReqConfirmPopup] = useState(false);
 
   const [deleteMsgId, setDeleteMsgId] = useState<number | null>(null);
@@ -252,8 +252,8 @@ const ChatsContent: React.FC = () => {
   const [groupMenuOptions, setGroupMenuOptions] = useState<any[]>([]);
 
   const [openEmbedCodeDlg, setOpenEmbedCodeDlg] = useState(false);
-  const [newGroupName, setNewGroupName] = useState("");  
-  
+  const [newGroupName, setNewGroupName] = useState("");
+
   const [config, setConfig] = useState<ChatWidgetConfig>({
     sizeMode: 'fixed',
     width: 500,
@@ -373,12 +373,12 @@ const ChatsContent: React.FC = () => {
 
   const [mySoundOptionId, setMySoundOptionId] = useState<number | null | undefined>(null);
   const [soundSelectedOption, setSoundSelectedOption] = useState<string | null | undefined>(null);
-  
+
 
   const soundSettingOptions = [
-    {val: "every", name: "On every message",  option_id: 1},
-    {val: "reply", name: "Only on @replies",  option_id: 2},
-    {val: "never", name: "Never",  option_id: 0}
+    { val: "every", name: "On every message", option_id: 1 },
+    { val: "reply", name: "Only on @replies", option_id: 2 },
+    { val: "never", name: "Never", option_id: 0 }
   ];
 
   const [hideChat, setHideChat] = useState(false)
@@ -391,7 +391,7 @@ const ChatsContent: React.FC = () => {
   const [dragStart, setDragStart] = useState({ x: 0, y: 0, chatX: 0, chatY: 0 });
   const [resizeStart, setResizeStart] = useState({ x: 0, y: 0, width: 0, height: 0 });
 
-// Parameters for the Admin Tools
+  // Parameters for the Admin Tools
   const adminManagePopoverRef = useRef<HTMLImageElement>(null);
   const [openChatLimitationPopup, setOpenChatLimitationPopup] = useState(false);
   const [openBannedUsersWidget, setOpenBannedUsersWidget] = useState(false);
@@ -407,7 +407,7 @@ const ChatsContent: React.FC = () => {
   const [tabbedPinMsgId, setTabbedPinMsgId] = useState<number | null>(null);
   const [adminManageOptions, setAdminManageOptions] = useState<{ id: string; name: string }[]>([]);
   const [filterOptions, setFilterOption] = useState<{ id: number; name: string }[]>([]);
-  const [filterMode, setFilterMode]  = useState(0)
+  const [filterMode, setFilterMode] = useState(0)
   const [filteredUser, setFilteredUser] = useState<ChatUser | null>(null)  // For the user selected in Filter mode for 1 on 1 Mode
   const [openSendGroupNotification, setOpenSendGroupNotification] = useState(false)
   const [filteredMsgList, setFilteredMsgList] = useState<MessageUnit[]>([])
@@ -422,14 +422,14 @@ const ChatsContent: React.FC = () => {
   const [showOnlineUserCount, setShowOnlineUserCount] = useState(true)
   const [openGroupOnlineUsersPopup, setOpenGroupOnlineUsersPopup] = useState(false)
   const [groupOnlineUserIds, setGroupOnlineUserIds] = useState<number[]>([])
-  
+
   const [isBannedUser, setIsBanneduser] = useState(false);
   const [canPost, setCanPost] = useState(true)
   const [canPinMessage, setCanPinMessage] = useState(false);
-  
+
   const [openChatRules, setOpenChatRules] = useState(false);
   const [chatRules, setChatRules] = useState("");
-  const [hasSeenRulesForGroup, setHasSeenRulesForGroup] = useState<{[groupId: number]: boolean}>(() => {
+  const [hasSeenRulesForGroup, setHasSeenRulesForGroup] = useState<{ [groupId: number]: boolean }>(() => {
     // Load seen rules from localStorage
     try {
       const stored = localStorage.getItem('seenChatRules');
@@ -437,7 +437,7 @@ const ChatsContent: React.FC = () => {
     } catch {
       return {};
     }
-  });  
+  });
 
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const [canSend, setCanSend] = useState(true);
@@ -488,7 +488,7 @@ const ChatsContent: React.FC = () => {
     const checkScreenSize = () => {
       setIsMobile(window.innerWidth < 768);
     };
-    
+
     checkScreenSize();
     window.addEventListener('resize', checkScreenSize);
     fetchSoundOption();  // Get user sound selected status
@@ -498,9 +498,9 @@ const ChatsContent: React.FC = () => {
     getMyGroups(token); // Socket Emit to get My groups and favorite groups
     console.log("🔍 Calling getFavGroups...");
     getFavGroups(token); // Socket Emit to get My groups and favorite groups
-    
+
     // Backend socket handlers are now working - no test data needed 
-    const interval = setInterval(getCurrentGroupOnlineUsers, 1 * 60 * 1000);   
+    const interval = setInterval(getCurrentGroupOnlineUsers, 1 * 60 * 1000);
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
       clearInterval(interval)
@@ -508,10 +508,10 @@ const ChatsContent: React.FC = () => {
     };
   }, []);
 
-  useEffect(() => {    
+  useEffect(() => {
     setGroupBannedUsers(selectedChatGroup?.members?.filter(mem => mem.banned == 1) ?? [])
-    dispatch(setIsLoading(false)); 
-    
+    dispatch(setIsLoading(false));
+
     if (selectedChatGroup) {
       const myMemInfo = selectedChatGroup?.members?.find(mem => mem.id == getCurrentUserId());
 
@@ -534,8 +534,8 @@ const ChatsContent: React.FC = () => {
         options.push({ id: "5", name: "Banned Users" });
         options.push({ id: "6", name: "IP Bans" });
       }
-      setAdminManageOptions(options);  
-      
+      setAdminManageOptions(options);
+
       // Set filter option based on user role
       const filterOptions: { id: number; name: string }[] = [];
       filterOptions.push({ id: 0, name: "Public Mode" });
@@ -544,14 +544,14 @@ const ChatsContent: React.FC = () => {
         filterOptions.push({ id: 2, name: "Mods Mode" });
       }
       setFilterOption(filterOptions)
-      
+
       // Is Banner init
       setIsBanneduser(myMemInfo?.banned == 1)
 
       // Init Addmin tools variables
       if (selectedChatGroup.post_level == null || selectedChatGroup.post_level == 0) {
         setCanPost(true)
-      } else if (selectedChatGroup.post_level == 1 ) {
+      } else if (selectedChatGroup.post_level == 1) {
         if (myMemInfo?.id && myMemInfo?.id < 1000000) {
           setCanPost(true)
         } else {
@@ -565,11 +565,11 @@ const ChatsContent: React.FC = () => {
         }
       }
 
-      if (myMemInfo?.role_id == 1 || selectedChatGroup?.creater_id == getCurrentUserId() || myMemInfo?.role_id == 2 ) {
+      if (myMemInfo?.role_id == 1 || selectedChatGroup?.creater_id == getCurrentUserId() || myMemInfo?.role_id == 2) {
         setCanPinMessage(true)
       } else {
         setCanPinMessage(false)
-      }      
+      }
     }
 
     getCurrentGroupOnlineUsers()
@@ -579,28 +579,28 @@ const ChatsContent: React.FC = () => {
       setGroupMsgList([]);
       setShowJoinView(false);
       return;
-    }     
+    }
 
     const groupMyInfo = selectedChatGroup.members?.find(mem => mem.id === getCurrentUserId());
     if (groupMyInfo == null || groupMyInfo && groupMyInfo.is_member != 1) {
-        const token = localStorage.getItem(TOKEN_KEY);
-        // If user click unJoined group, then add user to group as listener to show group messages
-        addListenerToGroup(token, selectedChatGroup.id, getCurrentUserId());
+      const token = localStorage.getItem(TOKEN_KEY);
+      // If user click unJoined group, then add user to group as listener to show group messages
+      addListenerToGroup(token, selectedChatGroup.id, getCurrentUserId());
     }
 
     // Show or hide Join Now view on chatting box
     if (selectedChatGroup.members == null || selectedChatGroup.members.length == 0) {
-        setShowJoinView(true);
-        return;
+      setShowJoinView(true);
+      return;
     }
     const myGroupInfo = selectedChatGroup.members.find(mem => mem.id === getCurrentUserId());
     if (myGroupInfo == null) {
-        setShowJoinView(true);
-        return;
+      setShowJoinView(true);
+      return;
     }
     if (myGroupInfo.is_member != 1) {
-        setShowJoinView(true);
-        return;
+      setShowJoinView(true);
+      return;
     }
     setShowJoinView(false);
 
@@ -610,10 +610,10 @@ const ChatsContent: React.FC = () => {
   useEffect(() => {
     if (socketConnected && selectedChatGroup?.id) {
       const token = localStorage.getItem(TOKEN_KEY);
-      
+
       console.log("🔍 [F] Socket connected and group selected - loading messages");
       console.log("🔍 [F] Group ID:", selectedChatGroup.id, "Socket connected:", socketConnected);
-      
+
       if (token) {
         // Add a small delay to ensure socket is fully ready
         setTimeout(() => {
@@ -634,7 +634,7 @@ const ChatsContent: React.FC = () => {
     let newMsgs = []
     if (myMemInfo?.role_id == 1 || myMemInfo?.role_id == 2) {
       console.log("🔍 [F] User is moderator/admin - showing all messages");
-      newMsgs = groupMsgList.filter(msg => msg.Receiver_Id == null || msg.Receiver_Id == 1 || msg.Receiver_Id == getCurrentUserId() || msg.Sender_Id == getCurrentUserId())      
+      newMsgs = groupMsgList.filter(msg => msg.Receiver_Id == null || msg.Receiver_Id == 1 || msg.Receiver_Id == getCurrentUserId() || msg.Sender_Id == getCurrentUserId())
     } else {
       console.log("🔍 [F] Regular user - showing public + own messages");
       newMsgs = groupMsgList.filter(msg => msg.Receiver_Id == null || msg.Receiver_Id == getCurrentUserId() || msg.Sender_Id == getCurrentUserId())
@@ -646,7 +646,7 @@ const ChatsContent: React.FC = () => {
         newMsgs = newMsgs.filter(msg => {
           const senderInfo = selectedChatGroup?.members?.find(u => u.id === msg.Sender_Id)
           if (senderInfo?.role_id == 1 || senderInfo?.role_id == 2) return true
-          return !blockedUserIds.includes(msg.Sender_Id ?? -1)        
+          return !blockedUserIds.includes(msg.Sender_Id ?? -1)
         })
       } else {
         console.log("🔍 [F] No blocked users - showing all messages");
@@ -654,27 +654,27 @@ const ChatsContent: React.FC = () => {
     } else {
       console.log("🔍 [F] User is admin/moderator/creator - no blocked user filtering");
     }
-    
+
     console.log("🔍 [F] Filtered messages:", newMsgs?.length, "from", groupMsgList?.length);
     setFilteredMsgList(newMsgs)
 
     const prevLength = filteredMsgList.length;
     const newLength = newMsgs.length;
     if (prevLength + 1 == newLength) {
-      if (newMsgs[newLength - 1].Sender_Id != getCurrentUserId()) {        
+      if (newMsgs[newLength - 1].Sender_Id != getCurrentUserId()) {
         if (mySoundOptionId == 1) {
           console.log(" === Played Bell ==== ")
           playBell();
         } else if (mySoundOptionId == 2) {
           if (newMsgs[newLength - 1].parent_id != null) {
             const toMsgId = newMsgs[newLength - 1].parent_id;
-            const toMsg = filteredMsgList.find(msg =>  msg.Id == toMsgId);
+            const toMsg = filteredMsgList.find(msg => msg.Id == toMsgId);
             if (toMsg?.Sender_Id == getCurrentUserId()) {
               console.log(" === Played Bell ==== ")
               playBell();
             }
           }
-        }          
+        }
       }
     }
   }, [groupMsgList, blockedUserIds, selectedChatGroup])
@@ -693,7 +693,7 @@ const ChatsContent: React.FC = () => {
     if (token && selectedChatGroup) {
       setPinnedMsgIds([]);
       getPinnedMessages(token, selectedChatGroup?.id);
-      
+
       // Load chat rules for the selected group
       console.log("🔍 [Chat Rules] Loading chat rules for group:", selectedChatGroup.id);
       getChatRules(token, selectedChatGroup.id);
@@ -704,46 +704,46 @@ const ChatsContent: React.FC = () => {
   }, [selectedChatGroup?.id]);
 
   useEffect(() => {
-    const currGrpIsFav = favGroupList.find(group => group.id === selectedChatGroup?.id) != null;    
+    const currGrpIsFav = favGroupList.find(group => group.id === selectedChatGroup?.id) != null;
     if (getCurrentUserId() == selectedChatGroup?.creater_id) {
       setGroupMenuOptions([
-        {id: 1, name: "Copy Group Link"},
-        {id: 2, name: currGrpIsFav ? "Remove from Favorites" : "Add to Favorites"},
-        {id: 3, name: hideChat ? "Show Chat" : "Hide Chat"},
-        {id: 4, name: "Send a Notification"},
-        {id: 5, name: "Edit Chatbox Style"},
-        {id: 6, name: "Chat Rules"}
-      ]); 
+        { id: 1, name: "Copy Group Link" },
+        { id: 2, name: currGrpIsFav ? "Remove from Favorites" : "Add to Favorites" },
+        { id: 3, name: hideChat ? "Show Chat" : "Hide Chat" },
+        { id: 4, name: "Send a Notification" },
+        { id: 5, name: "Edit Chatbox Style" },
+        { id: 6, name: "Chat Rules" }
+      ]);
     } else {
-        setGroupMenuOptions([
-          {id: 1, name: "Copy Group Link"},
-          {id: 2, name: currGrpIsFav ? "Remove from Favorites" : "Add to Favorites"},
-          {id: 3, name: hideChat ? "Show Chat" : "Hide Chat"},
-          {id: 6, name: "Chat Rules"}
-        ]); 
-    }    
+      setGroupMenuOptions([
+        { id: 1, name: "Copy Group Link" },
+        { id: 2, name: currGrpIsFav ? "Remove from Favorites" : "Add to Favorites" },
+        { id: 3, name: hideChat ? "Show Chat" : "Hide Chat" },
+        { id: 6, name: "Chat Rules" }
+      ]);
+    }
   }, [favGroupList, selectedChatGroup, hideChat]);
 
   // Update show groups based on several cases: TabIndex(My groups, Favrorites), My groups, favorite groups, searched result
   useEffect(() => {
     switch (tabIndex) {
-        case 0:
-            console.log("🔍 My Groups tab - showing", myGroupList?.length, "groups");
-            setFilteredGroupList(myGroupList);
-            break;
-        case 1:
-            if (search == "") {
-                console.log("🔍 Favorites tab - showing", favGroupList?.length, "groups");
-                setFilteredGroupList(favGroupList);
-            } else {
-                console.log("🔍 Search results - showing", searchedGroupList?.length, "groups");
-                setFilteredGroupList(searchedGroupList);
-            }            
-            break;
-        default:
-            setFilteredGroupList(myGroupList);
-            break;
-    }    
+      case 0:
+        console.log("🔍 My Groups tab - showing", myGroupList?.length, "groups");
+        setFilteredGroupList(myGroupList);
+        break;
+      case 1:
+        if (search == "") {
+          console.log("🔍 Favorites tab - showing", favGroupList?.length, "groups");
+          setFilteredGroupList(favGroupList);
+        } else {
+          console.log("🔍 Search results - showing", searchedGroupList?.length, "groups");
+          setFilteredGroupList(searchedGroupList);
+        }
+        break;
+      default:
+        setFilteredGroupList(myGroupList);
+        break;
+    }
   }, [myGroupList, favGroupList, tabIndex, search, searchedGroupList]);
 
   const startCooldown = () => {
@@ -766,7 +766,7 @@ const ChatsContent: React.FC = () => {
           return prev - 1;
         });
       }, 1000);
-    }    
+    }
   };
 
   // Fetch Groups with search string
@@ -787,16 +787,16 @@ const ChatsContent: React.FC = () => {
       setSearchedGroupList(res.data.groups);
     } catch (error) {
       // Handle error appropriately
-    //   toast.error(messages.common.serverError);
+      //   toast.error(messages.common.serverError);
     }
     dispatch(setIsLoading(false));
   }, [dispatch]);
 
   useEffect(() => {
     if (search != "") {
-        searchGroups(search);
-    }   
-  }, [search]);  
+      searchGroups(search);
+    }
+  }, [search]);
 
   useEffect(() => {
     if (!isDarkMode) {
@@ -812,7 +812,7 @@ const ChatsContent: React.FC = () => {
           msgBg: selectedChatGroup?.msg_bg_color ?? MSG_BG_COLOR,
           replyText: selectedChatGroup?.reply_msg_color ?? REPLY_MGS_COLOR,
           msgText: selectedChatGroup?.msg_txt_color ?? MSG_COLOR,
-          dateText: selectedChatGroup?.msg_date_color ?? MSG_DATE_COLOR,      
+          dateText: selectedChatGroup?.msg_date_color ?? MSG_DATE_COLOR,
           inputBg: selectedChatGroup?.input_bg_color ?? INPUT_BG_COLOR,
         },
         settings: {
@@ -837,7 +837,7 @@ const ChatsContent: React.FC = () => {
           msgBg: darkenColor(selectedChatGroup?.msg_bg_color ?? MSG_BG_COLOR),
           replyText: darkenColor(selectedChatGroup?.reply_msg_color ?? REPLY_MGS_COLOR),
           msgText: darkenColor(selectedChatGroup?.msg_txt_color ?? MSG_COLOR),
-          dateText: darkenColor(selectedChatGroup?.msg_date_color ?? MSG_DATE_COLOR),      
+          dateText: darkenColor(selectedChatGroup?.msg_date_color ?? MSG_DATE_COLOR),
           inputBg: darkenColor(selectedChatGroup?.input_bg_color ?? INPUT_BG_COLOR),
         },
         settings: {
@@ -849,7 +849,7 @@ const ChatsContent: React.FC = () => {
           cornerRadius: selectedChatGroup?.corner_radius ?? CORNOR_RADIUS
         }
       });
-    }   
+    }
   }, [selectedChatGroup, isDarkMode]);
 
   const getCurrentUserId = (): number => {
@@ -862,7 +862,7 @@ const ChatsContent: React.FC = () => {
 
   const getEmbedCode = () => {
     if (selectedChatGroup == null) return "";
-    return '<iframe src="http://' + selectedChatGroup?.name + '.pingbash.com" width="600" height="400" allow="clipboard-write"></iframe>';
+    return `<script src='https://widget.pingbash.com/js/widget-split.js' data-position='top-right' data-group-name='${selectedChatGroup?.name}' data-api-url='${SERVER_URL}'></script>`;
   }
 
   useEffect(() => {
@@ -876,18 +876,18 @@ const ChatsContent: React.FC = () => {
       // dispatch(setMessageList(data))
     }
 
-    const handleSendGroupNotify = (msg: string | null) => {  
+    const handleSendGroupNotify = (msg: string | null) => {
       if (!hasShownGroupNotify.current) {
         toast.success("Sent notifications successfully")
         hasShownGroupNotify.current = true
-      }      
+      }
     }
 
     socket.on(ChatConst.GET_GROUP_ONLINE_USERS, handleGetGroupOnlineUsers)
-    socket.on(ChatConst.GET_GROUP_MSG, handleGetGroupMsg)   
+    socket.on(ChatConst.GET_GROUP_MSG, handleGetGroupMsg)
     socket.on(ChatConst.GET_PINNED_MESSAGES, handleGetPinnedMesssages)
     socket.on(ChatConst.SEND_GROUP_NOTIFY, handleSendGroupNotify)
-    
+
     // Cleanup to avoid memory leaks and invalid state updates
     return () => {
 
@@ -898,7 +898,7 @@ const ChatsContent: React.FC = () => {
       // socket.off(ChatConst.GET_GROUP_HISTORY, handleGetGroupHistory)
       // socket.off(ChatConst.SEND_MSG, handleSendMsg)
     };
-  }, [selectedChatGroup]); 
+  }, [selectedChatGroup]);
 
   const handleGetPinnedMesssages = (msgIds: number[]) => {
     setPinnedMsgIds(msgIds);
@@ -919,17 +919,17 @@ const ChatsContent: React.FC = () => {
     } else {
       toast.error("Access forbidden");
     }
-  }    
+  }
 
   const handleGetMyGroups = (data: ChatGroup[]) => {
-    console.log("🔍 handleGetMyGroups received data:", data?.length, "groups");              
+    console.log("🔍 handleGetMyGroups received data:", data?.length, "groups");
     dispatch(setMyGroupList(data));
   };
 
-  
+
 
   const handleGetFavGroups = (data: ChatGroup[]) => {
-    let updatedData: ChatGroup[] = [];    
+    let updatedData: ChatGroup[] = [];
     data.map(group => {
       var banned = null;
       var unban_request = null;
@@ -939,13 +939,13 @@ const ChatsContent: React.FC = () => {
         if (myGroupInfo != null) {
           banned = myGroupInfo?.banned;
           unban_request = myGroupInfo?.unban_request;
-        }        
+        }
       }
-      let newGroup = {...group};
+      let newGroup = { ...group };
       newGroup.banned = banned;
       newGroup.unban_request = unban_request;
       updatedData.push(newGroup);
-    });    
+    });
     dispatch(setFavoriteGroupList(updatedData));
     const newSelGroup = updatedData.find(group => group.id == selectedChatGroup?.id) ?? null;
     if (newSelGroup) {
@@ -955,36 +955,36 @@ const ChatsContent: React.FC = () => {
         const updatedSearchedGroup = searchedGroupList.map(group =>
           group.id === selectedChatGroup?.id
             ? {
-                ...group,
-                members: group.members.map(member =>
-                  member.id === getCurrentUserId()
-                    ? { ...member, is_member: 1 }
-                    : member
-                )
-              }
+              ...group,
+              members: group.members.map(member =>
+                member.id === getCurrentUserId()
+                  ? { ...member, is_member: 1 }
+                  : member
+              )
+            }
             : group
-          );
-          setSearchedGroupList(updatedSearchedGroup);
+        );
+        setSearchedGroupList(updatedSearchedGroup);
       }
-      setSelectedChatGroup(newSelGroup); 
-    } 
+      setSelectedChatGroup(newSelGroup);
+    }
   };
 
   const handleBanGroupUser = (userId: number) => {
     console.log(`🚫 [F] User ${userId} banned - updating UI`);
-    
+
     // Remove messages from banned user
     const updateMsgList = groupMsgList.filter(msg => msg.Sender_Id != userId);
     setGroupMsgList(updateMsgList);
-    
+
     // Update banned users list immediately
     if (selectedChatGroup?.members) {
-      const updatedMembers = selectedChatGroup.members.map(member => 
+      const updatedMembers = selectedChatGroup.members.map(member =>
         member.id === userId ? { ...member, banned: 1 } : member
       );
       const updatedGroup = { ...selectedChatGroup, members: updatedMembers };
       setSelectedChatGroup(updatedGroup);
-      
+
       // Update banned users list
       setGroupBannedUsers(updatedMembers.filter(mem => mem.banned == 1));
       console.log(`🚫 [F] Banned users list updated - now ${updatedMembers.filter(mem => mem.banned == 1).length} banned users`);
@@ -993,19 +993,19 @@ const ChatsContent: React.FC = () => {
 
   const handleUnbanGroupUser = (userId: number) => {
     console.log(`✅ [F] User ${userId} unbanned - updating UI`);
-    
+
     // Restore messages from unbanned user
-    const updateMsgList = groupMsgList.map(msg => msg.Sender_Id == userId ? {...msg, sender_banned: 0} : msg);
+    const updateMsgList = groupMsgList.map(msg => msg.Sender_Id == userId ? { ...msg, sender_banned: 0 } : msg);
     setGroupMsgList(updateMsgList);
-    
+
     // Update banned users list immediately
     if (selectedChatGroup?.members) {
-      const updatedMembers = selectedChatGroup.members.map(member => 
+      const updatedMembers = selectedChatGroup.members.map(member =>
         member.id === userId ? { ...member, banned: 0 } : member
       );
       const updatedGroup = { ...selectedChatGroup, members: updatedMembers };
       setSelectedChatGroup(updatedGroup);
-      
+
       // Update banned users list
       setGroupBannedUsers(updatedMembers.filter(mem => mem.banned == 1));
       console.log(`✅ [F] Banned users list updated - now ${updatedMembers.filter(mem => mem.banned == 1).length} banned users`);
@@ -1014,19 +1014,19 @@ const ChatsContent: React.FC = () => {
 
   const handleUnbanGroupUsers = (userIds: number[] | null) => {
     console.log(`✅ [F] Users ${userIds} unbanned - updating UI`);
-    
+
     // Restore messages from unbanned users
-    const updateMsgList = groupMsgList.map(msg => userIds?.includes(msg.Sender_Id ?? -1) ? {...msg, sender_banned: 0} : msg);
+    const updateMsgList = groupMsgList.map(msg => userIds?.includes(msg.Sender_Id ?? -1) ? { ...msg, sender_banned: 0 } : msg);
     setGroupMsgList(updateMsgList);
-    
+
     // Update banned users list immediately
     if (selectedChatGroup?.members && userIds) {
-      const updatedMembers = selectedChatGroup.members.map(member => 
+      const updatedMembers = selectedChatGroup.members.map(member =>
         userIds.includes(member.id) ? { ...member, banned: 0 } : member
       );
       const updatedGroup = { ...selectedChatGroup, members: updatedMembers };
       setSelectedChatGroup(updatedGroup);
-      
+
       // Update banned users list
       setGroupBannedUsers(updatedMembers.filter(mem => mem.banned == 1));
       console.log(`✅ [F] Banned users list updated - now ${updatedMembers.filter(mem => mem.banned == 1).length} banned users`);
@@ -1055,12 +1055,12 @@ const ChatsContent: React.FC = () => {
     try {
       const timeoutKey = `timeout_${groupId}`;
       const timeoutInfo = localStorage.getItem(timeoutKey);
-      
+
       if (timeoutInfo) {
         const parsed = JSON.parse(timeoutInfo);
         const now = new Date().getTime();
         const expiry = new Date(parsed.expiresAt).getTime();
-        
+
         if (expiry > now) {
           // Timeout is still active
           console.log(`⏰ [F] Restored timeout state for group ${groupId}, expires at ${parsed.expiresAt}`);
@@ -1084,10 +1084,10 @@ const ChatsContent: React.FC = () => {
   const handleTimeoutNotification = (data: any) => {
     console.log(`⏰ [F] Timeout notification received:`, data);
     const { timeoutMinutes, expiresAt, message, groupId } = data;
-    
+
     setTimeoutData({ timeoutMinutes, expiresAt });
     setShowTimeoutNotification(true);
-    
+
     // Persist timeout state in localStorage for page refresh persistence
     const timeoutInfo = {
       groupId: groupId,
@@ -1095,7 +1095,7 @@ const ChatsContent: React.FC = () => {
       timeoutMinutes: timeoutMinutes
     };
     localStorage.setItem(`timeout_${groupId}`, JSON.stringify(timeoutInfo));
-    
+
     // Show toast message as well
     toast.error(message, {
       duration: 5000,
@@ -1104,44 +1104,44 @@ const ChatsContent: React.FC = () => {
   }
 
   const handleSendGroupMsg = useCallback((data: MessageUnit[]) => {
-      const currentUserId = getCurrentUserId();
-      const currentUserName = localStorage.getItem('userName') || 'Unknown';
-      
-      console.log("🔍 [F] handleSendGroupMsg received:", data?.length, "messages");
-      console.log("🔍 [F] Current user:", currentUserId, currentUserName);
-      console.log("🔍 [F] Socket connected:", socketConnected);
-      
-      // Check if this is a single new message or bulk update
-      const isBulkUpdate = data?.length > 10;
-      const isNewMessage = data?.length === 1 || (data?.length <= 5 && data?.length > 0);
-      console.log("🔍 [F] Message type:", isBulkUpdate ? "BULK_UPDATE" : isNewMessage ? "NEW_MESSAGE" : "UNKNOWN", "Count:", data?.length);
-      
-      if (isNewMessage && data?.length > 0) {
-        console.log("🔍 [F] New message details:", {
-          sender: data[data.length - 1].sender_name,
-          content: data[data.length - 1].Content,
-          time: data[data.length - 1].Send_Time
-        });
-      }
-      
-      const groupId = data?.length && data[data.length - 1].group_id;
-      console.log("🔍 [F] Message group ID:", groupId, "Selected group ID:", selectedChatGroup?.id);
-      console.log("🔍 [F] selectedChatGroup object:", selectedChatGroup);
-      console.log("🔍 [F] Page visible:", pageVisible);
-      
-      if (groupId === selectedChatGroup?.id) {
-        if (pageVisible) {
-          console.log("🔍 Page visible - adding messages immediately");
-          const newList = mergeArrays(groupMsgList, data);
-          setGroupMsgList(newList);
-        } else {
-          console.log("🔍 Page hidden - queuing messages for later");
-          setPendingMessages(prev => mergeArrays(prev, data));
-        }
+    const currentUserId = getCurrentUserId();
+    const currentUserName = localStorage.getItem('userName') || 'Unknown';
+
+    console.log("🔍 [F] handleSendGroupMsg received:", data?.length, "messages");
+    console.log("🔍 [F] Current user:", currentUserId, currentUserName);
+    console.log("🔍 [F] Socket connected:", socketConnected);
+
+    // Check if this is a single new message or bulk update
+    const isBulkUpdate = data?.length > 10;
+    const isNewMessage = data?.length === 1 || (data?.length <= 5 && data?.length > 0);
+    console.log("🔍 [F] Message type:", isBulkUpdate ? "BULK_UPDATE" : isNewMessage ? "NEW_MESSAGE" : "UNKNOWN", "Count:", data?.length);
+
+    if (isNewMessage && data?.length > 0) {
+      console.log("🔍 [F] New message details:", {
+        sender: data[data.length - 1].sender_name,
+        content: data[data.length - 1].Content,
+        time: data[data.length - 1].Send_Time
+      });
+    }
+
+    const groupId = data?.length && data[data.length - 1].group_id;
+    console.log("🔍 [F] Message group ID:", groupId, "Selected group ID:", selectedChatGroup?.id);
+    console.log("🔍 [F] selectedChatGroup object:", selectedChatGroup);
+    console.log("🔍 [F] Page visible:", pageVisible);
+
+    if (groupId === selectedChatGroup?.id) {
+      if (pageVisible) {
+        console.log("🔍 Page visible - adding messages immediately");
+        const newList = mergeArrays(groupMsgList, data);
+        setGroupMsgList(newList);
       } else {
-        console.log("🔍 Message not for current group, ignoring");
+        console.log("🔍 Page hidden - queuing messages for later");
+        setPendingMessages(prev => mergeArrays(prev, data));
       }
-    }, [selectedChatGroup, groupMsgList, pageVisible]); // Add dependencies so it updates when these change
+    } else {
+      console.log("🔍 Message not for current group, ignoring");
+    }
+  }, [selectedChatGroup, groupMsgList, pageVisible]); // Add dependencies so it updates when these change
 
   const handleGroupUpdated = (updatedGroup: ChatGroup) => {
     dispatch(setIsLoading(false));
@@ -1168,7 +1168,7 @@ const ChatsContent: React.FC = () => {
       setGroupMsgList([])
     }
     dispatch(setIsLoading(false));
-  } 
+  }
 
   const handleDeleteGroupMsg = (data: number) => {
     const updateMsgList = groupMsgList.filter(msg => msg.Id != data);
@@ -1180,9 +1180,9 @@ const ChatsContent: React.FC = () => {
     console.log("🔍 [Chat Rules] Received chat rules:", data);
     console.log("🔍 [Chat Rules] Current selectedChatGroup:", selectedChatGroup);
     console.log("🔍 [Chat Rules] hasSeenRulesForGroup:", hasSeenRulesForGroup);
-    
+
     setChatRules(data.chatRules || '');
-    
+
     // Update the config if needed
     if (data.showChatRules !== undefined) {
       setConfig(prev => ({
@@ -1193,7 +1193,7 @@ const ChatsContent: React.FC = () => {
         }
       }));
     }
-    
+
     // Auto-show chat rules if:
     // 1. showChatRules is true
     // 2. There are actual rules to show
@@ -1201,7 +1201,7 @@ const ChatsContent: React.FC = () => {
     // 4. User is not the creator (creators can see rules anytime via menu)
     const groupId = selectedChatGroup?.id;
     const isCreator = getCurrentUserId() === selectedChatGroup?.creater_id;
-    
+
     console.log("🔍 [Chat Rules] Auto-display conditions:", {
       showChatRules: data.showChatRules,
       hasRules: data.chatRules && data.chatRules.trim().length > 0,
@@ -1209,16 +1209,16 @@ const ChatsContent: React.FC = () => {
       hasSeenBefore: groupId ? hasSeenRulesForGroup[groupId] : undefined,
       isCreator
     });
-    
-    if (data.showChatRules && 
-        data.chatRules && 
-        data.chatRules.trim().length > 0 && 
-        groupId && 
-        !hasSeenRulesForGroup[groupId] && 
-        !isCreator) {
-      
+
+    if (data.showChatRules &&
+      data.chatRules &&
+      data.chatRules.trim().length > 0 &&
+      groupId &&
+      !hasSeenRulesForGroup[groupId] &&
+      !isCreator) {
+
       console.log("🔍 [Chat Rules] Auto-showing rules for group:", groupId);
-      
+
       // Add a small delay to ensure the UI is ready
       setTimeout(() => {
         setOpenChatRules(true);
@@ -1242,12 +1242,12 @@ const ChatsContent: React.FC = () => {
   };
 
   // Removed handleGetBlockedUsers - personal blocks should not affect group chat filtering
-  
+
   const handleExpired = () => {
     localStorage.clear()
     dispatch(setIsLoading(false));
     router.push(`/auth?Role=${params.get("Role")}&Collection=login`);
-  } 
+  }
 
   const handleServerError = () => {
     dispatch(setIsLoading(false));
@@ -1261,7 +1261,7 @@ const ChatsContent: React.FC = () => {
       console.log("🔍 [F] Socket connected");
       setSocketConnected(true);
     };
-    
+
     const handleDisconnect = () => {
       console.log("🔍 [F] Socket disconnected");
       setSocketConnected(false);
@@ -1272,15 +1272,15 @@ const ChatsContent: React.FC = () => {
       const isVisible = !document.hidden;
       setPageVisible(isVisible);
       console.log("🔍 [F] Page visibility changed:", isVisible ? 'visible' : 'hidden');
-      
+
       if (isVisible) {
         console.log("🔍 [F] Window reactivated - polling for new messages");
-        
+
         // Clear any existing timeout
         if (reloadTimeoutRef.current) {
           clearTimeout(reloadTimeoutRef.current);
         }
-        
+
         // Process any pending messages first
         setPendingMessages(currentPending => {
           if (currentPending.length > 0) {
@@ -1293,15 +1293,15 @@ const ChatsContent: React.FC = () => {
           }
           return []; // Clear pending messages
         });
-        
+
         // Debounce polling to prevent rapid successive calls
         reloadTimeoutRef.current = setTimeout(() => {
           // Get current values directly from localStorage to avoid stale closure
           const token = localStorage.getItem(TOKEN_KEY);
           const selectedGroupId = localStorage.getItem(SELECTED_GROUP_ID);
-          
+
           console.log("🔍 [F] Polling for new messages - Token:", !!token, "Group ID:", selectedGroupId);
-          
+
           if (token && selectedChatGroup?.id && socket.connected) {
             console.log("🔍 [F] Emitting GET_GROUP_MSG to poll for new messages");
             // Use socket to poll for messages, just like when sending a new message
@@ -1321,7 +1321,7 @@ const ChatsContent: React.FC = () => {
 
     socket.on('connect', handleConnect);
     socket.on('disconnect', handleDisconnect);
-    
+
     // Check initial connection state
     if (socket.connected) {
       setSocketConnected(true);
@@ -1330,7 +1330,7 @@ const ChatsContent: React.FC = () => {
     // Get Groups list for chat history in chat page
     socket.on(ChatConst.GET_MY_GROUPS, handleGetMyGroups);
     socket.on(ChatConst.GET_FAV_GROUPS, handleGetFavGroups);
-    
+
     // Socket hook for ban user socket
     // Group admin can ban user
     socket.on(ChatConst.BAN_GROUP_USER, handleBanGroupUser);
@@ -1349,55 +1349,55 @@ const ChatsContent: React.FC = () => {
     socket.on(ChatConst.FORBIDDEN, handleForbidden)
     socket.on(ChatConst.SERVER_ERROR, handleServerError)
 
-          // Removed blocked users socket handler - not needed for group chats
+    // Removed blocked users socket handler - not needed for group chats
 
-         // Receive the message afer sending the message.
-     socket.on(ChatConst.SEND_GROUP_MSG, (data) => {
+    // Receive the message afer sending the message.
+    socket.on(ChatConst.SEND_GROUP_MSG, (data) => {
       const currentUserId = getCurrentUserId();
       const currentUserName = localStorage.getItem('userName') || 'Unknown';
       console.log("🔍 [F] SEND_GROUP_MSG socket event received by user:", currentUserName, "data:", data?.length, "messages");
       handleSendGroupMsg(data);
     });
 
-     // Timeout notification listener
-     socket.on(ChatConst.USER_TIMEOUT_NOTIFICATION, handleTimeoutNotification);
+    // Timeout notification listener
+    socket.on(ChatConst.USER_TIMEOUT_NOTIFICATION, handleTimeoutNotification);
 
-     // Chat rules listeners
-     socket.on(ChatConst.GET_CHAT_RULES, handleGetChatRules);
-     socket.on(ChatConst.UPDATE_CHAT_RULES, handleUpdateChatRules);
+    // Chat rules listeners
+    socket.on(ChatConst.GET_CHAT_RULES, handleGetChatRules);
+    socket.on(ChatConst.UPDATE_CHAT_RULES, handleUpdateChatRules);
 
-                 // Cleanup listeners on unmount
-   return () => {
-     document.removeEventListener('visibilitychange', handleVisibilityChange);
-     
-     // Clear any pending reload timeout
-     if (reloadTimeoutRef.current) {
-       clearTimeout(reloadTimeoutRef.current);
-     }
-     
-     socket.off('connect', handleConnect);
-     socket.off('disconnect', handleDisconnect);
+    // Cleanup listeners on unmount
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+
+      // Clear any pending reload timeout
+      if (reloadTimeoutRef.current) {
+        clearTimeout(reloadTimeoutRef.current);
+      }
+
+      socket.off('connect', handleConnect);
+      socket.off('disconnect', handleDisconnect);
       socket.off(ChatConst.GET_MY_GROUPS, handleGetMyGroups);
       socket.off(ChatConst.GET_FAV_GROUPS, handleGetFavGroups);
       socket.off(ChatConst.BAN_GROUP_USER, handleBanGroupUser);
       socket.off(ChatConst.UNBAN_GROUP_USER, handleUnbanGroupUser);
       socket.off(ChatConst.UNBAN_GROUP_USERS, handleUnbanGroupUsers);
-          socket.off(ChatConst.GET_BANNED_USERS, handleGetBannedUsers);
-    socket.off(ChatConst.GET_IP_BANS, handleGetIpBans);
-    socket.off(ChatConst.JOIN_TO_GROUP_ANON, handleJoinToGroupAnon);
+      socket.off(ChatConst.GET_BANNED_USERS, handleGetBannedUsers);
+      socket.off(ChatConst.GET_IP_BANS, handleGetIpBans);
+      socket.off(ChatConst.JOIN_TO_GROUP_ANON, handleJoinToGroupAnon);
       socket.off(ChatConst.DELETE_GROUP_MSG, handleDeleteGroupMsg);
       socket.off(ChatConst.CLEAR_GROUP_CHAT, handleClearGroupChat);
       socket.off(ChatConst.GROUP_UPDATED, handleGroupUpdated);
       socket.off(ChatConst.EXPIRED, handleExpired);
       socket.off(ChatConst.FORBIDDEN, handleForbidden);
       socket.off(ChatConst.SERVER_ERROR, handleServerError);
-             // Removed blocked users socket cleanup - not needed for group chats
-             socket.off(ChatConst.SEND_GROUP_MSG);
+      // Removed blocked users socket cleanup - not needed for group chats
+      socket.off(ChatConst.SEND_GROUP_MSG);
       socket.off(ChatConst.USER_TIMEOUT_NOTIFICATION, handleTimeoutNotification);
       socket.off(ChatConst.GET_CHAT_RULES, handleGetChatRules);
       socket.off(ChatConst.UPDATE_CHAT_RULES, handleUpdateChatRules);
-     };
-   }, [handleSendGroupMsg]); // Include handleSendGroupMsg so socket listener updates when it changes
+    };
+  }, [handleSendGroupMsg]); // Include handleSendGroupMsg so socket listener updates when it changes
 
   // When get new messages, will scroll bottom message list view.
   const scrollToBottom = () => {
@@ -1405,7 +1405,7 @@ const ChatsContent: React.FC = () => {
     if (scrollContainerRef.current) {
       scrollContainerRef.current.scrollTop = scrollContainerRef.current.scrollHeight;
     }
-    
+
     if (scrollContainerRef.current?.parentElement) {
       const msgContainer = scrollContainerRef.current.parentElement;
       msgContainer.scrollTop = msgContainer.scrollHeight;
@@ -1428,7 +1428,7 @@ const ChatsContent: React.FC = () => {
     if (lastChatDate == 1) return;
     const token = localStorage.getItem(TOKEN_KEY);
     getGroupHistory(token, selectedChatGroup?.id, lastChatDate);
-  }, [lastChatDate])  
+  }, [lastChatDate])
 
   // The action for the message send action
   const sendGroupMsgHandler = (type: string, value: string) => {
@@ -1448,10 +1448,10 @@ const ChatsContent: React.FC = () => {
       return;
     }
     const memInfo = selectedChatGroup?.members?.find(user => user.id == getCurrentUserId());
-    
+
     // Check if user is currently timed out (check both server data and localStorage)
     const isCurrentlyTimedOut = memInfo?.is_timed_out || checkPersistedTimeout(selectedChatGroup?.id || 0);
-    
+
     if (isCurrentlyTimedOut && selectedChatGroup?.creater_id != getCurrentUserId()) {
       const toTime = isTimedout(memInfo?.to_time ?? "");
       const timeoutMessage = toTime ? `You can send message ${toTime} later.` : "You are temporarily restricted from sending messages.";
@@ -1475,15 +1475,15 @@ const ChatsContent: React.FC = () => {
         , localStorage.getItem(TOKEN_KEY), receiverid, replyMsg?.Id)
     } else if (attachment?.type && attachment.type === 'image') {
       sendGroupMsg(
-        selectedChatGroup?.id, 
-        `<img src='${SERVER_URL}/uploads/chats/images/${attachment?.url}' alt="" />`, 
-        localStorage.getItem(TOKEN_KEY), 
+        selectedChatGroup?.id,
+        `<img src='${SERVER_URL}/uploads/chats/images/${attachment?.url}' alt="" />`,
+        localStorage.getItem(TOKEN_KEY),
         receiverid,
         replyMsg?.Id
       )
     } else {
       const token = localStorage.getItem(TOKEN_KEY);
-       if (type === "gif") {
+      if (type === "gif") {
         sendGroupMsg(selectedChatGroup?.id, value, token, receiverid, replyMsg?.Id);
       } else if (type === "sticker") {
         sendGroupMsg(selectedChatGroup?.id, value, token, receiverid, replyMsg?.Id);
@@ -1491,22 +1491,22 @@ const ChatsContent: React.FC = () => {
         if (inputMsg.length > 0) {
           const myMemInfo = selectedChatGroup?.members?.find(mem => mem.id == getCurrentUserId())
 
-          if (selectedChatGroup?.url_level == 1 
-            && (myMemInfo?.role_id == 0 || myMemInfo?.role_id == null) 
+          if (selectedChatGroup?.url_level == 1
+            && (myMemInfo?.role_id == 0 || myMemInfo?.role_id == null)
             && containsURL(inputMsg)) {
             toast.error("You can't post url. You have no permission.");
-            setInputMsg(""); 
-            setShowEmoji(false);  
+            setInputMsg("");
+            setShowEmoji(false);
             return
           }
           const censorWords = getCensoredWordArray(selectedChatGroup?.censored_words ?? null)
           const censoredMessage = getCensoredMessage(inputMsg, censorWords ?? [])
           console.log("🔍 About to send message - selectedChatGroup?.id:", selectedChatGroup?.id, "selectedChatGroup:", selectedChatGroup);
-          sendGroupMsg(selectedChatGroup?.id, censoredMessage, token, receiverid, replyMsg?.Id);       
-          setInputMsg(""); 
-          setShowEmoji(false);         
+          sendGroupMsg(selectedChatGroup?.id, censoredMessage, token, receiverid, replyMsg?.Id);
+          setInputMsg("");
+          setShowEmoji(false);
         }
-      }      
+      }
     }
     setReplyMsg(null);
     setShowMsgReplyView(false);
@@ -1517,19 +1517,19 @@ const ChatsContent: React.FC = () => {
         startCooldown();
       }
     }
-    
-  } 
+
+  }
 
   const groupSelectHandler = async (
-    group : ChatGroup
+    group: ChatGroup
   ) => {
     console.log("🔍 Group selected:", group.id, "Previous:", selectedChatGroup?.id);
     if (window.innerWidth < 810) { setUserNavShow(false); }
     // router.push(`${path}?Group=${id}`);
     if (selectedChatGroup?.id == group.id) return;
-    
+
     const token = localStorage.getItem(TOKEN_KEY);
-    
+
     // Ensure user is joined to the group and then load messages
     console.log("🔍 [F] Joining user to group:", group.id);
     try {
@@ -1539,12 +1539,12 @@ const ChatsContent: React.FC = () => {
       }, {
         headers: {
           "Accept": "application/json",
-          "Content-type": "application/json", 
+          "Content-type": "application/json",
           Authorization: token,
         },
       });
       console.log("🔍 [F] User successfully joined group, refreshing group data");
-      
+
       // Refresh group data to get updated member list
       const updatedGroupRes = await axios.get(`${SERVER_URL}/api/private/get/groups/${group.id}`, {
         headers: {
@@ -1553,7 +1553,7 @@ const ChatsContent: React.FC = () => {
           Authorization: token,
         },
       });
-      
+
       if (updatedGroupRes.data) {
         console.log("🔍 [F] Updated group data with members:", updatedGroupRes.data);
         setSelectedChatGroup(updatedGroupRes.data);
@@ -1568,10 +1568,10 @@ const ChatsContent: React.FC = () => {
       setSelectedChatGroup(group);
       console.log("🔍 setSelectedChatGroup called with group:", group.id);
     }
-    
+
     // Check for persisted timeout state when switching groups
     checkPersistedTimeout(group.id);
-    
+
     // To call the function to send the socket function to make the Read_Time to set
     readGroupMsg(token, group.id)
   }
@@ -1672,7 +1672,7 @@ const ChatsContent: React.FC = () => {
 
   const banUser = () => {
     if (banUserId == null) return;
-    
+
     // RULE 1: User cannot ban himself
     const currentUserId = getCurrentUserId();
     if (banUserId === currentUserId) {
@@ -1681,7 +1681,7 @@ const ChatsContent: React.FC = () => {
       setBanUserId(null);
       return;
     }
-    
+
     // RULE 2: Only Group Master can ban users
     if (selectedChatGroup?.creater_id !== currentUserId) {
       toast.error("Only the group creator can ban users");
@@ -1689,13 +1689,13 @@ const ChatsContent: React.FC = () => {
       setBanUserId(null);
       return;
     }
-    
+
     const token = localStorage.getItem(TOKEN_KEY)
     console.log(`Frontend: Group Master ${currentUserId} attempting to ban user ${banUserId}`);
     banGroupUser(token, selectedChatGroup?.id, banUserId);
     setOpenBanUserConfirmPopup(false);
     setBanUserId(null);
-    
+
     // Refresh banned users list after a short delay
     setTimeout(() => {
       if (selectedChatGroup?.members) {
@@ -1718,7 +1718,7 @@ const ChatsContent: React.FC = () => {
       toast.error("Only the group creator can unban users");
       return;
     }
-    
+
     const token = localStorage.getItem(TOKEN_KEY)
     console.log(`Frontend: Group Master ${currentUserId} unbanning users ${userIds} from group ${selectedChatGroup?.id}`);
     unbanGroupUsers(token, selectedChatGroup?.id, userIds);
@@ -1733,7 +1733,7 @@ const ChatsContent: React.FC = () => {
       toast.error("Only the group creator can unban IP addresses");
       return;
     }
-    
+
     const token = localStorage.getItem(TOKEN_KEY)
     console.log(`Frontend: Group Master ${currentUserId} unbanning IPs ${ipAddresses} from group ${selectedChatGroup?.id}`);
     unbanGroupIps(token, selectedChatGroup?.id, ipAddresses);
@@ -1746,10 +1746,10 @@ const ChatsContent: React.FC = () => {
   ) => {
     const token = localStorage.getItem(TOKEN_KEY)
     updateGroupChatLimitations(
-      token, 
-      selectedChatGroup?.id, 
-      settings.postOption, 
-      settings.urlOption, 
+      token,
+      selectedChatGroup?.id,
+      settings.postOption,
+      settings.urlOption,
       settings.slowMode,
       settings.speed
     )
@@ -1819,7 +1819,7 @@ const ChatsContent: React.FC = () => {
   }
 
   const onBlockUser = (userId: number | null) => {
-    const token = localStorage.getItem(TOKEN_KEY)   
+    const token = localStorage.getItem(TOKEN_KEY)
     blockUser(token, userId);
     dispatch(setIsLoading(true));
   }
@@ -1840,9 +1840,9 @@ const ChatsContent: React.FC = () => {
     sendGroupNotify(token, selectedChatGroup?.id ?? null, msg)
   }
 
-  const deleteMessage = () => {    
+  const deleteMessage = () => {
     if (deleteMsgId == null) return;
-    const token = localStorage.getItem(TOKEN_KEY)     
+    const token = localStorage.getItem(TOKEN_KEY)
     deleteGroupMsg(token, deleteMsgId, selectedChatGroup?.id);
     setOpenMsgDeleteConfirmPopup(false);
     setDeleteMsgId(null);
@@ -1909,18 +1909,18 @@ const ChatsContent: React.FC = () => {
     let type = "text";
     let value = content;
     if (content!.indexOf("<img") > -1) {
-      type = "img"; value= "Photo";
+      type = "img"; value = "Photo";
     }
     if (content!.indexOf("gif::https://") > -1 || content!.indexOf(".gif") > -1 && content!.indexOf(" ") < 0 && content!.indexOf("https://") > -1) {
-      type = "gif"; value= "Gif";
+      type = "gif"; value = "Gif";
     }
     if (content!.indexOf("sticker::") > -1) {
-      type = "sticker"; value= "Sticker";
+      type = "sticker"; value = "Sticker";
     }
     if (type === "text") {
-      return  <div className='text-[14px] mt-[3px]'><span  dangerouslySetInnerHTML={{ __html: content! }} /></div>;
+      return <div className='text-[14px] mt-[3px]'><span dangerouslySetInnerHTML={{ __html: content! }} /></div>;
     } else {
-      return  <div className='text-[14px] mt-[3px] text-gray-400'>{value}</div>;
+      return <div className='text-[14px] mt-[3px] text-gray-400'>{value}</div>;
     }
   }
 
@@ -1932,16 +1932,16 @@ const ChatsContent: React.FC = () => {
         dangerouslySetInnerHTML={{ __html: contentStr! }}
       />;
     }
-    if (content!.indexOf("gif::https://") > -1 ) {
-      return <img src={content!.slice("gif::".length)} className="h-[36px]" /> 
+    if (content!.indexOf("gif::https://") > -1) {
+      return <img src={content!.slice("gif::".length)} className="h-[36px]" />
     }
 
     if (content!.indexOf(".gif") > -1 && content!.indexOf("https://") > -1 && content!.indexOf(" ") < 0) {
       return <img src={content!} className="h-[36px]" />
     }
-    
-    if (content!.indexOf("sticker::") > -1 ) {
-      return <Lottie animationData={getSticker(content!)} style={{height: 30 }} /> 
+
+    if (content!.indexOf("sticker::") > -1) {
+      return <Lottie animationData={getSticker(content!)} style={{ height: 30 }} />
     }
 
     return null;
@@ -1957,7 +1957,7 @@ const ChatsContent: React.FC = () => {
     console.log(itemIndex);
     const container = scrollContainerRef.current;
     const item = msgItemRefs.current[itemIndex];
-    
+
     if (!container || !item) return;
 
     const containerHeight = container.clientHeight;
@@ -1978,16 +1978,16 @@ const ChatsContent: React.FC = () => {
     } else {
       setSoundSelectedOption(soundSettingOptions.find(opt => opt.option_id == mySoundOptionId)?.val);
     }
-    
+
   }, [mySoundOptionId]);
 
   const fetchSoundOption = useCallback(async () => {
     try {
       dispatch(setIsLoading(true));
-      const res = await axios.post(`${SERVER_URL}/api/private/get/chats/option`, 
+      const res = await axios.post(`${SERVER_URL}/api/private/get/chats/option`,
         {
           user_id: getCurrentUserId()
-        }, 
+        },
         {
           headers: {
             "Accept": "application/json",
@@ -1995,7 +1995,7 @@ const ChatsContent: React.FC = () => {
             Authorization: localStorage.getItem(TOKEN_KEY),
           },
         });
-      
+
       if (res == null) {
         setMySoundOptionId(null);
       } else {
@@ -2003,8 +2003,8 @@ const ChatsContent: React.FC = () => {
         setMySoundOptionId(optVal.sound_option);
       }
     } catch (error) {
-      
-    }    
+
+    }
     dispatch(setIsLoading(false));
   }, [dispatch]);
 
@@ -2017,11 +2017,11 @@ const ChatsContent: React.FC = () => {
         dispatch(setIsLoading(false));
         return;
       }
-      const res = await axios.post(`${SERVER_URL}/api/private/add/chats/updateoption`, 
+      const res = await axios.post(`${SERVER_URL}/api/private/add/chats/updateoption`,
         {
           user_id: getCurrentUserId(),
           sound_option: optionVal == null ? 0 : optionVal
-        }, 
+        },
         {
           headers: {
             "Accept": "application/json",
@@ -2031,8 +2031,8 @@ const ChatsContent: React.FC = () => {
         });
       setMySoundOptionId(optionVal);
     } catch (error) {
-      
-    }    
+
+    }
     dispatch(setIsLoading(false));
   }
 
@@ -2070,7 +2070,7 @@ const ChatsContent: React.FC = () => {
           },
         }
       );
-    //   setChatGroupList(res.data.groups);
+      //   setChatGroupList(res.data.groups);
       console.log("🔍 Group created successfully, calling getMyGroups...");
       getMyGroups(localStorage.getItem(TOKEN_KEY));
       toast.success(messages.group.createSuccess);
@@ -2094,7 +2094,7 @@ const ChatsContent: React.FC = () => {
     const token = localStorage.getItem(TOKEN_KEY);
     const res = await axios.post(
       `${SERVER_URL}/api/private/get/groups/name/availability`,
-      {groupName: inputGroupRef.current?.value},
+      { groupName: inputGroupRef.current?.value },
       {
         headers: {
           "Accept": "application/json",
@@ -2154,7 +2154,7 @@ const ChatsContent: React.FC = () => {
       const container = containerRef.current.getBoundingClientRect();
       const offsetX = e.clientX - container.left - chatPosition.x;
       const offsetY = e.clientY - container.top - chatPosition.y;
-      
+
       setDragStart({
         x: offsetX,
         y: offsetY,
@@ -2170,11 +2170,11 @@ const ChatsContent: React.FC = () => {
     if (isDragging && containerRef.current) {
       const container = containerRef.current.getBoundingClientRect();
       const newX = Math.max(0, Math.min(
-        e.clientX - container.left - dragStart.x, 
+        e.clientX - container.left - dragStart.x,
         container.width - groupConfig.width
       ));
       const newY = Math.max(0, Math.min(
-        e.clientY - container.top - dragStart.y, 
+        e.clientY - container.top - dragStart.y,
         container.height - groupConfig.height
       ));
       setChatPosition({ x: newX, y: newY });
@@ -2183,7 +2183,7 @@ const ChatsContent: React.FC = () => {
       const deltaY = e.clientY - resizeStart.y;
       const newWidth = Math.max(500, resizeStart.width + deltaX);
       const newHeight = Math.max(400, resizeStart.height + deltaY);
-      
+
       setConfig(prev => ({ ...prev, width: newWidth, height: newHeight }));
     }
   };
@@ -2206,25 +2206,25 @@ const ChatsContent: React.FC = () => {
 
               <div className="flex justify-center h-[40px]">
                 <TabBar
-                    tabs={tabs}
-                    activeIndex={tabIndex}
-                    onTabClick={(index) => {
-                        setTabIndex(index);
-                    }}
-                />                
+                  tabs={tabs}
+                  activeIndex={tabIndex}
+                  onTabClick={(index) => {
+                    setTabIndex(index);
+                  }}
+                />
               </div>
               {tabIndex == 0 && <button className="absolute bottom-[0px] right-[0px] bg-gradient-to-r from-[#0F00D4] to-[#B300C8] text-white text-[14px] text-bold px-4 py-2 rounded-full z-[2]"
-                  onClick={()=>!openNewGroupPop && setOpenNewGroupPop(true)}>
-                  New Group
+                onClick={() => !openNewGroupPop && setOpenNewGroupPop(true)}>
+                New Group
               </button>}
 
               {/* Search Area Start */}
-              {tabIndex === 1 && 
-              <div className="search-box sticky top-0 bg-white z-10 my-[8px] px-[12px] py-[8px] gap-[10px] whitespace-nowrap rounded-[10px] flex items-center w-full border">
+              {tabIndex === 1 &&
+                <div className="search-box sticky top-0 bg-white z-10 my-[8px] px-[12px] py-[8px] gap-[10px] whitespace-nowrap rounded-[10px] flex items-center w-full border">
                   <span className="max-[810px]:flex"><FontAwesomeIcon icon={faSearch} className="text-[14px]" /></span>
                   <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} className="outline-none inline-block w-full text-[14px]" placeholder="Search or start a new chat" />
-              </div>}
-                  {/* Search Area End*/}
+                </div>}
+              {/* Search Area End*/}
               {/* Group List Start  */}
               <div className="flex flex-col gap-[2px] h-[calc(100%-40px)] overflow-y-auto">
                 {filterdGroupList != null && filterdGroupList.length > 0 && filterdGroupList.map((group, idx) => (
@@ -2248,10 +2248,10 @@ const ChatsContent: React.FC = () => {
             {/* Chat Left Side End ---Chat History */}
 
             {/* Chat Container */}
-            <div 
+            <div
               ref={containerRef}
               className="flex-1 relative overflow-auto"
-              style={{ 
+              style={{
                 background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
               }}
             >
@@ -2271,21 +2271,22 @@ const ChatsContent: React.FC = () => {
                     ? `min(100%, ${groupConfig.height}px)`
                     : '100%',
                 }}
-                
+
               >
                 {/* Chat Right Side Start ---Message History */}
-                  <section className={`flex flex-col justify-between bg-white border rounded-[10px] w-[calc(100%-267px)] duration-500 ${userNavShow ? "max-[810px]:hidden" : "max-[810px]:w-full"}`}
-                    style={{
-                      borderRadius: groupConfig?.settings.roundCorners ? groupConfig.settings.cornerRadius ?? CORNOR_RADIUS : CORNOR_RADIUS,
-                      width: '100%',
-                      height: '100%'                
-                    }}
-                  >
+                <section className={`flex flex-col justify-between bg-white border rounded-[10px] w-[calc(100%-267px)] duration-500 ${userNavShow ? "max-[810px]:hidden" : "max-[810px]:w-full"}`}
+                  style={{
+                    borderRadius: groupConfig?.settings.roundCorners ? groupConfig.settings.cornerRadius ?? CORNOR_RADIUS : CORNOR_RADIUS,
+                    width: '100%',
+                    height: '100%'
+                  }}
+                >
 
-                    {/* Chat Right Side Header Start */} 
-                    {selectedChatGroup != null && selectedChatGroup.id && 
+                  {/* Chat Right Side Header Start */}
+                  {selectedChatGroup != null && selectedChatGroup.id &&
                     <nav className={`relative shadow-lg shadow-slate-300 select-none px-[20px] py-[16px] gap-[10px] border-b flex justify-between flex-wrap ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
-                      style={{background: groupConfig.colors.background ?? BG_COLOR, 
+                      style={{
+                        background: groupConfig.colors.background ?? BG_COLOR,
                         borderTopLeftRadius: groupConfig.settings.roundCorners ? groupConfig.settings.cornerRadius ?? CORNOR_RADIUS : CORNOR_RADIUS,
                         borderTopRightRadius: groupConfig.settings.roundCorners ? groupConfig.settings.cornerRadius ?? CORNOR_RADIUS : CORNOR_RADIUS,
                         color: groupConfig.colors.title ?? TITLE_COLOR
@@ -2294,7 +2295,7 @@ const ChatsContent: React.FC = () => {
                     >
                       <div className="flex gap-[16px] items-center">
                         <span className="hidden max-[810px]:flex"><FontAwesomeIcon icon={userNavShow ? faArrowRight : faArrowLeft} onClick={() => setUserNavShow(!userNavShow)} /></span>
-                        
+
                         <div>
                           <p className="flex justify-start max-[810px]:flex-col items-center gap-[5px] whitespace-nowrap truncate">
                             <img
@@ -2310,12 +2311,12 @@ const ChatsContent: React.FC = () => {
                             {/*<span className="text-[20px] font-bold truncate w-[100%]">{selectedChatGroup?.name}</span>*/}
                           </p>
                         </div>
-                        
+
                       </div>
-                      {selectedChatGroup && selectedChatGroup.creater_id == getCurrentUserId() && 
-                      <div className="absolute px-[10px] py-[6px] top-[13px] right-[72px] rounded-[6px] bg-[wheat] cursor-pointer"
-                        onClick={() => setOpenEmbedCodeDlg(true)}
-                      >{'< Embed Code />'}</div>}
+                      {selectedChatGroup && selectedChatGroup.creater_id == getCurrentUserId() &&
+                        <div className="absolute px-[10px] py-[6px] top-[13px] right-[72px] rounded-[6px] bg-[wheat] cursor-pointer"
+                          onClick={() => setOpenEmbedCodeDlg(true)}
+                        >{'< Embed Code />'}</div>}
                       <Popover placement="bottom-start" showArrow >
                         <PopoverTrigger >
                           <div className="max-[810px]:flex cursor-pointer" ref={groupMemuPopoverRef}>
@@ -2335,14 +2336,14 @@ const ChatsContent: React.FC = () => {
                             ))}
                             <SwitchButton enabled={isDarkMode} onToggle={setDarkMode} />
                           </ul>
-                          
+
                         </PopoverContent>
                       </Popover>
                     </nav>}
-                    {/* Chat Right Side Header End */}
+                  {/* Chat Right Side Header End */}
 
-                    {/* Pinned Message carousel Start */}
-                    {!hideChat && pinnedMessages?.length > 0 && 
+                  {/* Pinned Message carousel Start */}
+                  {!hideChat && pinnedMessages?.length > 0 &&
                     <PinnedMessagesWidget
                       messages={pinnedMessages}
                       bgColor={groupConfig.colors.background}
@@ -2355,220 +2356,221 @@ const ChatsContent: React.FC = () => {
                         setTabbedPinMsgId(id);
                       }}
                     />}
-                    
-                    {/* Pinned Message Carousel End */}
 
-                    {/* Chat Article Start */}
-                    {<article className={`overflow-y-auto h-full ${hideChat ? "hidden" : "flex"} flex-col py-[12px] overflow-x-hidden min-h-20 pb-0`}
-                      style={{background: groupConfig?.colors.msgBg ?? MSG_BG_COLOR}}
-                    >
-                      {/* <p className="text-center text-sm" style={{color: groupConfig.colors.msgText ?? MSG_COLOR}}><button onClick={() => setLastChatDate(lastChatDate + 1)}>Read More</button></p> */}
-                      <div className="flex flex-col overflow-y-scroll gap-[4px]" ref={scrollContainerRef} >
-                        {filteredMsgList?.length ? filteredMsgList.map((message, idx) => {
-                          if (message.group_id === selectedChatGroup?.id) {
-                            return (
-                              <div key={idx} ref={setMsgItemRef(idx)}>
-                                <Message
-                                  key={`message-${idx}`}                          
-                                  messageId={message.Id}
-                                  avatar={message?.sender_avatar ? `${SERVER_URL}/uploads/users/${message.sender_avatar}` : null}
-                                  senderId={message.Sender_Id}
-                                  sender={message.sender_name}
-                                  content={`${message.Content}`}
-                                  sender_banned={selectedChatGroup?.members?.find(mem => mem.id === message.Sender_Id)?.banned ?? null}
-                                  time={chatDate(`${message.Send_Time}`)}
-                                  read_time={message.Read_Time}
-                                  parentMsg={filteredMsgList.find(msg => msg.Id === message.parent_id)}
-                                  showPin={canPinMessage}
-                                  isPinned={pinnedMsgIds.includes(message.Id ?? -1)}
-                                  isTabbed={tabbedPinMsgId == message.Id}
-                                  show_reply={true}
+                  {/* Pinned Message Carousel End */}
 
-                                  show_avatar={groupConfig.settings.userImages ?? SHOW_USER_IMG}
-                                  font_size={groupConfig.settings.customFontSize ? groupConfig.settings.fontSize ?? FONT_SIZE : FONT_SIZE}
-                                  message_color={groupConfig.colors.msgText ?? MSG_COLOR}
-                                  date_color={groupConfig.colors.dateText ?? MSG_DATE_COLOR}
-                                  reply_message_color={groupConfig.colors.replyText ?? REPLY_MGS_COLOR}
+                  {/* Chat Article Start */}
+                  {<article className={`overflow-y-auto h-full ${hideChat ? "hidden" : "flex"} flex-col py-[12px] overflow-x-hidden min-h-20 pb-0`}
+                    style={{ background: groupConfig?.colors.msgBg ?? MSG_BG_COLOR }}
+                  >
+                    {/* <p className="text-center text-sm" style={{color: groupConfig.colors.msgText ?? MSG_COLOR}}><button onClick={() => setLastChatDate(lastChatDate + 1)}>Read More</button></p> */}
+                    <div className="flex flex-col overflow-y-scroll gap-[4px]" ref={scrollContainerRef} >
+                      {filteredMsgList?.length ? filteredMsgList.map((message, idx) => {
+                        if (message.group_id === selectedChatGroup?.id) {
+                          return (
+                            <div key={idx} ref={setMsgItemRef(idx)}>
+                              <Message
+                                key={`message-${idx}`}
+                                messageId={message.Id}
+                                avatar={message?.sender_avatar ? `${SERVER_URL}/uploads/users/${message.sender_avatar}` : null}
+                                senderId={message.Sender_Id}
+                                sender={message.sender_name}
+                                content={`${message.Content}`}
+                                sender_banned={selectedChatGroup?.members?.find(mem => mem.id === message.Sender_Id)?.banned ?? null}
+                                time={chatDate(`${message.Send_Time}`)}
+                                read_time={message.Read_Time}
+                                parentMsg={filteredMsgList.find(msg => msg.Id === message.parent_id)}
+                                showPin={canPinMessage}
+                                isPinned={pinnedMsgIds.includes(message.Id ?? -1)}
+                                isTabbed={tabbedPinMsgId == message.Id}
+                                show_reply={true}
 
-                                  message={message}
-                                  group={selectedChatGroup}
-                                  userId={getCurrentUserId()}
+                                show_avatar={groupConfig.settings.userImages ?? SHOW_USER_IMG}
+                                font_size={groupConfig.settings.customFontSize ? groupConfig.settings.fontSize ?? FONT_SIZE : FONT_SIZE}
+                                message_color={groupConfig.colors.msgText ?? MSG_COLOR}
+                                date_color={groupConfig.colors.dateText ?? MSG_DATE_COLOR}
+                                reply_message_color={groupConfig.colors.replyText ?? REPLY_MGS_COLOR}
 
-                                  onDelete={messageDeleteButtonClicked}
-                                  onBanUser={userBanButtonClicked}
-                                  onReplyMessage={(msgId) => {
-                                    if (isBannedUser) return
-                                    if (!canPost) return
-                                    setReplyMsg(filteredMsgList.find(msg => msg.Id === msgId));
-                                    setShowMsgReplyView(true);
-                                  }}
-                                  onReplyMsgPartClicked={(msgId) => {
-                                    scrollToRepliedMsg(msgId);
-                                  }}
-                                  onEndedHighlight={() => setTabbedPinMsgId(null)}                            
-                                  onPinMessage={(msgId) => {
-                                    if (!canPinMessage) return
-                                    pinnedMsgIds.includes(message.Id ?? -1) ? unpinMessage(msgId) : pinMessage(msgId)
-                                  }}
-                                  onTimeOutUser={onTimeOutGroupUser}     
-                                  onBlockUser={onBlockUser}                             
-                                />
-                              </div>                              
-                            );
-                          }
-                          return null;
-                        }) : ""}</div>
-                    </article>}
-                    {/* Chat Article End */}
-                    <nav className={`relative max-[320px]:px-[5px] gap-[10px] flex flex-col border-t ${isMobile ? "p-[8px]" : "px-[12px] py-[6px]"}`}
-                      style={{background: groupConfig.colors?.background ?? BG_COLOR, 
-                        borderBottomLeftRadius: groupConfig?.settings.roundCorners ? groupConfig.settings.cornerRadius ?? CORNOR_RADIUS : CORNOR_RADIUS,
-                        borderBottomRightRadius: groupConfig?.settings.roundCorners ? groupConfig.settings.cornerRadius ?? CORNOR_RADIUS : CORNOR_RADIUS,
-                        color: groupConfig?.colors.title ?? TITLE_COLOR
-                      }}
-                    >
-                      {/* start upload preview for image or file */}
-                      {attachment?.type && <div className="upload-preview relative">
-                        {attachment.type === 'image' && <Image className="h-[100px] w-auto" src={`${SERVER_URL}/uploads/chats/images/${attachment.url}`} alt="" width={100} height={100} />}
-                        {attachment.type === 'file' && (<div>File : ${attachment.url}</div>)}
-                        <span onClick={handleRemoveAttachment} className="absolute top-0 right-0 text-xl cursor-pointer inline-block w-2 h-2">&times;</span>
-                      </div>}
-                      {/* end upload preview for image or file */}
+                                message={message}
+                                group={selectedChatGroup}
+                                userId={getCurrentUserId()}
 
-                      {showMsgReplyView && replyMsg && <div className="none relative flex flex-row justity-start h-[36px]">
-                        <div><FontAwesomeIcon icon={faReply} className="text-[20px] mt-[4px] mr-[12px] text-[#2596be]"/></div>
-                        {getReplyMsgImgHtml(replyMsg.Content)}
-                        <div className="h-[16px] flex items-center  whitespace-nowrap absolute top-0 right-0 gap-2 mr-[12px]">
-                          <button onClick={() => {
-                            setReplyMsg(null);
-                            setShowMsgReplyView(false);
-                          }}>
-                            <FontAwesomeIcon icon={faClose} className="text-[16px] text-[#8A8A8A]"/>
-                          </button>
-                        </div>   
-                        <div className="ml-[12px] flex-column">
-                          <div className="font-bold text-[15px] text-[#2596be] h-[16px] text-ruby">Reply to {replyMsg?.sender_name}</div> 
-                          {getReplyMsgContentHtml(replyMsg.Content)} 
-                        </div>                   
-                      </div>}
-                          
-                      <div className=" flex max-[810px]:flex-col-reverse justify-between gap-[10px] items-center">
-                        <div className="max-[810px]:flex justify-between max-[810px]:w-full">
-                          <div className="flex gap-[10px] min-w-[126px] relative cursor-pointer max-[810px]:flex">
-                            <span 
-                              onClick={() => {
-                                if (isBannedUser) return
-                                if (!canPost) return
-                                if (hideChat) return
-                                if (!canSend) {
-                                  toast.error("You can't send message now. You can send " + cooldown + " seconds later.");
-                                  return;
-                                }
-                                const memInfo = selectedChatGroup?.members?.find(user => user.id == getCurrentUserId());
-                                const toTime = isTimedout(memInfo?.to_time ?? "")
-                                if (toTime != "" && selectedChatGroup?.creater_id != getCurrentUserId()) {
-                                  toast.error("You can't send message now. You are timed out. You can send message " + toTime + " later.");
-                                  return
-                                }
-                                imageUploadRef.current?.click()
-                              }} 
-                              className="w-[24px] h-[24px]"><FontAwesomeIcon icon={faImages} className="text-[24px]" 
+                                onDelete={messageDeleteButtonClicked}
+                                onBanUser={userBanButtonClicked}
+                                onReplyMessage={(msgId) => {
+                                  if (isBannedUser) return
+                                  if (!canPost) return
+                                  setReplyMsg(filteredMsgList.find(msg => msg.Id === msgId));
+                                  setShowMsgReplyView(true);
+                                }}
+                                onReplyMsgPartClicked={(msgId) => {
+                                  scrollToRepliedMsg(msgId);
+                                }}
+                                onEndedHighlight={() => setTabbedPinMsgId(null)}
+                                onPinMessage={(msgId) => {
+                                  if (!canPinMessage) return
+                                  pinnedMsgIds.includes(message.Id ?? -1) ? unpinMessage(msgId) : pinMessage(msgId)
+                                }}
+                                onTimeOutUser={onTimeOutGroupUser}
+                                onBlockUser={onBlockUser}
+                              />
+                            </div>
+                          );
+                        }
+                        return null;
+                      }) : ""}</div>
+                  </article>}
+                  {/* Chat Article End */}
+                  <nav className={`relative max-[320px]:px-[5px] gap-[10px] flex flex-col border-t ${isMobile ? "p-[8px]" : "px-[12px] py-[6px]"}`}
+                    style={{
+                      background: groupConfig.colors?.background ?? BG_COLOR,
+                      borderBottomLeftRadius: groupConfig?.settings.roundCorners ? groupConfig.settings.cornerRadius ?? CORNOR_RADIUS : CORNOR_RADIUS,
+                      borderBottomRightRadius: groupConfig?.settings.roundCorners ? groupConfig.settings.cornerRadius ?? CORNOR_RADIUS : CORNOR_RADIUS,
+                      color: groupConfig?.colors.title ?? TITLE_COLOR
+                    }}
+                  >
+                    {/* start upload preview for image or file */}
+                    {attachment?.type && <div className="upload-preview relative">
+                      {attachment.type === 'image' && <Image className="h-[100px] w-auto" src={`${SERVER_URL}/uploads/chats/images/${attachment.url}`} alt="" width={100} height={100} />}
+                      {attachment.type === 'file' && (<div>File : ${attachment.url}</div>)}
+                      <span onClick={handleRemoveAttachment} className="absolute top-0 right-0 text-xl cursor-pointer inline-block w-2 h-2">&times;</span>
+                    </div>}
+                    {/* end upload preview for image or file */}
+
+                    {showMsgReplyView && replyMsg && <div className="none relative flex flex-row justity-start h-[36px]">
+                      <div><FontAwesomeIcon icon={faReply} className="text-[20px] mt-[4px] mr-[12px] text-[#2596be]" /></div>
+                      {getReplyMsgImgHtml(replyMsg.Content)}
+                      <div className="h-[16px] flex items-center  whitespace-nowrap absolute top-0 right-0 gap-2 mr-[12px]">
+                        <button onClick={() => {
+                          setReplyMsg(null);
+                          setShowMsgReplyView(false);
+                        }}>
+                          <FontAwesomeIcon icon={faClose} className="text-[16px] text-[#8A8A8A]" />
+                        </button>
+                      </div>
+                      <div className="ml-[12px] flex-column">
+                        <div className="font-bold text-[15px] text-[#2596be] h-[16px] text-ruby">Reply to {replyMsg?.sender_name}</div>
+                        {getReplyMsgContentHtml(replyMsg.Content)}
+                      </div>
+                    </div>}
+
+                    <div className=" flex max-[810px]:flex-col-reverse justify-between gap-[10px] items-center">
+                      <div className="max-[810px]:flex justify-between max-[810px]:w-full">
+                        <div className="flex gap-[10px] min-w-[126px] relative cursor-pointer max-[810px]:flex">
+                          <span
+                            onClick={() => {
+                              if (isBannedUser) return
+                              if (!canPost) return
+                              if (hideChat) return
+                              if (!canSend) {
+                                toast.error("You can't send message now. You can send " + cooldown + " seconds later.");
+                                return;
+                              }
+                              const memInfo = selectedChatGroup?.members?.find(user => user.id == getCurrentUserId());
+                              const toTime = isTimedout(memInfo?.to_time ?? "")
+                              if (toTime != "" && selectedChatGroup?.creater_id != getCurrentUserId()) {
+                                toast.error("You can't send message now. You are timed out. You can send message " + toTime + " later.");
+                                return
+                              }
+                              imageUploadRef.current?.click()
+                            }}
+                            className="w-[24px] h-[24px]"><FontAwesomeIcon icon={faImages} className="text-[24px]"
                             /></span>
-                            {/* <Image onClick={() => imageUploadRef.current?.click()} className="w-[24px] h-[24px]" src={`/assets/light/chats/images.svg`} alt="" width={100} height={100} /> */}
-                            <input ref={imageUploadRef} type="file" onChange={handleImageUpload} className="hidden" accept="image/*" />
-                            <span 
-                              onClick={() => {
-                                if (isBannedUser) return
-                                if (!canPost) return
-                                if (hideChat) return
-                                if (!canSend) {
-                                  toast.error("You can't send message now. You can send " + cooldown + " seconds later.");
-                                  return;
-                                }
-                                const memInfo = selectedChatGroup?.members?.find(user => user.id == getCurrentUserId());
-                                const toTime = isTimedout(memInfo?.to_time ?? "")
-                                if (toTime != "" && selectedChatGroup?.creater_id != getCurrentUserId()) {
-                                  toast.error("You can't send message now. You are timed out. You can send message " + toTime + " later.");
-                                  return
-                                }
-                                fileUploadRef.current?.click()
-                              }} 
-                              className="w-[24px] h-[24px]">
-                                <FontAwesomeIcon icon={faPaperclip} className="text-[24px]" />
-                            </span>
-                            {/* <Image onClick={() => fileUploadRef.current?.click()} className="w-[24px] h-[24px]" src={`/assets/light/chats/paperclip.svg`} alt="" width={100} height={100} /> */}
-                            <input ref={fileUploadRef} type="file" onChange={handleFileUpload} className="hidden" />
-                            {showEmoji &&
-                            <div className=" absolute bottom-[3em] max-[810px]:bottom-[5.5em] w-[370px] h-[415px]">                      
+                          {/* <Image onClick={() => imageUploadRef.current?.click()} className="w-[24px] h-[24px]" src={`/assets/light/chats/images.svg`} alt="" width={100} height={100} /> */}
+                          <input ref={imageUploadRef} type="file" onChange={handleImageUpload} className="hidden" accept="image/*" />
+                          <span
+                            onClick={() => {
+                              if (isBannedUser) return
+                              if (!canPost) return
+                              if (hideChat) return
+                              if (!canSend) {
+                                toast.error("You can't send message now. You can send " + cooldown + " seconds later.");
+                                return;
+                              }
+                              const memInfo = selectedChatGroup?.members?.find(user => user.id == getCurrentUserId());
+                              const toTime = isTimedout(memInfo?.to_time ?? "")
+                              if (toTime != "" && selectedChatGroup?.creater_id != getCurrentUserId()) {
+                                toast.error("You can't send message now. You are timed out. You can send message " + toTime + " later.");
+                                return
+                              }
+                              fileUploadRef.current?.click()
+                            }}
+                            className="w-[24px] h-[24px]">
+                            <FontAwesomeIcon icon={faPaperclip} className="text-[24px]" />
+                          </span>
+                          {/* <Image onClick={() => fileUploadRef.current?.click()} className="w-[24px] h-[24px]" src={`/assets/light/chats/paperclip.svg`} alt="" width={100} height={100} /> */}
+                          <input ref={fileUploadRef} type="file" onChange={handleFileUpload} className="hidden" />
+                          {showEmoji &&
+                            <div className=" absolute bottom-[3em] max-[810px]:bottom-[5.5em] w-[370px] h-[415px]">
                               <EmojiPicker
                                 onSelect={(value) => {
                                   // Example:
                                   if (value.type === 'emoji') { setInputMsg(inputMsg + value.content); inputMsgRef.current?.focus() }
                                   if (value.type === 'gif') {
-                                    sendGroupMsgHandler("gif", "gif::"+value.content);
+                                    sendGroupMsgHandler("gif", "gif::" + value.content);
                                     setInputMsg("");
                                     setShowEmoji(false);
                                   }
                                   if (value.type === 'sticker') {
-                                    sendGroupMsgHandler("sticker", "sticker::"+value.content);
+                                    sendGroupMsgHandler("sticker", "sticker::" + value.content);
                                     setInputMsg("");
                                     setShowEmoji(false);
                                   }
                                 }}
                               />
                             </div>}
-                            <span 
-                              onClick={() => {
-                                if (isBannedUser) return
-                                if (!canPost) return
-                                if (hideChat) return                                
-                                if (!canSend) {
-                                  toast.error("You can't send message now. You can send " + cooldown + " seconds later.");
-                                  return;
-                                }
-                                const memInfo = selectedChatGroup?.members?.find(user => user.id == getCurrentUserId());
-                                const toTime = isTimedout(memInfo?.to_time ?? "")
-                                if (toTime != "" && selectedChatGroup?.creater_id != getCurrentUserId()) return
-                                setShowEmoji(!showEmoji)
-                              }} 
-                              className="w-[24px] h-[24px]"><FontAwesomeIcon icon={faFaceSmile} className="text-[24px]" />
-                            </span>
-                            {/* <Image onClick={() => setShowEmoji(!showEmoji)} className={`w-[24px] h-[24px] ${showEmoji && "bg-gray-200"}`} src={`/assets/light/chats/smile.svg`} alt="" width={100} height={100} /> */}
-                            <Popover placement="bottom-start" showArrow >
-                              <PopoverTrigger>
-                                <div className="w-[24px] h-[24px]" ref={soundMenuPopoverRef}><FontAwesomeIcon icon={faVolumeUp} className="text-[24px]" /></div>
-                                
-                              </PopoverTrigger>
-                              <PopoverContent className="relative bg-white dark:bg-zinc-100 border rounded-md shadow-md p-4 w-64">
-                                <button
-                                  onClick={() => {
-                                    soundMenuPopoverRef.current?.click();
-                                    setSoundSelectedOption(soundSettingOptions.find(opt => opt.option_id == mySoundOptionId)?.val);
-                                  }}
-                                  className="absolute top-2 right-2 text-gray-500 hover:text-black text-[24px]"
-                                  aria-label="Close"
-                                >
-                                  ×
-                                </button>
-                                <h3 className="text-lg font-medium mb-2">Play sounds:</h3>
-                                <ul className="flex flex-col gap-2">
-                                  {soundSettingOptions.map((item, index) => (
-                                    <div className="flex items-center mb-2" key={index}>
-                                      <input
-                                        type="radio"
-                                        id={item.val}
-                                        value={item.val}
-                                        checked={soundSelectedOption === soundSettingOptions[index].val}
-                                        onChange={(e) => {
-                                          setSoundSelectedOption(e.target.value)
-                                        }}
-                                        className="mr-2"
-                                      />
-                                      <label htmlFor={item.val}>{item.name}</label>
-                                    </div>
-                                  ))}
-                                </ul>
-                                <div className="flex justify-end">
+                          <span
+                            onClick={() => {
+                              if (isBannedUser) return
+                              if (!canPost) return
+                              if (hideChat) return
+                              if (!canSend) {
+                                toast.error("You can't send message now. You can send " + cooldown + " seconds later.");
+                                return;
+                              }
+                              const memInfo = selectedChatGroup?.members?.find(user => user.id == getCurrentUserId());
+                              const toTime = isTimedout(memInfo?.to_time ?? "")
+                              if (toTime != "" && selectedChatGroup?.creater_id != getCurrentUserId()) return
+                              setShowEmoji(!showEmoji)
+                            }}
+                            className="w-[24px] h-[24px]"><FontAwesomeIcon icon={faFaceSmile} className="text-[24px]" />
+                          </span>
+                          {/* <Image onClick={() => setShowEmoji(!showEmoji)} className={`w-[24px] h-[24px] ${showEmoji && "bg-gray-200"}`} src={`/assets/light/chats/smile.svg`} alt="" width={100} height={100} /> */}
+                          <Popover placement="bottom-start" showArrow >
+                            <PopoverTrigger>
+                              <div className="w-[24px] h-[24px]" ref={soundMenuPopoverRef}><FontAwesomeIcon icon={faVolumeUp} className="text-[24px]" /></div>
+
+                            </PopoverTrigger>
+                            <PopoverContent className="relative bg-white dark:bg-zinc-100 border rounded-md shadow-md p-4 w-64">
+                              <button
+                                onClick={() => {
+                                  soundMenuPopoverRef.current?.click();
+                                  setSoundSelectedOption(soundSettingOptions.find(opt => opt.option_id == mySoundOptionId)?.val);
+                                }}
+                                className="absolute top-2 right-2 text-gray-500 hover:text-black text-[24px]"
+                                aria-label="Close"
+                              >
+                                ×
+                              </button>
+                              <h3 className="text-lg font-medium mb-2">Play sounds:</h3>
+                              <ul className="flex flex-col gap-2">
+                                {soundSettingOptions.map((item, index) => (
+                                  <div className="flex items-center mb-2" key={index}>
+                                    <input
+                                      type="radio"
+                                      id={item.val}
+                                      value={item.val}
+                                      checked={soundSelectedOption === soundSettingOptions[index].val}
+                                      onChange={(e) => {
+                                        setSoundSelectedOption(e.target.value)
+                                      }}
+                                      className="mr-2"
+                                    />
+                                    <label htmlFor={item.val}>{item.name}</label>
+                                  </div>
+                                ))}
+                              </ul>
+                              <div className="flex justify-end">
                                 <button
                                   type="button"
                                   onClick={() => {
@@ -2579,19 +2581,19 @@ const ChatsContent: React.FC = () => {
                                   OK
                                 </button>
                               </div>
-                              </PopoverContent>
-                            </Popover>                    
-                          </div>
-                          <div className={`hidden gap-[10px] ${adminManageOptions?.length > 0 && !isBannedUser ? "min-w-[152px]" : "min-w-[112px]"} relative cursor-pointer max-[810px]:flex justify-end`}>                      
-                            {showOnlineUserCount && <div className="w-[40px] h-[24px]" onClick={() => setOpenGroupOnlineUsersPopup(true)}><FontAwesomeIcon icon={faUser} className="text-[24px] mr-[8px]" />{groupOnlineUserIds.length}</div>}
-                            <Popover placement="bottom-start" showArrow >
-                              <PopoverTrigger>
-                                <div className="w-[24px] h-[24px]" ref={filterPopoverRef}><FontAwesomeIcon icon={faFilter} className="text-[24px]" /></div>
-                                
-                              </PopoverTrigger>
-                              <PopoverContent className="relative bg-white dark:bg-zinc-100 border rounded-md shadow-md p-4 ">
-                                <ul className="flex flex-col gap-2 w-[240px]">
-                                  {filterOptions &&                           
+                            </PopoverContent>
+                          </Popover>
+                        </div>
+                        <div className={`hidden gap-[10px] ${adminManageOptions?.length > 0 && !isBannedUser ? "min-w-[152px]" : "min-w-[112px]"} relative cursor-pointer max-[810px]:flex justify-end`}>
+                          {showOnlineUserCount && <div className="w-[40px] h-[24px]" onClick={() => setOpenGroupOnlineUsersPopup(true)}><FontAwesomeIcon icon={faUser} className="text-[24px] mr-[8px]" />{groupOnlineUserIds.length}</div>}
+                          <Popover placement="bottom-start" showArrow >
+                            <PopoverTrigger>
+                              <div className="w-[24px] h-[24px]" ref={filterPopoverRef}><FontAwesomeIcon icon={faFilter} className="text-[24px]" /></div>
+
+                            </PopoverTrigger>
+                            <PopoverContent className="relative bg-white dark:bg-zinc-100 border rounded-md shadow-md p-4 ">
+                              <ul className="flex flex-col gap-2 w-[240px]">
+                                {filterOptions &&
                                   <FilterWidget
                                     currentMode={filterMode}
                                     filteredUser={filteredUser}
@@ -2606,11 +2608,11 @@ const ChatsContent: React.FC = () => {
                                       console.log('Selected User:', user)
                                     }}
                                   />}
-                                </ul>
-                              </PopoverContent>
-                            </Popover>  
-                            
-                            {adminManageOptions?.length > 0 && !isBannedUser && 
+                              </ul>
+                            </PopoverContent>
+                          </Popover>
+
+                          {adminManageOptions?.length > 0 && !isBannedUser &&
                             <Popover placement="bottom-start" showArrow >
                               <PopoverTrigger>
                                 <div className="w-[24px] h-[24px]" ref={adminManagePopoverRef}><FontAwesomeIcon icon={faSliders} className="text-[24px]" /></div>
@@ -2618,9 +2620,9 @@ const ChatsContent: React.FC = () => {
                               <PopoverContent className="relative bg-white dark:bg-zinc-100 border rounded-md shadow-md p-4 w-60">
                                 <ul className="flex flex-col gap-2">
                                   {adminManageOptions.map((item, index) => (
-                                    <div 
-                                      className="flex items-center mb-2 cursor-pointer" 
-                                      key={index} 
+                                    <div
+                                      className="flex items-center mb-2 cursor-pointer"
+                                      key={index}
                                       onClick={() => {
                                         handleAdminOptionClick(item.id);
                                         adminManagePopoverRef.current?.click()
@@ -2631,34 +2633,34 @@ const ChatsContent: React.FC = () => {
                                   ))}
                                 </ul>
                               </PopoverContent>
-                            </Popover>}                                           
-                          </div>
-                        </div>                  
-                        <div className={`flex w-full items-center justify-between p-[6px] ${isMobile ? "pl-12px" : "pl-[16px]"} rounded-full border`}
-                          style={{background: groupConfig?.colors.inputBg ?? INPUT_BG_COLOR}}
-                        >
-                          <input 
-                            type="text" 
-                            ref={inputMsgRef} 
-                            onKeyDown={(e) => e.keyCode === 13 && sendGroupMsgHandler("msg", "")} 
-                            value={inputMsg} onChange={(e) => setInputMsg(e.target.value)} 
-                            className="w-full outline-none text-[14px] leading-[24px]" placeholder="Write a message" 
-                            style={{background: groupConfig?.colors.inputBg ?? INPUT_BG_COLOR, color: groupConfig?.colors.msgText ?? MSG_COLOR}}
-                          />
-                          <button onClick={() => sendGroupMsgHandler("msg", "")} className="h-[30px] active:translate-y-[2px] py-[3px] max-[320px]:px-[12px] px-[26px] rounded-full text-[14px] max-[320px]:text-[10px] text-white bg-gradient-to-r from-[#BD00FF] to-[#3A4EFF]">
-                            {isMobile ? <span className="hidden max-[810px]:flex"><FontAwesomeIcon icon={faPaperPlane} className="text-[16px]" /></span> : "Send"}
-                          </button>
+                            </Popover>}
                         </div>
-                        <div className={`flex gap-[10px] ${adminManageOptions?.length > 0 && !isBannedUser ? "min-w-[122px]" : "min-w-[82px]"} relative cursor-pointer max-[810px]:hidden`}>                      
-                          {showOnlineUserCount && <div className="w-auto h-[24px]" onClick={() => setOpenGroupOnlineUsersPopup(!openGroupOnlineUsersPopup)}><FontAwesomeIcon icon={faUser} className="text-[24px] pr-[6px]" />{groupOnlineUserIds.length}</div>}
-                          <Popover placement="bottom-start" showArrow >
-                            <PopoverTrigger>
-                              <div className="w-[24px] h-[24px]" ref={filterPopoverRef}><FontAwesomeIcon icon={faFilter} className="text-[24px]" /></div>
-                              
-                            </PopoverTrigger>
-                            <PopoverContent className="relative bg-white dark:bg-zinc-100 border rounded-md shadow-md p-4 ">
-                              <ul className="flex flex-col gap-2 w-[240px]">
-                                {filterOptions &&                           
+                      </div>
+                      <div className={`flex w-full items-center justify-between p-[6px] ${isMobile ? "pl-12px" : "pl-[16px]"} rounded-full border`}
+                        style={{ background: groupConfig?.colors.inputBg ?? INPUT_BG_COLOR }}
+                      >
+                        <input
+                          type="text"
+                          ref={inputMsgRef}
+                          onKeyDown={(e) => e.keyCode === 13 && sendGroupMsgHandler("msg", "")}
+                          value={inputMsg} onChange={(e) => setInputMsg(e.target.value)}
+                          className="w-full outline-none text-[14px] leading-[24px]" placeholder="Write a message"
+                          style={{ background: groupConfig?.colors.inputBg ?? INPUT_BG_COLOR, color: groupConfig?.colors.msgText ?? MSG_COLOR }}
+                        />
+                        <button onClick={() => sendGroupMsgHandler("msg", "")} className="h-[30px] active:translate-y-[2px] py-[3px] max-[320px]:px-[12px] px-[26px] rounded-full text-[14px] max-[320px]:text-[10px] text-white bg-gradient-to-r from-[#BD00FF] to-[#3A4EFF]">
+                          {isMobile ? <span className="hidden max-[810px]:flex"><FontAwesomeIcon icon={faPaperPlane} className="text-[16px]" /></span> : "Send"}
+                        </button>
+                      </div>
+                      <div className={`flex gap-[10px] ${adminManageOptions?.length > 0 && !isBannedUser ? "min-w-[122px]" : "min-w-[82px]"} relative cursor-pointer max-[810px]:hidden`}>
+                        {showOnlineUserCount && <div className="w-auto h-[24px]" onClick={() => setOpenGroupOnlineUsersPopup(!openGroupOnlineUsersPopup)}><FontAwesomeIcon icon={faUser} className="text-[24px] pr-[6px]" />{groupOnlineUserIds.length}</div>}
+                        <Popover placement="bottom-start" showArrow >
+                          <PopoverTrigger>
+                            <div className="w-[24px] h-[24px]" ref={filterPopoverRef}><FontAwesomeIcon icon={faFilter} className="text-[24px]" /></div>
+
+                          </PopoverTrigger>
+                          <PopoverContent className="relative bg-white dark:bg-zinc-100 border rounded-md shadow-md p-4 ">
+                            <ul className="flex flex-col gap-2 w-[240px]">
+                              {filterOptions &&
                                 <FilterWidget
                                   currentMode={filterMode}
                                   filteredUser={filteredUser}
@@ -2673,11 +2675,11 @@ const ChatsContent: React.FC = () => {
                                     console.log('Selected User:', user)
                                   }}
                                 />}
-                              </ul>
-                            </PopoverContent>
-                          </Popover>  
-                          
-                          {adminManageOptions?.length > 0 && !isBannedUser && 
+                            </ul>
+                          </PopoverContent>
+                        </Popover>
+
+                        {adminManageOptions?.length > 0 && !isBannedUser &&
                           <Popover placement="bottom-start" showArrow >
                             <PopoverTrigger>
                               <div className="w-[24px] h-[24px]" ref={adminManagePopoverRef}><FontAwesomeIcon icon={faSliders} className="text-[24px]" /></div>
@@ -2685,9 +2687,9 @@ const ChatsContent: React.FC = () => {
                             <PopoverContent className="relative bg-white dark:bg-zinc-100 border rounded-md shadow-md p-4 w-60">
                               <ul className="flex flex-col gap-2">
                                 {adminManageOptions.map((item, index) => (
-                                  <div 
-                                    className="flex items-center mb-2 cursor-pointer" 
-                                    key={index} 
+                                  <div
+                                    className="flex items-center mb-2 cursor-pointer"
+                                    key={index}
                                     onClick={() => {
                                       handleAdminOptionClick(item.id);
                                       adminManagePopoverRef.current?.click()
@@ -2698,25 +2700,25 @@ const ChatsContent: React.FC = () => {
                                 ))}
                               </ul>
                             </PopoverContent>
-                          </Popover>}                                           
-                        </div>
+                          </Popover>}
                       </div>
-                      {/* Image Upload, File Upload, Emoticon End */}
-                      {showJoinView &&
+                    </div>
+                    {/* Image Upload, File Upload, Emoticon End */}
+                    {showJoinView &&
                       <div className="z-[11] w-full h-full absolute bottom-[0px] right-[0px] py-[3px] border-t px-[8px]" onClick={joinToGroup}>
-                          <div className="h-full w-full bg-white flex justify-center items-center cursor-pointer"
-                            style={{
-                              background: groupConfig.colors.background ?? BG_COLOR,
-                              borderRadius: groupConfig.settings.roundCorners ? groupConfig.settings.cornerRadius ?? CORNOR_RADIUS : CORNOR_RADIUS
-                            }}
-                          >
-                                Join now
-                          </div>
-                      </div>}                
-                    </nav>              
-                  </section>
-                  {/* Chat Right Side Start ---Message History */}
-                
+                        <div className="h-full w-full bg-white flex justify-center items-center cursor-pointer"
+                          style={{
+                            background: groupConfig.colors.background ?? BG_COLOR,
+                            borderRadius: groupConfig.settings.roundCorners ? groupConfig.settings.cornerRadius ?? CORNOR_RADIUS : CORNOR_RADIUS
+                          }}
+                        >
+                          Join now
+                        </div>
+                      </div>}
+                  </nav>
+                </section>
+                {/* Chat Right Side Start ---Message History */}
+
                 {/* Resize Handle */}
                 {config.sizeMode === 'fixed' && (
                   <div
@@ -2737,11 +2739,11 @@ const ChatsContent: React.FC = () => {
                   <p className="text-sm mt-2">Configure colors and settings in the left panel</p> */}
                 </div>
               </div>
-            </div>            
+            </div>
           </div>
         </div>
       </div>
-        {/* Chats Area End */}
+      {/* Chats Area End */}
       <SendNotificationPopup
         isOpen={openSendGroupNotification}
         onClose={() => setOpenSendGroupNotification(false)}
@@ -2788,12 +2790,12 @@ const ChatsContent: React.FC = () => {
           setBanUserId(null);
         }}
         onYesBtnClicked={unbanUser}
-      />      
+      />
       <GroupCreatPopup isOpen={openNewGroupPop} onClose={() => setOpenNewGroupPop(false)}>
         <h2 className="text-xl font-semibold mb-2 flex justify-center">Create New Group</h2>
-        <input 
-          type="text" 
-          ref={inputGroupRef} 
+        <input
+          type="text"
+          ref={inputGroupRef}
           onChange={(e) => {
             if (inputGroupRef.current?.value == "") {
               setGroupNameMessage("");
@@ -2807,57 +2809,57 @@ const ChatsContent: React.FC = () => {
               checkGroupNameAvailability();
             }
           }}
-          className="w-full px-5 border border-gray-200 bg-gray-100 rounded-[12px] p-2 mb-[20px]" 
-          placeholder="Write a group name" 
+          className="w-full px-5 border border-gray-200 bg-gray-100 rounded-[12px] p-2 mb-[20px]"
+          placeholder="Write a group name"
         />
-        {groupNameMessage != ""  && <div className="text-sm my-2 text-[red]">{groupNameMessage}</div>}   
-        <GroupPropsEditWidget 
-          groupName={newGroupName} 
+        {groupNameMessage != "" && <div className="text-sm my-2 text-[red]">{groupNameMessage}</div>}
+        <GroupPropsEditWidget
+          groupName={newGroupName}
           groupConfig={null}
           msgList={null}
           onUpdatedConfig={(conf) => {
             setConfig(conf);
           }}
-        />         
-        <button  className={`h-[40px] mt-[20px] py-[2px] rounded-[12px] font-semibold text-white w-full ${groupNameIsValid ? "bg-gradient-to-r from-[#BD00FF] to-[#3A4EFF] cursor-pointer" : "bg-gray-400 cursor-no-drop"} `}
-        onClick={() => onCreateNewGroup()}>Create</button>
+        />
+        <button className={`h-[40px] mt-[20px] py-[2px] rounded-[12px] font-semibold text-white w-full ${groupNameIsValid ? "bg-gradient-to-r from-[#BD00FF] to-[#3A4EFF] cursor-pointer" : "bg-gray-400 cursor-no-drop"} `}
+          onClick={() => onCreateNewGroup()}>Create</button>
       </GroupCreatPopup>
 
       <GroupCreatPopup isOpen={openEditGroupPop} onClose={() => setOpenEditGroupPop(false)}>
         <h2 className="text-xl font-semibold mb-2 flex justify-center">Group: {selectedChatGroup?.name}</h2>
-        <GroupPropsEditWidget 
-          groupName={selectedChatGroup?.name ?? ""} 
+        <GroupPropsEditWidget
+          groupName={selectedChatGroup?.name ?? ""}
           groupConfig={groupConfig}
           msgList={filteredMsgList}
           onUpdatedConfig={(conf) => {
             setGroupEditConfig(conf);
           }}
-        />         
-        <button  className={`h-[40px] mt-[20px] py-[2px] rounded-[12px] font-semibold text-white w-full bg-gradient-to-r from-[#BD00FF] to-[#3A4EFF] cursor-pointer `}
-        onClick={() => onSaveGroupConfig()}>Save</button>
+        />
+        <button className={`h-[40px] mt-[20px] py-[2px] rounded-[12px] font-semibold text-white w-full bg-gradient-to-r from-[#BD00FF] to-[#3A4EFF] cursor-pointer `}
+          onClick={() => onSaveGroupConfig()}>Save</button>
       </GroupCreatPopup>
 
       {/* Group Admin Modals */}
-      <ChatLimitPopup 
-        isOpen={openChatLimitationPopup} 
-        postLvl = {selectedChatGroup?.post_level}
-        urlLvl = {selectedChatGroup?.url_level}
-        slow_mode = {selectedChatGroup?.slow_mode}
-        slowTime = {selectedChatGroup?.slow_time}
+      <ChatLimitPopup
+        isOpen={openChatLimitationPopup}
+        postLvl={selectedChatGroup?.post_level}
+        urlLvl={selectedChatGroup?.url_level}
+        slow_mode={selectedChatGroup?.slow_mode}
+        slowTime={selectedChatGroup?.slow_time}
         onClose={() => {
           setOpenChatLimitationPopup(false)
-        }} 
+        }}
         onConfirm={updateChatLimits}
       />
 
-      <BannedUsersPopup 
+      <BannedUsersPopup
         users={groupBannedUsers}
         isOpen={openBannedUsersWidget}
         onClose={() => setOpenBannedUsersWidget(false)}
         unbanUsers={unbanUsers}
       />
 
-      <IpBansPopup 
+      <IpBansPopup
         ipBans={groupIpBans}
         isOpen={openIpBansWidget}
         onClose={() => setOpenIpBansWidget(false)}
@@ -2873,14 +2875,14 @@ const ChatsContent: React.FC = () => {
         onUpdateModPermissions={updateModeratorPermissions}
       />
 
-      <CensoredContentsPopup 
+      <CensoredContentsPopup
         isOpen={openCensoredPopup}
         onClose={() => setOpenCensoredPopup(false)}
         contentsStr={selectedChatGroup?.censored_words ?? ""}
         onSave={updateCensoredContents}
       />
 
-      <ManageChatPopup 
+      <ManageChatPopup
         isOpen={openManageChatPopup}
         isOpenPinnedMsgView={showPinnedMessagesView}
         onClose={() => setOpenManageChatPopup(false)}
