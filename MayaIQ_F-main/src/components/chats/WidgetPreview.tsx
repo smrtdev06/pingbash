@@ -60,23 +60,26 @@ const WidgetPreview: React.FC<WidgetPreviewProps> = ({
       ? `${SERVER_URL}/uploads/users/${message.sender_avatar}` 
       : null;
     
+    const senderName = message.sender_name || 'Anonymous';
+    const sendTime = message.Send_Time || new Date().toISOString();
+    
     return (
       <div key={idx} className="pingbash-message" data-message-id={message.Id}>
         <div className="pingbash-message-content">
           {settings.userImages && avatarUrl && (
             <img 
               src={avatarUrl} 
-              alt={message.sender_name} 
+              alt={senderName} 
               className="pingbash-message-avatar"
             />
           )}
           <div className="pingbash-message-body">
             <div className="pingbash-message-header">
               <span className="pingbash-message-sender" style={{ color: colors.msgText }}>
-                {message.sender_name}
+                {senderName}
               </span>
               <span className="pingbash-message-time" style={{ color: colors.dateText }}>
-                {chatDate(message.Send_Time)}
+                {chatDate(sendTime)}
               </span>
             </div>
             <div 
