@@ -48,64 +48,64 @@ const WidgetPreview: React.FC<WidgetPreviewProps> = ({
 }) => {
   const messagesRef = useRef<HTMLDivElement>(null);
 
-  // Sample messages for preview (same as old ChatBox)
+  // Sample messages for preview with placeholder avatars
   const sampleMessages: MessageUnit[] = [
     {
-      Opposite_Photo_Name: "shyvana.png",
-      Content: "I am the best champion of LOL",
-      Send_Time: "2025-07-24 06:01:11",
+      Opposite_Photo_Name: null,
+      Content: "Hello everyone! Welcome to our chat group! 👋",
+      Send_Time: new Date(Date.now() - 5 * 60000).toISOString(), // 5 minutes ago
       Receiver_Id: null,
       Id: 1,
       Sender_Id: 1,
       Read_Time: null,
       group_id: 10,
-      sender_name: "Shyvana",
-      sender_avatar: "shyvana.png",
+      sender_name: "Alice Johnson",
+      sender_avatar: null, // No avatar - will use placeholder
       sender_banned: null,
       sender_unban_request: null,
       parent_id: null
     },
     {
-      Opposite_Photo_Name: "lux.png",
-      Content: "I am the best Supporter of LOL",
-      Send_Time: "2025-07-24 06:02:11",
+      Opposite_Photo_Name: null,
+      Content: "Hi Alice! Great to be here. This chat widget looks amazing! 😊",
+      Send_Time: new Date(Date.now() - 4 * 60000).toISOString(), // 4 minutes ago
       Receiver_Id: null,
       Id: 2,
       Sender_Id: 2,
       Read_Time: null,
       group_id: 10,
-      sender_name: "LUX",
-      sender_avatar: "lux.png",
+      sender_name: "Bob Smith",
+      sender_avatar: null,
       sender_banned: null,
       sender_unban_request: null,
       parent_id: null
     },
     {
-      Opposite_Photo_Name: "garen.png",
-      Content: "I am the most powerful Champion of LOL",
-      Send_Time: "2025-07-24 06:03:11",
+      Opposite_Photo_Name: null,
+      Content: "I love the customization options! The colors look perfect. 🎨",
+      Send_Time: new Date(Date.now() - 3 * 60000).toISOString(), // 3 minutes ago
       Receiver_Id: null,
       Id: 3,
       Sender_Id: 3,
       Read_Time: null,
       group_id: 10,
-      sender_name: "Garen",
-      sender_avatar: "garen.png",
+      sender_name: "Carol Williams",
+      sender_avatar: null,
       sender_banned: null,
       sender_unban_request: null,
       parent_id: null
     },
     {
-      Opposite_Photo_Name: "teemo.png",
-      Content: "I am the best lovely Champion of LOL",
-      Send_Time: "2025-07-24 06:05:11",
+      Opposite_Photo_Name: null,
+      Content: "This is exactly what we needed for our website! Thank you! 🚀",
+      Send_Time: new Date(Date.now() - 2 * 60000).toISOString(), // 2 minutes ago
       Receiver_Id: null,
-      Id: 5,
-      Sender_Id: 5,
+      Id: 4,
+      Sender_Id: 4,
       Read_Time: null,
       group_id: 10,
-      sender_name: "Teemo",
-      sender_avatar: "teemo.png",
+      sender_name: "David Brown",
+      sender_avatar: null,
       sender_banned: null,
       sender_unban_request: null,
       parent_id: null
@@ -123,37 +123,133 @@ const WidgetPreview: React.FC<WidgetPreviewProps> = ({
   }, [displayMessages]);
 
   const renderMessage = (message: MessageUnit, idx: number) => {
-    const avatarUrl = message?.sender_avatar 
-      ? `${SERVER_URL}/uploads/users/${message.sender_avatar}` 
-      : null;
-    
     const senderName = message.sender_name || 'Anonymous';
     const sendTime = message.Send_Time || new Date().toISOString();
     
+    // Generate avatar: use real avatar if available, otherwise create placeholder with initials
+    const getAvatarElement = () => {
+      if (!settings.userImages) return null;
+      
+      const avatarUrl = message?.sender_avatar 
+        ? `${SERVER_URL}/uploads/users/${message.sender_avatar}` 
+        : null;
+      
+      if (avatarUrl) {
+        return (
+          <img 
+            src={avatarUrl} 
+            alt={senderName} 
+            className="pingbash-message-avatar"
+            style={{
+              width: '32px',
+              height: '32px',
+              borderRadius: '50%',
+              objectFit: 'cover',
+              flexShrink: 0
+            }}
+          />
+        );
+      }
+      
+      // Create placeholder avatar with initials
+      const initials = senderName
+        .split(' ')
+        .map(word => word[0])
+        .join('')
+        .toUpperCase()
+        .slice(0, 2);
+      
+      // Generate color based on sender ID for consistent colors
+      const avatarColors = [
+        '#667eea', '#764ba2', '#f093fb', '#4facfe',
+        '#43e97b', '#fa709a', '#30cfd0', '#a8edea'
+      ];
+      const colorIndex = (message.Sender_Id || idx) % avatarColors.length;
+      const bgColor = avatarColors[colorIndex];
+      
+      return (
+        <div 
+          className="pingbash-message-avatar"
+          style={{
+            width: '32px',
+            height: '32px',
+            borderRadius: '50%',
+            backgroundColor: bgColor,
+            color: 'white',
+            fontWeight: 'bold',
+            fontSize: '14px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexShrink: 0
+          }}
+        >
+          {initials}
+        </div>
+      );
+    };
+    
     return (
-      <div key={idx} className="pingbash-message" data-message-id={message.Id}>
-        <div className="pingbash-message-content">
-          {settings.userImages && avatarUrl && (
-            <img 
-              src={avatarUrl} 
-              alt={senderName} 
-              className="pingbash-message-avatar"
-            />
-          )}
-          <div className="pingbash-message-body">
-            <div className="pingbash-message-header">
-              <span className="pingbash-message-sender" style={{ color: colors.msgText }}>
+      <div 
+        key={idx} 
+        className="pingbash-message" 
+        data-message-id={message.Id}
+        style={{
+          marginBottom: '2px',
+          display: 'flex',
+          width: '100%'
+        }}
+      >
+        <div 
+          className="pingbash-message-content"
+          style={{
+            display: 'flex',
+            alignItems: 'flex-start',
+            gap: '2px',
+            flex: 1,
+            maxWidth: '100%'
+          }}
+        >
+          {getAvatarElement()}
+          <div 
+            className="pingbash-message-body"
+            style={{
+              flex: 1,
+              minWidth: 0,
+              maxWidth: '80%',
+              padding: '4px 8px',
+              borderRadius: '18px',
+              borderBottomLeftRadius: '4px',
+              background: '#f0f0f0',
+              color: '#333',
+              position: 'relative'
+            }}
+          >
+            <div 
+              className="pingbash-message-header"
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: '1px',
+                opacity: 0.7,
+                fontSize: '11px'
+              }}
+            >
+              <span className="pingbash-message-sender" style={{ fontWeight: 600 }}>
                 {senderName}
               </span>
-              <span className="pingbash-message-time" style={{ color: colors.dateText }}>
+              <span className="pingbash-message-time" style={{ fontSize: '10px' }}>
                 {chatDate(sendTime)}
               </span>
             </div>
             <div 
-              className="pingbash-message-text" 
-              style={{ 
-                color: colors.msgText,
-                fontSize: settings.customFontSize ? `${settings.fontSize}px` : '14px'
+              className="pingbash-message-text"
+              style={{
+                fontSize: '14px',
+                lineHeight: '1.5',
+                wordWrap: 'break-word',
+                whiteSpace: 'pre-wrap'
               }}
             >
               {message.Content}
@@ -281,48 +377,63 @@ const WidgetPreview: React.FC<WidgetPreviewProps> = ({
         }
 
         .pingbash-message {
-          margin-bottom: 16px;
+          margin-bottom: 2px !important;
+          opacity: 1 !important;
+          display: flex !important;
+          width: 100% !important;
         }
 
         .pingbash-message-content {
-          display: flex;
-          gap: 12px;
+          display: flex !important;
+          align-items: flex-start !important;
+          gap: 2px !important;
+          flex: 1 !important;
+          max-width: 100% !important;
+          word-wrap: break-word !important;
         }
 
         .pingbash-message-avatar {
-          width: 40px;
-          height: 40px;
-          border-radius: 50%;
-          object-fit: cover;
-          flex-shrink: 0;
+          width: 32px !important;
+          height: 32px !important;
+          border-radius: 50% !important;
+          object-fit: cover !important;
+          flex-shrink: 0 !important;
         }
 
         .pingbash-message-body {
-          flex: 1;
-          min-width: 0;
+          flex: 1 !important;
+          min-width: 0 !important;
+          padding: 4px 8px !important;
+          border-radius: 18px !important;
+          position: relative !important;
+          background: #f0f0f0 !important;
+          color: #333 !important;
+          border-bottom-left-radius: 4px !important;
+          max-width: 80% !important;
         }
 
         .pingbash-message-header {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          margin-bottom: 4px;
+          display: flex !important;
+          justify-content: space-between !important;
+          align-items: center !important;
+          margin-bottom: 1px !important;
+          opacity: 0.7 !important;
+          font-size: 11px !important;
         }
 
         .pingbash-message-sender {
-          font-weight: 600;
-          font-size: 14px;
+          font-weight: 600 !important;
         }
 
         .pingbash-message-time {
-          font-size: 12px;
-          opacity: 0.7;
+          font-size: 10px !important;
         }
 
         .pingbash-message-text {
-          word-wrap: break-word;
-          white-space: pre-wrap;
-          line-height: 1.5;
+          word-wrap: break-word !important;
+          white-space: pre-wrap !important;
+          line-height: 1.5 !important;
+          font-size: 14px !important;
         }
 
         .pingbash-bottom-bar {
