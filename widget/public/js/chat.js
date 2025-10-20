@@ -1904,6 +1904,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
 
       // Filter messages from all blocked users
       filterMessagesFromBlockedUsers() {
+        console.log('🚫🚫🚫 [Widget] NEW VERSION LOADED - filterMessagesFromBlockedUsers called');
         if (!this.blockedUsers || this.blockedUsers.size === 0) {
           if( window.isDebugging ) console.log('🚫 [Widget] No blocked users to filter');
           return;
