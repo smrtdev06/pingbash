@@ -755,7 +755,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
           padding: 4px;
           border-radius: 4px;
           transition: all 0.2s ease;
-          display: flex;
+          display: none;
           align-items: center;
           justify-content: center;
           margin-right: 4px;

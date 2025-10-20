@@ -1849,11 +1849,6 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
       blockUser(userId) {
         if( window.isDebugging ) console.log('🚫 [Widget] Blocking user:', userId);
         
-        if (!this.isAuthenticated || !this.authenticatedToken) {
-          ////alert('You must be signed in to block users');
-          return;
-        }
-
         // User cannot block themselves
         const currentUserId = this.getCurrentUserId();
         if (userId === currentUserId) {
@@ -2455,6 +2450,9 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
 
   });
 }
+
+
+
 
 
 

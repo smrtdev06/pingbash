@@ -746,7 +746,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
       
       const isPopout = this.dialog.classList.contains('popout-mode');
       const popoutIcon = this.dialog.querySelector('.pingbash-popout-icon');
-      const fullscreenIcon = this.dialog.querySelector('.pingbash-fullscreen-icon');
+      // const fullscreenIcon = this.dialog.querySelector('.pingbash-fullscreen-icon');
       const popoutBtn = this.dialog.querySelector('.pingbash-popout-btn');
       
       if (isPopout) {
@@ -2429,37 +2429,49 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
           if( window.isDebugging ) console.log('📱 [Widget] Mobile detected - using CSS media query sizing');
         }
       } else {
-        // Desktop: Check if user has manually resized
-        const hasCustomSize = actualChatDialog.style.width && 
-                              actualChatDialog.style.width !== '' &&
-                              !actualChatDialog.hasAttribute('data-initial-load');
-        
-        if (hasCustomSize) {
-          // Preserve user's manual resize on desktop
-          if( window.isDebugging ) console.log('🖥️ [Widget] Desktop - preserving user resized size:', actualChatDialog.style.width, 'x', actualChatDialog.style.height);
-        } else if (groupData.size_mode === 'fixed' && groupData.frame_width && groupData.frame_height) {
-          // Desktop: Apply fixed size from group data (first load)
-        actualChatDialog.style.width = groupData.frame_width + 'px';
-        actualChatDialog.style.height = groupData.frame_height + 'px';
-          actualChatDialog.style.minWidth = '100px';
-          actualChatDialog.style.minHeight = '100px';
-          actualChatDialog.style.maxWidth = 'none';
-          actualChatDialog.style.maxHeight = 'none';
-          if( window.isDebugging ) console.log('🎨 [Widget] Applied fixed size:', groupData.frame_width + 'x' + groupData.frame_height);
-        } else if (groupData.frame_width && groupData.frame_height) {
-          // Desktop: Fallback for older format without size_mode
-          actualChatDialog.style.width = groupData.frame_width + 'px';
-          actualChatDialog.style.height = groupData.frame_height + 'px';
-          if( window.isDebugging ) console.log('🎨 [Widget] Applied legacy size:', groupData.frame_width + 'x' + groupData.frame_height);
-        } else {
-          // Desktop: Responsive mode - reset to default responsive behavior
-          actualChatDialog.style.width = '';
-          actualChatDialog.style.height = '';
+        // Desktop: Check if in embedded mode first
+        if (this.isEmbeddedMode) {
+          // In embedded mode, ensure dialog fills parent container
+          actualChatDialog.style.width = '100%';
+          actualChatDialog.style.height = '100%';
           actualChatDialog.style.minWidth = '';
           actualChatDialog.style.minHeight = '';
           actualChatDialog.style.maxWidth = '';
           actualChatDialog.style.maxHeight = '';
-          if( window.isDebugging ) console.log('🎨 [Widget] Applied responsive sizing');
+          if( window.isDebugging ) console.log('🎯 [Widget] Embedded mode: dialog set to fill parent (100% x 100%)');
+        } else {
+          // Desktop: Check if user has manually resized
+          const hasCustomSize = actualChatDialog.style.width && 
+                                actualChatDialog.style.width !== '' &&
+                                !actualChatDialog.hasAttribute('data-initial-load');
+          
+          if (hasCustomSize) {
+            // Preserve user's manual resize on desktop
+            if( window.isDebugging ) console.log('🖥️ [Widget] Desktop - preserving user resized size:', actualChatDialog.style.width, 'x', actualChatDialog.style.height);
+          } else if (groupData.size_mode === 'fixed' && groupData.frame_width && groupData.frame_height) {
+            // Desktop: Apply fixed size from group data (first load)
+          actualChatDialog.style.width = groupData.frame_width + 'px';
+          actualChatDialog.style.height = groupData.frame_height + 'px';
+            actualChatDialog.style.minWidth = '100px';
+            actualChatDialog.style.minHeight = '100px';
+            actualChatDialog.style.maxWidth = 'none';
+            actualChatDialog.style.maxHeight = 'none';
+            if( window.isDebugging ) console.log('🎨 [Widget] Applied fixed size:', groupData.frame_width + 'x' + groupData.frame_height);
+          } else if (groupData.frame_width && groupData.frame_height) {
+            // Desktop: Fallback for older format without size_mode
+            actualChatDialog.style.width = groupData.frame_width + 'px';
+            actualChatDialog.style.height = groupData.frame_height + 'px';
+            if( window.isDebugging ) console.log('🎨 [Widget] Applied legacy size:', groupData.frame_width + 'x' + groupData.frame_height);
+          } else {
+            // Desktop: Responsive mode - reset to default responsive behavior
+            actualChatDialog.style.width = '';
+            actualChatDialog.style.height = '';
+            actualChatDialog.style.minWidth = '';
+            actualChatDialog.style.minHeight = '';
+            actualChatDialog.style.maxWidth = '';
+            actualChatDialog.style.maxHeight = '';
+            if( window.isDebugging ) console.log('🎨 [Widget] Applied responsive sizing');
+          }
         }
         
         // Remove initial load flag after first settings apply
