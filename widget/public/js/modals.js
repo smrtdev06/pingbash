@@ -1442,7 +1442,8 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
       });
       
       // Only group creator can manage moderators
-      const isGroupCreator = this.group?.creater_id && currentUserId === parseInt(this.group.creater_id);
+      const groupCreatorId = this.group?.creater_id != null ? parseInt(this.group.creater_id) : null;
+      const isGroupCreator = groupCreatorId === currentUserId;
       
       if( window.isDebugging ) console.log('🔍 [Debug] User is group creator - moderator management allowed:', isGroupCreator);
       
@@ -1460,13 +1461,17 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
       });
       
       // Group creator can always manage chat limitations
-      if (this.group?.creater_id && currentUserId === parseInt(this.group.creater_id)) {
+      const groupCreatorId = this.group?.creater_id != null ? parseInt(this.group.creater_id) : null;
+      if (groupCreatorId === currentUserId) {
         if( window.isDebugging ) console.log('🔍 [Debug] User is group creator - chat limitations allowed');
         return true;
       }
       
       // Check if user is a moderator with chat_limit permission
-      const userMember = this.group?.members?.find(member => member.id === currentUserId);
+      const userMember = this.group?.members?.find(member => {
+        const memberId = member?.id != null ? parseInt(member.id) : null;
+        return memberId === currentUserId;
+      });
       const hasPermission = userMember && userMember.role_id === 2 && userMember.chat_limit === true;
       
       if( window.isDebugging ) console.log('🔍 [Debug] Chat limitations check:', {
@@ -1492,13 +1497,17 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
       });
       
       // Group creator can always manage chat
-      if (this.group?.creater_id && currentUserId === parseInt(this.group.creater_id)) {
+      const groupCreatorId = this.group?.creater_id != null ? parseInt(this.group.creater_id) : null;
+      if (groupCreatorId === currentUserId) {
         if( window.isDebugging ) console.log('🔍 [Debug] User is group creator - manage chat allowed');
         return true;
       }
       
       // Check if user is a moderator with manage_chat permission
-      const userMember = this.group?.members?.find(member => member.id === currentUserId);
+      const userMember = this.group?.members?.find(member => {
+        const memberId = member?.id != null ? parseInt(member.id) : null;
+        return memberId === currentUserId;
+      });
       const hasPermission = userMember && userMember.role_id === 2 && userMember.manage_chat === true;
       
       if( window.isDebugging ) console.log('🔍 [Debug] Manage chat check:', {
@@ -1524,13 +1533,17 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
       });
       
       // Group creator can always manage censored content
-      if (this.group?.creater_id && currentUserId === parseInt(this.group.creater_id)) {
+      const groupCreatorId = this.group?.creater_id != null ? parseInt(this.group.creater_id) : null;
+      if (groupCreatorId === currentUserId) {
         if( window.isDebugging ) console.log('🔍 [Debug] User is group creator - censored content allowed');
         return true;
       }
       
       // Check if user is a moderator with manage_censored permission
-      const userMember = this.group?.members?.find(member => member.id === currentUserId);
+      const userMember = this.group?.members?.find(member => {
+        const memberId = member?.id != null ? parseInt(member.id) : null;
+        return memberId === currentUserId;
+      });
       const hasPermission = userMember && userMember.role_id === 2 && userMember.manage_censored === true;
       
       if( window.isDebugging ) console.log('🔍 [Debug] Censored content check:', {
@@ -1661,7 +1674,10 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
         const isGroupOwner = this.group && currentUserId === this.group.creater_id;
         
         // Check if user is moderator with ban permission
-        const myMemInfo = this.group?.members?.find(user => user.id === currentUserId);
+        const myMemInfo = this.group?.members?.find(user => {
+          const userId = user?.id != null ? parseInt(user.id) : null;
+          return userId === currentUserId;
+        });
         const canBanUsers = (myMemInfo?.role_id === 2 && myMemInfo?.ban_user === true);
         const hasAccessToBannedUsers = isGroupOwner || canBanUsers;
         
@@ -1694,7 +1710,10 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
         const isGroupOwner = this.group && currentUserId === this.group.creater_id;
         
         // Check if user is moderator with ban permission (reuse same logic as banned users)
-        const myMemInfo = this.group?.members?.find(user => user.id === currentUserId);
+        const myMemInfo = this.group?.members?.find(user => {
+          const userId = user?.id != null ? parseInt(user.id) : null;
+          return userId === currentUserId;
+        });
         const canBanUsers = (myMemInfo?.role_id === 2 && myMemInfo?.ban_user === true);
         const hasAccessToIpBans = isGroupOwner || canBanUsers;
         
@@ -3078,7 +3097,10 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
       if (this.group.creater_id === currentUserId) return true;
       
       // Check if user is mod/admin with chat_limit permission
-      const userMember = this.group.members?.find(member => member.id === currentUserId);
+      const userMember = this.group.members?.find(member => {
+        const memberId = member?.id != null ? parseInt(member.id) : null;
+        return memberId === currentUserId;
+      });
       return userMember && (userMember.role_id === 1 || userMember.role_id === 2) && userMember.chat_limit;
     },
 
@@ -3217,7 +3239,10 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
         if (this.group.creater_id === currentUserId) return true;
         
         // Check if user is mod/admin
-        const userMember = this.group.members?.find(member => member.id === currentUserId);
+        const userMember = this.group.members?.find(member => {
+          const memberId = member?.id != null ? parseInt(member.id) : null;
+          return memberId === currentUserId;
+        });
         return userMember && (userMember.role_id === 1 || userMember.role_id === 2);
       }
       
@@ -3247,7 +3272,10 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
         if (this.group.creater_id === currentUserId) return true;
         
         // Check if user is mod/admin
-        const userMember = this.group.members?.find(member => member.id === currentUserId);
+        const userMember = this.group.members?.find(member => {
+          const memberId = member?.id != null ? parseInt(member.id) : null;
+          return memberId === currentUserId;
+        });
         return userMember && (userMember.role_id === 1 || userMember.role_id === 2);
       }
       
@@ -3273,7 +3301,10 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
         // 🆕 Check if user is admin or moderator (exempt from slow mode)
         const currentUserId = this.getCurrentUserId();
         const isAdminOrMod = this.group?.creater_id === currentUserId || 
-          this.group?.members?.find(member => member.id === currentUserId && (member.role_id === 1 || member.role_id === 2));
+          this.group?.members?.find(member => {
+          const memberId = member?.id != null ? parseInt(member.id) : null;
+          return memberId === currentUserId && (member.role_id === 1 || member.role_id === 2);
+        });
         
         if (isAdminOrMod) {
           if( window.isDebugging ) console.log('⚡ [Widget] Admin/Moderator exempt from slow mode');
@@ -3385,7 +3416,10 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
       if (urlLevel === 1) {
         const currentUserId = this.getCurrentUserId();
         const isAdminOrMod = this.group?.creater_id === currentUserId || 
-          this.group?.members?.find(member => member.id === currentUserId && (member.role_id === 1 || member.role_id === 2));
+          this.group?.members?.find(member => {
+          const memberId = member?.id != null ? parseInt(member.id) : null;
+          return memberId === currentUserId && (member.role_id === 1 || member.role_id === 2);
+        });
         
         if (!isAdminOrMod) {
           input.placeholder = 'Write a message (URLs not allowed)';

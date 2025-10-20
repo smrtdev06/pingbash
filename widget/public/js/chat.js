@@ -664,7 +664,10 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
 
       const currentUserId = this.getCurrentUserId();
       const senderInfo = this.group?.members?.find(user => user.id === message.Sender_Id);
-      const myMemInfo = this.group?.members?.find(user => user.id === currentUserId);
+      const myMemInfo = this.group?.members?.find(user => {
+          const userId = user?.id != null ? parseInt(user.id) : null;
+          return userId === currentUserId;
+        });
 
       // Don't show actions for messages from admins/mods
       if (senderInfo?.role_id === 1 || senderInfo?.role_id === 2) {
@@ -1344,13 +1347,17 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         }
         
         // Group creator can always access moderator features
-        if (this.group.creater_id === currentUserId) {
+        const groupCreatorId = this.group?.creater_id != null ? parseInt(this.group.creater_id) : null;
+        if (groupCreatorId === currentUserId) {
           if( window.isDebugging ) console.log('🔍 [Widget] isModeratorOrAdmin: User is group creator');
           return true;
         }
         
         // Check if user is mod/admin in group members
-        const userMember = this.group.members?.find(member => member.id === currentUserId);
+        const userMember = this.group.members?.find(member => {
+          const memberId = member?.id != null ? parseInt(member.id) : null;
+          return memberId === currentUserId;
+        });
         const isModAdmin = userMember && (userMember.role_id === 1 || userMember.role_id === 2);
         
         if( window.isDebugging ) console.log('🔍 [Widget] isModeratorOrAdmin check:', {
@@ -1521,7 +1528,10 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         });
         
         // RULE 2: Group Master OR Moderators with ban_user permission can ban users
-        const myMemInfo = this.group?.members?.find(user => user.id === currentUserId);
+        const myMemInfo = this.group?.members?.find(user => {
+          const userId = user?.id != null ? parseInt(user.id) : null;
+          return userId === currentUserId;
+        });
         const canBan = (this.group?.creater_id === currentUserId || (myMemInfo?.role_id === 2 && myMemInfo?.ban_user === true));
         
         if (!canBan) {
@@ -1619,7 +1629,10 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         
         // Check permissions
         const currentUserId = this.getCurrentUserId();
-        const myMemInfo = this.group?.members?.find(user => user.id === currentUserId);
+        const myMemInfo = this.group?.members?.find(user => {
+          const userId = user?.id != null ? parseInt(user.id) : null;
+          return userId === currentUserId;
+        });
         const canDelete = (this.group?.creater_id === currentUserId) || (myMemInfo?.role_id === 2);
         
         if (!canDelete) {
@@ -1657,7 +1670,10 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         }
         
         // RULE 2: Group Creator OR moderators with ban_user permission can timeout users
-        const myMemInfo = this.group?.members?.find(user => user.id === currentUserId);
+        const myMemInfo = this.group?.members?.find(user => {
+          const userId = user?.id != null ? parseInt(user.id) : null;
+          return userId === currentUserId;
+        });
         const canTimeout = (this.group?.creater_id === currentUserId) || (myMemInfo?.role_id === 2 && myMemInfo?.ban_user === true);
         
         if( window.isDebugging ) console.log('⏰ [Widget] Permission check:', {
@@ -1778,7 +1794,10 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         let hasBanPermission = false;
         
         if (!isGroupCreator && this.group?.members) {
-          const userMember = this.group.members.find(m => m.id === currentUserId);
+          const userMember = this.group.members.find(m => {
+          const memberId = m?.id != null ? parseInt(m.id) : null;
+          return memberId === currentUserId;
+        });
           if (userMember && userMember.role_id === 2) {
             isModerator = true;
             hasBanPermission = userMember.ban_user === true;
@@ -2085,7 +2104,10 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         if (this.group.creater_id === currentUserId) return true;
         
         // Check if user is mod/admin in group members
-        const userMember = this.group.members?.find(member => member.id === currentUserId);
+        const userMember = this.group.members?.find(member => {
+          const memberId = member?.id != null ? parseInt(member.id) : null;
+          return memberId === currentUserId;
+        });
         return userMember && (userMember.role_id === 1 || userMember.role_id === 2);
       },
 
@@ -2433,5 +2455,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
 
   });
 }
+
+
 
 

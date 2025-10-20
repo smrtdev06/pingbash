@@ -1285,7 +1285,10 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
       if (this.group.creater_id === currentUserId) return true;
       
       // Check if user is mod/admin in group members
-      const userMember = this.group.members?.find(member => member.id === currentUserId);
+      const userMember = this.group.members?.find(member => {
+          const memberId = member?.id != null ? parseInt(member.id) : null;
+          return memberId === currentUserId;
+        });
       return userMember && (userMember.role_id === 1 || userMember.role_id === 2);
     },
 
