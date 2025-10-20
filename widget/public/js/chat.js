@@ -1911,17 +1911,13 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
 
         const messages = messagesList.querySelectorAll('.pingbash-message');
         messages.forEach(messageEl => {
-          // Extract sender ID from message actions
-          const actionButton = messageEl.querySelector('[onclick*="User("]');
-          if (actionButton) {
-            const onclick = actionButton.getAttribute('onclick');
-            const userIdMatch = onclick.match(/User\((\d+)\)/);
-            if (userIdMatch) {
-              const senderId = parseInt(userIdMatch[1]);
-              if (this.blockedUsers.has(senderId)) {
-                messageEl.style.display = 'none';
-                if( window.isDebugging ) console.log('🚫 [Widget] Hidden message from blocked user:', senderId);
-              }
+          // Extract sender ID from data-sender-id attribute (more reliable)
+          const senderId = messageEl.getAttribute('data-sender-id');
+          if (senderId) {
+            const senderIdNum = parseInt(senderId);
+            if (this.blockedUsers.has(senderIdNum)) {
+              messageEl.style.display = 'none';
+              if( window.isDebugging ) console.log('🚫 [Widget] Hidden message from blocked user:', senderIdNum);
             }
           }
         });
