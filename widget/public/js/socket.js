@@ -63,6 +63,18 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
             }
           }, 500);
         }
+        
+        // For authenticated users, request blocked users list on reconnection
+        if (this.isAuthenticated && this.authenticatedToken) {
+          if( window.isDebugging ) console.log('🔌 [Widget] Re-requesting blocked users list for authenticated user on connect');
+          setTimeout(() => {
+            if (this.socket && this.socket.connected) {
+              this.socket.emit('get blocked users info', {
+                token: this.authenticatedToken
+              });
+            }
+          }, 1000);
+        }
 
         // Request online users after connecting
         setTimeout(() => {
@@ -1461,9 +1473,11 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
               groupId: parseInt(this.groupId)
             });
 
-            // Request blocked users list for authenticated users (no specific socket event needed, backend sends on block)
-            // The backend automatically sends 'get blocked users info' when a user blocks someone
-            if( window.isDebugging ) console.log('🚫 [Widget] Authenticated user - blocked users will be loaded when blocking occurs');
+            // Request blocked users list for authenticated users on join
+            if( window.isDebugging ) console.log('🚫 [Widget] Authenticated user - requesting blocked users list on join');
+            this.socket.emit('get blocked users info', {
+              token: this.authenticatedToken
+            });
     
                       // Keep the authenticated flag for future rejoins
     
@@ -2396,3 +2410,6 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
 
   });
 }
+
+
+

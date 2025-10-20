@@ -44,6 +44,12 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
     setupDragFunctionality() {
       if (!this.dialog) return;
       
+      // Skip drag setup in embedded mode
+      if (this.isEmbeddedMode) {
+        if( window.isDebugging ) console.log('🎯 [Widget] Skipping drag setup - embedded mode');
+        return;
+      }
+      
       // Enable drag on ALL devices including mobile
       if( window.isDebugging ) console.log('👆 [Widget] Enabling drag functionality for all devices');
       
@@ -297,6 +303,18 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
     createChatDialog() {
       this.dialog = document.createElement('div');
       this.dialog.className = 'pingbash-chat-dialog';
+      
+      // Check if there's a layout element on the page
+      this.layoutElement = document.getElementById('pingbash-chat-layout');
+      this.isEmbeddedMode = !!this.layoutElement;
+      
+      if (this.isEmbeddedMode) {
+        if( window.isDebugging ) console.log('🎯 [Widget] Found pingbash-chat-layout element, using embedded mode');
+        this.dialog.classList.add('pingbash-embedded-mode');
+      } else {
+        if( window.isDebugging ) console.log('🎯 [Widget] No layout element found, using popup mode');
+        this.dialog.classList.add('pingbash-popup-mode');
+      }
       this.dialog.innerHTML = `
         <!-- W Version Header: Logo + Ad Space + Hamburger Menu -->
         <nav class="pingbash-header">
@@ -319,6 +337,13 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
           </div>
           <div class="pingbash-header-right">
             
+            <!-- Popup button (embedded mode only) - converts embedded to popup -->
+            <button class="pingbash-popup-btn" title="Open in Popup" style="display: none;">
+              <svg viewBox="0 0 24 24" width="22" height="22">
+                <path fill="currentColor" d="M14,3V5H17.59L7.76,14.83L9.17,16.24L19,6.41V10H21V3M19,19H5V5H12V3H5C3.89,3 3,3.9 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V12H19V19Z"/>
+              </svg>
+            </button>
+            
             <!-- Popout button (mobile only) - toggles between popout and fullscreen -->
             <button class="pingbash-popout-btn" title="Popout Mode" style="display: none;">
               <!-- Icon for full-screen mode: popout/minimize icon -->
@@ -328,7 +353,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
               <!-- Icon for popout mode: fullscreen/expand icon -->
               <svg class="pingbash-fullscreen-icon" viewBox="0 0 24 24" width="22" height="22" style="display: none;">
                 <path fill="currentColor" d="M5,5H10V7H7V10H5V5M14,5H19V10H17V7H14V5M17,14H19V19H14V17H17V14M10,17V19H5V14H7V17H10Z"/>
-                </svg>
+              </svg>
             </button>
             
             <div class="pingbash-hamburger-container">
@@ -1598,9 +1623,208 @@ Example:
   
       this.widget.appendChild(this.dialog);
     
+    // Handle embedded vs popup mode
+    if (this.isEmbeddedMode) {
+      // Preserve the original style of the layout element exactly
+      const originalStyle = this.layoutElement.getAttribute('style') || '';
+      if (originalStyle) {
+        // Store the original style to restore later if needed
+        this.layoutElement.setAttribute('data-original-style', originalStyle);
+        
+        // Force the original style to be applied
+        this.layoutElement.setAttribute('style', originalStyle + ' !important');
+        
+        // Extract height from original style and set as CSS custom property
+        const heightMatch = originalStyle.match(/height:\s*([^;]+)/);
+        if (heightMatch) {
+          const originalHeight = heightMatch[1].trim();
+          
+          // If height is 100%, set it to a specific height (800px default)
+          if (originalHeight === '100%') {
+            const fallbackHeight = '800px';
+            this.layoutElement.style.setProperty('--original-height', fallbackHeight);
+            this.layoutElement.style.setProperty('height', fallbackHeight, 'important');
+            if( window.isDebugging ) console.log('🎯 [Widget] Layout element height was 100%, set to', fallbackHeight);
+          } else {
+            this.layoutElement.style.setProperty('--original-height', originalHeight);
+            this.layoutElement.style.setProperty('height', originalHeight, 'important');
+          }
+          
+          // Set a more aggressive protection
+          const finalHeight = originalHeight === '100%' ? '800px' : originalHeight;
+          Object.defineProperty(this.layoutElement.style, 'height', {
+            get: () => finalHeight,
+            set: (value) => {
+              if (value !== finalHeight) {
+                this.layoutElement.style.setProperty('height', finalHeight, 'important');
+              }
+            },
+            configurable: true
+          });
+        }
+        
+        // Also set via style property to ensure it's applied
+        const computedStyle = window.getComputedStyle(this.layoutElement);
+        if (computedStyle.height && computedStyle.height !== 'auto') {
+          this.layoutElement.style.setProperty('height', computedStyle.height, 'important');
+        }
+      }
+      
+      // In embedded mode, fit dialog inside the layout element
+      this.layoutElement.appendChild(this.dialog);
+      this.dialog.style.setProperty('position', 'relative', 'important');
+      this.dialog.style.setProperty('width', '100%', 'important');
+      this.dialog.style.setProperty('height', '100%', 'important');
+      this.dialog.style.setProperty('top', 'auto', 'important');
+      this.dialog.style.setProperty('left', 'auto', 'important');
+      this.dialog.style.setProperty('right', 'auto', 'important');
+      this.dialog.style.setProperty('bottom', 'auto', 'important');
+      this.dialog.style.setProperty('transform', 'none', 'important');
+      this.dialog.style.setProperty('margin', '0', 'important');
+      this.dialog.style.setProperty('resize', 'none', 'important');
+      this.dialog.style.setProperty('overflow', 'hidden', 'important');
+      
+      // Disable drag functionality in embedded mode
+      this.dialog.style.setProperty('cursor', 'default', 'important');
+      
+      // Debug: Check dimensions
+      if( window.isDebugging ) {
+        const layoutRect = this.layoutElement.getBoundingClientRect();
+        const dialogRect = this.dialog.getBoundingClientRect();
+        console.log('🎯 [Widget] Layout element dimensions:', layoutRect.width, 'x', layoutRect.height);
+        console.log('🎯 [Widget] Dialog dimensions:', dialogRect.width, 'x', dialogRect.height);
+        console.log('🎯 [Widget] Layout element computed height:', window.getComputedStyle(this.layoutElement).height);
+        console.log('🎯 [Widget] Dialog computed height:', window.getComputedStyle(this.dialog).height);
+      }
+      
+      // Show popup button
+      const popupBtn = this.dialog.querySelector('.pingbash-popup-btn');
+      if (popupBtn) {
+        popupBtn.style.display = 'flex';
+      }
+      
+      // Set up a MutationObserver to prevent height changes
+      if (this.layoutElement) {
+        let isRestoring = false; // Prevent infinite loops
+        
+        const observer = new MutationObserver((mutations) => {
+          if (isRestoring) return; // Skip if we're already restoring
+          
+          mutations.forEach((mutation) => {
+            if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
+              const currentStyle = this.layoutElement.getAttribute('style');
+              const originalStyle = this.layoutElement.getAttribute('data-original-style');
+              
+              // Only restore if the height specifically was changed
+              if (originalStyle && currentStyle !== originalStyle) {
+                const originalHeight = originalStyle.match(/height:\s*([^;]+)/)?.[1];
+                const currentHeight = currentStyle.match(/height:\s*([^;]+)/)?.[1];
+                
+                if (originalHeight && currentHeight && originalHeight !== currentHeight) {
+                  isRestoring = true;
+                  
+                  // Restore original style if height was changed
+                  this.layoutElement.setAttribute('style', originalStyle + ' !important');
+                  if( window.isDebugging ) console.log('🎯 [Widget] Restored original layout element style - height changed from', currentHeight, 'to', originalHeight);
+                  
+                  // Reset flag after a short delay
+                  setTimeout(() => { isRestoring = false; }, 100);
+                }
+              }
+            }
+          });
+        });
+        
+        observer.observe(this.layoutElement, {
+          attributes: true,
+          attributeFilter: ['style']
+        });
+        
+        // Store observer for cleanup
+        this.layoutObserver = observer;
+      }
+      
+      // Also set up observer for dialog height changes
+      if (this.dialog) {
+        const dialogObserver = new MutationObserver((mutations) => {
+          mutations.forEach((mutation) => {
+            if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
+              const currentHeight = this.dialog.style.height;
+              if (currentHeight !== '100%') {
+                this.dialog.style.setProperty('height', '100%', 'important');
+                if( window.isDebugging ) console.log('🎯 [Widget] Restored dialog height to 100%');
+              }
+            }
+          });
+        });
+        
+        dialogObserver.observe(this.dialog, {
+          attributes: true,
+          attributeFilter: ['style']
+        });
+        
+        // Store dialog observer for cleanup
+        this.dialogObserver = dialogObserver;
+      }
+      
+      if( window.isDebugging ) console.log('🎯 [Widget] Dialog embedded in layout element - drag/resize disabled');
+    } else {
+      // In popup mode, use normal positioning
+      if( window.isDebugging ) console.log('🎯 [Widget] Dialog in popup mode');
+    }
+    
     // Store reference to messages container for DOM operations
     this.messagesContainer = this.dialog.querySelector('.pingbash-messages-list');
     if( window.isDebugging ) console.log('🔍 [Widget] Messages container reference stored:', !!this.messagesContainer);
+    },
+
+    // Convert embedded dialog to popup mode
+    convertToPopupMode() {
+      if( window.isDebugging ) console.log('🎯 [Widget] Converting embedded dialog to popup mode');
+      
+      // Clean up observers
+      if (this.layoutObserver) {
+        this.layoutObserver.disconnect();
+        this.layoutObserver = null;
+      }
+      
+      if (this.dialogObserver) {
+        this.dialogObserver.disconnect();
+        this.dialogObserver = null;
+      }
+      
+      // Remove from layout element and add back to widget
+      this.dialog.remove();
+      this.widget.appendChild(this.dialog);
+      
+      // Remove embedded mode class and add popup mode class
+      this.dialog.classList.remove('pingbash-embedded-mode');
+      this.dialog.classList.add('pingbash-popup-mode');
+      
+      // Reset positioning to use CSS positioning
+      this.dialog.style.position = '';
+      this.dialog.style.width = '';
+      this.dialog.style.height = '';
+      this.dialog.style.top = '';
+      this.dialog.style.left = '';
+      this.dialog.style.right = '';
+      this.dialog.style.bottom = '';
+      this.dialog.style.transform = '';
+      this.dialog.style.margin = '';
+      
+      // Hide popup button
+      const popupBtn = this.dialog.querySelector('.pingbash-popup-btn');
+      if (popupBtn) {
+        popupBtn.style.display = 'none';
+      }
+      
+      // Update mode flag
+      this.isEmbeddedMode = false;
+      
+      // Re-enable drag functionality for popup mode
+      this.setupDragFunctionality();
+      
+      if( window.isDebugging ) console.log('🎯 [Widget] Dialog converted to popup mode');
     },
 
   // EXACT COPY from widget.js - updatePosition method

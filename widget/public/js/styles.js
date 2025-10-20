@@ -216,6 +216,95 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
             visibility: visible;
           }
           
+          /* Embedded mode styles */
+          .pingbash-chat-dialog.pingbash-embedded-mode {
+            position: relative !important;
+            width: 100% !important;
+            height: 100% !important;
+            top: auto !important;
+            left: auto !important;
+            right: auto !important;
+            bottom: auto !important;
+            transform: none !important;
+            margin: 0 !important;
+            border-radius: 0 !important;
+            box-shadow: none !important;
+            resize: none !important;
+            overflow: hidden !important;
+            cursor: default !important;
+            display: flex !important;
+            flex-direction: column !important;
+            box-sizing: border-box !important;
+            min-height: 0 !important;
+            max-height: 100% !important;
+          }
+          
+          /* Disable drag cursor in embedded mode */
+          .pingbash-chat-dialog.pingbash-embedded-mode .pingbash-header {
+            cursor: default !important;
+            user-select: auto !important;
+            flex-shrink: 0 !important;
+            min-height: auto !important;
+          }
+          
+          /* Ensure input bar doesn't grow in embedded mode */
+          .pingbash-chat-dialog.pingbash-embedded-mode .pingbash-input-bar {
+            flex-shrink: 0 !important;
+            min-height: auto !important;
+          }
+          
+          /* Disable resize handle in embedded mode */
+          .pingbash-chat-dialog.pingbash-embedded-mode .pingbash-resize-handle {
+            display: none !important;
+          }
+          
+          /* Ensure messages container fills available space in embedded mode */
+          .pingbash-chat-dialog.pingbash-embedded-mode .pingbash-messages-list {
+            flex: 1 !important;
+            min-height: 0 !important;
+            overflow-y: auto !important;
+            height: auto !important;
+            max-height: none !important;
+            display: flex !important;
+            flex-direction: column !important;
+          }
+          
+          /* Force layout element to maintain its original height */
+          #pingbash-chat-layout {
+            height: var(--original-height, 800px) !important;
+            min-height: var(--original-height, 800px) !important;
+            max-height: var(--original-height, 800px) !important;
+            display: block !important;
+            position: relative !important;
+            overflow: hidden !important;
+          }
+          
+          /* Ensure parent elements have height for percentage to work */
+          html, body {
+            height: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
+          }
+          
+          /* Popup button styles */
+          .pingbash-popup-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            border: none;
+            background: transparent;
+            color: #333;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: background-color 0.2s;
+          }
+          
+          .pingbash-popup-btn:hover {
+            background: rgba(0, 0, 0, 0.05);
+          }
+          
           /* Mobile: Header IS draggable */
           .pingbash-header {
             cursor: move !important;
@@ -1248,8 +1337,10 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
         }
         
         .pingbash-message {
-          margin-bottom: 2px;
-          opacity: 1;
+          margin-bottom: 2px !important;
+          opacity: 1 !important;
+          display: flex !important;
+          width: 100% !important;
         }
         
         .pingbash-message.new-message {
@@ -1258,12 +1349,12 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
         }
         
         .pingbash-message-content {
-          display: flex;
-          align-items: flex-start;
-          gap: 2px;
-          flex:1;
-          max-width: 100%;
-          word-wrap: break-word;
+          display: flex !important;
+          align-items: flex-start !important;
+          gap: 2px !important;
+          flex: 1 !important;
+          max-width: 100% !important;
+          word-wrap: break-word !important;
         }
 
         /* Message avatar styles (same as W version) */
@@ -1294,11 +1385,11 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
         }
 
         .pingbash-message-body {
-          flex: 1;
-          min-width: 0;
-          padding: 4px 8px;
-          border-radius: 18px;
-          position: relative;
+          flex: 1 !important;
+          min-width: 0 !important;
+          padding: 4px 8px !important;
+          border-radius: 18px !important;
+          position: relative !important;
         }
         
         .pingbash-message.own {
@@ -1309,13 +1400,15 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
         .pingbash-message.own .pingbash-message-body {
           background: ${this.config.customColors?.primary || '#2596be'} !important;
           color: white !important;
-          border-bottom-left-radius: 4px;
+          border-bottom-left-radius: 4px !important;
+          max-width: 80% !important;
         }
         
         .pingbash-message:not(.own) .pingbash-message-body {
           background: #f0f0f0 !important;
           color: #333 !important;
-          border-bottom-left-radius: 4px;
+          border-bottom-left-radius: 4px !important;
+          max-width: 80% !important;
         }
         
         /* Ensure sender name styling for own messages */

@@ -862,7 +862,7 @@ const ChatsContent: React.FC = () => {
 
   const getEmbedCode = () => {
     if (selectedChatGroup == null) return "";
-    return `<script src='https://widget.pingbash.com/js/widget-split.js' data-position='top-right' data-group-name='${selectedChatGroup?.name}' data-api-url='${SERVER_URL}'></script>`;
+    return `<div id="pingbash-chat-layout" style="width:500px; height: 800px "></div><script src='https://widget.pingbash.com/js/widget-split.js' data-position='top-right' data-group-name='${selectedChatGroup?.name}' data-api-url='${SERVER_URL}'></script>`;
   }
 
   useEffect(() => {
