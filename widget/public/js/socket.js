@@ -935,6 +935,10 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
           if (!this.isAuthenticated && blockedUsers.length === 0) {
             // Keep existing blocked users for anonymous users (don't clear the Set)
             if (window.isDebugging) console.log('🚫 [Socket] Anonymous user - keeping existing blocked users:', this.blockedUsers);
+            // Ensure blockedUsers Set exists
+            if (!this.blockedUsers || !(this.blockedUsers instanceof Set)) {
+              this.blockedUsers = new Set();
+            }
             // Add any new IDs from the response (if any)
             userIds.forEach(id => this.blockedUsers.add(id));
           } else {
