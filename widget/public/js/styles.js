@@ -1426,7 +1426,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
         
         .pingbash-message-header {
           display: flex;
-          justify-content: space-between;
+          justify-content: flex-start;
           align-items: center;
           margin-bottom: 1px;
           opacity: 0.7;
@@ -1435,7 +1435,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
         
         /* For own messages, align header to the left like other messages */
         .pingbash-message.own .pingbash-message-header {
-          justify-content: space-between;
+          justify-content: flex-start;
         }
         
         .pingbash-message-sender {
@@ -1443,7 +1443,15 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
         }
         
         .pingbash-message-time {
-          font-size: 10px;
+          font-size: 9px !important;
+          position: absolute !important;
+          bottom: 2px !important;
+          right: 8px !important;
+          opacity: 0.7 !important;
+        }
+        
+        .pingbash-message-body {
+          position: relative !important;
         }
         
         .pingbash-message-text {
@@ -1451,6 +1459,8 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
           line-height: 1.4;
           word-wrap: break-word;
           color: var(--msg-text-color, #333);
+          padding-right: 60px !important;
+          padding-bottom: 4px !important;
         }
         
         .pingbash-message-text img {
@@ -6780,5 +6790,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
     },
 
 });
+
+
 
 

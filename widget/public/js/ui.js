@@ -1812,10 +1812,10 @@ Example:
       this.dialog.style.transform = '';
       this.dialog.style.margin = '';
       
-      // Hide popup button
+      // Show popup button (to convert back to embedded mode)
       const popupBtn = this.dialog.querySelector('.pingbash-popup-btn');
       if (popupBtn) {
-        popupBtn.style.display = 'none';
+        popupBtn.style.display = 'flex';
       }
       
       // Update mode flag
@@ -1825,6 +1825,131 @@ Example:
       this.setupDragFunctionality();
       
       if( window.isDebugging ) console.log('🎯 [Widget] Dialog converted to popup mode');
+    },
+
+    // Convert popup dialog back to embedded mode
+    convertToEmbeddedMode() {
+      if( window.isDebugging ) console.log('🎯 [Widget] Converting popup dialog to embedded mode');
+      
+      // Check if layout element exists
+      if (!this.layoutElement) {
+        if( window.isDebugging ) console.warn('⚠️ [Widget] No layout element found, cannot convert to embedded mode');
+        return;
+      }
+      
+      // Remove from widget and add to layout element
+      this.dialog.remove();
+      this.layoutElement.appendChild(this.dialog);
+      
+      // Remove popup mode class and add embedded mode class
+      this.dialog.classList.remove('pingbash-popup-mode');
+      this.dialog.classList.add('pingbash-embedded-mode');
+      
+      // Set embedded mode styles with !important
+      this.dialog.style.setProperty('position', 'relative', 'important');
+      this.dialog.style.setProperty('width', '100%', 'important');
+      this.dialog.style.setProperty('height', '100%', 'important');
+      this.dialog.style.setProperty('top', 'auto', 'important');
+      this.dialog.style.setProperty('left', 'auto', 'important');
+      this.dialog.style.setProperty('right', 'auto', 'important');
+      this.dialog.style.setProperty('bottom', 'auto', 'important');
+      this.dialog.style.setProperty('transform', 'none', 'important');
+      this.dialog.style.setProperty('margin', '0', 'important');
+      this.dialog.style.setProperty('resize', 'none', 'important');
+      this.dialog.style.setProperty('overflow', 'hidden', 'important');
+      this.dialog.style.setProperty('cursor', 'default', 'important');
+      
+      // Show popup button
+      const popupBtn = this.dialog.querySelector('.pingbash-popup-btn');
+      if (popupBtn) {
+        popupBtn.style.display = 'flex';
+      }
+      
+      // Update mode flag
+      this.isEmbeddedMode = true;
+      
+      // Restore height preservation logic
+      const originalStyle = this.layoutElement.getAttribute('data-original-style');
+      if (originalStyle) {
+        this.layoutElement.setAttribute('style', originalStyle + ' !important');
+        
+        const heightMatch = originalStyle.match(/height:\s*([^;]+)/);
+        if (heightMatch) {
+          const originalHeight = heightMatch[1].trim();
+          const finalHeight = originalHeight === '100%' ? '800px' : originalHeight;
+          
+          this.layoutElement.style.setProperty('--original-height', finalHeight);
+          this.layoutElement.style.setProperty('height', finalHeight, 'important');
+          
+          Object.defineProperty(this.layoutElement.style, 'height', {
+            get: () => finalHeight,
+            set: (value) => {
+              if (value !== finalHeight) {
+                this.layoutElement.style.setProperty('height', finalHeight, 'important');
+              }
+            },
+            configurable: true
+          });
+        }
+      }
+      
+      // Set up observers again
+      if (this.layoutElement) {
+        let isRestoring = false;
+        
+        const observer = new MutationObserver((mutations) => {
+          if (isRestoring) return;
+          
+          mutations.forEach((mutation) => {
+            if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
+              const currentStyle = this.layoutElement.getAttribute('style');
+              const originalStyle = this.layoutElement.getAttribute('data-original-style');
+              
+              if (originalStyle && currentStyle !== originalStyle) {
+                const originalHeight = originalStyle.match(/height:\s*([^;]+)/)?.[1];
+                const currentHeight = currentStyle.match(/height:\s*([^;]+)/)?.[1];
+                
+                if (originalHeight && currentHeight && originalHeight !== currentHeight) {
+                  isRestoring = true;
+                  this.layoutElement.setAttribute('style', originalStyle + ' !important');
+                  if( window.isDebugging ) console.log('🎯 [Widget] Restored original layout element style');
+                  setTimeout(() => { isRestoring = false; }, 100);
+                }
+              }
+            }
+          });
+        });
+        
+        observer.observe(this.layoutElement, {
+          attributes: true,
+          attributeFilter: ['style']
+        });
+        
+        this.layoutObserver = observer;
+      }
+      
+      if (this.dialog) {
+        const dialogObserver = new MutationObserver((mutations) => {
+          mutations.forEach((mutation) => {
+            if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
+              const currentHeight = this.dialog.style.height;
+              if (currentHeight !== '100%') {
+                this.dialog.style.setProperty('height', '100%', 'important');
+                if( window.isDebugging ) console.log('🎯 [Widget] Restored dialog height to 100%');
+              }
+            }
+          });
+        });
+        
+        dialogObserver.observe(this.dialog, {
+          attributes: true,
+          attributeFilter: ['style']
+        });
+        
+        this.dialogObserver = dialogObserver;
+      }
+      
+      if( window.isDebugging ) console.log('🎯 [Widget] Dialog converted to embedded mode');
     },
 
   // EXACT COPY from widget.js - updatePosition method
@@ -2164,3 +2289,4 @@ Example:
 
   });
 }
+

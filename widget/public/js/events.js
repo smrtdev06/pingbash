@@ -66,6 +66,19 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         this.togglePopoutMode();
       });
 
+      // Popup button - Toggle between embedded and popup modes
+      const popupBtn = this.dialog.querySelector('.pingbash-popup-btn');
+      popupBtn?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (this.isEmbeddedMode) {
+          if( window.isDebugging ) console.log('🎯 [Widget] Popup button clicked - converting to popup mode');
+          this.convertToPopupMode();
+        } else {
+          if( window.isDebugging ) console.log('🎯 [Widget] Popup button clicked - converting to embedded mode');
+          this.convertToEmbeddedMode();
+        }
+      });
+
       // Hamburger menu
       const hamburgerBtn = this.dialog.querySelector('.pingbash-hamburger-btn');
       const hamburgerDropdown = this.dialog.querySelector('.pingbash-hamburger-dropdown');
@@ -3131,3 +3144,5 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
 
 });
 }
+
+
