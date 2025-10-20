@@ -646,7 +646,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
           padding: 2px 6px;
           border-radius: 10px;
           min-width: 18px;
-          height: 18px;
+          height: 10px;
           display: flex;
           align-items: center;
           justify-content: center;
@@ -1710,14 +1710,14 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
         .pingbash-controls-bar .pingbash-online-count-badge {
           position: absolute;
           top: -4px;
-          right: -4px;
+          left: 15px;
           background: #007bff;
           color: white;
           border-radius: 10px;
           padding: 2px 6px;
           font-size: 10px;
           font-weight: bold;
-          min-width: 16px;
+          min-width: 3px;
           text-align: center;
           line-height: 1;
           border: 2px solid #f8f9fa;
