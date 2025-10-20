@@ -1614,7 +1614,7 @@ Example:
         </div>
         
         <!-- Custom Resize Handle (mobile only) -->
-        <div class="pingbash-resize-handle" style="display: none;">
+        <div class="pingbash-resize-handle" style="display: none; justify-content: end;">
           <svg viewBox="0 0 24 24" width="20" height="20">
             <path fill="currentColor" d="M22,22H20V20H22V22M22,18H20V16H22V18M18,22H16V20H18V22M18,18H16V16H18V18M14,22H12V20H14V22M22,14H20V12H22V14Z"/>
           </svg>
@@ -1818,6 +1818,14 @@ Example:
         popupBtn.style.display = 'flex';
       }
       
+      // Show resize handle for popup mode
+      const resizeHandle = this.dialog.querySelector('.pingbash-resize-handle');
+      if (resizeHandle) {
+        resizeHandle.style.display = 'flex';
+        resizeHandle.style.justifyContent = 'end';
+        if( window.isDebugging ) console.log('🎯 [Widget] Resize handle shown');
+      }
+      
       // Update mode flag
       this.isEmbeddedMode = false;
       
@@ -1863,6 +1871,13 @@ Example:
       const popupBtn = this.dialog.querySelector('.pingbash-popup-btn');
       if (popupBtn) {
         popupBtn.style.display = 'flex';
+      }
+      
+      // Hide resize handle in embedded mode
+      const resizeHandle = this.dialog.querySelector('.pingbash-resize-handle');
+      if (resizeHandle) {
+        resizeHandle.style.display = 'none';
+        if( window.isDebugging ) console.log('🎯 [Widget] Resize handle hidden');
       }
       
       // Update mode flag

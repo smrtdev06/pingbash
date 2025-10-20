@@ -39,6 +39,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
           outline: none;
           -webkit-font-smoothing: antialiased;
           -moz-osx-font-smoothing: grayscale;
+          
         }
         
         .pingbash-widget {
@@ -377,6 +378,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
             position: absolute;
             bottom: 0;
             right: 0;
+            left: auto;
             width: 44px;
             height: 44px;
             background: linear-gradient(135deg, transparent 50%, rgba(0,123,255,0.4) 50%);
@@ -388,6 +390,12 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
             z-index: 100;
             touch-action: none;
             user-select: none;
+            justify-content: end;
+          }
+          
+          /* Ensure dialog has relative positioning for resize handle */
+          .pingbash-chat-dialog.pingbash-popup-mode {
+            position: relative;
           }
           
           .pingbash-resize-handle svg {
@@ -398,13 +406,15 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
             right: 4px;
           }
           
-          /* Show resize handle only in popout mode on mobile */
-          .pingbash-chat-dialog.popout-mode .pingbash-resize-handle {
+          /* Show resize handle in popout mode and popup mode */
+          .pingbash-chat-dialog.popout-mode .pingbash-resize-handle,
+          .pingbash-chat-dialog.pingbash-popup-mode .pingbash-resize-handle {
             display: flex !important;
           }
           
           /* Disable native browser resize when using custom handle */
-          .pingbash-chat-dialog.popout-mode {
+          .pingbash-chat-dialog.popout-mode,
+          .pingbash-chat-dialog.pingbash-popup-mode {
             resize: none !important;
             overflow: hidden !important;
           }
@@ -646,7 +656,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
           padding: 2px 6px;
           border-radius: 10px;
           min-width: 18px;
-          height: 10px;
+          height: 20px;
           display: flex;
           align-items: center;
           justify-content: center;
