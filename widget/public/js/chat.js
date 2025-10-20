@@ -1904,23 +1904,38 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
 
       // Filter messages from all blocked users
       filterMessagesFromBlockedUsers() {
-        if (!this.blockedUsers || this.blockedUsers.size === 0) return;
+        if (!this.blockedUsers || this.blockedUsers.size === 0) {
+          if( window.isDebugging ) console.log('🚫 [Widget] No blocked users to filter');
+          return;
+        }
         
         const messagesList = this.dialog?.querySelector('.pingbash-messages-list');
-        if (!messagesList) return;
+        if (!messagesList) {
+          if( window.isDebugging ) console.log('🚫 [Widget] Messages list not found');
+          return;
+        }
 
         const messages = messagesList.querySelectorAll('.pingbash-message');
+        if( window.isDebugging ) console.log('🚫 [Widget] Filtering', messages.length, 'messages, blocked users:', Array.from(this.blockedUsers));
+        
+        let hiddenCount = 0;
         messages.forEach(messageEl => {
           // Extract sender ID from data-sender-id attribute (more reliable)
           const senderId = messageEl.getAttribute('data-sender-id');
+          if( window.isDebugging ) console.log('🚫 [Widget] Checking message with sender ID:', senderId);
+          
           if (senderId) {
             const senderIdNum = parseInt(senderId);
             if (this.blockedUsers.has(senderIdNum)) {
-              messageEl.style.display = 'none';
-              if( window.isDebugging ) console.log('🚫 [Widget] Hidden message from blocked user:', senderIdNum);
+              messageEl.style.setProperty('display', 'none', 'important');
+              messageEl.remove(); // Also remove from DOM completely
+              hiddenCount++;
+              if( window.isDebugging ) console.log('🚫 [Widget] Hidden and removed message from blocked user:', senderIdNum);
             }
           }
         });
+        
+        if( window.isDebugging ) console.log('🚫 [Widget] Total messages hidden/removed:', hiddenCount);
       },
 
       // Also filter messages when displaying them (for new messages)
