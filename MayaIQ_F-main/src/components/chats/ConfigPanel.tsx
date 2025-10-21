@@ -94,15 +94,19 @@ export const ConfigPanel = ({ config, onConfigChange }: ConfigPanelProps) => {
             <div className="flex items-center space-x-2">
               <Input
                 type="number"
+                min="400"
+                max="800"
                 value={config.width}
-                onChange={(e) => updateConfig('width', parseInt(e.target.value) || 242)}
+                onChange={(e) => updateConfig('width', Math.max(400, Math.min(800, parseInt(e.target.value) || 400)))}
                 className="w-20"
               />
               <span className="text-sm text-muted-foreground">px by</span>
               <Input
                 type="number"
+                min="300"
+                max="900"
                 value={config.height}
-                onChange={(e) => updateConfig('height', parseInt(e.target.value) || 378)}
+                onChange={(e) => updateConfig('height', Math.max(300, Math.min(900, parseInt(e.target.value) || 300)))}
                 className="w-20"
               />
               <span className="text-sm text-muted-foreground">px</span>

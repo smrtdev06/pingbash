@@ -2046,11 +2046,11 @@ Example:
                       
                       <div class="pingbash-size-inputs">
                         <div class="pingbash-input-group">
-                          <input type="number" id="width-input-body" class="pingbash-size-input" value="500" />
+                          <input type="number" id="width-input-body" class="pingbash-size-input" value="500" min="400" max="800" />
                           <label>Width (px)</label>
                         </div>
                         <div class="pingbash-input-group">
-                          <input type="number" id="height-input-body" class="pingbash-size-input" value="400" />
+                          <input type="number" id="height-input-body" class="pingbash-size-input" value="400" min="300" max="900" />
                           <label>Height (px)</label>
                         </div>
                       </div>

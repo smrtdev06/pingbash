@@ -2061,18 +2061,38 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         });
       });
 
-      // Width and Height inputs - immediate preview update
+      // Width and Height inputs - immediate preview update with validation
       const widthInput = modal.querySelector('#width-input-body');
       const heightInput = modal.querySelector('#height-input-body');
       
       if (widthInput) {
-        widthInput.addEventListener('input', updatePreviewImmediately);
-        widthInput.addEventListener('change', updatePreviewImmediately);
+        widthInput.addEventListener('input', (e) => {
+          let value = parseInt(e.target.value);
+          if (value < 400) e.target.value = 400;
+          if (value > 800) e.target.value = 800;
+          updatePreviewImmediately();
+        });
+        widthInput.addEventListener('change', (e) => {
+          let value = parseInt(e.target.value);
+          if (value < 400) e.target.value = 400;
+          if (value > 800) e.target.value = 800;
+          updatePreviewImmediately();
+        });
       }
       
       if (heightInput) {
-        heightInput.addEventListener('input', updatePreviewImmediately);
-        heightInput.addEventListener('change', updatePreviewImmediately);
+        heightInput.addEventListener('input', (e) => {
+          let value = parseInt(e.target.value);
+          if (value < 300) e.target.value = 300;
+          if (value > 900) e.target.value = 900;
+          updatePreviewImmediately();
+        });
+        heightInput.addEventListener('change', (e) => {
+          let value = parseInt(e.target.value);
+          if (value < 300) e.target.value = 300;
+          if (value > 900) e.target.value = 900;
+          updatePreviewImmediately();
+        });
       }
 
       // Group name input - update preview title immediately
@@ -2727,8 +2747,8 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         },
         // Size settings
         sizeMode: modal.querySelector('input[name="size-mode-body"]:checked')?.value || 'responsive',
-        width: parseInt(modal.querySelector('#width-input-body')?.value) || 500,
-        height: parseInt(modal.querySelector('#height-input-body')?.value) || 400,
+        width: Math.max(400, Math.min(800, parseInt(modal.querySelector('#width-input-body')?.value) || 500)),
+        height: Math.max(300, Math.min(900, parseInt(modal.querySelector('#height-input-body')?.value) || 400)),
         // Group name
         groupName: modal.querySelector('#group-name-body')?.value || 'Group Name'
       };

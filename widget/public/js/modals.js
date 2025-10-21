@@ -3830,6 +3830,40 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
         });
       }
       
+      // Width and Height inputs - validation
+      const widthInput = modal.querySelector('#edit-width-input-body');
+      const heightInput = modal.querySelector('#edit-height-input-body');
+      
+      if (widthInput) {
+        widthInput.addEventListener('input', (e) => {
+          let value = parseInt(e.target.value);
+          if (value < 400) e.target.value = 400;
+          if (value > 800) e.target.value = 800;
+          this.updateEditStylePreview();
+        });
+        widthInput.addEventListener('change', (e) => {
+          let value = parseInt(e.target.value);
+          if (value < 400) e.target.value = 400;
+          if (value > 800) e.target.value = 800;
+          this.updateEditStylePreview();
+        });
+      }
+      
+      if (heightInput) {
+        heightInput.addEventListener('input', (e) => {
+          let value = parseInt(e.target.value);
+          if (value < 300) e.target.value = 300;
+          if (value > 900) e.target.value = 900;
+          this.updateEditStylePreview();
+        });
+        heightInput.addEventListener('change', (e) => {
+          let value = parseInt(e.target.value);
+          if (value < 300) e.target.value = 300;
+          if (value > 900) e.target.value = 900;
+          this.updateEditStylePreview();
+        });
+      }
+      
       // Color inputs - add real-time preview updates
       const colorInputs = modal.querySelectorAll('input[type="color"]');
       colorInputs.forEach(input => {
@@ -3870,8 +3904,8 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
       
       return {
         sizeMode: modal.querySelector('input[name="edit-size-mode-body"]:checked')?.value || 'fixed',
-        width: parseInt(modal.querySelector('#edit-width-input-body')?.value) || 500,
-        height: parseInt(modal.querySelector('#edit-height-input-body')?.value) || 400,
+        width: Math.max(400, Math.min(800, parseInt(modal.querySelector('#edit-width-input-body')?.value) || 500)),
+        height: Math.max(300, Math.min(900, parseInt(modal.querySelector('#edit-height-input-body')?.value) || 400)),
         colors: {
           background: modal.querySelector('#edit-bg-color-body')?.value || '#FFFFFF',
           title: modal.querySelector('#edit-title-color-body')?.value || '#333333',
@@ -4316,5 +4350,6 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
 
   });
 }
+
 
 

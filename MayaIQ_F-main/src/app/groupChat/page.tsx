@@ -2181,7 +2181,7 @@ const ChatsContent: React.FC = () => {
     } else if (isResizing) {
       const deltaX = e.clientX - resizeStart.x;
       const deltaY = e.clientY - resizeStart.y;
-      const newWidth = Math.max(500, resizeStart.width + deltaX);
+      const newWidth = Math.max(400, resizeStart.width + deltaX);
       const newHeight = Math.max(400, resizeStart.height + deltaY);
 
       setConfig(prev => ({ ...prev, width: newWidth, height: newHeight }));
@@ -2942,3 +2942,5 @@ const Chats: React.FC = () => {
   )
 }
 export default Chats;
+
+
