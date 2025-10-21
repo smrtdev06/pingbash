@@ -931,31 +931,46 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
             return id;
           }).filter(id => id !== undefined);
 
-          // For anonymous users, or when backend returns empty (e.g., blocking anonymous users),
-          // we need to keep client-side blocks
-          if (blockedUsers.length === 0 && this.blockedUsers && this.blockedUsers.size > 0) {
-            // Keep existing blocked users when backend returns empty (don't clear the Set)
-            // This handles: anonymous users blocking anyone, or authenticated users blocking anonymous users
-            if (window.isDebugging) console.log('🚫 [Socket] Backend returned empty, keeping existing blocked users:', this.blockedUsers);
-            // Ensure blockedUsers Set exists
-            if (!this.blockedUsers || !(this.blockedUsers instanceof Set)) {
-              this.blockedUsers = new Set();
+          // Store previous blocked users for comparison
+          const previousBlockedUsers = this.blockedUsers ? new Set(this.blockedUsers) : new Set();
+          
+          // For authenticated users: replace the blocked list with backend response
+          // For anonymous users: merge client-side blocks with backend (if any)
+          if (this.isAuthenticated && this.authenticatedToken) {
+            // Authenticated users: Always trust the backend's list (supports unblocking)
+            this.blockedUsers = new Set(userIds);
+            if (window.isDebugging) console.log('🚫 [Socket] Authenticated user - replaced blocked list with backend:', this.blockedUsers);
+            
+            // Check if any users were unblocked
+            const unblockedUsers = Array.from(previousBlockedUsers).filter(id => !this.blockedUsers.has(id));
+            if (unblockedUsers.length > 0) {
+              if (window.isDebugging) console.log('✅ [Socket] Detected unblocked users:', unblockedUsers);
+              // Reload messages to show unblocked users' messages
+              if (this.socket && this.socket.connected && this.groupId) {
+                setTimeout(() => {
+                  if (window.isDebugging) console.log('🔄 [Socket] Reloading messages after unblock');
+                  this.socket.emit('get group messages', {
+                    token: this.authenticatedToken,
+                    groupId: this.groupId
+                  });
+                }, 100);
+              }
             }
-            // Add any new IDs from the response (if any)
-            userIds.forEach(id => this.blockedUsers.add(id));
-          } else if (userIds.length > 0) {
-            // Backend returned blocked users, merge with existing
-            if (!this.blockedUsers || !(this.blockedUsers instanceof Set)) {
-              this.blockedUsers = new Set();
-            }
-            userIds.forEach(id => this.blockedUsers.add(id));
           } else {
-            // Backend returned empty and we have no existing blocks - initialize empty Set
-            if (!this.blockedUsers || !(this.blockedUsers instanceof Set)) {
+            // Anonymous users: Keep client-side blocks (backend doesn't persist anonymous blocks)
+            if (blockedUsers.length === 0 && this.blockedUsers && this.blockedUsers.size > 0) {
+              // Keep existing client-side blocks for anonymous users
+              if (window.isDebugging) console.log('🚫 [Socket] Anonymous user - keeping client-side blocks:', this.blockedUsers);
+            } else {
+              // Initialize with backend data (shouldn't happen for anon, but be safe)
               this.blockedUsers = new Set(userIds);
+              if (window.isDebugging) console.log('🚫 [Socket] Anonymous user - initialized blocked list:', this.blockedUsers);
             }
           }
-          if (window.isDebugging) console.log('🚫 [Socket] Updated blocked users list:', this.blockedUsers);
+          if (window.isDebugging) console.log('🚫 [Socket] Final blocked users list:', this.blockedUsers);
+
+          // Update localStorage for persistence
+          this.saveBlockedUsersToLocalStorage();
 
           // Hide messages from newly blocked users
           this.filterMessagesFromBlockedUsers();

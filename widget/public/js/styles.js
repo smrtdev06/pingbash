@@ -2413,17 +2413,19 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
           background: #218838;
         }
         
-        /* Sign In Form */
+        /* Sign In Form - positioned within chat dialog */
         .pingbash-signin-modal {
-          position: fixed;
+          position: absolute;
           top: 0;
           left: 0;
           width: 100%;
           height: 100%;
-          z-index: 2147483648;
+          z-index: 1000;
           display: flex;
           align-items: center;
           justify-content: center;
+          border-radius: 12px;
+          overflow: hidden;
         }
         
         .pingbash-signin-form {
