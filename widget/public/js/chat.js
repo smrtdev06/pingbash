@@ -199,6 +199,9 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
 
   // EXACT COPY from widget.js - displayMessages method
     displayMessages(messages) {
+      // Load blocked users from localStorage before displaying messages
+      this.loadBlockedUsersFromLocalStorage();
+      
       const allMessages = messages || [];
       const messagesList = this.dialog.querySelector('#pingbash-messages');
   
@@ -313,6 +316,11 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
       if (isInitialLoad) {
         this.scrollToBottomAfterImages();
       }
+      
+      // Filter blocked users' messages after displaying
+      setTimeout(() => {
+        this.filterMessagesFromBlockedUsers();
+      }, 100);
     },
 
   // EXACT COPY from widget.js - displayPendingMessages method
@@ -1887,6 +1895,9 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
           this.blockedUsers.add(userId);
           if( window.isDebugging ) console.log('🚫 [Widget] Optimistically added user to blocked list:', this.blockedUsers);
           
+          // Save to localStorage for persistence across refreshes
+          this.saveBlockedUsersToLocalStorage();
+          
           // Hide messages from this user immediately
           this.filterMessagesFromBlockedUsers();
           
@@ -1942,6 +1953,39 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
       // Also filter messages when displaying them (for new messages)
       isMessageFromBlockedUser(message) {
         return this.blockedUsers && this.blockedUsers.has(message.Sender_Id);
+      },
+
+      // Save blocked users to localStorage for persistence
+      saveBlockedUsersToLocalStorage() {
+        try {
+          const blockedArray = Array.from(this.blockedUsers);
+          const storageKey = this.isAuthenticated 
+            ? `pingbash_blocked_users_${this.currentUserId}` 
+            : `pingbash_blocked_users_anon_${this.groupId}`;
+          localStorage.setItem(storageKey, JSON.stringify(blockedArray));
+          if( window.isDebugging ) console.log('💾 [Widget] Saved blocked users to localStorage:', storageKey, blockedArray);
+        } catch (error) {
+          console.error('💾 [Widget] Failed to save blocked users to localStorage:', error);
+        }
+      },
+
+      // Load blocked users from localStorage
+      loadBlockedUsersFromLocalStorage() {
+        try {
+          const storageKey = this.isAuthenticated 
+            ? `pingbash_blocked_users_${this.currentUserId}` 
+            : `pingbash_blocked_users_anon_${this.groupId}`;
+          const stored = localStorage.getItem(storageKey);
+          if (stored) {
+            const blockedArray = JSON.parse(stored);
+            this.blockedUsers = new Set(blockedArray);
+            if( window.isDebugging ) console.log('💾 [Widget] Loaded blocked users from localStorage:', storageKey, blockedArray);
+            return true;
+          }
+        } catch (error) {
+          console.error('💾 [Widget] Failed to load blocked users from localStorage:', error);
+        }
+        return false;
       },
 
       // Unban all users functionality
