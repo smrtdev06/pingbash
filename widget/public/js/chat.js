@@ -317,10 +317,9 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         this.scrollToBottomAfterImages();
       }
       
-      // Filter blocked users' messages after displaying
-      setTimeout(() => {
-        this.filterMessagesFromBlockedUsers();
-      }, 100);
+      // Filter blocked users' messages immediately after displaying (no delay)
+      // This ensures blocked messages are never visible, even when page is inactive
+      this.filterMessagesFromBlockedUsers();
     },
 
   // EXACT COPY from widget.js - displayPendingMessages method
