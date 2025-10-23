@@ -143,7 +143,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         }
       });
 
-      // Logo click to create group
+      // Logo click to open Pingbash website
       const logo = this.dialog.querySelector('.pingbash-logo');
       if( window.isDebugging ) console.log('🔍 [Widget] Logo element found:', !!logo, logo);
 
@@ -151,14 +151,16 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         // Add visual indicator that logo is clickable
         logo.style.cursor = 'pointer';
         logo.style.transition = 'opacity 0.2s';
+        logo.title = 'Visit Pingbash.com';
 
         logo.addEventListener('click', (e) => {
-          if( window.isDebugging ) console.log('🔍 [Widget] Logo clicked - opening create new group modal');
+          if( window.isDebugging ) console.log('🔍 [Widget] Logo clicked - opening Pingbash website');
           if( window.isDebugging ) console.log('🔍 [Widget] Event details:', e);
           e.preventDefault();
           e.stopPropagation();
 
-          this.showGroupCreationModal();
+          // Open Pingbash groupChat page in new window
+          window.open('https://pingbash.com/groupChat', '_blank', 'noopener,noreferrer');
         });
 
         // Add hover effect
