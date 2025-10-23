@@ -219,8 +219,8 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         let newHeight = startHeight + deltaY;
         
         // Apply min/max constraints
-        const minWidth = 100;
-        const minHeight = 100;
+        const minWidth = 0;
+        const minHeight = 0;
         const maxWidth = window.innerWidth - 20;
         const maxHeight = window.innerHeight - 20;
         

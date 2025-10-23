@@ -20,7 +20,7 @@ window.isDebugging = true;
         height: config.height || '700px',
         customColors: config.customColors || null,
         autoOpen: config.autoOpen || false,
-        minWidth: config.minWidth || '350px',
+        minWidth: config.minWidth || '0px',
         minHeight: config.minHeight || '400px',
         maxWidth: config.maxWidth || '800px',
         maxHeight: config.maxHeight || '900px',
@@ -411,3 +411,4 @@ window.isDebugging = true;
   // Start the initialization process
   initializeWidget();
 })();
+

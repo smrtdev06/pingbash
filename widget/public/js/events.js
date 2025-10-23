@@ -2474,8 +2474,8 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
             // Desktop: Apply fixed size from group data (first load)
           actualChatDialog.style.width = groupData.frame_width + 'px';
           actualChatDialog.style.height = groupData.frame_height + 'px';
-            actualChatDialog.style.minWidth = '100px';
-            actualChatDialog.style.minHeight = '100px';
+            actualChatDialog.style.minWidth = '0px';
+            actualChatDialog.style.minHeight = '0px';
             actualChatDialog.style.maxWidth = 'none';
             actualChatDialog.style.maxHeight = 'none';
             if( window.isDebugging ) console.log('🎨 [Widget] Applied fixed size:', groupData.frame_width + 'x' + groupData.frame_height);
