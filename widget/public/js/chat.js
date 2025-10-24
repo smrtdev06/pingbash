@@ -779,14 +779,18 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
     convertYouTubeLinksToEmbeds(content) {
       if (!content) return '';
       
-      // Check if content already contains HTML (images, links, iframes, etc.)
-      // If it does, don't process it for YouTube embeds
-      if (content.includes('<img') || content.includes('<a') || content.includes('<iframe') || content.includes('<video')) {
+      // Skip if content already has iframes or videos (already processed)
+      if (content.includes('<iframe') || content.includes('<video')) {
         return content;
       }
       
-      // YouTube URL patterns - more comprehensive
-      const youtubeRegex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})(?:[^\s]*)?/gi;
+      // Skip if content has images (different content type)
+      if (content.includes('<img')) {
+        return content;
+      }
+      
+      // YouTube URL patterns - matches both plain URLs and URLs within <a> tags
+      const youtubeRegex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})(?:[^\s<"]*)?/gi;
       
       // Check if content has YouTube links
       if (!youtubeRegex.test(content)) {
@@ -796,9 +800,34 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
       // Reset regex lastIndex
       youtubeRegex.lastIndex = 0;
       
-      // Replace YouTube links with embed iframe
+      if( window.isDebugging ) console.log('🎥 [Widget] Processing content for YouTube embeds:', content.substring(0, 100));
+      
+      // If content has <a> tags, we need to handle them specially
+      if (content.includes('<a')) {
+        // Extract YouTube links from anchor tags
+        const anchorRegex = /<a[^>]*href="([^"]*(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})[^"]*)"[^>]*>.*?<\/a>/gi;
+        
+        let embedContent = content.replace(anchorRegex, (match, url, videoId) => {
+          if( window.isDebugging ) console.log('🎥 [Widget] Found YouTube link in anchor tag, converting to embed:', videoId);
+          return `<div class="pingbash-youtube-embed">
+            <iframe 
+              width="100%" 
+              height="315" 
+              src="https://www.youtube.com/embed/${videoId}" 
+              frameborder="0" 
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+              allowfullscreen
+              style="max-width: 560px; border-radius: 8px; display: block; margin: 8px 0;">
+            </iframe>
+          </div>`;
+        });
+        
+        return embedContent;
+      }
+      
+      // Replace plain YouTube URLs with embed iframe
       const embedContent = content.replace(youtubeRegex, (match, videoId) => {
-        if( window.isDebugging ) console.log('🎥 [Widget] Found YouTube link, converting to embed:', videoId);
+        if( window.isDebugging ) console.log('🎥 [Widget] Found plain YouTube link, converting to embed:', videoId);
         return `<div class="pingbash-youtube-embed">
           <iframe 
             width="100%" 
