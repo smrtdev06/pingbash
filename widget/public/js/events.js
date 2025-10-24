@@ -59,13 +59,6 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         // User search now handled by modal - no inline search needed
       }
 
-      // Popout button (mobile only)
-      const popoutBtn = this.dialog.querySelector('.pingbash-popout-btn');
-      popoutBtn?.addEventListener('click', (e) => {
-        e.stopPropagation();
-        this.togglePopoutMode();
-      });
-
       // Popup button - Toggle between embedded and popup modes
       const popupBtn = this.dialog.querySelector('.pingbash-popup-btn');
       popupBtn?.addEventListener('click', (e) => {

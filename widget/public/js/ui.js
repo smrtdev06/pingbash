@@ -337,23 +337,11 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
           </div>
           <div class="pingbash-header-right">
             
-            <!-- Popup button (embedded mode only) - converts embedded to popup -->
-            <button class="pingbash-popup-btn" title="Open in Popup" style="display: none;">
+            <!-- Popup button - converts between embedded and popup modes -->
+            <button class="pingbash-popup-btn" title="Open in Popup">
               <svg viewBox="0 0 24 24" width="22" height="22">
                 <path fill="currentColor" d="M14,3V5H17.59L7.76,14.83L9.17,16.24L19,6.41V10H21V3M19,19H5V5H12V3H5C3.89,3 3,3.9 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V12H19V19Z"/>
               </svg>
-            </button>
-            
-            <!-- Popout button (mobile only) - toggles between popout and fullscreen -->
-            <button class="pingbash-popout-btn" title="Popout Mode">
-              <!-- Icon for full-screen mode: popout/minimize icon -->
-              <svg class="pingbash-popout-icon" viewBox="0 0 24 24" width="22" height="22">
-                <path fill="currentColor" d="M14,14H19V16H16V19H14V14M5,14H10V19H8V16H5V14M8,5H10V10H5V8H8V5M19,8V10H14V5H16V8H19Z"/>
-                </svg>
-              <!-- Icon for popout mode: fullscreen/expand icon 
-              <svg class="pingbash-fullscreen-icon" viewBox="0 0 24 24" width="22" height="22" style="display: none;">
-                <path fill="currentColor" d="M5,5H10V7H7V10H5V5M14,5H19V10H17V7H14V5M17,14H19V19H14V17H17V14M10,17V19H5V14H7V17H10Z"/>
-              </svg>-->
             </button>
             
             <div class="pingbash-hamburger-container">

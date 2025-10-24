@@ -287,25 +287,6 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
             padding: 0 !important;
           }
           
-          /* Popup button styles */
-          .pingbash-popup-btn {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 32px;
-            height: 32px;
-            border: none;
-            background: transparent;
-            color: #333;
-            cursor: pointer;
-            border-radius: 6px;
-            transition: background-color 0.2s;
-          }
-          
-          .pingbash-popup-btn:hover {
-            background: rgba(0, 0, 0, 0.05);
-          }
-          
           /* Mobile: Header IS draggable */
           .pingbash-header {
             cursor: move !important;
@@ -314,9 +295,10 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
           }
           
           /* Show popout button only on mobile */
-          .pingbash-popout-btn {
-            display: flex !important;
-          }
+        /* Popup button visible on mobile */
+        .pingbash-popup-btn {
+          display: flex !important;
+        }
           
           /* Mobile: Make ad more compact */
           .pingbash-header-center {
@@ -348,7 +330,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
           .pingbash-header button,
           .pingbash-header .pingbash-hamburger-btn,
           .pingbash-header .pingbash-hamburger-container,
-          .pingbash-header .pingbash-popout-btn,
+          .pingbash-header .pingbash-popup-btn,
           .pingbash-header .pingbash-header-inbox-icon,
           .pingbash-header .pingbash-logo,
           .pingbash-hamburger-dropdown,
@@ -772,6 +754,24 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
         .pingbash-fullscreen-icon {
           display: block;
           transition: opacity 0.2s ease;
+        }
+        
+        /* Popup button - match hamburger button style */
+        .pingbash-popup-btn {
+          background: none;
+          border: none;
+          color: #666;
+          cursor: pointer;
+          padding: 4px;
+          border-radius: 4px;
+          transition: background-color 0.2s ease;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        
+        .pingbash-popup-btn:hover {
+          background: rgba(0,0,0,0.05);
         }
         
         .pingbash-hamburger-btn {
@@ -6554,21 +6554,21 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
           color: #e5e5e5 !important;
         }
 
-        /* Dark Mode Popout/Fullscreen Button Fix */
-        /* When in dark mode, popout button should use same color as hamburger icon */
-        .pingbash-dark-mode .pingbash-popout-btn {
+        /* Dark Mode Popup Button Fix */
+        /* When in dark mode, popup button should use same color as hamburger icon */
+        .pingbash-dark-mode .pingbash-popup-btn {
           color: #e5e5e5 !important;
         }
 
-        .pingbash-dark-mode .pingbash-popout-btn svg path {
+        .pingbash-dark-mode .pingbash-popup-btn svg path {
           fill: #e5e5e5 !important;
         }
 
-        .pingbash-dark-mode .pingbash-popout-btn svg {
+        .pingbash-dark-mode .pingbash-popup-btn svg {
           color: #e5e5e5 !important;
         }
 
-        .pingbash-dark-mode .pingbash-popout-btn:hover {
+        .pingbash-dark-mode .pingbash-popup-btn:hover {
           background: rgba(255,255,255,0.1) !important;
         }
 
