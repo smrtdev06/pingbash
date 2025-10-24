@@ -779,8 +779,22 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
     convertYouTubeLinksToEmbeds(content) {
       if (!content) return '';
       
-      // YouTube URL patterns
-      const youtubeRegex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/g;
+      // Check if content already contains HTML (images, links, iframes, etc.)
+      // If it does, don't process it for YouTube embeds
+      if (content.includes('<img') || content.includes('<a') || content.includes('<iframe') || content.includes('<video')) {
+        return content;
+      }
+      
+      // YouTube URL patterns - more comprehensive
+      const youtubeRegex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})(?:[^\s]*)?/gi;
+      
+      // Check if content has YouTube links
+      if (!youtubeRegex.test(content)) {
+        return content;
+      }
+      
+      // Reset regex lastIndex
+      youtubeRegex.lastIndex = 0;
       
       // Replace YouTube links with embed iframe
       const embedContent = content.replace(youtubeRegex, (match, videoId) => {
