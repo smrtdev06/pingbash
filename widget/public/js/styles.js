@@ -454,7 +454,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
           }
           
           .pingbash-message-text {
-            padding-right: 60px !important; /* Space for timestamp */
+            /*padding-right: 60px !important; Space for timestamp */
             padding-bottom: 2px !important;
           }
           
@@ -1471,6 +1471,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
           color: var(--msg-text-color, #333);
           padding-right: 60px !important;
           padding-bottom: 4px !important;
+          text-align: left !important;
         }
         
         .pingbash-message-text img {
@@ -1478,6 +1479,21 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
           max-height: 200px !important;
           border-radius: 8px !important;
           margin: 1px 0 !important;
+          display: block !important;
+        }
+        
+        /* YouTube embed styling */
+        .pingbash-message-text .pingbash-youtube-embed {
+          margin: 8px 0 !important;
+          text-align: left !important;
+        }
+        
+        .pingbash-message-text .pingbash-youtube-embed iframe {
+          max-width: 100% !important;
+          width: 100% !important;
+          max-width: 560px !important;
+          height: 315px !important;
+          border-radius: 8px !important;
           display: block !important;
         }
         

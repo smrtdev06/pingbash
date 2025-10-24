@@ -846,6 +846,10 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
           const result = `<img src="${content}" style="width: 160px; cursor: pointer;" onclick="window.pingbashWidget.openImageModal('${content}')" title="Click to view full size" />`;
           if( window.isDebugging ) console.log('🖼️ [Widget] Created clickable direct GIF HTML:', result);
           return result;
+        } else if (content.includes('<iframe')) {
+          if( window.isDebugging ) console.log('🎥 [Widget] Processing iframe content (YouTube embed)');
+          // YouTube embed or other iframe content - return as-is
+          return content;
         } else if (content.includes('<a')) {
           if( window.isDebugging ) console.log('🔗 [Widget] Content already contains <a> tags (files/links), preserving as-is');
           // Content already has anchor tags (files, existing links) - preserve as-is
