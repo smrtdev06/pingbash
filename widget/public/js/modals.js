@@ -1390,6 +1390,32 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
       }
     },
 
+    // Show delete message modal with options
+    showDeleteMessageModal(messageId, senderId) {
+      if( window.isDebugging ) console.log('🗑️ [Widget] Opening delete message modal', { messageId, senderId });
+      
+      const modal = this.dialog.querySelector('.pingbash-delete-message-modal');
+      if (!modal) {
+        console.error('Delete message modal not found');
+        return;
+      }
+      
+      // Store message and sender IDs for deletion
+      modal.dataset.messageId = messageId;
+      modal.dataset.senderId = senderId;
+      
+      modal.style.display = 'flex';
+    },
+
+    hideDeleteMessageModal() {
+      const modal = this.dialog.querySelector('.pingbash-delete-message-modal');
+      if (modal) {
+        modal.style.display = 'none';
+        delete modal.dataset.messageId;
+        delete modal.dataset.senderId;
+      }
+    },
+
     showModeratorManagement() {
       if( window.isDebugging ) console.log('👥 [Widget] Opening Moderator Management popup');
 

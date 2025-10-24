@@ -440,6 +440,34 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
       manageChatCloseBtn?.addEventListener('click', () => this.hideManageChat());
       manageChatOverlay?.addEventListener('click', () => this.hideManageChat());
       
+      // Delete Message Modal
+      const deleteMessageModal = this.dialog.querySelector('.pingbash-delete-message-modal');
+      const deleteMessageCloseBtn = deleteMessageModal?.querySelector('.pingbash-popup-close');
+      const deleteMessageOverlay = deleteMessageModal?.querySelector('.pingbash-popup-overlay');
+      const deleteCancelBtn = this.dialog.querySelector('.pingbash-delete-cancel-btn');
+      const deleteSingleBtn = this.dialog.querySelector('.pingbash-delete-single-btn');
+      const deleteAllBtn = this.dialog.querySelector('.pingbash-delete-all-btn');
+
+      deleteMessageCloseBtn?.addEventListener('click', () => this.hideDeleteMessageModal());
+      deleteMessageOverlay?.addEventListener('click', () => this.hideDeleteMessageModal());
+      deleteCancelBtn?.addEventListener('click', () => this.hideDeleteMessageModal());
+      
+      deleteSingleBtn?.addEventListener('click', () => {
+        const messageId = deleteMessageModal?.dataset.messageId;
+        if (messageId) {
+          this.deleteMessage(parseInt(messageId));
+          this.hideDeleteMessageModal();
+        }
+      });
+      
+      deleteAllBtn?.addEventListener('click', () => {
+        const senderId = deleteMessageModal?.dataset.senderId;
+        if (senderId) {
+          this.deleteAllUserMessages(parseInt(senderId));
+          this.hideDeleteMessageModal();
+        }
+      });
+      
       // Manage chat menu options
       manageChatOptions.forEach(option => {
         option.addEventListener('click', () => {

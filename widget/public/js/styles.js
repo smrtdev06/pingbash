@@ -1528,6 +1528,22 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
           background: rgba(0,0,0,0.1) !important;
         }
         
+        /* Admin/Mod actions - hide by default on desktop, show on message hover */
+        @media (min-width: 769px) {
+          .pingbash-message-action.pingbash-action-admin {
+            display: none !important;
+          }
+          
+          .pingbash-message:hover .pingbash-message-action.pingbash-action-admin {
+            display: inline-flex !important;
+          }
+        }
+        
+        /* Regular user actions - always visible */
+        .pingbash-message-action.pingbash-action-regular {
+          display: inline-flex !important;
+        }
+        
         .pingbash-message-action.ban {
           color: #f44336 !important;
         }
@@ -1768,8 +1784,9 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
           background: var(--input-bg-color, #f8f9fa);
           border-radius: 25px;
           border: 1px solid #e9ecef;
-          padding: 6px 12px;
+          padding: 6px 4px 6px 12px;
           transition: border-color 0.2s ease;
+          margin: 0 4px;
         }
         
         .pingbash-input-row {
@@ -1813,10 +1830,11 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
         }
         
         .pingbash-send-btn {
-          height: 30px;
-          padding: 3px 26px;
+          width: 36px;
+          height: 36px;
+          padding: 0;
           border: none;
-          border-radius: 25px;
+          border-radius: 50%;
           background: linear-gradient(to right, #BD00FF, #3A4EFF);
           color: white;
           font-size: 14px;
@@ -1825,17 +1843,16 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
           display: flex;
           align-items: center;
           justify-content: center;
-          gap: 4px;
-          min-width: 60px;
+          flex-shrink: 0;
         }
         
         .pingbash-send-btn:hover:not(:disabled) {
-          transform: translateY(-1px);
+          transform: scale(1.05);
           box-shadow: 0 2px 8px rgba(0,0,0,0.15);
         }
         
         .pingbash-send-btn:active:not(:disabled) {
-          transform: translateY(2px);
+          transform: scale(0.95);
         }
         
         .pingbash-send-btn:disabled {
@@ -1844,27 +1861,8 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
           transform: none;
         }
         
-        .pingbash-send-text {
-          font-weight: 500;
-        }
-        
         .pingbash-send-icon {
-          display: none;
-        }
-        
-        @media (max-width: 480px) {
-          .pingbash-send-text {
-            display: none;
-          }
-          
-          .pingbash-send-icon {
-            display: block;
-          }
-          
-          .pingbash-send-btn {
-            min-width: 30px;
-            padding: 3px 8px;
-          }
+          display: block;
         }
         
         /* Reply functionality styles */

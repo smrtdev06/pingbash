@@ -326,13 +326,13 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
           <div class="pingbash-header-center">
             <!-- Google AdSense Ad Space -->
             <div class="pingbash-header-ad" id="pingbash-google-ad-container">
-              <!-- Google AdSense ad will be inserted here -->
+              <!-- Google AdSense ad will be inserted here 
               <ins class="adsbygoogle pingbash-adsense-banner"
                    style="display:inline-block;width:100%;max-width:250px;height:60px;"
                    data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
                    data-ad-slot="XXXXXXXXXX"
                    data-ad-format="horizontal"
-                   data-full-width-responsive="false"></ins>
+                   data-full-width-responsive="false"></ins>-->
             </div>
           </div>
           <div class="pingbash-header-right">
@@ -455,9 +455,8 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
                 maxlength="500"
                 disabled
               />
-              <button class="pingbash-send-btn" disabled>
-                <span class="pingbash-send-text">Send</span>
-                <svg class="pingbash-send-icon" viewBox="0 0 24 24" width="16" height="16">
+              <button class="pingbash-send-btn" disabled title="Send message">
+                <svg class="pingbash-send-icon" viewBox="0 0 24 24" width="20" height="20">
                   <path fill="currentColor" d="M2,21L23,12L2,3V10L17,12L2,14V21Z"/>
                 </svg>
               </button>
@@ -940,6 +939,31 @@ Example:
                 </div>
 
               </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Delete Message Modal -->
+        <div class="pingbash-delete-message-modal" style="display: none;">
+          <div class="pingbash-popup-overlay"></div>
+          <div class="pingbash-popup-content" style="width:400px; max-width:90vw;">
+            <div class="pingbash-popup-header">
+              <h3>Delete Message</h3>
+              <button class="pingbash-popup-close">×</button>
+            </div>
+            <div class="pingbash-popup-body">
+              <p style="margin-bottom: 20px;">Choose delete option:</p>
+              <div class="pingbash-delete-options">
+                <button class="pingbash-delete-single-btn" style="width:100%; padding:12px; margin-bottom:10px; background:#e91e63; color:white; border:none; border-radius:6px; cursor:pointer; font-size:14px;">
+                  Delete This Message Only
+                </button>
+                <button class="pingbash-delete-all-btn" style="width:100%; padding:12px; background:#f44336; color:white; border:none; border-radius:6px; cursor:pointer; font-size:14px;">
+                  Delete All User's Messages
+                </button>
+              </div>
+            </div>
+            <div class="pingbash-popup-footer">
+              <button class="pingbash-delete-cancel-btn">Cancel</button>
             </div>
           </div>
         </div>

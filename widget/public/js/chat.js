@@ -448,9 +448,9 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
               <div class="pingbash-message-buttons">
                 ${this.getMessageActionButtons(message, isOwn)}
                 ${this.canPinMessages() ? `
-                  <button class="pingbash-message-action pin" onclick="window.pingbashWidget.${this.isPinnedMessage(message.Id) ? 'unpinMessage' : 'pinMessage'}(${message.Id})" title="${this.isPinnedMessage(message.Id) ? 'Unpin Message' : 'Pin Message'}">${this.isPinnedMessage(message.Id) ? '📌' : '📍'}</button>
+                  <button class="pingbash-message-action pingbash-action-admin pin" onclick="window.pingbashWidget.${this.isPinnedMessage(message.Id) ? 'unpinMessage' : 'pinMessage'}(${message.Id})" title="${this.isPinnedMessage(message.Id) ? 'Unpin Message' : 'Pin Message'}">${this.isPinnedMessage(message.Id) ? '📌' : '📍'}</button>
                 ` : ''}
-                <button class="pingbash-message-reply" onclick="window.pingbashWidget.replyToMessage(${message.Id}, '${senderName.replace(/'/g, "\\'")}', '${escapedContent}')" title="Reply">↩️</button>
+                <button class="pingbash-message-action pingbash-action-regular pingbash-message-reply" onclick="window.pingbashWidget.replyToMessage(${message.Id}, '${senderName.replace(/'/g, "\\'")}', '${escapedContent}')" title="Reply">↩️</button>
               </div>
             </div>
             <div class="pingbash-message-text">${this.renderMessageContent(message.Content)}</div>
@@ -691,27 +691,29 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
 
       // AUTHENTICATED REGULAR USERS (not mods/admins)
       // Block button: Show for regular users against other regular users (F version line 191-194)
+      // Add 'pingbash-action-regular' class to keep visible always
       if (myMemInfo?.role_id !== 1 && myMemInfo?.role_id !== 2 && senderInfo?.role_id !== 1 && senderInfo?.role_id !== 2 && senderInfo?.id !== currentUserId) {
-        actions.push(`<button class="pingbash-message-action block" onclick="window.pingbashWidget.blockUser(${message.Sender_Id})" title="Block User">🚫</button>`);
+        actions.push(`<button class="pingbash-message-action pingbash-action-regular block" onclick="window.pingbashWidget.blockUser(${message.Sender_Id})" title="Block User">🚫</button>`);
       }
 
       // TIMEOUT PERMISSION: Group creator OR moderators with ban_user permission can timeout users
       // But NOT against other mods/admins and NOT if target is already timed out
+      // Add 'pingbash-action-admin' class for admin/mod actions to show on hover only (desktop)
       const canTimeout = (this.group?.creater_id === currentUserId) || (myMemInfo?.role_id === 2 && myMemInfo?.ban_user === true);
       if (canTimeout && senderInfo?.role_id !== 1 && senderInfo?.role_id !== 2 && !senderInfo?.is_timed_out) {
-        actions.push(`<button class="pingbash-message-action timeout" onclick="window.pingbashWidget.timeoutUser(${message.Sender_Id})" title="Timeout User">⏰</button>`);
+        actions.push(`<button class="pingbash-message-action pingbash-action-admin timeout" onclick="window.pingbashWidget.timeoutUser(${message.Sender_Id})" title="Timeout User">⏰</button>`);
       }
 
       // BAN PERMISSION: Group creator OR moderators with ban_user permission - F version line 198 + ban_user flag
       const canBan = (this.group?.creater_id === currentUserId) || (myMemInfo?.role_id === 2 && myMemInfo?.ban_user === true);
       if (canBan && senderInfo?.role_id !== 1 && senderInfo?.role_id !== 2) {
-        actions.push(`<button class="pingbash-message-action ban" onclick="window.pingbashWidget.banUser(${message.Sender_Id})" title="Ban User">🔨</button>`);
+        actions.push(`<button class="pingbash-message-action pingbash-action-admin ban" onclick="window.pingbashWidget.banUser(${message.Sender_Id})" title="Ban User">🔨</button>`);
       }
 
       // DELETE MESSAGE PERMISSION: Group creator OR moderators can delete messages
       const canDeleteMessage = (this.group?.creater_id === currentUserId) || (myMemInfo?.role_id === 2);
       if (canDeleteMessage) {
-        actions.push(`<button class="pingbash-message-action delete" onclick="window.pingbashWidget.deleteMessage(${message.Id})" title="Delete Message">🗑️</button>`);
+        actions.push(`<button class="pingbash-message-action pingbash-action-admin delete" onclick="window.pingbashWidget.showDeleteMessageModal(${message.Id}, ${message.Sender_Id})" title="Delete Message">🗑️</button>`);
       }
 
       if( window.isDebugging ) console.log('🔍 [Widget] Message actions for user', message.Sender_Id, ':', {
@@ -773,9 +775,38 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
       return escaped;
     },
 
+  // NEW METHOD - Convert YouTube links to embedded players
+    convertYouTubeLinksToEmbeds(content) {
+      if (!content) return '';
+      
+      // YouTube URL patterns
+      const youtubeRegex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/g;
+      
+      // Replace YouTube links with embed iframe
+      const embedContent = content.replace(youtubeRegex, (match, videoId) => {
+        if( window.isDebugging ) console.log('🎥 [Widget] Found YouTube link, converting to embed:', videoId);
+        return `<div class="pingbash-youtube-embed">
+          <iframe 
+            width="100%" 
+            height="315" 
+            src="https://www.youtube.com/embed/${videoId}" 
+            frameborder="0" 
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+            allowfullscreen
+            style="max-width: 560px; border-radius: 8px; display: block; margin: 8px 0;">
+          </iframe>
+        </div>`;
+      });
+      
+      return embedContent;
+    },
+
   // EXACT COPY from widget.js - renderMessageContent method
     renderMessageContent(content) {
       if (!content) return '';
+      
+      // First, check for YouTube links and convert them to embeds
+      content = this.convertYouTubeLinksToEmbeds(content);
   
       // Log content analysis for debugging
       if( window.isDebugging ) console.log('🔍 [Widget] Content analysis:', {
@@ -788,7 +819,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
       });
       if( window.isDebugging ) console.log("******************************", content, content.includes('<img'), content.includes('<a'), content.includes('gif::'), content.includes('sticker::'), content.includes('.gif') && content.includes('https://') && !content.includes(' '));
       // Check if content contains HTML tags (images, links, etc.)
-      if (content.includes('<img') || content.includes('<a') || content.includes('gif::') || content.includes('sticker::')) {
+      if (content.includes('<img') || content.includes('<a') || content.includes('gif::') || content.includes('sticker::') || content.includes('<iframe')) {
         if( window.isDebugging ) console.log('🖼️ [Widget] Detected HTML/special content, processing...');
   
         // Handle different content types (same as W version)
@@ -1629,11 +1660,6 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
       deleteMessage(messageId) {
         if( window.isDebugging ) console.log('🗑️ [Widget] Delete message requested for ID:', messageId);
         
-        // Confirm deletion
-        if (!confirm('Are you sure you want to delete this message?')) {
-          return;
-        }
-        
         // Check permissions
         const currentUserId = this.getCurrentUserId();
         const myMemInfo = this.group?.members?.find(user => {
@@ -1664,6 +1690,50 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
           groupId: parseInt(this.groupId),
           token: this.isAuthenticated ? this.authenticatedToken : `anonuser${this.config.groupName}${this.anonId}`
         });
+      },
+
+      // NEW METHOD - Delete All User's Messages
+      deleteAllUserMessages(userId) {
+        if( window.isDebugging ) console.log('🗑️ [Widget] Delete all messages requested for user:', userId);
+        
+        // Check permissions
+        const currentUserId = this.getCurrentUserId();
+        const myMemInfo = this.group?.members?.find(user => {
+          const userIdParsed = user?.id != null ? parseInt(user.id) : null;
+          return userIdParsed === currentUserId;
+        });
+        const canDelete = (this.group?.creater_id === currentUserId) || (myMemInfo?.role_id === 2);
+        
+        if (!canDelete) {
+          alert("You don't have permission to delete messages");
+          return;
+        }
+        
+        if (!this.socket || !this.socket.connected) {
+          alert('Not connected to server');
+          return;
+        }
+        
+        // Find all messages from this user and delete them
+        const userMessages = this.messages.filter(msg => parseInt(msg.Sender_Id) === parseInt(userId));
+        if( window.isDebugging ) console.log(`🗑️ [Widget] Found ${userMessages.length} messages from user ${userId}`);
+        
+        if (userMessages.length === 0) {
+          alert('No messages found from this user');
+          return;
+        }
+        
+        // Delete each message
+        userMessages.forEach(msg => {
+          if( window.isDebugging ) console.log('🗑️ [Widget] Deleting message:', msg.Id);
+          this.socket.emit('delete group msg', {
+            msgId: parseInt(msg.Id),
+            groupId: parseInt(this.groupId),
+            token: this.isAuthenticated ? this.authenticatedToken : `anonuser${this.config.groupName}${this.anonId}`
+          });
+        });
+        
+        if( window.isDebugging ) console.log(`🗑️ [Widget] Sent delete requests for ${userMessages.length} messages`);
       },
 
       timeoutUser(userId) {
