@@ -1481,20 +1481,18 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
           display: block !important;
         }
         
-        /* YouTube embed styling */
-        .pingbash-message-text .pingbash-youtube-embed {
-          margin: 8px 0 !important;
-          text-align: left !important;
-        }
-        
-        .pingbash-message-text .pingbash-youtube-embed iframe {
-          max-width: 100% !important;
-          width: 100% !important;
-          max-width: 560px !important;
-          height: 315px !important;
-          border-radius: 8px !important;
-          display: block !important;
-        }
+      /* YouTube embed styling - 200x150 (4:3 aspect ratio) */
+      .pingbash-message-text .pingbash-youtube-embed {
+        margin: 8px 0 !important;
+        text-align: left !important;
+      }
+      
+      .pingbash-message-text .pingbash-youtube-embed iframe {
+        width: 200px !important;
+        height: 150px !important;
+        border-radius: 8px !important;
+        display: block !important;
+      }
         
         .pingbash-message-text a {
           color: var(--msg-text-color, #333);

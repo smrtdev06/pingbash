@@ -811,13 +811,13 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
           if( window.isDebugging ) console.log('🎥 [Widget] Found YouTube link in anchor tag, converting to embed:', videoId);
           return `<div class="pingbash-youtube-embed">
             <iframe 
-              width="100%" 
-              height="315" 
+              width="200" 
+              height="150" 
               src="https://www.youtube.com/embed/${videoId}" 
               frameborder="0" 
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
               allowfullscreen
-              style="max-width: 560px; border-radius: 8px; display: block; margin: 8px 0;">
+              style="border-radius: 8px; display: block; margin: 8px 0;">
             </iframe>
           </div>`;
         });
@@ -830,13 +830,13 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         if( window.isDebugging ) console.log('🎥 [Widget] Found plain YouTube link, converting to embed:', videoId);
         return `<div class="pingbash-youtube-embed">
           <iframe 
-            width="100%" 
-            height="315" 
+            width="200" 
+            height="150" 
             src="https://www.youtube.com/embed/${videoId}" 
             frameborder="0" 
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
             allowfullscreen
-            style="max-width: 560px; border-radius: 8px; display: block; margin: 8px 0;">
+            style="border-radius: 8px; display: block; margin: 8px 0;">
           </iframe>
         </div>`;
       });
