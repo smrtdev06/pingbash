@@ -1469,7 +1469,6 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
           line-height: 1.4;
           word-wrap: break-word;
           color: var(--msg-text-color, #333);
-          padding-right: 60px !important;
           padding-bottom: 4px !important;
           text-align: left !important;
         }
