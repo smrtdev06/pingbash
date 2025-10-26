@@ -610,7 +610,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
         .pingbash-online-users-container {
           position: relative;
           cursor: pointer;
-          padding: 8px;
+          padding: 0px !important;
           border-radius: 6px;
           transition: background-color 0.2s;
         }
@@ -838,7 +838,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
         /* Settings Menu Styles */
         .pingbash-settings-container {
           position: relative;
-          margin-right: 12px;
+          margin-right: 0px !important;
         }
         
         .pingbash-settings-btn {
@@ -1609,13 +1609,11 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
         .pingbash-controls-left {
           display: flex;
           align-items: center;
-          gap: 8px;
         }
         
         .pingbash-controls-right {
           display: flex;
           align-items: center;
-          gap: 8px;
         }
         
         .pingbash-control-btn {
@@ -3723,7 +3721,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
         .pingbash-preview-container .pingbash-online-users-container {
           position: relative !important;
           cursor: pointer !important;
-          padding: 8px !important;
+          padding: 0px !important;
           border-radius: 6px !important;
           transition: background-color 0.2s !important;
         }
