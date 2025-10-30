@@ -103,9 +103,16 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
                 setTimeout(() => this.showSigninModal(), 500);
             }
 
-            // Always open dialog by default, hide chat button
+            // Check if on mobile device
+            const isMobile = this.isMobileDevice();
+            if( window.isDebugging ) console.log('📱 [Widget] Device detection - isMobile:', isMobile);
+
+            // On mobile: keep dialog closed, show only bubble icon
+            // On desktop: open dialog by default
             setTimeout(() => {
-                this.openDialog();
+                if (!isMobile) {
+                    this.openDialog();
+                }
                 this.updateButtonVisibility();
             }, 1000);
         },
@@ -137,7 +144,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
             }
         },
 
-        // Generate anonymous ID using same method as W version
+        // Generate anonymous ID using persistent localStorage-based approach
         getBrowserFingerprint() {
             return [
                 navigator.userAgent,
@@ -157,10 +164,41 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
             return Math.abs(hash >>> 0); // Unsigned 32-bit number
         },
 
+        // Generate a random anonymous ID between 10000000 and 999999999
+        generateRandomAnonId() {
+            // Generate a random 8-9 digit number
+            return Math.floor(Math.random() * 990000000) + 10000000;
+        },
+
         getAnonId() {
+            // First, try to get existing anonymous ID from localStorage (persistent storage)
+            const storedAnonId = localStorage.getItem('pingbash_anon_id');
+            if (storedAnonId) {
+                const parsedId = parseInt(storedAnonId);
+                if (parsedId && !isNaN(parsedId) && parsedId > 0) {
+                    if( window.isDebugging ) console.log('👤 [Widget] Using stored anonymous ID:', parsedId);
+                    return parsedId;
+                }
+            }
+
+            // If no stored ID, generate a new one
+            // We'll use fingerprint as a seed, but add randomness to avoid collisions
             const fingerprint = this.getBrowserFingerprint();
-            const anonId = this.hashStringToNumber(fingerprint);
-            return anonId % 1000000000;
+            const fingerprintHash = this.hashStringToNumber(fingerprint);
+            
+            // Combine fingerprint with random number for uniqueness
+            const randomComponent = Math.floor(Math.random() * 1000);
+            const timestamp = Date.now() % 100000; // Last 5 digits of timestamp
+            
+            // Create ID from fingerprint + timestamp + random
+            const combinedString = `${fingerprintHash}_${timestamp}_${randomComponent}`;
+            const anonId = this.hashStringToNumber(combinedString) % 900000000 + 100000000;
+            
+            // Store for future use
+            localStorage.setItem('pingbash_anon_id', anonId.toString());
+            if( window.isDebugging ) console.log('👤 [Widget] Generated new anonymous ID:', anonId);
+            
+            return anonId;
         },
 
         // Check if there's a pending chat rules trigger waiting for group ID
@@ -604,6 +642,31 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
             const fallbackUrl = window.location.origin + '/';
             if( window.isDebugging ) console.log('🔊 [Widget] Using fallback URL:', fallbackUrl);
             return fallbackUrl;
+        },
+
+        // Detect if device is mobile
+        isMobileDevice() {
+            // Check screen size (tablets and phones)
+            const isMobileScreen = window.innerWidth <= 768;
+            
+            // Check user agent for mobile devices
+            const isMobileUserAgent = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+            
+            // Check for touch capability
+            const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+            
+            // Consider it mobile if screen is small OR it's a mobile user agent with touch
+            const isMobile = isMobileScreen || (isMobileUserAgent && isTouchDevice);
+            
+            if( window.isDebugging ) console.log('📱 [Widget] Mobile detection:', {
+                isMobileScreen,
+                isMobileUserAgent,
+                isTouchDevice,
+                isMobile,
+                screenWidth: window.innerWidth
+            });
+            
+            return isMobile;
         },
 
     });

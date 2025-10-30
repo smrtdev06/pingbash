@@ -38,8 +38,7 @@ const CustomerProfile: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
 
   // refs related to user detail information
-  const firstNameRef = useRef<HTMLInputElement | null>(null)
-  const lastNameRef = useRef<HTMLInputElement | null>(null)
+  const userNameRef = useRef<HTMLInputElement | null>(null)
   const emailRef = useRef<HTMLInputElement | null>(null)
   const bioRef = useRef<HTMLInputElement | null>(null)
 
@@ -91,12 +90,11 @@ const CustomerProfile: React.FC = () => {
         });
 
 
-      if (firstNameRef.current && lastNameRef.current && emailRef.current && bioRef.current) {
+      if (userNameRef.current && emailRef.current && bioRef.current) {
 
         let personal = res.data.personal[0]
-        let name = personal.Name.split(' ');
-        firstNameRef.current.value = name[0];
-        lastNameRef.current.value = name.slice(1).join('');
+        // Load username from First Name field only
+        userNameRef.current.value = personal.Name || '';
         emailRef.current.value = personal.Email;
         bioRef.current.value = personal.Profession ?? "";
         setSelectedGender(personal.gender);
@@ -169,8 +167,7 @@ const CustomerProfile: React.FC = () => {
   const updatePersonalInfor = async (event: MouseEvent<HTMLButtonElement>) => {
 
     event.preventDefault();
-    if (firstNameRef.current && firstNameRef.current.value && lastNameRef.current 
-      && lastNameRef.current.value && emailRef.current && emailRef.current.value
+    if (userNameRef.current && userNameRef.current.value && emailRef.current && emailRef.current.value
       && birthdayRef.current && birthdayRef.current?.value) {
 
       //When all form are filled
@@ -178,8 +175,8 @@ const CustomerProfile: React.FC = () => {
       try {
 
         await axios.post(`${SERVER_URL}/api/private/update/customer/detail`, {
-          FirstName: firstNameRef.current.value,
-          LastName: lastNameRef.current.value,
+          FirstName: userNameRef.current.value,
+          LastName: '',
           Email: emailRef.current.value,
           description: bioRef.current?.value == "" ? null : bioRef.current?.value,
           country: selectedCountry,
@@ -202,10 +199,8 @@ const CustomerProfile: React.FC = () => {
       dispatch(setIsLoading(false))
     } else {
       // When there is any empty form
-      if (!firstNameRef.current?.value) {
-        firstNameRef.current?.focus();
-      } else if (!lastNameRef.current?.value) {
-        lastNameRef.current?.focus()
+      if (!userNameRef.current?.value) {
+        userNameRef.current?.focus();
       } else if (!emailRef.current?.value) {
         emailRef.current?.focus()
       } else if (!birthdayRef.current?.value) {
@@ -289,13 +284,8 @@ const CustomerProfile: React.FC = () => {
                   <div className={`input-form gap-[16px] flex  ${isMobile ? "flex-col" : "flex-wrap flex-row justify-between"}`}>
                     {/* Form Fields */}
                     <div className={`gap-2 flex flex-col ${isMobile ? "100%" : "w-[calc(50%-10px)]"}`}>
-                      <p>First Name</p>
-                      <input ref={firstNameRef} type="text"
-                        className="w-full p-2 text-[14px] rounded-md outline-none border" />
-                    </div>
-                    <div className={`gap-2 flex flex-col ${isMobile ? "100%" : "w-[calc(50%-10px)]"}`}>
-                      <p>Last Name</p>
-                      <input ref={lastNameRef} type="text"
+                      <p>User Name</p>
+                      <input ref={userNameRef} type="text"
                         className="w-full p-2 text-[14px] rounded-md outline-none border" />
                     </div>
                     <div className={`gap-2 flex flex-col ${isMobile ? "100%" : "w-[calc(50%-10px)]"}`}>

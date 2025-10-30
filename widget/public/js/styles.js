@@ -465,7 +465,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
           }
           
           .pingbash-controls-bar {
-            padding: 4px 8px !important;
+            padding: 4px 20px 0px 0px !important;
             min-height: auto !important;
             gap: 6px !important;
           }

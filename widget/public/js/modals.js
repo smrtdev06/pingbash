@@ -61,15 +61,9 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
 
                 <!-- Profile Form -->
                 <div class="pingbash-profile-form">
-                  <div class="pingbash-form-row">
-                    <div class="pingbash-form-group">
-                      <label>First Name</label>
-                      <input type="text" id="pingbash-profile-firstname" placeholder="First Name" />
-                    </div>
-                    <div class="pingbash-form-group">
-                      <label>Last Name</label>
-                      <input type="text" id="pingbash-profile-lastname" placeholder="Last Name" />
-                    </div>
+                  <div class="pingbash-form-group">
+                    <label>User Name</label>
+                    <input type="text" id="pingbash-profile-username" placeholder="User Name" />
                   </div>
 
                   <div class="pingbash-form-group">
@@ -159,21 +153,15 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
       saveBtn.parentNode.replaceChild(newSaveBtn, saveBtn);
       
       newSaveBtn.addEventListener('click', async () => {
-        const firstName = popup.querySelector('#pingbash-profile-firstname').value.trim();
-        const lastName = popup.querySelector('#pingbash-profile-lastname').value.trim();
+        const userName = popup.querySelector('#pingbash-profile-username').value.trim();
         const email = popup.querySelector('#pingbash-profile-email').value.trim();
         const bio = popup.querySelector('#pingbash-profile-bio').value.trim();
         const country = popup.querySelector('#pingbash-profile-country').value.trim();
         const gender = popup.querySelector('#pingbash-profile-gender').value;
         const birthday = popup.querySelector('#pingbash-profile-birthday').value;
 
-        if (!firstName) {
-          this.showErrorToast('Validation Error', 'First name is required');
-          return;
-        }
-
-        if (!lastName) {
-          this.showErrorToast('Validation Error', 'Last name is required');
+        if (!userName) {
+          this.showErrorToast('Validation Error', 'User name is required');
           return;
         }
 
@@ -188,8 +176,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
         }
 
         const success = await this.updateUserProfile({
-          firstName,
-          lastName,
+          userName,
           email,
           bio,
           country,
@@ -205,8 +192,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
 
       // Populate form with profile data
       popup.querySelector('.pingbash-profile-avatar').src = profileData.avatar || 'https://pingbash.com/logo-orange.png';
-      popup.querySelector('#pingbash-profile-firstname').value = profileData.firstName || '';
-      popup.querySelector('#pingbash-profile-lastname').value = profileData.lastName || '';
+      popup.querySelector('#pingbash-profile-username').value = profileData.userName || '';
       popup.querySelector('#pingbash-profile-email').value = profileData.email || '';
       popup.querySelector('#pingbash-profile-bio').value = profileData.bio || '';
       popup.querySelector('#pingbash-profile-country').value = profileData.country || '';
@@ -237,7 +223,6 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
 
         const data = await response.json();
         const personal = data.personal[0];
-        const nameParts = (personal.Name || '').split(' ');
 
         // Format birthday for HTML date input (YYYY-MM-DD)
         let formattedBirthday = '';
@@ -253,8 +238,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
         }
 
         return {
-          firstName: nameParts[0] || '',
-          lastName: nameParts.slice(1).join(' ') || '',
+          userName: personal.Name || '',
           email: personal.Email || '',
           bio: personal.Profession || '',
           country: personal.country || '',
@@ -312,8 +296,8 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
             'Authorization': token
           },
           body: JSON.stringify({
-            FirstName: profileData.firstName,
-            LastName: profileData.lastName,
+            FirstName: profileData.userName,
+            LastName: '',
             Email: profileData.email,
             description: profileData.bio || '',
             country: profileData.country || '',

@@ -73,8 +73,7 @@ const VendorProfile: React.FC = () => {
   });
 
   // refs related to user detail information
-  const firstNameRef = useRef<HTMLInputElement | null>(null)
-  const lastNameRef = useRef<HTMLInputElement | null>(null)
+  const userNameRef = useRef<HTMLInputElement | null>(null)
   const professionRef = useRef<HTMLInputElement | null>(null)
   const descriptionRef = useRef<HTMLTextAreaElement | null>(null)
   const emailRef = useRef<HTMLInputElement | null>(null)
@@ -113,12 +112,11 @@ const VendorProfile: React.FC = () => {
         });
 
       //Start Set the personal Information initially
-      if (firstNameRef.current && lastNameRef.current && professionRef.current && descriptionRef.current && emailRef.current && locationTypeRef.current && addressRef.current) {
+      if (userNameRef.current && professionRef.current && descriptionRef.current && emailRef.current && locationTypeRef.current && addressRef.current) {
 
         let personal = res.data.personal[0]
-        let name = personal.Name.split(' ');
-        firstNameRef.current.value = name[0];
-        lastNameRef.current.value = name.slice(1).join('');
+        // Load username from First Name field only
+        userNameRef.current.value = personal.Name || '';
         descriptionRef.current.value = personal.Description
         emailRef.current.value = personal.Email
         locationTypeRef.current.value = personal.LocationType
@@ -229,7 +227,7 @@ const VendorProfile: React.FC = () => {
   const updatePersonalInfor = async (event: MouseEvent<HTMLButtonElement>) => {
 
     event.preventDefault();
-    if (firstNameRef.current && firstNameRef.current.value && lastNameRef.current && lastNameRef.current.value && professionRef.current && professionRef.current.value && descriptionRef.current && descriptionRef.current.value && emailRef.current && emailRef.current.value && locationTypeRef.current && locationTypeRef.current.value && addressRef.current && addressRef.current.value) {
+    if (userNameRef.current && userNameRef.current.value && professionRef.current && professionRef.current.value && descriptionRef.current && descriptionRef.current.value && emailRef.current && emailRef.current.value && locationTypeRef.current && locationTypeRef.current.value && addressRef.current && addressRef.current.value) {
 
       //When all form are filled
       dispatch(setIsLoading(true))
@@ -237,8 +235,8 @@ const VendorProfile: React.FC = () => {
       try {
 
         await axios.post(`${SERVER_URL}/api/private/update/vendor/detail`, {
-          FirstName: firstNameRef.current.value,
-          LastName: lastNameRef.current.value,
+          FirstName: userNameRef.current.value,
+          LastName: '',
           Profession: professionRef.current.value,
           Description: descriptionRef.current.value,
           Email: emailRef.current.value,
@@ -262,10 +260,8 @@ const VendorProfile: React.FC = () => {
       dispatch(setIsLoading(false))
     } else {
       // When there is any empty form
-      if (!firstNameRef.current?.value) {
-        firstNameRef.current?.focus();
-      } else if (!lastNameRef.current?.value) {
-        lastNameRef.current?.focus()
+      if (!userNameRef.current?.value) {
+        userNameRef.current?.focus();
       } else if (!professionRef.current?.value) {
         professionRef.current?.focus()
       } else if (!descriptionRef.current?.value) {
@@ -339,13 +335,8 @@ const VendorProfile: React.FC = () => {
                   <div className="input-form gap-[16px] flex flex-col">
                     {/* Form Fields */}
                     <div className="gap-2 flex flex-col">
-                      <p>First Name</p>
-                      <input ref={firstNameRef} type="text"
-                        className="w-full p-2 text-[14px] rounded-md outline-none border" />
-                    </div>
-                    <div className="gap-2 flex flex-col">
-                      <p>Last Name</p>
-                      <input ref={lastNameRef} type="text"
+                      <p>User Name</p>
+                      <input ref={userNameRef} type="text"
                         className="w-full p-2 text-[14px] rounded-md outline-none border" />
                     </div>
                     <div className="gap-2 flex flex-col">
