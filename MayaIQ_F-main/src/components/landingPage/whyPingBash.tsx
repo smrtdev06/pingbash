@@ -19,7 +19,19 @@ const WhyPingBash: React.FC = () => {
     <div className="gap-[30px] flex flex-col">
       {/* This is a part for Welcome To MayalQ */}
       <div className="text-container flex flex-col items-center w-[1120px] mx-auto max-[1135px]:w-[80%] max-[650px]:w-full gap-[30px] max-[1135px]:px-0 pt-[10px] ">
-        <div className="p-2 max-w-ld mx-auto">          
+        <div className="p-2 max-w-ld mx-auto">
+          {/* Intro Video */}
+          <div className="mb-8 max-w-4xl mx-auto">
+            <video 
+              className="w-full rounded-lg shadow-2xl"
+              controls
+              preload="metadata"
+            >
+              <source src="/videos/intro.mp4" type="video/mp4" />
+              Your browser does not support the video tag.
+            </video>
+          </div>
+          
           <h2 className="text-3xl max-[650px]:text-2xl font-bold mb-4 text-[white]">🚀 Why PingBash?</h2>
           <ul className="space-y-4 text-[white] text-left text-[20px]">
             {descContents.map(cont => {
