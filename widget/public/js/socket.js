@@ -46,11 +46,13 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         this.joinGroup();
 
         // For anonymous users, re-register on reconnection to ensure message reception
-        if (!this.isAuthenticated && this.anonId) {
+        if (!this.isAuthenticated && this.anonId && !this.anonUserRegistered) {
           if (window.isDebugging) console.log('🔌 [Widget] Re-registering anonymous user on connect:', this.anonId);
           setTimeout(() => {
             if (this.socket && this.socket.connected) {
               this.socket.emit('user logged as annon', { userId: this.anonId });
+              this.anonUserRegistered = true;
+              if (window.isDebugging) console.log('🔌 [Widget] Anonymous user registered on reconnect');
 
               // Request messages again for anonymous users to catch any missed messages
               setTimeout(() => {
@@ -1547,8 +1549,14 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
           // Store anonymous token in localStorage (same as W version)
           localStorage.setItem('anonToken', anonToken);
 
-          // First register as anonymous user (same as W version)
-          this.socket.emit('user logged as annon', { userId: this.anonId });
+          // First register as anonymous user (same as W version) - only if not already registered
+          if (!this.anonUserRegistered) {
+            this.socket.emit('user logged as annon', { userId: this.anonId });
+            this.anonUserRegistered = true;
+            if (window.isDebugging) console.log('🔍 [Widget] Anonymous user registered in joinGroup');
+          } else {
+            if (window.isDebugging) console.log('🔍 [Widget] Anonymous user already registered, skipping duplicate registration');
+          }
 
           // Join the group as anonymous user (same event name as W version)
           // Backend automatically sends 'group updated' event with group data for anonymous users

@@ -86,9 +86,13 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
 
                 // Register as anonymous user after socket connection (same as W version)
                 setTimeout(() => {
-                    if (this.socket && this.socket.connected) {
+                    if (this.socket && this.socket.connected && !this.anonUserRegistered) {
                         if( window.isDebugging ) console.log('👤 [Widget] Auto-registering as anonymous user with ID:', anonId);
                         this.socket.emit('user logged as annon', { userId: anonId });
+                        this.anonUserRegistered = true;
+                        if( window.isDebugging ) console.log('👤 [Widget] Anonymous user registered in init');
+                    } else if (this.anonUserRegistered) {
+                        if( window.isDebugging ) console.log('👤 [Widget] Anonymous user already registered, skipping');
                     }
                 }, 1000);
 

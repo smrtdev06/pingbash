@@ -58,6 +58,9 @@ window.isDebugging = true;
       this.connectAsAuthenticated = false;
       this.authenticatedToken = null;
       this.anonId = null;
+      
+      // Track if anonymous user has been registered in this session
+      this.anonUserRegistered = false;
 
       // Page visibility state (same as W version)
       this.pageVisible = true;
