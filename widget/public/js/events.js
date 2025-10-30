@@ -333,50 +333,17 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
       // Attach event listeners to ALL Continue As Guest buttons
       continueAnonBtns.forEach((continueAnonBtn, index) => {
         if( window.isDebugging ) console.log(`🔍 [Widget] Adding click listener to Continue As Guest button ${index + 1}`);
-        if( window.isDebugging ) console.log(`🔍 [Widget] Button ${index + 1} properties:`, {
-          tagName: continueAnonBtn.tagName,
-          className: continueAnonBtn.className,
-          disabled: continueAnonBtn.disabled,
-          style: continueAnonBtn.style.cssText,
-          offsetWidth: continueAnonBtn.offsetWidth,
-          offsetHeight: continueAnonBtn.offsetHeight,
-          clientWidth: continueAnonBtn.clientWidth,
-          clientHeight: continueAnonBtn.clientHeight
-        });
 
-        // Try multiple event types to debug
+        // Only ONE click handler to prevent duplicate calls
         continueAnonBtn.addEventListener('click', (event) => {
           if( window.isDebugging ) console.log(`🔍 [Widget] Continue As Guest button ${index + 1} CLICKED!`);
-          if( window.isDebugging ) console.log('🔍 [Widget] Click event details:', {
-            target: event.target,
-            currentTarget: event.currentTarget,
-            type: event.type
-          });
           event.preventDefault();
           event.stopPropagation();
           this.continueAsAnonymous();
         });
-
-        continueAnonBtn.addEventListener('mousedown', () => {
-          if( window.isDebugging ) console.log(`🔍 [Widget] Continue As Guest button ${index + 1} MOUSEDOWN!`);
-        });
-
-        continueAnonBtn.addEventListener('mouseup', () => {
-          if( window.isDebugging ) console.log(`🔍 [Widget] Continue As Guest button ${index + 1} MOUSEUP!`);
-        });
-
-        // Also try direct onclick
-        continueAnonBtn.onclick = (event) => {
-          if( window.isDebugging ) console.log(`🔍 [Widget] Continue As Guest button ${index + 1} ONCLICK!`);
-          event.preventDefault();
-          event.stopPropagation();
-          this.continueAsAnonymous();
-        };
 
         // Mark that listener has been attached
         continueAnonBtn._listenerAttached = true;
-
-        if( window.isDebugging ) console.log(`🔍 [Widget] All event listeners added to Continue As Guest button ${index + 1}`);
       });
 
       if (continueAnonBtns.length === 0) {
