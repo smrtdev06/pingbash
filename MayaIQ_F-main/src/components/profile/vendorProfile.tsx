@@ -335,9 +335,9 @@ const VendorProfile: React.FC = () => {
                   <div className="input-form gap-[16px] flex flex-col">
                     {/* Form Fields */}
                     <div className="gap-2 flex flex-col">
-                      <p>User Name</p>
-                      <input ref={userNameRef} type="text"
-                        className="w-full p-2 text-[14px] rounded-md outline-none border" />
+                      <p>User Name *</p>
+                      <input ref={userNameRef} type="text" readOnly
+                        className="w-full p-2 text-[14px] rounded-md outline-none border bg-gray-100 cursor-not-allowed" />
                     </div>
                     <div className="gap-2 flex flex-col">
                       <p>Title/Profession</p>

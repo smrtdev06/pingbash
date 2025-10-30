@@ -62,13 +62,13 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
                 <!-- Profile Form -->
                 <div class="pingbash-profile-form">
                   <div class="pingbash-form-group">
-                    <label>User Name</label>
-                    <input type="text" id="pingbash-profile-username" placeholder="User Name" />
+                    <label>User Name *</label>
+                    <input type="text" id="pingbash-profile-username" placeholder="User Name" readonly style="background-color: #f3f4f6; cursor: not-allowed;" />
                   </div>
 
                   <div class="pingbash-form-group">
-                    <label>Email</label>
-                    <input type="email" id="pingbash-profile-email" placeholder="email@example.com" readonly />
+                    <label>Email *</label>
+                    <input type="email" id="pingbash-profile-email" placeholder="email@example.com" readonly style="background-color: #f3f4f6; cursor: not-allowed;" />
                   </div>
 
                   <div class="pingbash-form-group">
@@ -78,11 +78,11 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
 
                   <div class="pingbash-form-row">
                     <div class="pingbash-form-group">
-                      <label>Country</label>
+                      <label>Country (Optional)</label>
                       <input type="text" id="pingbash-profile-country" placeholder="Country" />
                     </div>
                     <div class="pingbash-form-group">
-                      <label>Gender</label>
+                      <label>Gender (Optional)</label>
                       <select id="pingbash-profile-gender">
                         <option value="">Select Gender</option>
                         <option value="Male">Male</option>
@@ -93,7 +93,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
                   </div>
 
                   <div class="pingbash-form-group">
-                    <label>Birthday</label>
+                    <label>Birthday (Optional)</label>
                     <input type="date" id="pingbash-profile-birthday" />
                   </div>
                 </div>
@@ -160,6 +160,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
         const gender = popup.querySelector('#pingbash-profile-gender').value;
         const birthday = popup.querySelector('#pingbash-profile-birthday').value;
 
+        // Only username and email are required, birthday/gender are optional
         if (!userName) {
           this.showErrorToast('Validation Error', 'User name is required');
           return;
@@ -170,18 +171,13 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
           return;
         }
 
-        if (!birthday) {
-          this.showErrorToast('Validation Error', 'Birthday is required');
-          return;
-        }
-
         const success = await this.updateUserProfile({
           userName,
           email,
           bio,
-          country,
-          gender,
-          birthday
+          country: country || null,
+          gender: gender || null,
+          birthday: birthday || null
         });
 
         if (success) {
@@ -299,10 +295,10 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
             FirstName: profileData.userName,
             LastName: '',
             Email: profileData.email,
-            description: profileData.bio || '',
-            country: profileData.country || '',
-            gender: profileData.gender || '',
-            birthday: profileData.birthday || ''
+            description: profileData.bio || null,
+            country: profileData.country || null,
+            gender: profileData.gender || null,
+            birthday: profileData.birthday || null
           })
         });
 

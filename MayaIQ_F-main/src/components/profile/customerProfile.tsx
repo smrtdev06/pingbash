@@ -167,10 +167,9 @@ const CustomerProfile: React.FC = () => {
   const updatePersonalInfor = async (event: MouseEvent<HTMLButtonElement>) => {
 
     event.preventDefault();
-    if (userNameRef.current && userNameRef.current.value && emailRef.current && emailRef.current.value
-      && birthdayRef.current && birthdayRef.current?.value) {
+    if (userNameRef.current && userNameRef.current.value && emailRef.current && emailRef.current.value) {
 
-      //When all form are filled
+      //When all form are filled (username and email are required, birthday/gender are optional)
       dispatch(setIsLoading(true))
       try {
 
@@ -180,7 +179,7 @@ const CustomerProfile: React.FC = () => {
           Email: emailRef.current.value,
           description: bioRef.current?.value == "" ? null : bioRef.current?.value,
           country: selectedCountry,
-          gender: selectedGender,
+          gender: selectedGender || null,
           birthday: birthdayRef.current?.value == "" ? null : birthdayRef.current?.value
         },
           {
@@ -203,10 +202,7 @@ const CustomerProfile: React.FC = () => {
         userNameRef.current?.focus();
       } else if (!emailRef.current?.value) {
         emailRef.current?.focus()
-      } else if (!birthdayRef.current?.value) {
-        toast.error("Please enter birthday");
       }
-        
     }
   }
 
@@ -284,12 +280,12 @@ const CustomerProfile: React.FC = () => {
                   <div className={`input-form gap-[16px] flex  ${isMobile ? "flex-col" : "flex-wrap flex-row justify-between"}`}>
                     {/* Form Fields */}
                     <div className={`gap-2 flex flex-col ${isMobile ? "100%" : "w-[calc(50%-10px)]"}`}>
-                      <p>User Name</p>
-                      <input ref={userNameRef} type="text"
-                        className="w-full p-2 text-[14px] rounded-md outline-none border" />
+                      <p>User Name *</p>
+                      <input ref={userNameRef} type="text" readOnly
+                        className="w-full p-2 text-[14px] rounded-md outline-none border bg-gray-100 cursor-not-allowed" />
                     </div>
                     <div className={`gap-2 flex flex-col ${isMobile ? "100%" : "w-[calc(50%-10px)]"}`}>
-                      <p>Email Address</p>
+                      <p>Email Address *</p>
                       <input
                         ref={emailRef}
                         type="text"
@@ -297,7 +293,7 @@ const CustomerProfile: React.FC = () => {
                       />
                     </div>
                     <div className={`gap-2 flex flex-col ${isMobile ? "100%" : "w-[calc(50%-10px)]"}`}>
-                      <p>Birthday</p>
+                      <p>Birthday (Optional)</p>
                       <input
                         type="date"
                         ref={birthdayRef}
@@ -308,7 +304,7 @@ const CustomerProfile: React.FC = () => {
                       />
                     </div>                    
                     <div className={`gap-2 flex flex-col ${isMobile ? "100%" : "w-[calc(50%-10px)]"}`}>
-                      <p>Country</p>
+                      <p>Country (Optional)</p>
                       <form autoComplete="off">
                         <CountrySelector 
                           onChange={(val) => {
@@ -322,7 +318,7 @@ const CustomerProfile: React.FC = () => {
                     </div>
                     {/* Gender Picker */}
                     <div className={`gap-2 flex flex-col ${isMobile ? "100%" : "w-[calc(50%-10px)]"}`}>
-                      <p>Gender</p>
+                      <p>Gender (Optional)</p>
                       <div className="flex gap-3 ">
                         {['Female', 'Male', 'Other'].map((gender) => (
                           <button
