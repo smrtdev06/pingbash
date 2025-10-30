@@ -1539,8 +1539,8 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
           
           this.currentUserId = this.anonId;
 
-          // Create anonymous token (same format as W version)
-          const anonToken = `anonuser${this.config.groupName}${this.anonId}`;
+          // Create anonymous token with separators to prevent parsing issues
+          const anonToken = `anonuser_${this.config.groupName}_${this.anonId}`;
           this.userId = anonToken;
 
           if (window.isDebugging) console.log('🔍 [Widget] Anonymous user ID:', this.anonId);
@@ -2042,7 +2042,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         }
 
         // Get messages with correct group ID
-        const token = this.connectAsAuthenticated ? this.authenticatedToken : `anonuser${this.config.groupName}${this.anonId}`;
+        const token = this.connectAsAuthenticated ? this.authenticatedToken : `anonuser_${this.config.groupName}_${this.anonId}`;
         this.socket.emit('get group msg', {
           token: token,
           groupId: parseInt(this.groupId)

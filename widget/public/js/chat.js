@@ -1729,13 +1729,13 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         if( window.isDebugging ) console.log('🗑️ [Widget] Sending delete message event:', {
           messageId: messageId,
           groupId: this.groupId,
-          token: this.isAuthenticated ? this.authenticatedToken : `anonuser${this.config.groupName}${this.anonId}`
+          token: this.isAuthenticated ? this.authenticatedToken : `anonuser_${this.config.groupName}_${this.anonId}`
         });
         
         this.socket.emit('delete group msg', {
           msgId: parseInt(messageId),
           groupId: parseInt(this.groupId),
-          token: this.isAuthenticated ? this.authenticatedToken : `anonuser${this.config.groupName}${this.anonId}`
+          token: this.isAuthenticated ? this.authenticatedToken : `anonuser_${this.config.groupName}_${this.anonId}`
         });
       },
 
@@ -1776,7 +1776,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
           this.socket.emit('delete group msg', {
             msgId: parseInt(msg.Id),
             groupId: parseInt(this.groupId),
-            token: this.isAuthenticated ? this.authenticatedToken : `anonuser${this.config.groupName}${this.anonId}`
+            token: this.isAuthenticated ? this.authenticatedToken : `anonuser_${this.config.groupName}_${this.anonId}`
           });
         });
         

@@ -552,10 +552,17 @@ module.exports = async (http) => {
                         let isAnonymousUser = false;
                         
                         if (data.token && data.token.includes('anonuser')) {
-                            // Anonymous user - extract ID from token
+                            // Anonymous user - extract ID from token (format: anonuser_{groupName}_{anonId})
                             isAnonymousUser = true;
-                            const anonIdMatch = data.token.match(/anonuser.*?(\d+)/);
-                            loggedId = anonIdMatch ? parseInt(anonIdMatch[1]) : null;
+                            const parts = data.token.split('_');
+                            if (parts.length >= 3) {
+                                // New format: anonuser_groupname_id
+                                loggedId = parseInt(parts[2]);
+                            } else {
+                                // Fallback for old format (will be phased out)
+                                const anonIdMatch = data.token.match(/anonuser.*?(\d+)$/);
+                                loggedId = anonIdMatch ? parseInt(anonIdMatch[1]) : null;
+                            }
                             console.log(`📝 [GET_MSG] Anonymous user detected - ID: ${loggedId}`);
                         } else {
                             // Authenticated user - verify JWT token

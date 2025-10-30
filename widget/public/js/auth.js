@@ -234,8 +234,8 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         this.anonId = anonId;
         this.currentUserId = anonId;
   
-        // Create anonymous token (same format as W version)
-        const anonToken = `anonuser${this.config.groupName}${anonId}`;
+        // Create anonymous token with separators to prevent parsing issues
+        const anonToken = `anonuser_${this.config.groupName}_${anonId}`;
         this.userId = anonToken;
   
         // Store anonymous token in localStorage (same as W version)

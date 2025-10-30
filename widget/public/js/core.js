@@ -64,9 +64,9 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
                 // Auto-signin with anonymous user (same as W version)
                 if( window.isDebugging ) console.log('👤 [Widget] Found saved anonymous token, auto-signing in as anonymous...');
 
-                // Extract anonId from token (format: anonuser{groupName}{anonId})
-                const tokenPrefix = `anonuser${this.config.groupName}`;
-                const anonId = parseInt(savedAnonToken.replace(tokenPrefix, ''));
+                // Extract anonId from token (format: anonuser_{groupName}_{anonId})
+                const parts = savedAnonToken.split('_');
+                const anonId = parts.length >= 3 ? parseInt(parts[2]) : parseInt(savedAnonToken.replace(`anonuser${this.config.groupName}`, ''));
 
                 this.isAuthenticated = false;
                 this.connectAsAuthenticated = false;
