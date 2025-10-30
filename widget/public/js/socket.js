@@ -1526,8 +1526,15 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
           // Join as anonymous user (original flow)
           if (window.isDebugging) console.log('🔍 [Widget] Joining as anonymous user');
 
-          // Generate anonymous user ID - use same format as W version
-          this.anonId = this.getAnonId();
+          // Only generate new ID if we don't already have one
+          if (!this.anonId) {
+            // Generate anonymous user ID - use same format as W version
+            this.anonId = this.getAnonId();
+            if (window.isDebugging) console.log('🔍 [Widget] Generated new anonymous user ID:', this.anonId);
+          } else {
+            if (window.isDebugging) console.log('🔍 [Widget] Using existing anonymous user ID:', this.anonId);
+          }
+          
           this.currentUserId = this.anonId;
 
           // Create anonymous token (same format as W version)
