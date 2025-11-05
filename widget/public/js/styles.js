@@ -342,11 +342,14 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
           /* Make inbox icon more tappable on mobile (when visible) */
           .pingbash-header-inbox-icon {
             min-width: 44px !important;
+            position: absolute !important;
+            top: 5px !important;
             min-height: 44px !important;
             /* Don't force display - let JavaScript control visibility based on unread count */
             align-items: center !important;
             justify-content: center !important;
             cursor: pointer !important;
+
             -webkit-tap-highlight-color: rgba(0,0,0,0.1) !important;
           }
           
@@ -1097,6 +1100,61 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
         .pingbash-dark-mode .pingbash-popup-body div,
         .pingbash-dark-mode .pingbash-popup-body span {
           color: var(--dark-text-primary) !important;
+        }
+        
+        /* Chat Limitations & Manage Chat Dark Mode */
+        .pingbash-dark-mode .pingbash-chat-limitations-popup .pingbash-popup-content,
+        .pingbash-dark-mode .pingbash-manage-chat-popup .pingbash-popup-content {
+          background: var(--dark-bg-secondary) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-limitations-content,
+        .pingbash-dark-mode .pingbash-manage-chat-content {
+          background: var(--dark-bg-secondary) !important;
+          color: var(--dark-text-primary) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-limitations-option,
+        .pingbash-dark-mode .pingbash-manage-chat-option {
+          background: var(--dark-bg-tertiary) !important;
+          color: var(--dark-text-primary) !important;
+          border-color: var(--dark-border) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-limitations-option:hover,
+        .pingbash-dark-mode .pingbash-manage-chat-option:hover {
+          background: var(--dark-bg-hover) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-limitations-option input[type="radio"],
+        .pingbash-dark-mode .pingbash-limitations-option label {
+          color: var(--dark-text-primary) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-manage-chat-menu,
+        .pingbash-dark-mode .pingbash-pinned-messages-view,
+        .pingbash-dark-mode .pingbash-moderators-view {
+          background: var(--dark-bg-secondary) !important;
+          color: var(--dark-text-primary) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-menu-item {
+          color: var(--dark-text-primary) !important;
+          background: var(--dark-bg-tertiary) !important;
+          border-color: var(--dark-border) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-menu-item:hover {
+          background: var(--dark-bg-hover) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-menu-back {
+          color: var(--dark-text-primary) !important;
+          background: var(--dark-bg-tertiary) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-menu-back:hover {
+          background: var(--dark-bg-hover) !important;
         }
         
         /* Form Elements Dark Mode */
