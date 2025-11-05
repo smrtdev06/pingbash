@@ -259,29 +259,9 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         this.messages = newMessages;
         newMessages.forEach(msg => this.addMessage(msg));
       } else {
-        // Quick check: if we have the same number of messages and the last message ID matches, skip
-        if (this.messages && this.messages.length === newMessages.length) {
-          const lastExistingId = this.messages[this.messages.length - 1]?.Id;
-          const lastNewId = newMessages[newMessages.length - 1]?.Id;
-          if( window.isDebugging ) console.log('🔍 [Widget] Comparing message sets - existing:', this.messages.length, 'new:', newMessages.length);
-          if( window.isDebugging ) console.log('🔍 [Widget] Last existing ID:', lastExistingId, 'Last new ID:', lastNewId);
-  
-          // Debug: Show last few message IDs from both sets
-          const lastFewExisting = this.messages.slice(-3).map(m => ({ id: m.Id, content: m.Content?.substring(0, 30) }));
-          const lastFewNew = newMessages.slice(-3).map(m => ({ id: m.Id, content: m.Content?.substring(0, 30) }));
-          if( window.isDebugging ) console.log('🔍 [Widget] Last few existing messages:', lastFewExisting);
-          if( window.isDebugging ) console.log('🔍 [Widget] Last few new messages:', lastFewNew);
-  
-          if (lastExistingId === lastNewId) {
-            if( window.isDebugging ) console.log('🔍 [Widget] Same message set received, skipping processing');
-            return;
-          } else {
-            if( window.isDebugging ) console.log('🔍 [Widget] Different last message ID, proceeding with update');
-          }
-        }
-  
         // Smart append - only add messages that don't exist in DOM
         if( window.isDebugging ) console.log('🔍 [Widget] Smart append - checking for new messages');
+        if( window.isDebugging ) console.log('🔍 [Widget] Comparing message sets - existing:', this.messages?.length || 0, 'new:', newMessages.length);
   
         // Get existing message IDs from DOM (more reliable than stored array)
         const existingDomIds = new Set();

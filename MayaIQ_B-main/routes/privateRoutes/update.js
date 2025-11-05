@@ -56,11 +56,18 @@ router.post("/customer/detail", authenticateUser, async (req, res) => {
 
     let email = req.body.Email.toLowerCase();
     let fullName = req.body.FirstName + " " + req.body.LastName;
+    
+    // Handle optional fields - convert empty strings to NULL
+    let country = req.body.country && req.body.country.trim() !== '' ? req.body.country : null;
+    let description = req.body.description && req.body.description.trim() !== '' ? req.body.description : null;
+    let gender = req.body.gender && req.body.gender.trim() !== '' ? req.body.gender : null;
+    let birthday = req.body.birthday && req.body.birthday.trim() !== '' ? req.body.birthday : null;
 
     try {
         await PG_query(`UPDATE "Users"
-                         SET "Name" = '${fullName}', "Email" = '${email}', "country" = '${req.body.country}', "Profession"='${req.body.description}', "gender" = '${req.body.gender}', "birthday" = '${req.body.birthday}'
-                         WHERE "Id" = '${req.user.id}';`);
+                         SET "Name" = $1, "Email" = $2, "country" = $3, "Profession" = $4, "gender" = $5, "birthday" = $6
+                         WHERE "Id" = $7;`, 
+                         [fullName, email, country, description, gender, birthday, req.user.id]);
         res.status(httpCode.SUCCESS).send("Successfully Updated!");
     } catch (error) {
         console.error(error);
