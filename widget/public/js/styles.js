@@ -1089,6 +1089,16 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
           color: var(--dark-text-primary) !important;
         }
         
+        .pingbash-dark-mode .pingbash-popup-body {
+          color: var(--dark-text-primary) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-popup-body p,
+        .pingbash-dark-mode .pingbash-popup-body div,
+        .pingbash-dark-mode .pingbash-popup-body span {
+          color: var(--dark-text-primary) !important;
+        }
+        
         /* Form Elements Dark Mode */
         .pingbash-dark-mode .pingbash-form-input {
           background: var(--dark-bg-input) !important;
@@ -2244,6 +2254,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
         
         .pingbash-popup-body {
           padding: 20px;
+          text-align: left;
         }
         
         .pingbash-sound-option {
