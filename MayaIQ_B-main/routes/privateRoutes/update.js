@@ -55,7 +55,7 @@ router.post("/customer/detail", authenticateUser, async (req, res) => {
     if (error) return res.status(httpCode.INVALID_MSG).send(error.details[0].message);
 
     let email = req.body.Email.toLowerCase();
-    let fullName = req.body.FirstName + " " + req.body.LastName;
+    let fullName = req.body.FirstName; // Only use FirstName, not LastName
     
     // Handle optional fields - convert empty strings to NULL
     let country = req.body.country && req.body.country.trim() !== '' ? `'${req.body.country.replace(/'/g, "''")}'` : 'NULL';
@@ -115,7 +115,7 @@ router.post("/vendor/detail", authenticateUser, async (req, res) => {
     if (error) return res.status(httpCode.INVALID_MSG).send(error.details[0].message);
 
     let email = req.body.Email.toLowerCase();
-    let fullName = req.body.FirstName + " " + req.body.LastName;
+    let fullName = req.body.FirstName; // Only use FirstName, not LastName
 
     try {
         await PG_query(`UPDATE "Users"

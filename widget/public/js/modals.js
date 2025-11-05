@@ -293,7 +293,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
           },
           body: JSON.stringify({
             FirstName: profileData.userName,
-            LastName: profileData.lastName || 'User',
+            LastName: '', // Don't use LastName
             Email: profileData.email,
             description: profileData.bio || '',
             country: profileData.country || '',

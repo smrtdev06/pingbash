@@ -172,7 +172,8 @@ const updateCustomerInforValidation = (data) => {
             .required(),
 
         LastName: Joi.string()
-            .required(),
+            .allow('', null)
+            .optional(),
 
         Email: Joi.string()
             .email()
@@ -217,7 +218,8 @@ const updateVendorInforValidation = (data) => {
             .required(),
 
         LastName: Joi.string()
-            .required(),
+            .allow('', null)
+            .optional(),
 
         Profession: Joi.string()
             .required(),

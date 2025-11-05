@@ -1157,6 +1157,107 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
           background: var(--dark-bg-hover) !important;
         }
         
+        /* Chat Limitations Section Headers & Labels Dark Mode */
+        .pingbash-dark-mode .pingbash-limitation-section h4 {
+          color: var(--dark-text-primary) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-limitation-section .pingbash-radio-option {
+          color: var(--dark-text-primary) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-limitation-section .pingbash-radio-option span {
+          color: var(--dark-text-primary) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-limitation-divider {
+          border-top-color: var(--dark-border) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-slow-mode-label,
+        .pingbash-dark-mode .pingbash-custom-seconds label {
+          color: var(--dark-text-primary) !important;
+        }
+        
+        /* Edit Chat Style Modal Dark Mode */
+        .pingbash-dark-mode .pingbash-edit-style-modal-body .pingbash-popup-content {
+          background: var(--dark-bg-secondary) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-style-form {
+          background: var(--dark-bg-secondary) !important;
+          color: var(--dark-text-primary) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-style-form label {
+          color: var(--dark-text-primary) !important;
+        }
+        
+        /* Manage Moderators Dark Mode */
+        .pingbash-dark-mode .pingbash-moderator-item {
+          background: var(--dark-bg-tertiary) !important;
+          border-color: var(--dark-border) !important;
+          color: var(--dark-text-primary) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-moderator-name,
+        .pingbash-dark-mode .pingbash-moderator-permissions {
+          color: var(--dark-text-primary) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-permission-item label,
+        .pingbash-dark-mode .pingbash-permission-label,
+        .pingbash-dark-mode .pingbash-permission-description {
+          color: var(--dark-text-primary) !important;
+        }
+        
+        /* Censored Content Dark Mode */
+        .pingbash-dark-mode .pingbash-censored-content-popup .pingbash-popup-content {
+          background: var(--dark-bg-secondary) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-censored-list,
+        .pingbash-dark-mode .pingbash-censored-item {
+          background: var(--dark-bg-tertiary) !important;
+          border-color: var(--dark-border) !important;
+          color: var(--dark-text-primary) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-censored-word {
+          color: var(--dark-text-primary) !important;
+        }
+        
+        /* Banned Users & IP Bans Dark Mode */
+        .pingbash-dark-mode .pingbash-banned-users-popup .pingbash-popup-content,
+        .pingbash-dark-mode .pingbash-ip-bans-popup .pingbash-popup-content {
+          background: var(--dark-bg-secondary) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-banned-list,
+        .pingbash-dark-mode .pingbash-ip-ban-list {
+          background: var(--dark-bg-secondary) !important;
+          color: var(--dark-text-primary) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-banned-item,
+        .pingbash-dark-mode .pingbash-ip-ban-item {
+          background: var(--dark-bg-tertiary) !important;
+          border-color: var(--dark-border) !important;
+          color: var(--dark-text-primary) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-banned-user-name,
+        .pingbash-dark-mode .pingbash-banned-user-id,
+        .pingbash-dark-mode .pingbash-ip-address {
+          color: var(--dark-text-primary) !important;
+        }
+        
+        /* Send Notification Dialog Dark Mode */
+        .pingbash-dark-mode .pingbash-notification-modal .pingbash-notification-form label,
+        .pingbash-dark-mode .pingbash-notification-form p {
+          color: var(--dark-text-primary) !important;
+        }
+        
         /* Form Elements Dark Mode */
         .pingbash-dark-mode .pingbash-form-input {
           background: var(--dark-bg-input) !important;
