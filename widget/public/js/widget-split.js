@@ -189,7 +189,7 @@ window.isDebugging = true;
           const logoSection = this.dialog?.querySelector('.pingbash-header-logo-section');
           if (logoSection) {
             const inboxIconHTML = `
-              <div class="pingbash-header-inbox-icon" style="display: none; position: relative; cursor: pointer; touch-action: auto; pointer-events: auto; min-width: 44px; min-height: 44px; align-items: center; justify-content: center;" title="View Inbox">
+              <div class="pingbash-header-inbox-icon" style="display: none; position: absolute; cursor: pointer; touch-action: auto; top: 5px; pointer-events: auto; min-width: 44px; min-height: 44px; align-items: center; justify-content: center;" title="View Inbox">
                 <svg viewBox="0 0 24 24" width="28" height="28">
                   <path fill="currentColor" d="M19,15H15A3,3 0 0,1 12,18A3,3 0 0,1 9,15H5V5H19M19,3H5C3.89,3 3,3.9 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5A2,2 0 0,0 19,3Z"/>
                 </svg>
