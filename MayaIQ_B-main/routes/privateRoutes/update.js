@@ -58,16 +58,15 @@ router.post("/customer/detail", authenticateUser, async (req, res) => {
     let fullName = req.body.FirstName + " " + req.body.LastName;
     
     // Handle optional fields - convert empty strings to NULL
-    let country = req.body.country && req.body.country.trim() !== '' ? req.body.country : null;
-    let description = req.body.description && req.body.description.trim() !== '' ? req.body.description : null;
-    let gender = req.body.gender && req.body.gender.trim() !== '' ? req.body.gender : null;
-    let birthday = req.body.birthday && req.body.birthday.trim() !== '' ? req.body.birthday : null;
+    let country = req.body.country && req.body.country.trim() !== '' ? `'${req.body.country.replace(/'/g, "''")}'` : 'NULL';
+    let description = req.body.description && req.body.description.trim() !== '' ? `'${req.body.description.replace(/'/g, "''")}'` : 'NULL';
+    let gender = req.body.gender && req.body.gender.trim() !== '' ? `'${req.body.gender.replace(/'/g, "''")}'` : 'NULL';
+    let birthday = req.body.birthday && req.body.birthday.trim() !== '' ? `'${req.body.birthday.replace(/'/g, "''")}'` : 'NULL';
 
     try {
         await PG_query(`UPDATE "Users"
-                         SET "Name" = $1, "Email" = $2, "country" = $3, "Profession" = $4, "gender" = $5, "birthday" = $6
-                         WHERE "Id" = $7;`, 
-                         [fullName, email, country, description, gender, birthday, req.user.id]);
+                         SET "Name" = '${fullName.replace(/'/g, "''")}', "Email" = '${email.replace(/'/g, "''")}', "country" = ${country}, "Profession" = ${description}, "gender" = ${gender}, "birthday" = ${birthday}
+                         WHERE "Id" = '${req.user.id}';`);
         res.status(httpCode.SUCCESS).send("Successfully Updated!");
     } catch (error) {
         console.error(error);
