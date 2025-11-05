@@ -1778,6 +1778,24 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
           background: var(--dark-bg-secondary) !important;
         }
         
+        .pingbash-dark-mode .pingbash-profile-popup .pingbash-popup-header {
+          background: var(--dark-bg-secondary) !important;
+          border-bottom-color: var(--dark-border) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-profile-popup .pingbash-popup-header h2 {
+          color: var(--dark-text-primary) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-profile-popup .pingbash-popup-body {
+          background: var(--dark-bg-secondary) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-profile-popup .pingbash-popup-footer {
+          background: var(--dark-bg-secondary) !important;
+          border-top-color: var(--dark-border) !important;
+        }
+        
         .pingbash-dark-mode .pingbash-profile-content {
           background: var(--dark-bg-secondary) !important;
         }
