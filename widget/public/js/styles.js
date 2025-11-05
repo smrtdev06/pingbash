@@ -133,7 +133,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
         
         .pingbash-unread-badge {
           position: absolute;
-          top: -5px;
+          top: 5px;
           right: -5px;
           background: #ff4444;
           color: white;
@@ -1110,14 +1110,17 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
         }
         
         /* Button Dark Mode */
+        .pingbash-dark-mode .pingbash-signin-submit-btn,
+        .pingbash-dark-mode .pingbash-signup-submit-btn,
         .pingbash-dark-mode .pingbash-continue-anon-btn {
-          background: var(--dark-bg-tertiary) !important;
-          color: var(--dark-text-primary) !important;
-          border-color: var(--dark-border) !important;
+          background: #5dbbdf !important;
+          color: white !important;
         }
         
+        .pingbash-dark-mode .pingbash-signin-submit-btn:hover,
+        .pingbash-dark-mode .pingbash-signup-submit-btn:hover,
         .pingbash-dark-mode .pingbash-continue-anon-btn:hover {
-          background: var(--dark-bg-hover) !important;
+          background: #4aabcd !important;
         }
         
         /* Chat Rules Dark Mode */
@@ -2472,41 +2475,38 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
         
         .pingbash-signin-options {
           display: flex;
+          flex-direction: column;
           gap: 12px;
           margin-top: 8px;
         }
         
-        .pingbash-signin-submit-btn {
-          flex: 1;
-          background: #2596be;
+        .pingbash-signin-submit-btn,
+        .pingbash-continue-anon-btn {
+          width: 100%;
+          background: #5dbbdf;
           color: white;
           border: none;
-          padding: 10px 16px;
-          border-radius: 4px;
+          padding: 12px 20px;
+          border-radius: 24px;
           cursor: pointer;
-          font-size: 14px;
+          font-size: 16px;
           font-weight: 600;
-          transition: background-color 0.2s ease;
+          transition: all 0.2s ease;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 10px;
         }
         
-        .pingbash-signin-submit-btn:hover {
-          background: #1e7ba8;
-        }
-        
-        .pingbash-continue-anon-btn {
-          flex: 1;
-          background: #f0f0f0;
-          color: #333;
-          border: none;
-          padding: 10px 16px;
-          border-radius: 4px;
-          cursor: pointer;
-          font-size: 14px;
-          transition: background-color 0.2s ease;
-        }
-        
+        .pingbash-signin-submit-btn:hover,
         .pingbash-continue-anon-btn:hover {
-          background: #e0e0e0;
+          background: #4aabcd;
+          transform: translateY(-1px);
+          box-shadow: 0 4px 8px rgba(93, 187, 223, 0.3);
+        }
+        
+        .pingbash-btn-icon {
+          flex-shrink: 0;
         }
         
         /* Auth Footer Styles */
@@ -2562,25 +2562,32 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
         
         .pingbash-signup-options {
           display: flex;
+          flex-direction: column;
           gap: 12px;
           margin-top: 8px;
         }
         
         .pingbash-signup-submit-btn {
-          flex: 1;
-          background: #28a745;
+          width: 100%;
+          background: #5dbbdf;
           color: white;
           border: none;
-          padding: 10px 16px;
-          border-radius: 4px;
+          padding: 12px 20px;
+          border-radius: 24px;
           cursor: pointer;
-          font-size: 14px;
+          font-size: 16px;
           font-weight: 600;
-          transition: background-color 0.2s ease;
+          transition: all 0.2s ease;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 10px;
         }
         
         .pingbash-signup-submit-btn:hover {
-          background: #218838;
+          background: #4aabcd;
+          transform: translateY(-1px);
+          box-shadow: 0 4px 8px rgba(93, 187, 223, 0.3);
         }
         
         /* Email Verification Modal */

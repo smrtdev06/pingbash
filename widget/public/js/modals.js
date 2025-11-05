@@ -293,12 +293,12 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
           },
           body: JSON.stringify({
             FirstName: profileData.userName,
-            LastName: '',
+            LastName: profileData.lastName || 'User',
             Email: profileData.email,
-            description: profileData.bio || null,
-            country: profileData.country || null,
-            gender: profileData.gender || null,
-            birthday: profileData.birthday || null
+            description: profileData.bio || '',
+            country: profileData.country || '',
+            gender: profileData.gender || '',
+            birthday: profileData.birthday || ''
           })
         });
 

@@ -768,6 +768,14 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
           // Ensure URL has protocol
           const href = cleanUrl.startsWith('www.') ? 'http://' + cleanUrl : cleanUrl;
           
+          // Check if URL points to an image file
+          const imageExtensions = /\.(png|jpg|jpeg|gif|webp|bmp|svg|ico)(\?.*)?$/i;
+          if (imageExtensions.test(cleanUrl)) {
+            // Render as clickable image
+            return `<img src="${href}" style="max-width: 200px; max-height: 200px; border-radius: 8px; margin: 4px 0; display: block; cursor: pointer;" onclick="window.pingbashWidget.openImageModal('${href}')" title="Click to view full size" />`;
+          }
+          
+          // Regular link
           return `<a href="${href}" target="_blank" rel="noopener noreferrer" style="color: inherit; text-decoration: underline; text-underline-offset: 2px;">${cleanUrl}</a>`;
         });
       }

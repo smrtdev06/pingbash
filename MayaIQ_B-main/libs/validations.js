@@ -179,16 +179,21 @@ const updateCustomerInforValidation = (data) => {
             .required(),
 
         description: Joi.string()
+            .allow('', null)
             .default(null),
         
         country: Joi.string()
+            .allow('', null)
             .default(null),
 
         gender: Joi.string()
+            .allow('', null)
             .default(null),
             
         birthday: Joi.date()
-            .max(new Date()),
+            .allow('', null)
+            .max(new Date())
+            .default(null),
     })
     return schema.validate(data)
 }

@@ -24,8 +24,11 @@ const WhyPingBash: React.FC = () => {
           <div className="mb-8 max-w-4xl mx-auto">
             <video 
               className="w-full rounded-lg shadow-2xl"
+              autoPlay
+              loop
+              muted
+              playsInline
               controls
-              preload="metadata"
             >
               <source src="/videos/intro.mp4" type="video/mp4" />
               Your browser does not support the video tag.
