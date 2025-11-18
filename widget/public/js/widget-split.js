@@ -362,6 +362,9 @@ window.isDebugging = true;
     }
 
     const config = {};
+    
+    // Check if we're on *.pingbash.com domain
+    const isPingbashDomain = window.location.hostname.match(/^([^.]+)\.pingbash\.com$/);
 
     if (script && script.dataset) {
       // Extract configuration from data attributes
@@ -369,9 +372,8 @@ window.isDebugging = true;
         config.groupName = script.dataset.groupName;
       else {
         // If groupName is not provided, try to extract from window.location if on *.pingbash.com
-        const hostMatch = window.location.hostname.match(/^([^.]+)\.pingbash\.com$/);
-        if (hostMatch && hostMatch[1]) {
-          config.groupName = hostMatch[1];
+        if (isPingbashDomain && isPingbashDomain[1]) {
+          config.groupName = isPingbashDomain[1];
           if( window.isDebugging ) console.log('🌐 [Widget] Extracted groupName from hostname:', config.groupName);
         } else {
           config.groupName = 'testgroup6';
@@ -383,6 +385,40 @@ window.isDebugging = true;
       if (script.dataset.width) config.width = script.dataset.width;
       if (script.dataset.height) config.height = script.dataset.height;
       if (script.dataset.autoOpen) config.autoOpen = script.dataset.autoOpen === 'true';
+    }
+    
+    // If on *.pingbash.com domain, automatically set fullscreen mode
+    if (isPingbashDomain) {
+      if( window.isDebugging ) console.log('🌐 [Widget] Detected *.pingbash.com domain - enabling fullscreen mode');
+      
+      // Create layout element if it doesn't exist
+      let layoutElement = document.getElementById('pingbash-chat-layout');
+      if (!layoutElement) {
+        layoutElement = document.createElement('div');
+        layoutElement.id = 'pingbash-chat-layout';
+        document.body.appendChild(layoutElement);
+        if( window.isDebugging ) console.log('🌐 [Widget] Created layout element for fullscreen mode');
+      }
+      
+      // Set fullscreen styles on body and layout element
+      document.body.style.margin = '0';
+      document.body.style.padding = '0';
+      document.body.style.height = '100vh';
+      document.body.style.overflow = 'hidden';
+      
+      layoutElement.style.width = '100vw';
+      layoutElement.style.height = '100vh';
+      layoutElement.style.position = 'fixed';
+      layoutElement.style.top = '0';
+      layoutElement.style.left = '0';
+      layoutElement.style.boxSizing = 'border-box';
+      
+      // Override config for fullscreen
+      config.width = '100vw';
+      config.height = '100vh';
+      config.autoOpen = true;
+      
+      if( window.isDebugging ) console.log('🌐 [Widget] Fullscreen mode configured');
     }
 
     if( window.isDebugging ) console.log('🔍 [Widget] Final config:', config);
