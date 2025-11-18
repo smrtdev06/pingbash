@@ -4,18 +4,27 @@
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Pingbash Chat Widget - Self-Contained Demo</title>
-        
+        <style>
+            html, body {
+                height: 100%;
+                margin: 0;
+                padding: 0;
+            }
+            #pingbash-chat-layout {
+                width: 100vw;
+                height: 100vh;
+                box-sizing: border-box;
+            }
+        </style>
     </head>
-    
-
     <body>
-        <div id="pingbash-chat-layout" style="width:500px; height: 800px "></div>
+        <div id="pingbash-chat-layout"></div>
         <script src="./js/widget-split.js"
         data-position="top-right"
         data-api-url="https://pingbash.com"
         data-theme="light"
-        data-width="500px"
-        data-height="700px"
+        data-width="100vw"
+        data-height="100vh"
         data-auto-open="true"
         data-custom-colors="{}"
         data-resizable="true"
