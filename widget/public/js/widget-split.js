@@ -596,6 +596,31 @@ window.isDebugging = true;
         `;
         document.head.appendChild(styleEl);
         if( window.isDebugging ) console.log('🌐 [Widget] Re-injected fullscreen popup CSS after widget initialization');
+        
+        // Force apply fullscreen styles to dialog element directly (override inline styles)
+        setTimeout(() => {
+          const dialog = document.querySelector('.pingbash-chat-dialog.pingbash-popup-mode');
+          if (dialog) {
+            if( window.isDebugging ) console.log('🌐 [Widget] Force-applying fullscreen styles to dialog');
+            
+            // Remove any conflicting inline styles
+            dialog.style.setProperty('position', 'fixed', 'important');
+            dialog.style.setProperty('top', '0', 'important');
+            dialog.style.setProperty('bottom', '0', 'important');
+            dialog.style.setProperty('left', '0', 'important');
+            dialog.style.setProperty('right', '0', 'important');
+            dialog.style.setProperty('width', '100%', 'important');
+            dialog.style.setProperty('height', '100%', 'important');
+            dialog.style.setProperty('max-width', '100%', 'important');
+            dialog.style.setProperty('max-height', '100%', 'important');
+            dialog.style.setProperty('border-radius', '0', 'important');
+            dialog.style.setProperty('transform', 'none', 'important');
+            dialog.style.setProperty('margin', '0', 'important');
+            dialog.style.setProperty('box-shadow', 'none', 'important');
+            
+            if( window.isDebugging ) console.log('🌐 [Widget] Fullscreen styles applied successfully');
+          }
+        }, 100);
       }
 
       // Make it globally accessible for debugging
