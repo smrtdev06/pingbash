@@ -3,7 +3,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-        <title>PingBash Chat - Fullscreen Demo</title>
+        <title>PingBash Chat - Fullscreen Demo (Popup Mode)</title>
         <style>
             /* Ensure no margins or padding */
             html, body {
@@ -20,69 +20,57 @@
                 }
             }
             
-            /* Layout container for the widget */
-            #pingbash-chat-layout {
-                width: 100%;
-                height: 100%;
-                position: fixed;
-                top: 0;
-                bottom: 0;
-                left: 0;
-                right: 0;
-                box-sizing: border-box;
-                overflow: hidden;
+            /* Fullscreen popup mode styling */
+            .pingbash-chat-dialog.pingbash-popup-mode {
+                position: fixed !important;
+                top: 0 !important;
+                bottom: 0 !important;
+                left: 0 !important;
+                right: 0 !important;
+                width: 100% !important;
+                height: 100% !important;
+                max-width: 100% !important;
+                max-height: 100% !important;
+                min-width: 100% !important;
+                min-height: 100% !important;
+                border-radius: 0 !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                resize: none !important;
+                box-shadow: none !important;
+                display: flex !important;
+                flex-direction: column !important;
+                overflow: hidden !important;
             }
             
-            /* Mobile specific fixes */
-            @media (max-width: 768px) {
-                body {
-                    position: fixed !important;
-                    width: 100% !important;
-                    height: 100% !important;
-                    touch-action: none !important;
-                }
-                
-                /* Force dialog to fill available space */
-                #pingbash-chat-layout .pingbash-chat-dialog {
-                    position: fixed !important;
-                    top: 0 !important;
-                    bottom: 0 !important;
-                    left: 0 !important;
-                    right: 0 !important;
-                    width: 100% !important;
-                    height: 100% !important;
-                    max-height: none !important;
-                    min-height: 100% !important;
-                    display: flex !important;
-                    flex-direction: column !important;
-                    overflow: hidden !important;
-                }
-                
-                /* Ensure header is visible */
-                #pingbash-chat-layout .pingbash-header {
-                    flex-shrink: 0 !important;
-                    position: relative !important;
-                    z-index: 10 !important;
-                }
-                
-                /* Messages area should flex */
-                #pingbash-chat-layout .pingbash-messages-area {
-                    flex: 1 !important;
-                    min-height: 0 !important;
-                    overflow: hidden !important;
-                }
-                
-                /* Input and controls at bottom */
-                #pingbash-chat-layout .pingbash-input-bar,
-                #pingbash-chat-layout .pingbash-controls-bar {
-                    flex-shrink: 0 !important;
-                }
+            /* Ensure header is visible */
+            .pingbash-chat-dialog.pingbash-popup-mode .pingbash-header {
+                flex-shrink: 0 !important;
+                position: relative !important;
+                z-index: 10 !important;
+            }
+            
+            /* Messages area should flex */
+            .pingbash-chat-dialog.pingbash-popup-mode .pingbash-messages-area {
+                flex: 1 !important;
+                min-height: 0 !important;
+                overflow: hidden !important;
+            }
+            
+            /* Input and controls at bottom */
+            .pingbash-chat-dialog.pingbash-popup-mode .pingbash-input-bar,
+            .pingbash-chat-dialog.pingbash-popup-mode .pingbash-controls-bar {
+                flex-shrink: 0 !important;
+            }
+            
+            /* Hide popup toggle button */
+            .pingbash-chat-dialog.pingbash-popup-mode .pingbash-popup-btn {
+                display: none !important;
             }
         </style>
     </head>
     <body>
-        <!-- Container for fullscreen chat -->
-        <div id="pingbash-chat-layout"></div>
+        <!-- NO layout element - let widget use popup mode naturally -->
         
         <!-- Load the widget script -->
         <script src="./js/widget-split.js"
