@@ -436,8 +436,8 @@ window.isDebugging = true;
       styleEl.textContent = `
         /* Fullscreen mode mobile fix for *.pingbash.com */
         html {
-          height: 100%;
-          overflow: hidden;
+          height: 100% !important;
+          overflow: hidden !important;
         }
         
         @supports (-webkit-touch-callout: none) {
@@ -451,8 +451,10 @@ window.isDebugging = true;
           }
         }
         
-        /* Ensure dialog fills the container properly on mobile */
+        /* Override default mobile styles and ensure dialog fills container */
         @media (max-width: 768px) {
+          /* High specificity to override default styles */
+          #pingbash-chat-layout .pingbash-chat-dialog.pingbash-embedded-mode,
           #pingbash-chat-layout .pingbash-chat-dialog {
             position: fixed !important;
             top: 0 !important;
@@ -461,11 +463,12 @@ window.isDebugging = true;
             right: 0 !important;
             width: 100% !important;
             height: 100% !important;
-            max-height: 100% !important;
+            max-height: none !important;
             min-height: 100% !important;
             border-radius: 0 !important;
             transform: none !important;
             margin: 0 !important;
+            resize: none !important;
           }
           
           /* Prevent body scrolling when keyboard appears */
@@ -477,10 +480,24 @@ window.isDebugging = true;
             touch-action: none !important;
           }
           
-          /* Ensure input area stays at bottom */
-          #pingbash-chat-layout .pingbash-input-bar {
+          /* Ensure dialog fills and uses flex layout */
+          #pingbash-chat-layout .pingbash-chat-dialog {
+            display: flex !important;
+            flex-direction: column !important;
+          }
+          
+          /* Make messages area flexible */
+          #pingbash-chat-layout .pingbash-messages-area {
+            flex: 1 !important;
+            min-height: 0 !important;
+            overflow: hidden !important;
+          }
+          
+          /* Ensure input and controls bars stay at bottom */
+          #pingbash-chat-layout .pingbash-input-bar,
+          #pingbash-chat-layout .pingbash-controls-bar {
+            flex-shrink: 0 !important;
             position: relative !important;
-            bottom: 0 !important;
           }
         }
       `;
@@ -509,6 +526,60 @@ window.isDebugging = true;
       if (widget.init) {
         await widget.init();
         if( window.isDebugging ) console.log('🎯 [Widget] Widget initialized after module loading');
+      }
+
+      // Re-inject fullscreen mobile CSS AFTER widget initialization to ensure it overrides default styles
+      if (isPingbashDomain) {
+        // Remove old style if exists
+        const oldStyle = document.getElementById('pingbash-fullscreen-mobile-fix');
+        if (oldStyle) oldStyle.remove();
+        
+        // Re-inject with higher priority (will be last in DOM)
+        const styleEl = document.createElement('style');
+        styleEl.id = 'pingbash-fullscreen-mobile-fix-final';
+        styleEl.textContent = `
+          /* Fullscreen mobile fix - FINAL OVERRIDE for *.pingbash.com */
+          @media (max-width: 768px) {
+            /* Ultra-specific selectors to override all default styles */
+            #pingbash-chat-layout .pingbash-chat-dialog.pingbash-embedded-mode,
+            #pingbash-chat-layout .pingbash-chat-dialog {
+              position: fixed !important;
+              top: 0 !important;
+              bottom: 0 !important;
+              left: 0 !important;
+              right: 0 !important;
+              width: 100% !important;
+              height: 100% !important;
+              max-height: none !important;
+              min-height: 100% !important;
+              border-radius: 0 !important;
+              transform: none !important;
+              margin: 0 !important;
+              padding: 0 !important;
+              resize: none !important;
+              display: flex !important;
+              flex-direction: column !important;
+            }
+            
+            /* Make messages area flexible */
+            #pingbash-chat-layout .pingbash-messages-area {
+              flex: 1 !important;
+              min-height: 0 !important;
+              overflow: hidden !important;
+              display: flex !important;
+              flex-direction: column !important;
+            }
+            
+            /* Ensure input and controls bars stay at bottom */
+            #pingbash-chat-layout .pingbash-input-bar,
+            #pingbash-chat-layout .pingbash-controls-bar {
+              flex-shrink: 0 !important;
+              position: relative !important;
+            }
+          }
+        `;
+        document.head.appendChild(styleEl);
+        if( window.isDebugging ) console.log('🌐 [Widget] Re-injected mobile CSS after widget initialization');
       }
 
       // Make it globally accessible for debugging

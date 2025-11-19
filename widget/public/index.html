@@ -36,10 +36,23 @@
             /* Mobile specific fixes */
             @media (max-width: 768px) {
                 body {
-                    position: fixed;
-                    width: 100%;
-                    height: 100%;
-                    touch-action: none;
+                    position: fixed !important;
+                    width: 100% !important;
+                    height: 100% !important;
+                    touch-action: none !important;
+                }
+                
+                /* Force dialog to fill available space */
+                #pingbash-chat-layout .pingbash-chat-dialog {
+                    position: fixed !important;
+                    top: 0 !important;
+                    bottom: 0 !important;
+                    left: 0 !important;
+                    right: 0 !important;
+                    width: 100% !important;
+                    height: 100% !important;
+                    max-height: none !important;
+                    min-height: 100% !important;
                 }
             }
         </style>

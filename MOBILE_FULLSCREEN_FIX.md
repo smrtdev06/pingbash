@@ -92,6 +92,7 @@ Ensure the viewport meta tag prevents zooming and scaling issues:
 
 **Changes Made:**
 
+**1. Layout Container Setup:**
 ```javascript
 // Use position fixed with top/bottom for better mobile keyboard handling
 layoutElement.style.position = 'fixed';
@@ -112,6 +113,8 @@ if (!viewportMeta) {
   viewportMeta.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no';
 }
 
+**2. CSS Injection (First Pass - Before Widget Init):**
+```javascript
 // Add CSS to handle mobile viewport properly
 const styleEl = document.createElement('style');
 styleEl.id = 'pingbash-fullscreen-mobile-fix';
@@ -168,6 +171,61 @@ styleEl.textContent = `
 `;
 document.head.appendChild(styleEl);
 ```
+
+**3. CSS Re-injection (Second Pass - After Widget Init):**
+
+To ensure our mobile styles override the default widget styles, we inject the CSS again AFTER the widget is initialized:
+
+```javascript
+// Re-inject fullscreen mobile CSS AFTER widget initialization
+if (isPingbashDomain) {
+  const styleEl = document.createElement('style');
+  styleEl.id = 'pingbash-fullscreen-mobile-fix-final';
+  styleEl.textContent = `
+    /* Fullscreen mobile fix - FINAL OVERRIDE for *.pingbash.com */
+    @media (max-width: 768px) {
+      /* Ultra-specific selectors to override all default styles */
+      #pingbash-chat-layout .pingbash-chat-dialog.pingbash-embedded-mode,
+      #pingbash-chat-layout .pingbash-chat-dialog {
+        position: fixed !important;
+        top: 0 !important;
+        bottom: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+        max-height: none !important; /* ✅ Overrides calc(100vh - 100px) */
+        min-height: 100% !important;
+        display: flex !important;
+        flex-direction: column !important;
+      }
+      
+      /* Make messages area flexible */
+      #pingbash-chat-layout .pingbash-messages-area {
+        flex: 1 !important;
+        min-height: 0 !important;
+        overflow: hidden !important;
+      }
+      
+      /* Ensure input and controls bars stay at bottom */
+      #pingbash-chat-layout .pingbash-input-bar,
+      #pingbash-chat-layout .pingbash-controls-bar {
+        flex-shrink: 0 !important;
+      }
+    }
+  `;
+  document.head.appendChild(styleEl);
+}
+```
+
+### Why Double CSS Injection?
+
+The widget applies its default styles during initialization, which includes mobile styles with fixed heights like `height: calc(100vh - 100px)`. By injecting our CSS:
+
+1. **Before init:** Provides base mobile fix for early rendering
+2. **After init:** Ensures our styles are last in DOM and override defaults with `!important`
+
+This guarantees `max-height: none` beats `max-height: calc(100vh - 100px)`.
 
 ## How It Works
 
@@ -345,20 +403,30 @@ When the widget detects a PingBash domain on mobile, you'll see:
 
 ## Common Issues and Solutions
 
-### Issue 1: White space at top when keyboard appears
+### Issue 1: White space at bottom when keyboard appears
+**Root Cause:** Default widget styles set `max-height: calc(100vh - 100px)` on mobile, which doesn't adapt to keyboard
+**Solution:** 
+- Inject CSS with `max-height: none !important` AFTER widget initialization
+- Use `position: fixed` with `top: 0; bottom: 0` instead of fixed height
+- Apply flexbox layout to dialog and messages area
+
+### Issue 2: White space at top when keyboard appears
 **Solution:** Body is now `position: fixed` to prevent scrolling
 
-### Issue 2: Input hidden behind keyboard
-**Solution:** Chat dialog uses `bottom: 0` to stay above keyboard
+### Issue 3: Input hidden behind keyboard
+**Solution:** Chat dialog uses `bottom: 0` to stay above keyboard, flexbox ensures proper stacking
 
-### Issue 3: Content jumps when rotating
-**Solution:** Layout adapts to both portrait and landscape
+### Issue 4: Content jumps when rotating
+**Solution:** Layout adapts to both portrait and landscape with `position: fixed`
 
-### Issue 4: iOS Safari toolbar issues
+### Issue 5: iOS Safari toolbar issues
 **Solution:** Using `-webkit-fill-available` height
 
-### Issue 5: Zoom on input focus (iOS)
+### Issue 6: Zoom on input focus (iOS)
 **Solution:** Viewport meta tag with `maximum-scale=1.0`
+
+### Issue 7: CSS not overriding default styles
+**Solution:** Double CSS injection - once before and once after widget initialization to ensure our styles are last in DOM
 
 ## Performance Impact
 
