@@ -406,19 +406,92 @@ window.isDebugging = true;
       document.body.style.height = '100vh';
       document.body.style.overflow = 'hidden';
       
+      // Use position fixed with top/bottom for better mobile keyboard handling
       layoutElement.style.width = '100vw';
-      layoutElement.style.height = '100vh';
       layoutElement.style.position = 'fixed';
       layoutElement.style.top = '0';
+      layoutElement.style.bottom = '0';
       layoutElement.style.left = '0';
+      layoutElement.style.right = '0';
       layoutElement.style.boxSizing = 'border-box';
+      layoutElement.style.overflow = 'hidden';
+      
+      // Ensure viewport meta tag is set for mobile
+      let viewportMeta = document.querySelector('meta[name="viewport"]');
+      if (!viewportMeta) {
+        viewportMeta = document.createElement('meta');
+        viewportMeta.name = 'viewport';
+        viewportMeta.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no';
+        document.head.appendChild(viewportMeta);
+        if( window.isDebugging ) console.log('🌐 [Widget] Added viewport meta tag');
+      } else {
+        // Update existing viewport to prevent scaling issues
+        viewportMeta.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no';
+        if( window.isDebugging ) console.log('🌐 [Widget] Updated viewport meta tag');
+      }
+      
+      // Add CSS to handle mobile viewport properly
+      const styleEl = document.createElement('style');
+      styleEl.id = 'pingbash-fullscreen-mobile-fix';
+      styleEl.textContent = `
+        /* Fullscreen mode mobile fix for *.pingbash.com */
+        html {
+          height: 100%;
+          overflow: hidden;
+        }
+        
+        @supports (-webkit-touch-callout: none) {
+          /* iOS Safari */
+          #pingbash-chat-layout {
+            height: -webkit-fill-available !important;
+          }
+          
+          body {
+            height: -webkit-fill-available !important;
+          }
+        }
+        
+        /* Ensure dialog fills the container properly on mobile */
+        @media (max-width: 768px) {
+          #pingbash-chat-layout .pingbash-chat-dialog {
+            position: fixed !important;
+            top: 0 !important;
+            bottom: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            width: 100% !important;
+            height: 100% !important;
+            max-height: 100% !important;
+            min-height: 100% !important;
+            border-radius: 0 !important;
+            transform: none !important;
+            margin: 0 !important;
+          }
+          
+          /* Prevent body scrolling when keyboard appears */
+          body {
+            position: fixed !important;
+            width: 100% !important;
+            height: 100% !important;
+            overflow: hidden !important;
+            touch-action: none !important;
+          }
+          
+          /* Ensure input area stays at bottom */
+          #pingbash-chat-layout .pingbash-input-bar {
+            position: relative !important;
+            bottom: 0 !important;
+          }
+        }
+      `;
+      document.head.appendChild(styleEl);
       
       // Override config for fullscreen
       config.width = '100vw';
       config.height = '100vh';
       config.autoOpen = true;
       
-      if( window.isDebugging ) console.log('🌐 [Widget] Fullscreen mode configured');
+      if( window.isDebugging ) console.log('🌐 [Widget] Fullscreen mode configured with mobile keyboard support');
     }
 
     if( window.isDebugging ) console.log('🔍 [Widget] Final config:', config);
