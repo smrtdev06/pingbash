@@ -700,7 +700,7 @@ const deleteMsg = async (msgId, sender_id, receiver_id) => {
 };
 
 // To save the new group message
-const saveGroupMsg = async (sender_id, content, group_id, receiverId, parent_id, messageMode = null) => {
+const saveGroupMsg = async (sender_id, content, group_id, receiverId, parent_id, messageMode = null, skipInbox = false) => {
     try {
         // Determine message mode if not explicitly provided
         let mode = messageMode;
@@ -712,10 +712,18 @@ const saveGroupMsg = async (sender_id, content, group_id, receiverId, parent_id,
             }
         }
         
+        // Determine History_Iden (0 = skip inbox, 1 = show in inbox)
+        // For widget 1-on-1 messages, we skip inbox to avoid unread count increase
+        const historyIden = skipInbox ? 0 : 1;
+        
         // Escape single quotes for SQL
         const escapedContent = content.replace(/'/g, "''");
         await PG_query(`INSERT INTO "Messages" ("Receiver_Id", "Sender_Id", "Send_Time", "Content", "group_id", "History_Iden", "parent_id", "message_mode")
-         VALUES (${receiverId}, ${sender_id}, CURRENT_TIMESTAMP, '${escapedContent}', ${group_id}, 1, ${parent_id == undefined ? null : parent_id}, ${mode});`)
+         VALUES (${receiverId}, ${sender_id}, CURRENT_TIMESTAMP, '${escapedContent}', ${group_id}, ${historyIden}, ${parent_id == undefined ? null : parent_id}, ${mode});`)
+
+        if (skipInbox) {
+            console.log(`📭 [WIDGET] Saved 1-on-1 message with History_Iden=0 (skip inbox) for widget users`);
+        }
 
     } catch (err) {
         console.log(err)
