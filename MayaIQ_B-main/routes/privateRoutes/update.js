@@ -12,6 +12,8 @@ const { updateProductsValidation, updateVendorInforValidation, updateCustomerInf
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 
 // Ensure the directories exist
 const productUploadDir = path.join(__dirname, '../../uploads/products');
