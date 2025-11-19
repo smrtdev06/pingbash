@@ -53,6 +53,29 @@
                     height: 100% !important;
                     max-height: none !important;
                     min-height: 100% !important;
+                    display: flex !important;
+                    flex-direction: column !important;
+                    overflow: hidden !important;
+                }
+                
+                /* Ensure header is visible */
+                #pingbash-chat-layout .pingbash-header {
+                    flex-shrink: 0 !important;
+                    position: relative !important;
+                    z-index: 10 !important;
+                }
+                
+                /* Messages area should flex */
+                #pingbash-chat-layout .pingbash-messages-area {
+                    flex: 1 !important;
+                    min-height: 0 !important;
+                    overflow: hidden !important;
+                }
+                
+                /* Input and controls at bottom */
+                #pingbash-chat-layout .pingbash-input-bar,
+                #pingbash-chat-layout .pingbash-controls-bar {
+                    flex-shrink: 0 !important;
                 }
             }
         </style>

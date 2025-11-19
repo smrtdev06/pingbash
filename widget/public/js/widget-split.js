@@ -469,6 +469,9 @@ window.isDebugging = true;
             transform: none !important;
             margin: 0 !important;
             resize: none !important;
+            display: flex !important;
+            flex-direction: column !important;
+            overflow: hidden !important;
           }
           
           /* Prevent body scrolling when keyboard appears */
@@ -480,10 +483,12 @@ window.isDebugging = true;
             touch-action: none !important;
           }
           
-          /* Ensure dialog fills and uses flex layout */
-          #pingbash-chat-layout .pingbash-chat-dialog {
+          /* Ensure header stays at top and is visible */
+          #pingbash-chat-layout .pingbash-header {
+            flex-shrink: 0 !important;
+            position: relative !important;
+            z-index: 10 !important;
             display: flex !important;
-            flex-direction: column !important;
           }
           
           /* Make messages area flexible */
@@ -559,6 +564,15 @@ window.isDebugging = true;
               resize: none !important;
               display: flex !important;
               flex-direction: column !important;
+              overflow: hidden !important;
+            }
+            
+            /* Ensure header stays at top and is visible */
+            #pingbash-chat-layout .pingbash-header {
+              flex-shrink: 0 !important;
+              position: relative !important;
+              z-index: 10 !important;
+              display: flex !important;
             }
             
             /* Make messages area flexible */
