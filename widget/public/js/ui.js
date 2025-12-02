@@ -601,12 +601,12 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
             <div class="pingbash-popup-body">
               <div class="pingbash-signin-form">
                 <div class="pingbash-form-group">
-                  <label for="signin-email">Email:</label>
-                  <input type="email" id="signin-email" class="pingbash-form-input" placeholder="Enter your email">
+                  <label for="signin-email">Username or Email:</label>
+                  <input type="text" id="signin-email" class="pingbash-form-input" placeholder="Username or Email">
                 </div>
                 <div class="pingbash-form-group">
                   <label for="signin-password">Password:</label>
-                  <input type="password" id="signin-password" class="pingbash-form-input" placeholder="Enter your password">
+                  <input type="password" id="signin-password" class="pingbash-form-input" placeholder="Password">
                 </div>
                 <div class="pingbash-signin-options">
                   <button class="pingbash-signin-submit-btn">
@@ -615,15 +615,10 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
                     </svg>
                     <span>Sign In</span>
                   </button>
-                  <button class="pingbash-continue-anon-btn">
-                    <svg class="pingbash-btn-icon" viewBox="0 0 24 24" width="20" height="20">
-                      <path fill="currentColor" d="M14,12V19.88C14.04,20.18 13.94,20.5 13.71,20.71C13.32,21.1 12.69,21.1 12.3,20.71L10.29,18.7C10.06,18.47 9.96,18.16 10,17.87V12H9.97L4.21,4.62C3.87,4.19 3.95,3.56 4.38,3.22C4.57,3.08 4.78,3 5,3V3H19V3C19.22,3 19.43,3.08 19.62,3.22C20.05,3.56 20.13,4.19 19.79,4.62L14.03,12H14Z"/>
-                    </svg>
-                    <span>Continue as Guest</span>
-                  </button>
                 </div>
                 <div class="pingbash-auth-footer">
                   <p>Don't have an account? <button class="pingbash-show-signup-btn">Sign Up</button></p>
+                  <p class="pingbash-continue-anon-text"><a href="#" class="pingbash-continue-anon-link">Continue as Guest</a></p>
                 </div>
               </div>
             </div>
@@ -641,12 +636,12 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
             <div class="pingbash-popup-body">
               <div class="pingbash-signup-form">
                 <div class="pingbash-form-group">
-                  <label for="signup-email">Email:</label>
-                  <input type="email" id="signup-email" class="pingbash-form-input" placeholder="Enter your email">
+                  <label for="signup-username">Username:</label>
+                  <input type="text" id="signup-username" class="pingbash-form-input" placeholder="Enter your username">
                 </div>
                 <div class="pingbash-form-group">
-                  <label for="signup-name">User Name:</label>
-                  <input type="text" id="signup-name" class="pingbash-form-input" placeholder="Enter your chat username">
+                  <label for="signup-email">Email:</label>
+                  <input type="email" id="signup-email" class="pingbash-form-input" placeholder="Enter your email">
                 </div>
                 <div class="pingbash-form-group">
                   <label for="signup-password">Password:</label>
@@ -663,15 +658,10 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
                     </svg>
                     <span>Sign Up</span>
                   </button>
-                  <button class="pingbash-continue-anon-btn">
-                    <svg class="pingbash-btn-icon" viewBox="0 0 24 24" width="20" height="20">
-                      <path fill="currentColor" d="M14,12V19.88C14.04,20.18 13.94,20.5 13.71,20.71C13.32,21.1 12.69,21.1 12.3,20.71L10.29,18.7C10.06,18.47 9.96,18.16 10,17.87V12H9.97L4.21,4.62C3.87,4.19 3.95,3.56 4.38,3.22C4.57,3.08 4.78,3 5,3V3H19V3C19.22,3 19.43,3.08 19.62,3.22C20.05,3.56 20.13,4.19 19.79,4.62L14.03,12H14Z"/>
-                    </svg>
-                    <span>Continue as Guest</span>
-                  </button>
                 </div>
                 <div class="pingbash-auth-footer">
                   <p>Already have an account? <button class="pingbash-show-signin-btn">Sign In</button></p>
+                  <p class="pingbash-continue-anon-text"><a href="#" class="pingbash-continue-anon-link">Continue as Guest</a></p>
                 </div>
               </div>
             </div>

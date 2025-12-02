@@ -73,25 +73,6 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
       if( window.isDebugging ) console.log('🔍 [Widget] showSigninModal called');
       const modal = this.dialog.querySelector('.pingbash-signin-modal');
       modal.style.display = 'flex';
-  
-      // Re-attach event listeners when modal is shown (in case they got lost)
-      setTimeout(() => {
-        const continueAnonBtns = this.dialog.querySelectorAll('.pingbash-continue-anon-btn');
-        if( window.isDebugging ) console.log('🔍 [Widget] Re-checking Continue As Guest buttons in showSigninModal:', continueAnonBtns.length);
-  
-        continueAnonBtns.forEach((continueAnonBtn, index) => {
-          if (continueAnonBtn && !continueAnonBtn._listenerAttached) {
-            if( window.isDebugging ) console.log(`🔍 [Widget] Re-attaching event listener to Continue As Guest button ${index + 1}`);
-            continueAnonBtn.addEventListener('click', (event) => {
-              if( window.isDebugging ) console.log(`🔍 [Widget] Continue As Guest button ${index + 1} CLICKED (from showSigninModal)!`);
-              event.preventDefault();
-              event.stopPropagation();
-              this.continueAsAnonymous();
-            });
-            continueAnonBtn._listenerAttached = true;
-          }
-        });
-      }, 100);
     },
 
   // EXACT COPY from widget.js - hideSigninModal method
@@ -106,10 +87,10 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
       const modal = this.dialog.querySelector('.pingbash-signup-modal');
       modal.style.display = 'flex';
       
-      // Focus on first input
-      const emailInput = modal.querySelector('#signup-email');
-      if (emailInput) {
-        setTimeout(() => emailInput.focus(), 100);
+      // Focus on first input (username)
+      const usernameInput = modal.querySelector('#signup-username');
+      if (usernameInput) {
+        setTimeout(() => usernameInput.focus(), 100);
       }
     },
 
@@ -289,46 +270,34 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
     },
 
 
-    // EXACT COPY from widget.js - handleSignin method
-      async handleSignin() {
-        const emailInput = this.dialog.querySelector('#signin-email');
-        const passwordInput = this.dialog.querySelector('#signin-password');
+  // EXACT COPY from widget.js - handleSignin method
+    async handleSignin() {
+      const emailInput = this.dialog.querySelector('#signin-email');
+      const passwordInput = this.dialog.querySelector('#signin-password');
+  
+      const emailOrUsername = emailInput.value.trim();
+      const password = passwordInput.value.trim();
+  
+      if (!emailOrUsername.trim()) {
+        this.showError('Please enter your username or email');
+        emailInput.focus();
+        return;
+      }
+  
+      if (!password.trim()) {
+        this.showError('Please enter your password');
+        passwordInput.focus();
+        return;
+      }
     
-        const email = emailInput.value.trim();
-        const password = passwordInput.value.trim();
-    
-        // Email validation (same as W version)
-        const isValidEmail = (email) => {
-          const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-          return regex.test(email);
+      try {
+        if( window.isDebugging ) console.log('🔐 [Widget] Attempting sign in...');
+  
+        const requestBody = {
+          Email: emailOrUsername, // Can be username or email
+          Password: password,
+          Role: 1
         };
-    
-        if (!email.trim()) {
-          this.showError('Please enter your email address');
-          emailInput.focus();
-          return;
-        }
-    
-        if (!isValidEmail(email)) {
-          this.showError('Please enter a valid email address');
-          emailInput.focus();
-          return;
-        }
-    
-        if (!password.trim()) {
-          this.showError('Please enter your password');
-          passwordInput.focus();
-          return;
-        }
-    
-        try {
-          if( window.isDebugging ) console.log('🔐 [Widget] Attempting sign in...');
-    
-          const requestBody = {
-            Email: email,
-            Password: password,
-            Role: 1
-          };
     
           if( window.isDebugging ) console.log('🔐 [Widget] Request URL:', `${this.config.apiUrl}/api/user/login`);
           if( window.isDebugging ) console.log('🔐 [Widget] Request body:', requestBody);
@@ -419,17 +388,29 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
 
       // Handle signup form submission
       async handleSignup() {
+        const usernameInput = this.dialog.querySelector('#signup-username');
         const emailInput = this.dialog.querySelector('#signup-email');
-        const nameInput = this.dialog.querySelector('#signup-name');
         const passwordInput = this.dialog.querySelector('#signup-password');
         const confirmPasswordInput = this.dialog.querySelector('#signup-confirm-password');
 
+        const username = usernameInput.value.trim();
         const email = emailInput.value.trim();
-        const name = nameInput.value.trim();
         const password = passwordInput.value.trim();
         const confirmPassword = confirmPasswordInput.value.trim();
 
         // Basic validation
+        if (!username) {
+          alert('Please enter a username');
+          usernameInput.focus();
+          return;
+        }
+
+        if (username.length < 3) {
+          alert('Username must be at least 3 characters long');
+          usernameInput.focus();
+          return;
+        }
+
         if (!email) {
           alert('Please enter your email address');
           emailInput.focus();
@@ -441,12 +422,6 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         if (!emailRegex.test(email)) {
           alert('Please enter a valid email address');
           emailInput.focus();
-          return;
-        }
-
-        if (!name) {
-          alert('Please enter your full name');
-          nameInput.focus();
           return;
         }
 
@@ -478,16 +453,16 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
           if( window.isDebugging ) console.log('🔐 [Widget] Attempting sign up...');
 
           const requestBody = {
+            Username: username,
             Email: email,
-            Name: name,
             Password: password
           };
 
-          if( window.isDebugging ) console.log('🔐 [Widget] Signup Request URL:', `${this.config.apiUrl}/api/user/register/group`);
+          if( window.isDebugging ) console.log('🔐 [Widget] Signup Request URL:', `${this.config.apiUrl}/api/user/register/widget`);
           if( window.isDebugging ) console.log('🔐 [Widget] Signup Request body:', requestBody);
 
-          // Use W version signup API format
-          const response = await fetch(`${this.config.apiUrl}/api/user/register/group`, {
+          // Use new simplified widget signup API
+          const response = await fetch(`${this.config.apiUrl}/api/user/register/widget`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json'
@@ -503,7 +478,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
 
           if (!response.ok) {
             if (response.status === 409) {
-              throw new Error('An account with this email already exists');
+              throw new Error('An account with this username or email already exists');
             } else if (response.status === 400) {
               throw new Error('Invalid registration data provided');
             }
@@ -514,35 +489,36 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
           const result = JSON.parse(responseText);
           if( window.isDebugging ) console.log('✅ [Widget] Sign up successful:', result);
 
-          // Handle verification flow like W version
-          if (result.requiresVerification) {
-            if( window.isDebugging ) console.log('📧 [Widget] Verification required, showing verification modal');
-            this.showVerificationModal(result.email || email);
+          // Auto-signin without verification requirement
+          if( window.isDebugging ) console.log('✅ [Widget] Auto-signing in after successful registration...');
+          
+          // Store token and user info
+          this.userId = result.token;
+          this.currentUserId = result.id;
+          this.isAuthenticated = true;
+
+          // Save to localStorage
+          localStorage.setItem('pingbash_token', result.token);
+          localStorage.setItem('pingbash_user_id', result.id);
+
+          // Hide modal and continue
+          this.hideSignupModal();
+
+          // Show success message (optional verification link sent)
+          if (result.verificationLinkSent) {
+            alert('Account created successfully! We\'ve sent a verification link to your email (optional).');
           } else {
-            // Auto-signin if no verification required (backward compatibility)
-            if( window.isDebugging ) console.log('✅ [Widget] No verification required, auto-signing in...');
-            
-            // Store token and user info (W version format)
-            this.userId = result.token;
-            this.currentUserId = result.id;
-            this.isAuthenticated = true;
-
-            // Save to localStorage (same keys as W version)
-            localStorage.setItem('pingbash_token', result.token);
-            localStorage.setItem('pingbash_user_id', result.id);
-
-            // Hide modal and continue
-            this.hideSignupModal();
-
-            // Initialize socket with authenticated user
-            if( window.isDebugging ) console.log('🔐 [Widget] Initializing socket with authenticated user after signup...');
-            this.connectAsAuthenticated = true;
-            this.authenticatedToken = result.token;
-            
-            this.initializeSocket();
-
-            this.triggerChatRulesAfterLogin(this.authenticatedToken, 'logged-in');
+            alert('Account created successfully! Welcome to ' + this.config.groupName + '!');
           }
+
+          // Initialize socket with authenticated user
+          if( window.isDebugging ) console.log('🔐 [Widget] Initializing socket with authenticated user after signup...');
+          this.connectAsAuthenticated = true;
+          this.authenticatedToken = result.token;
+          
+          this.initializeSocket();
+
+          this.triggerChatRulesAfterLogin(this.authenticatedToken, 'logged-in');
         } catch (error) {
           console.error('❌ [Widget] Sign up error:', error);
           alert(`Sign up failed: ${error.message}`);

@@ -1531,6 +1531,14 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
           color: var(--dark-text-primary) !important;
         }
         
+        .pingbash-dark-mode .pingbash-continue-anon-link {
+          color: var(--dark-accent) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-continue-anon-link:hover {
+          color: #7ab8d4 !important;
+        }
+        
         .pingbash-dark-mode .pingbash-show-signup-btn,
         .pingbash-dark-mode .pingbash-show-signin-btn {
           color: var(--dark-accent) !important;
@@ -3294,9 +3302,25 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
         }
         
         .pingbash-auth-footer p {
-          margin: 0;
+          margin: 8px 0;
           font-size: 14px;
           color: #666;
+        }
+        
+        .pingbash-continue-anon-text {
+          margin-top: 12px !important;
+        }
+        
+        .pingbash-continue-anon-link {
+          color: #2596be;
+          text-decoration: none;
+          font-size: 14px;
+          transition: all 0.2s ease;
+        }
+        
+        .pingbash-continue-anon-link:hover {
+          color: #1d7a9e;
+          text-decoration: underline;
         }
         
         .pingbash-show-signup-btn,

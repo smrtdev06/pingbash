@@ -731,12 +731,19 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
     makeTextSafe(str) {
       if (!str) return "";
       
-      // Escape special characters
-      let escaped = str.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+      // Don't escape quotes - backend handles SQL escaping
+      // We only need to protect against XSS by escaping HTML in non-HTML content
+      let escaped = str;
       
       // Only convert URLs to links if the content does NOT contain HTML tags
       // (to avoid interfering with <img>, <a> tags from images/files)
       if (!escaped.includes('<img') && !escaped.includes('<a') && !escaped.includes('<video') && !escaped.includes('<iframe')) {
+        // Escape HTML special characters to prevent XSS (but preserve quotes for natural text)
+        escaped = escaped
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;');
+        
         // Convert URLs to clickable links with underline styling
         // Match http://, https://, and www. URLs
         const urlRegex = /(https?:\/\/[^\s<>"{}|\\^`\[\]]+|www\.[^\s<>"{}|\\^`\[\]]+)/gi;

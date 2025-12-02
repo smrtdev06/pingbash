@@ -140,6 +140,36 @@ const emailTemplates = {
     return getEmailWrapper(content);
   },
 
+  // Optional verification link email (widget signup)
+  verification_link: (userName, verificationLink) => {
+    const content = `
+      <h2 style="color: #333; margin-bottom: 20px; font-size: 20px;">Verify Your Email (Optional)</h2>
+      <p style="color: #666; line-height: 1.6; margin-bottom: 20px;">
+        Hi ${userName},
+      </p>
+      <p style="color: #666; line-height: 1.6; margin-bottom: 20px;">
+        Welcome to Pingbash! Your account is already active and you can start chatting right away.
+      </p>
+      <p style="color: #666; line-height: 1.6; margin-bottom: 20px;">
+        However, we recommend verifying your email address for added security and to ensure you can recover your account if needed.
+      </p>
+      <div style="text-align: center; margin: 30px 0;">
+        <a href="${verificationLink}" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">
+          Verify Email Address
+        </a>
+      </div>
+      <p style="color: #666; line-height: 1.6; margin-bottom: 20px; font-size: 14px;">
+        If you didn't create an account at Pingbash, you can safely ignore this email.
+      </p>
+      <div style="background: #e3f2fd; padding: 15px; border-radius: 6px; border-left: 4px solid #2196f3;">
+        <p style="margin: 0; color: #1976d2; font-size: 14px;">
+          <strong>Note:</strong> This verification is optional. You can continue using Pingbash without verifying your email.
+        </p>
+      </div>
+    `;
+    return getEmailWrapper(content);
+  },
+
   // Welcome email for new users
   welcome: (userName) => {
     const content = `
