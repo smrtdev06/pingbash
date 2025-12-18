@@ -601,19 +601,24 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
             <div class="pingbash-popup-body">
               <div class="pingbash-signin-form">
                 <div class="pingbash-form-group">
-                  <label for="signin-email">Email:</label>
-                  <input type="email" id="signin-email" class="pingbash-form-input" placeholder="Enter your email">
+                  <label for="signin-email">Username or Email:</label>
+                  <input type="text" id="signin-email" class="pingbash-form-input" placeholder="Username or Email">
                 </div>
                 <div class="pingbash-form-group">
                   <label for="signin-password">Password:</label>
-                  <input type="password" id="signin-password" class="pingbash-form-input" placeholder="Enter your password">
+                  <input type="password" id="signin-password" class="pingbash-form-input" placeholder="Password">
                 </div>
                 <div class="pingbash-signin-options">
-                  <button class="pingbash-signin-submit-btn">Sign In</button>
-                  <button class="pingbash-continue-anon-btn">Continue as Guest</button>
+                  <button class="pingbash-signin-submit-btn">
+                    <svg class="pingbash-btn-icon" viewBox="0 0 24 24" width="20" height="20">
+                      <path fill="currentColor" d="M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z"/>
+                    </svg>
+                    <span>Sign In</span>
+                  </button>
                 </div>
                 <div class="pingbash-auth-footer">
                   <p>Don't have an account? <button class="pingbash-show-signup-btn">Sign Up</button></p>
+                  <p class="pingbash-continue-anon-text"><a href="#" class="pingbash-continue-anon-link">Continue as Guest</a></p>
                 </div>
               </div>
             </div>
@@ -631,12 +636,12 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
             <div class="pingbash-popup-body">
               <div class="pingbash-signup-form">
                 <div class="pingbash-form-group">
-                  <label for="signup-email">Email:</label>
-                  <input type="email" id="signup-email" class="pingbash-form-input" placeholder="Enter your email">
+                  <label for="signup-username">Username:</label>
+                  <input type="text" id="signup-username" class="pingbash-form-input" placeholder="Enter your username">
                 </div>
                 <div class="pingbash-form-group">
-                  <label for="signup-name">User Name:</label>
-                  <input type="text" id="signup-name" class="pingbash-form-input" placeholder="Enter your chat username">
+                  <label for="signup-email">Email:</label>
+                  <input type="email" id="signup-email" class="pingbash-form-input" placeholder="Enter your email">
                 </div>
                 <div class="pingbash-form-group">
                   <label for="signup-password">Password:</label>
@@ -647,11 +652,16 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
                   <input type="password" id="signup-confirm-password" class="pingbash-form-input" placeholder="Confirm your password">
                 </div>
                 <div class="pingbash-signup-options">
-                  <button class="pingbash-signup-submit-btn">Sign Up</button>
-                  <button class="pingbash-continue-anon-btn">Continue as Guest</button>
+                  <button class="pingbash-signup-submit-btn">
+                    <svg class="pingbash-btn-icon" viewBox="0 0 24 24" width="20" height="20">
+                      <path fill="currentColor" d="M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z"/>
+                    </svg>
+                    <span>Sign Up</span>
+                  </button>
                 </div>
                 <div class="pingbash-auth-footer">
                   <p>Already have an account? <button class="pingbash-show-signin-btn">Sign In</button></p>
+                  <p class="pingbash-continue-anon-text"><a href="#" class="pingbash-continue-anon-link">Continue as Guest</a></p>
                 </div>
               </div>
             </div>

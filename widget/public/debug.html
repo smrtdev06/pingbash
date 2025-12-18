@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Widget Debug</title>
+    <style>
+        body {
+            font-family: monospace;
+            padding: 20px;
+            background: #1e1e1e;
+            color: #fff;
+        }
+        .log {
+            background: #252525;
+            padding: 10px;
+            margin: 10px 0;
+            border-left: 3px solid #4CAF50;
+            border-radius: 4px;
+        }
+        .error {
+            border-left-color: #f44336;
+        }
+        .warning {
+            border-left-color: #ff9800;
+        }
+        .info {
+            border-left-color: #2196F3;
+        }
+        h2 {
+            color: #4CAF50;
+        }
+        #console-output {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 Widget Debug Console</h1>
+    <p>Watch this page for initialization logs...</p>
+    
+    <div id="checks">
+        <h2>Pre-flight Checks:</h2>
+        <div id="check-results"></div>
+    </div>
+    
+    <div id="console-output">
+        <h2>Console Logs:</h2>
+    </div>
+
+    <script>
+        // Enable debugging
+        window.isDebugging = true;
+        
+        // Capture console logs
+        const consoleOutput = document.getElementById('console-output');
+        const originalLog = console.log;
+        const originalError = console.error;
+        const originalWarn = console.warn;
+        
+        function addLog(message, type = 'log') {
+            const div = document.createElement('div');
+            div.className = `log ${type}`;
+            div.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            consoleOutput.appendChild(div);
+            consoleOutput.scrollTop = consoleOutput.scrollHeight;
+        }
+        
+        console.log = function(...args) {
+            originalLog.apply(console, args);
+            addLog(args.join(' '), 'info');
+        };
+        
+        console.error = function(...args) {
+            originalError.apply(console, args);
+            addLog('ERROR: ' + args.join(' '), 'error');
+        };
+        
+        console.warn = function(...args) {
+            originalWarn.apply(console, args);
+            addLog('WARNING: ' + args.join(' '), 'warning');
+        };
+        
+        // Pre-flight checks
+        const checkResults = document.getElementById('check-results');
+        
+        function check(name, result, details = '') {
+            const div = document.createElement('div');
+            div.className = `log ${result ? 'info' : 'error'}`;
+            div.innerHTML = `${result ? '✅' : '❌'} ${name}${details ? '<br>&nbsp;&nbsp;&nbsp;&nbsp;' + details : ''}`;
+            checkResults.appendChild(div);
+        }
+        
+        // Run checks
+        setTimeout(() => {
+            check('Widget script loaded', typeof PingbashChatWidget !== 'undefined');
+            check('Socket.io available', typeof io !== 'undefined');
+            
+            // Check if backend is reachable
+            fetch('http://localhost:8000/api/user/test')
+                .then(response => {
+                    check('Backend reachable', response.ok, 'URL: http://localhost:8000');
+                })
+                .catch(err => {
+                    check('Backend reachable', false, 'ERROR: ' + err.message);
+                    console.error('Backend connection failed:', err);
+                });
+                
+            // Check widget initialization
+            setTimeout(() => {
+                const dialog = document.querySelector('.pingbash-chat-dialog');
+                const button = document.querySelector('.pingbash-chat-button');
+                check('Widget UI created', !!(dialog || button), dialog ? 'Dialog found' : (button ? 'Button found' : 'Nothing found'));
+                
+                if (dialog) {
+                    const styles = window.getComputedStyle(dialog);
+                    check('Widget styles applied', styles.display !== 'none', `Display: ${styles.display}`);
+                }
+            }, 2000);
+        }, 500);
+    </script>
+
+    <!-- Load the widget -->
+    <script src="./js/widget-split.js"
+        data-group-name="Debug Test"
+        data-api-url="http://localhost:8000"
+        data-theme="light"
+        data-position="bottom-right"
+        data-width="400px"
+        data-height="600px"
+    ></script>
+</body>
+</html>
+

@@ -299,10 +299,23 @@ module.exports = (socket, users) => {
             } else {
                 // Regular message (public or 1-on-1)
                 const messageMode = receiverId === null ? 0 : 1; // 0 = Public, 1 = Private
-                await Controller.saveGroupMsg(senderId, content, groupId, receiverId, data.parent_id, messageMode);
                 
-                // Send email notification for 1-on-1 messages to offline users
-                if (receiverId && receiverId !== -1) {
+                // Detect if this is a widget 1-on-1 message (anonymous users have IDs > 100000000)
+                const isAnonymousSender = senderId > 100000000;
+                const isAnonymousReceiver = receiverId && receiverId > 100000000;
+                const isWidgetMessage = isAnonymousSender || isAnonymousReceiver;
+                
+                // For widget 1-on-1 messages, skip inbox (History_Iden = 0) to avoid unread count
+                const skipInbox = isWidgetMessage && receiverId !== null;
+                
+                if (skipInbox) {
+                    console.log(`📭 [WIDGET] Detected widget 1-on-1 message (sender: ${senderId}, receiver: ${receiverId}) - will skip inbox`);
+                }
+                
+                await Controller.saveGroupMsg(senderId, content, groupId, receiverId, data.parent_id, messageMode, skipInbox);
+                
+                // Send email notification for 1-on-1 messages to offline users (but NOT for widget messages)
+                if (receiverId && receiverId !== -1 && !isWidgetMessage) {
                     console.log(`📧 [EMAIL-CHECK] Checking if user ${receiverId} is online for email notification`);
                     
                     // Check if the target user is online
@@ -341,6 +354,8 @@ module.exports = (socket, users) => {
                             console.error(`📬 [INBOX] Failed to send unread count to receiver:`, error);
                         }
                     }
+                } else if (isWidgetMessage && receiverId) {
+                    console.log(`📭 [WIDGET] Skipping email notification for widget 1-on-1 message (sender: ${senderId}, receiver: ${receiverId})`);
                 }
             }
             const receiverIds = await Controller.getReceiverIdsOfGroup(groupId);
@@ -487,10 +502,23 @@ module.exports = (socket, users) => {
             } else {
                 // Regular message (public or 1-on-1)
                 const messageMode = receiverId === null ? 0 : 1; // 0 = Public, 1 = Private
-                await Controller.saveGroupMsg(anonId, content, groupId, receiverId, data.parent_id, messageMode);
                 
-                // Send email notification for 1-on-1 messages to offline users from anonymous senders
-                if (receiverId && receiverId !== -1) {
+                // Detect if this is a widget 1-on-1 message (sender is anonymous, receiver might be anonymous too)
+                const isAnonymousSender = true; // Already in anonymous user section
+                const isAnonymousReceiver = receiverId && receiverId > 100000000;
+                const isWidgetMessage = isAnonymousSender || isAnonymousReceiver;
+                
+                // For widget 1-on-1 messages, skip inbox (History_Iden = 0) to avoid unread count
+                const skipInbox = isWidgetMessage && receiverId !== null;
+                
+                if (skipInbox) {
+                    console.log(`📭 [WIDGET] Detected widget 1-on-1 message from anonymous user ${anonId} to receiver ${receiverId} - will skip inbox`);
+                }
+                
+                await Controller.saveGroupMsg(anonId, content, groupId, receiverId, data.parent_id, messageMode, skipInbox);
+                
+                // Send email notification for 1-on-1 messages to offline users from anonymous senders (but NOT for widget messages)
+                if (receiverId && receiverId !== -1 && !isWidgetMessage) {
                     console.log(`📧 [ANON-EMAIL-CHECK] Checking if user ${receiverId} is online for email notification`);
                     
                     // Check if the target user is online
@@ -518,6 +546,8 @@ module.exports = (socket, users) => {
                     } else {
                         console.log(`📧 [ANON-EMAIL-CHECK] User ${receiverId} is online, skipping email notification`);
                     }
+                } else if (isWidgetMessage && receiverId) {
+                    console.log(`📭 [WIDGET] Skipping email notification for widget 1-on-1 message from anonymous user ${anonId} to ${receiverId}`);
                 }
             }
             console.log(`✅ [ANON-MSG] Message saved to database`);

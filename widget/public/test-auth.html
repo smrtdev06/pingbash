@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PingBash Widget - Auth Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-info {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .test-info h2 {
+            margin-top: 0;
+            color: #333;
+        }
+        .test-info ul {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+        .test-info li {
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-info">
+        <h2>🧪 Widget Authentication Test Page</h2>
+        <p>This page tests the simplified authentication flow:</p>
+        <ul>
+            <li><strong>Signup:</strong> Username, Email, Password (no verification required)</li>
+            <li><strong>Login:</strong> Username OR Email + Password</li>
+            <li><strong>Continue as Guest:</strong> Text link at bottom of auth modal</li>
+        </ul>
+        <p><strong>Instructions:</strong></p>
+        <ol>
+            <li>Click the chat bubble icon in the bottom right</li>
+            <li>Try "Sign Up" with a username</li>
+            <li>Try logging in with username or email</li>
+            <li>Try "Continue as Guest" text link</li>
+        </ol>
+        <p><strong>Note:</strong> Check browser console (F12) for any errors</p>
+    </div>
+
+    <!-- Widget will load here -->
+    <script src="./js/widget-split.js"
+        data-group-name="Test Group"
+        data-api-url="http://localhost:8000"
+        data-theme="light"
+        data-position="bottom-right"
+        data-width="400px"
+        data-height="600px"
+    ></script>
+</body>
+</html>
+

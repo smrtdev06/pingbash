@@ -259,29 +259,9 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
         this.messages = newMessages;
         newMessages.forEach(msg => this.addMessage(msg));
       } else {
-        // Quick check: if we have the same number of messages and the last message ID matches, skip
-        if (this.messages && this.messages.length === newMessages.length) {
-          const lastExistingId = this.messages[this.messages.length - 1]?.Id;
-          const lastNewId = newMessages[newMessages.length - 1]?.Id;
-          if( window.isDebugging ) console.log('🔍 [Widget] Comparing message sets - existing:', this.messages.length, 'new:', newMessages.length);
-          if( window.isDebugging ) console.log('🔍 [Widget] Last existing ID:', lastExistingId, 'Last new ID:', lastNewId);
-  
-          // Debug: Show last few message IDs from both sets
-          const lastFewExisting = this.messages.slice(-3).map(m => ({ id: m.Id, content: m.Content?.substring(0, 30) }));
-          const lastFewNew = newMessages.slice(-3).map(m => ({ id: m.Id, content: m.Content?.substring(0, 30) }));
-          if( window.isDebugging ) console.log('🔍 [Widget] Last few existing messages:', lastFewExisting);
-          if( window.isDebugging ) console.log('🔍 [Widget] Last few new messages:', lastFewNew);
-  
-          if (lastExistingId === lastNewId) {
-            if( window.isDebugging ) console.log('🔍 [Widget] Same message set received, skipping processing');
-            return;
-          } else {
-            if( window.isDebugging ) console.log('🔍 [Widget] Different last message ID, proceeding with update');
-          }
-        }
-  
         // Smart append - only add messages that don't exist in DOM
         if( window.isDebugging ) console.log('🔍 [Widget] Smart append - checking for new messages');
+        if( window.isDebugging ) console.log('🔍 [Widget] Comparing message sets - existing:', this.messages?.length || 0, 'new:', newMessages.length);
   
         // Get existing message IDs from DOM (more reliable than stored array)
         const existingDomIds = new Set();
@@ -751,12 +731,19 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
     makeTextSafe(str) {
       if (!str) return "";
       
-      // Escape special characters
-      let escaped = str.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+      // Don't escape quotes - backend handles SQL escaping
+      // We only need to protect against XSS by escaping HTML in non-HTML content
+      let escaped = str;
       
       // Only convert URLs to links if the content does NOT contain HTML tags
       // (to avoid interfering with <img>, <a> tags from images/files)
       if (!escaped.includes('<img') && !escaped.includes('<a') && !escaped.includes('<video') && !escaped.includes('<iframe')) {
+        // Escape HTML special characters to prevent XSS (but preserve quotes for natural text)
+        escaped = escaped
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;');
+        
         // Convert URLs to clickable links with underline styling
         // Match http://, https://, and www. URLs
         const urlRegex = /(https?:\/\/[^\s<>"{}|\\^`\[\]]+|www\.[^\s<>"{}|\\^`\[\]]+)/gi;
@@ -768,6 +755,14 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
           // Ensure URL has protocol
           const href = cleanUrl.startsWith('www.') ? 'http://' + cleanUrl : cleanUrl;
           
+          // Check if URL points to an image file
+          const imageExtensions = /\.(png|jpg|jpeg|gif|webp|bmp|svg|ico)(\?.*)?$/i;
+          if (imageExtensions.test(cleanUrl)) {
+            // Render as clickable image
+            return `<img src="${href}" style="max-width: 200px; max-height: 200px; border-radius: 8px; margin: 4px 0; display: block; cursor: pointer;" onclick="window.pingbashWidget.openImageModal('${href}')" title="Click to view full size" />`;
+          }
+          
+          // Regular link
           return `<a href="${href}" target="_blank" rel="noopener noreferrer" style="color: inherit; text-decoration: underline; text-underline-offset: 2px;">${cleanUrl}</a>`;
         });
       }

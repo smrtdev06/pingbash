@@ -172,23 +172,29 @@ const updateCustomerInforValidation = (data) => {
             .required(),
 
         LastName: Joi.string()
-            .required(),
+            .allow('', null)
+            .optional(),
 
         Email: Joi.string()
             .email()
             .required(),
 
         description: Joi.string()
+            .allow('', null)
             .default(null),
         
         country: Joi.string()
+            .allow('', null)
             .default(null),
 
         gender: Joi.string()
+            .allow('', null)
             .default(null),
             
         birthday: Joi.date()
-            .max(new Date()),
+            .allow('', null)
+            .max(new Date())
+            .default(null),
     })
     return schema.validate(data)
 }
@@ -212,7 +218,8 @@ const updateVendorInforValidation = (data) => {
             .required(),
 
         LastName: Joi.string()
-            .required(),
+            .allow('', null)
+            .optional(),
 
         Profession: Joi.string()
             .required(),

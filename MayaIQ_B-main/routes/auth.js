@@ -147,8 +147,94 @@ router.post('/register/group', async (req, res) => {
     }
 });
 
- // Router for user register
- router.get("/test", (req, res) => {
+// Router for simplified widget registration (no verification required)
+router.post('/register/widget', async (req, res) => {
+   console.log('[Widget Registration]', req.body);
+    
+   // Validate required fields
+   if (!req.body.Username || !req.body.Email || !req.body.Password) {
+       return res.status(httpCode.INVALID_MSG).send("Username, email, and password are required");
+   }
+
+   let email = req.body.Email.toLowerCase();
+   let username = req.body.Username.trim();
+
+   try {
+       // Check if email already exists
+       let emailExists = await PG_query(`SELECT * FROM "Users" WHERE "Email" = '${email}';`);
+       if (emailExists.rows.length) {
+           return res.status(httpCode.DUPLICATED).send("An account with this email already exists");
+       }
+
+       // Check if username already exists (stored in Name field)
+       let usernameExists = await PG_query(`SELECT * FROM "Users" WHERE "Name" = '${username}';`);
+       if (usernameExists.rows.length) {
+           return res.status(httpCode.DUPLICATED).send("An account with this username already exists");
+       }
+       
+       // Hash password
+       const salt = bcrypt.genSaltSync(10);
+       const hashedPassword = bcrypt.hashSync(req.body.Password, salt);
+       
+      // Create user account immediately (no verification required)
+      // Username is saved to Name field, Role = 1 (active), Profession = '' (empty by default)
+      const result = await PG_query(`
+          INSERT INTO "Users" ("Name", "Email", "Password", "Role", "Profession")
+          VALUES (
+              '${username}', 
+              '${email}', 
+              '${hashedPassword}',
+              1,
+              ''
+          )
+          RETURNING "Id";
+      `);
+
+       const userId = result.rows[0].Id;
+       const token = jwt.sign({ id: userId }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN });
+
+       // Send optional verification link email (non-blocking)
+       let verificationLinkSent = false;
+       try {
+           const verificationToken = jwt.sign({ 
+               email: email, 
+               userId: userId 
+           }, process.env.JWT_SECRET, { expiresIn: '7d' });
+           
+           const verificationLink = `${process.env.FRONTEND_URL || 'https://pingbash.com'}/verify?token=${verificationToken}`;
+           
+           const subject = 'Verify Your Pingbash Account (Optional)';
+           const message = emailTemplates.verification_link(username, verificationLink);
+           
+           await transporter.sendMail({ 
+               from: `${process.env.SMTP_FROM_NAME || 'Pingbash'} <${process.env.SMTP_FROM_EMAIL || process.env.SMTP_USER}>`, 
+               to: email, 
+               subject, 
+               html: message 
+           });
+           
+           verificationLinkSent = true;
+           console.log('✅ [Widget Registration] Verification link sent to:', email);
+       } catch (emailError) {
+           console.log("⚠️ [Widget Registration] Verification email failed (non-blocking):", emailError);
+           // Don't fail the registration if email fails
+       }
+
+       res.status(httpCode.SUCCESS).send({ 
+           token, 
+           id: userId,
+           message: "Account created successfully!",
+           verificationLinkSent
+       });
+
+   } catch (error) {
+       errorHandler(error);
+       res.status(httpCode.SERVER_ERROR).send("Server error during registration");
+   }
+});
+
+// Router for user register
+router.get("/test", (req, res) => {
     console.log("test =====");
   res.json({ message: 'GET request success!' });
   
@@ -221,17 +307,18 @@ router.post('/register/group', async (req, res) => {
  
          otpStore.delete(email);
 
-         // Create the user account now that verification is complete
-         const result = await PG_query(`
-             INSERT INTO "Users" ("Name", "Email", "Password", "Role")
-             VALUES (
-                 '${userData.name}', 
-                 '${userData.email}', 
-                 '${userData.hashedPassword}',
-                 ${userData.role}
-             )
-             RETURNING "Id";
-         `);
+        // Create the user account now that verification is complete
+        const result = await PG_query(`
+            INSERT INTO "Users" ("Name", "Email", "Password", "Role", "Profession")
+            VALUES (
+                '${userData.name}', 
+                '${userData.email}', 
+                '${userData.hashedPassword}',
+                ${userData.role},
+                ''
+            )
+            RETURNING "Id";
+        `);
 
          const token = jwt.sign({ id: result.rows[0].Id }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN });
 
@@ -298,39 +385,50 @@ router.post('/refresh-token', authenticateUser, async (req, res) => {
     }
 });
  
-// Router for user sign in
- router.post('/login', async (req, res) => {
-     const { error } = loginValidation(req.body);
-     if (error) return res.status(httpCode.FORBIDDEN).send(error.details[0].message);
- 
-     let email = req.body.Email.toLowerCase();
- 
-     try {
-         const user = await PG_query(`SELECT * FROM "Users" WHERE "Email" = '${email}';`);
- 
-         if (!user.rows.length) {
-             return res.status(httpCode.NOTHING).send();
-         } else {
-             // Check Role
-             if (req.body.Role !== 1) {
-                 return res.status(httpCode.NOT_ALLOWED).send('Email or Password or Role do not match');
-             } else {
-                 // Check password
-                 const passwordMatch = bcrypt.compareSync(req.body.Password, user.rows[0].Password);
-                 if (!passwordMatch) {
-                     return res.status(httpCode.NOT_MATCHED).send('Email or Password or Role do not match');
-                 } else {
-                     // Create and assign JWT
-                     const token = jwt.sign({ id: user.rows[0].Id }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN });
-                     res.send({ token, id: user.rows[0].Id });
-                 }
-             }
-         }
-     } catch (error) {
-         errorHandler(error);
-         res.status(httpCode.SERVER_ERROR).send();
-     }
- });
+// Router for user sign in (supports username or email)
+router.post('/login', async (req, res) => {
+    const { error } = loginValidation(req.body);
+    if (error) return res.status(httpCode.FORBIDDEN).send(error.details[0].message);
+
+    let emailOrUsername = req.body.Email; // Field name is Email but it can be username or email
+    
+    try {
+        // Check if it's an email (contains @) or username
+        const isEmail = emailOrUsername.includes('@');
+        let user;
+        
+        if (isEmail) {
+            // Login with email
+            let email = emailOrUsername.toLowerCase();
+            user = await PG_query(`SELECT * FROM "Users" WHERE "Email" = '${email}';`);
+        } else {
+            // Login with username (stored in Name field)
+            user = await PG_query(`SELECT * FROM "Users" WHERE "Name" = '${emailOrUsername}';`);
+        }
+
+        if (!user.rows.length) {
+            return res.status(httpCode.NOTHING).send();
+        } else {
+            // Check Role
+            if (req.body.Role !== 1) {
+                return res.status(httpCode.NOT_ALLOWED).send('Username/Email or Password or Role do not match');
+            } else {
+                // Check password
+                const passwordMatch = bcrypt.compareSync(req.body.Password, user.rows[0].Password);
+                if (!passwordMatch) {
+                    return res.status(httpCode.NOT_MATCHED).send('Username/Email or Password or Role do not match');
+                } else {
+                    // Create and assign JWT
+                    const token = jwt.sign({ id: user.rows[0].Id }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN });
+                    res.send({ token, id: user.rows[0].Id });
+                }
+            }
+        }
+    } catch (error) {
+        errorHandler(error);
+        res.status(httpCode.SERVER_ERROR).send();
+    }
+});
  
  // Router for new password 
  router.post('/setNewPass', async (req, res) => {

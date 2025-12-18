@@ -189,7 +189,7 @@ window.isDebugging = true;
           const logoSection = this.dialog?.querySelector('.pingbash-header-logo-section');
           if (logoSection) {
             const inboxIconHTML = `
-              <div class="pingbash-header-inbox-icon" style="display: none; position: relative; cursor: pointer; touch-action: auto; pointer-events: auto; min-width: 44px; min-height: 44px; align-items: center; justify-content: center;" title="View Inbox">
+              <div class="pingbash-header-inbox-icon" style="display: none; position: absolute; cursor: pointer; touch-action: auto; top: 5px; pointer-events: auto; min-width: 44px; min-height: 44px; align-items: center; justify-content: center;" title="View Inbox">
                 <svg viewBox="0 0 24 24" width="28" height="28">
                   <path fill="currentColor" d="M19,15H15A3,3 0 0,1 12,18A3,3 0 0,1 9,15H5V5H19M19,3H5C3.89,3 3,3.9 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5A2,2 0 0,0 19,3Z"/>
                 </svg>
@@ -362,6 +362,9 @@ window.isDebugging = true;
     }
 
     const config = {};
+    
+    // Check if we're on *.pingbash.com domain
+    const isPingbashDomain = window.location.hostname.match(/^([^.]+)\.pingbash\.com$/);
 
     if (script && script.dataset) {
       // Extract configuration from data attributes
@@ -369,9 +372,8 @@ window.isDebugging = true;
         config.groupName = script.dataset.groupName;
       else {
         // If groupName is not provided, try to extract from window.location if on *.pingbash.com
-        const hostMatch = window.location.hostname.match(/^([^.]+)\.pingbash\.com$/);
-        if (hostMatch && hostMatch[1]) {
-          config.groupName = hostMatch[1];
+        if (isPingbashDomain && isPingbashDomain[1]) {
+          config.groupName = isPingbashDomain[1];
           if( window.isDebugging ) console.log('🌐 [Widget] Extracted groupName from hostname:', config.groupName);
         } else {
           config.groupName = 'testgroup6';
@@ -383,6 +385,129 @@ window.isDebugging = true;
       if (script.dataset.width) config.width = script.dataset.width;
       if (script.dataset.height) config.height = script.dataset.height;
       if (script.dataset.autoOpen) config.autoOpen = script.dataset.autoOpen === 'true';
+    }
+    
+    // If on *.pingbash.com domain, automatically set fullscreen mode using POPUP mode
+    if (isPingbashDomain) {
+      if( window.isDebugging ) console.log('🌐 [Widget] Detected *.pingbash.com domain - enabling fullscreen popup mode');
+      
+      // DON'T create layout element - let it use popup mode naturally
+      // Remove any existing layout element to force popup mode
+      const existingLayout = document.getElementById('pingbash-chat-layout');
+      if (existingLayout) {
+        existingLayout.remove();
+        if( window.isDebugging ) console.log('🌐 [Widget] Removed layout element to force popup mode');
+      }
+      
+      // Set fullscreen styles on body
+      document.body.style.margin = '0';
+      document.body.style.padding = '0';
+      document.body.style.height = '100vh';
+      document.body.style.overflow = 'hidden';
+      
+      // Ensure viewport meta tag is set for mobile
+      let viewportMeta = document.querySelector('meta[name="viewport"]');
+      if (!viewportMeta) {
+        viewportMeta = document.createElement('meta');
+        viewportMeta.name = 'viewport';
+        viewportMeta.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no';
+        document.head.appendChild(viewportMeta);
+        if( window.isDebugging ) console.log('🌐 [Widget] Added viewport meta tag');
+      } else {
+        // Update existing viewport to prevent scaling issues
+        viewportMeta.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no';
+        if( window.isDebugging ) console.log('🌐 [Widget] Updated viewport meta tag');
+      }
+      
+      // Add CSS to handle fullscreen popup mode
+      const styleEl = document.createElement('style');
+      styleEl.id = 'pingbash-fullscreen-popup-fix';
+      styleEl.textContent = `
+        /* Fullscreen POPUP mode for *.pingbash.com */
+        html {
+          height: 100% !important;
+          overflow: hidden !important;
+        }
+        
+        body {
+          position: fixed !important;
+          width: 100% !important;
+          height: 100% !important;
+          overflow: hidden !important;
+        }
+        
+        @supports (-webkit-touch-callout: none) {
+          /* iOS Safari */
+          body {
+            height: -webkit-fill-available !important;
+          }
+        }
+        
+        /* Make popup mode dialog fill entire window */
+        .pingbash-chat-dialog.pingbash-popup-mode {
+          position: fixed !important;
+          top: 0 !important;
+          bottom: 0 !important;
+          left: 0 !important;
+          right: 0 !important;
+          width: 100% !important;
+          height: 100% !important;
+          max-width: 100% !important;
+          max-height: 100% !important;
+          min-width: 100% !important;
+          min-height: 100% !important;
+          border-radius: 0 !important;
+          transform: none !important;
+          margin: 0 !important;
+          padding: 0 !important;
+          resize: none !important;
+          display: flex !important;
+          flex-direction: column !important;
+          overflow: hidden !important;
+          box-shadow: none !important;
+        }
+        
+        /* Ensure header stays at top */
+        .pingbash-chat-dialog.pingbash-popup-mode .pingbash-header {
+          flex-shrink: 0 !important;
+          position: relative !important;
+          z-index: 10 !important;
+        }
+        
+        /* Messages area takes available space */
+        .pingbash-chat-dialog.pingbash-popup-mode .pingbash-messages-area {
+          flex: 1 !important;
+          min-height: 0 !important;
+          overflow: hidden !important;
+          display: flex !important;
+          flex-direction: column !important;
+        }
+        
+        /* Input and controls stay at bottom */
+        .pingbash-chat-dialog.pingbash-popup-mode .pingbash-input-bar,
+        .pingbash-chat-dialog.pingbash-popup-mode .pingbash-controls-bar {
+          flex-shrink: 0 !important;
+          position: relative !important;
+        }
+        
+        /* Hide chat button in fullscreen popup mode */
+        .pingbash-chat-button {
+          display: none !important;
+        }
+        
+        /* Hide popup button since we're already fullscreen */
+        .pingbash-chat-dialog.pingbash-popup-mode .pingbash-popup-btn {
+          display: none !important;
+        }
+      `;
+      document.head.appendChild(styleEl);
+      
+      // Override config for fullscreen
+      config.width = '100vw';
+      config.height = '100vh';
+      config.autoOpen = true;
+      
+      if( window.isDebugging ) console.log('🌐 [Widget] Fullscreen mode configured with mobile keyboard support');
     }
 
     if( window.isDebugging ) console.log('🔍 [Widget] Final config:', config);
@@ -400,6 +525,102 @@ window.isDebugging = true;
       if (widget.init) {
         await widget.init();
         if( window.isDebugging ) console.log('🎯 [Widget] Widget initialized after module loading');
+      }
+
+      // Re-inject fullscreen popup CSS AFTER widget initialization to ensure it overrides default styles
+      if (isPingbashDomain) {
+        // Remove old style if exists
+        const oldStyle = document.getElementById('pingbash-fullscreen-popup-fix');
+        if (oldStyle) oldStyle.remove();
+        
+        // Re-inject with higher priority (will be last in DOM)
+        const styleEl = document.createElement('style');
+        styleEl.id = 'pingbash-fullscreen-popup-fix-final';
+        styleEl.textContent = `
+          /* Fullscreen POPUP mode - FINAL OVERRIDE for *.pingbash.com */
+          
+          /* Make popup dialog fill entire window - highest specificity */
+          .pingbash-widget .pingbash-chat-dialog.pingbash-popup-mode,
+          .pingbash-chat-dialog.pingbash-popup-mode {
+            position: fixed !important;
+            top: 0 !important;
+            bottom: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            width: 100% !important;
+            height: 100% !important;
+            max-width: 100% !important;
+            max-height: none !important;
+            min-width: 100% !important;
+            min-height: 100% !important;
+            border-radius: 0 !important;
+            transform: none !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            resize: none !important;
+            display: flex !important;
+            flex-direction: column !important;
+            overflow: hidden !important;
+            box-shadow: none !important;
+          }
+          
+          /* Ensure header is visible and at top */
+          .pingbash-chat-dialog.pingbash-popup-mode .pingbash-header {
+            flex-shrink: 0 !important;
+            position: relative !important;
+            z-index: 10 !important;
+            width: 100% !important;
+          }
+          
+          /* Messages area fills available space */
+          .pingbash-chat-dialog.pingbash-popup-mode .pingbash-messages-area {
+            flex: 1 !important;
+            min-height: 0 !important;
+            overflow: hidden !important;
+            display: flex !important;
+            flex-direction: column !important;
+          }
+          
+          /* Input and controls at bottom */
+          .pingbash-chat-dialog.pingbash-popup-mode .pingbash-input-bar,
+          .pingbash-chat-dialog.pingbash-popup-mode .pingbash-controls-bar {
+            flex-shrink: 0 !important;
+            position: relative !important;
+            width: 100% !important;
+          }
+          
+          /* Hide popup/embed toggle button */
+          .pingbash-chat-dialog.pingbash-popup-mode .pingbash-popup-btn {
+            display: none !important;
+          }
+        `;
+        document.head.appendChild(styleEl);
+        if( window.isDebugging ) console.log('🌐 [Widget] Re-injected fullscreen popup CSS after widget initialization');
+        
+        // Force apply fullscreen styles to dialog element directly (override inline styles)
+        setTimeout(() => {
+          const dialog = document.querySelector('.pingbash-chat-dialog.pingbash-popup-mode');
+          if (dialog) {
+            if( window.isDebugging ) console.log('🌐 [Widget] Force-applying fullscreen styles to dialog');
+            
+            // Remove any conflicting inline styles
+            dialog.style.setProperty('position', 'fixed', 'important');
+            dialog.style.setProperty('top', '0', 'important');
+            dialog.style.setProperty('bottom', '0', 'important');
+            dialog.style.setProperty('left', '0', 'important');
+            dialog.style.setProperty('right', '0', 'important');
+            dialog.style.setProperty('width', '100%', 'important');
+            dialog.style.setProperty('height', '100%', 'important');
+            dialog.style.setProperty('max-width', '100%', 'important');
+            dialog.style.setProperty('max-height', '100%', 'important');
+            dialog.style.setProperty('border-radius', '0', 'important');
+            dialog.style.setProperty('transform', 'none', 'important');
+            dialog.style.setProperty('margin', '0', 'important');
+            dialog.style.setProperty('box-shadow', 'none', 'important');
+            
+            if( window.isDebugging ) console.log('🌐 [Widget] Fullscreen styles applied successfully');
+          }
+        }, 100);
       }
 
       // Make it globally accessible for debugging

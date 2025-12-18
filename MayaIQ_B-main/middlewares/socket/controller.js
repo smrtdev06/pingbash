@@ -666,8 +666,10 @@ const saveMsg = async (sender_id, content, receiver_id, parent_id) => {
          );`)
 
         // To set the History_Iden for the new chat as 1
+        // Escape single quotes for SQL
+        const escapedContent = content.replace(/'/g, "''");
         await PG_query(`INSERT INTO "Messages" ("Sender_Id", "Send_Time", "Content", "Receiver_Id", "History_Iden", "parent_id")
-         VALUES (${sender_id}, CURRENT_TIMESTAMP, '${content}', ${receiver_id}, 1, ${parent_id == undefined ? null : parent_id});`)
+         VALUES (${sender_id}, CURRENT_TIMESTAMP, '${escapedContent}', ${receiver_id}, 1, ${parent_id == undefined ? null : parent_id});`)
 
     } catch (err) {
         console.log(err)
@@ -698,7 +700,7 @@ const deleteMsg = async (msgId, sender_id, receiver_id) => {
 };
 
 // To save the new group message
-const saveGroupMsg = async (sender_id, content, group_id, receiverId, parent_id, messageMode = null) => {
+const saveGroupMsg = async (sender_id, content, group_id, receiverId, parent_id, messageMode = null, skipInbox = false) => {
     try {
         // Determine message mode if not explicitly provided
         let mode = messageMode;
@@ -710,8 +712,18 @@ const saveGroupMsg = async (sender_id, content, group_id, receiverId, parent_id,
             }
         }
         
+        // Determine History_Iden (0 = skip inbox, 1 = show in inbox)
+        // For widget 1-on-1 messages, we skip inbox to avoid unread count increase
+        const historyIden = skipInbox ? 0 : 1;
+        
+        // Escape single quotes for SQL
+        const escapedContent = content.replace(/'/g, "''");
         await PG_query(`INSERT INTO "Messages" ("Receiver_Id", "Sender_Id", "Send_Time", "Content", "group_id", "History_Iden", "parent_id", "message_mode")
-         VALUES (${receiverId}, ${sender_id}, CURRENT_TIMESTAMP, '${content}', ${group_id}, 1, ${parent_id == undefined ? null : parent_id}, ${mode});`)
+         VALUES (${receiverId}, ${sender_id}, CURRENT_TIMESTAMP, '${escapedContent}', ${group_id}, ${historyIden}, ${parent_id == undefined ? null : parent_id}, ${mode});`)
+
+        if (skipInbox) {
+            console.log(`📭 [WIDGET] Saved 1-on-1 message with History_Iden=0 (skip inbox) for widget users`);
+        }
 
     } catch (err) {
         console.log(err)
@@ -1522,10 +1534,12 @@ const updateGroupModPriorities = async (
 
 const sendGroupNotification = async (senderId, groupId, message) => {
     try {
+        // Escape single quotes for SQL
+        const escapedMessage = message.replace(/'/g, "''");
         // Insert notification messages with History_Iden = 1 so they appear in inbox
         await PG_query(`INSERT INTO "Messages" ("Content", "Sender_Id", "Receiver_Id", "History_Iden", "Send_Time")
             SELECT 
-                '${message}' AS "Content",
+                '${escapedMessage}' AS "Content",
                 ${senderId} AS "Sender_Id",
                 gu.user_id AS "Receiver_Id",
                 1 AS "History_Iden",

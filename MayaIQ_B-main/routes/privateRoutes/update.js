@@ -12,6 +12,8 @@ const { updateProductsValidation, updateVendorInforValidation, updateCustomerInf
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 
 // Ensure the directories exist
 const productUploadDir = path.join(__dirname, '../../uploads/products');
@@ -55,11 +57,17 @@ router.post("/customer/detail", authenticateUser, async (req, res) => {
     if (error) return res.status(httpCode.INVALID_MSG).send(error.details[0].message);
 
     let email = req.body.Email.toLowerCase();
-    let fullName = req.body.FirstName + " " + req.body.LastName;
+    let fullName = req.body.FirstName; // Only use FirstName, not LastName
+    
+    // Handle optional fields - convert empty strings to NULL
+    let country = req.body.country && req.body.country.trim() !== '' ? `'${req.body.country.replace(/'/g, "''")}'` : 'NULL';
+    let description = req.body.description && req.body.description.trim() !== '' ? `'${req.body.description.replace(/'/g, "''")}'` : 'NULL';
+    let gender = req.body.gender && req.body.gender.trim() !== '' ? `'${req.body.gender.replace(/'/g, "''")}'` : 'NULL';
+    let birthday = req.body.birthday && req.body.birthday.trim() !== '' ? `'${req.body.birthday.replace(/'/g, "''")}'` : 'NULL';
 
     try {
         await PG_query(`UPDATE "Users"
-                         SET "Name" = '${fullName}', "Email" = '${email}', "country" = '${req.body.country}', "Profession"='${req.body.description}', "gender" = '${req.body.gender}', "birthday" = '${req.body.birthday}'
+                         SET "Name" = '${fullName.replace(/'/g, "''")}', "Email" = '${email.replace(/'/g, "''")}', "country" = ${country}, "Profession" = ${description}, "gender" = ${gender}, "birthday" = ${birthday}
                          WHERE "Id" = '${req.user.id}';`);
         res.status(httpCode.SUCCESS).send("Successfully Updated!");
     } catch (error) {
@@ -109,7 +117,7 @@ router.post("/vendor/detail", authenticateUser, async (req, res) => {
     if (error) return res.status(httpCode.INVALID_MSG).send(error.details[0].message);
 
     let email = req.body.Email.toLowerCase();
-    let fullName = req.body.FirstName + " " + req.body.LastName;
+    let fullName = req.body.FirstName; // Only use FirstName, not LastName
 
     try {
         await PG_query(`UPDATE "Users"

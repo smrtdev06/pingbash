@@ -133,7 +133,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
         
         .pingbash-unread-badge {
           position: absolute;
-          top: -5px;
+          top: 5px;
           right: -5px;
           background: #ff4444;
           color: white;
@@ -342,11 +342,14 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
           /* Make inbox icon more tappable on mobile (when visible) */
           .pingbash-header-inbox-icon {
             min-width: 44px !important;
+            position: absolute !important;
+            top: 5px !important;
             min-height: 44px !important;
             /* Don't force display - let JavaScript control visibility based on unread count */
             align-items: center !important;
             justify-content: center !important;
             cursor: pointer !important;
+
             -webkit-tap-highlight-color: rgba(0,0,0,0.1) !important;
           }
           
@@ -1089,6 +1092,786 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
           color: var(--dark-text-primary) !important;
         }
         
+        .pingbash-dark-mode .pingbash-popup-body {
+          color: var(--dark-text-primary) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-popup-body p,
+        .pingbash-dark-mode .pingbash-popup-body div,
+        .pingbash-dark-mode .pingbash-popup-body span {
+          color: var(--dark-text-primary) !important;
+        }
+        
+        /* Chat Limitations & Manage Chat Dark Mode */
+        .pingbash-dark-mode .pingbash-chat-limitations-popup .pingbash-popup-content,
+        .pingbash-dark-mode .pingbash-manage-chat-popup .pingbash-popup-content {
+          background: var(--dark-bg-secondary) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-limitations-content,
+        .pingbash-dark-mode .pingbash-manage-chat-content {
+          background: var(--dark-bg-secondary) !important;
+          color: var(--dark-text-primary) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-limitations-option,
+        .pingbash-dark-mode .pingbash-manage-chat-option {
+          background: var(--dark-bg-tertiary) !important;
+          color: var(--dark-text-primary) !important;
+          border-color: var(--dark-border) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-limitations-option:hover,
+        .pingbash-dark-mode .pingbash-manage-chat-option:hover {
+          background: var(--dark-bg-hover) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-limitations-option input[type="radio"],
+        .pingbash-dark-mode .pingbash-limitations-option label {
+          color: var(--dark-text-primary) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-manage-chat-menu,
+        .pingbash-dark-mode .pingbash-pinned-messages-view,
+        .pingbash-dark-mode .pingbash-moderators-view {
+          background: var(--dark-bg-secondary) !important;
+          color: var(--dark-text-primary) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-menu-item {
+          color: var(--dark-text-primary) !important;
+          background: var(--dark-bg-tertiary) !important;
+          border-color: var(--dark-border) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-menu-item:hover {
+          background: var(--dark-bg-hover) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-menu-back {
+          color: var(--dark-text-primary) !important;
+          background: var(--dark-bg-tertiary) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-menu-back:hover {
+          background: var(--dark-bg-hover) !important;
+        }
+        
+        /* Chat Limitations Section Headers & Labels Dark Mode */
+        .pingbash-dark-mode .pingbash-limitation-section h4 {
+          color: var(--dark-text-primary) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-limitation-section .pingbash-radio-option {
+          color: var(--dark-text-primary) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-limitation-section .pingbash-radio-option span {
+          color: var(--dark-text-primary) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-limitation-divider {
+          border-top-color: var(--dark-border) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-slow-mode-label,
+        .pingbash-dark-mode .pingbash-custom-seconds label {
+          color: var(--dark-text-primary) !important;
+        }
+        
+        /* Edit Chat Style Modal Dark Mode - COMPLETE */
+        .pingbash-dark-mode .pingbash-edit-style-modal-body .pingbash-popup-content {
+          background: var(--dark-bg-secondary) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-edit-style-modal-body .pingbash-popup-header {
+          background: var(--dark-bg-secondary) !important;
+          border-bottom-color: var(--dark-border) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-edit-style-modal-body .pingbash-modal-title {
+          color: var(--dark-text-primary) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-edit-style-modal-body .pingbash-popup-body {
+          background: var(--dark-bg-secondary) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-group-name-section {
+          background: var(--dark-bg-secondary) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-group-name-section .pingbash-input-label {
+          color: var(--dark-text-primary) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-group-name-input[readonly],
+        .pingbash-dark-mode .pingbash-group-name-input[disabled] {
+          background: var(--dark-bg-tertiary) !important;
+          color: var(--dark-text-muted) !important;
+          border-color: var(--dark-border) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-style-form {
+          background: var(--dark-bg-secondary) !important;
+          color: var(--dark-text-primary) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-style-form label {
+          color: var(--dark-text-primary) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-color-item label {
+          color: var(--dark-text-primary) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-color-grid {
+          background: var(--dark-bg-secondary) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-settings-grid {
+          background: var(--dark-bg-secondary) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-font-size-section,
+        .pingbash-dark-mode .pingbash-corner-radius-section {
+          background: var(--dark-bg-secondary) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-font-size-section label,
+        .pingbash-dark-mode .pingbash-corner-radius-section label {
+          color: var(--dark-text-primary) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-font-size-value,
+        .pingbash-dark-mode .pingbash-corner-radius-value {
+          color: var(--dark-text-primary) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-group-config-widget {
+          background: var(--dark-bg-secondary) !important;
+        }
+        
+        /* Manage Moderators Dark Mode - COMPLETE */
+        .pingbash-dark-mode .pingbash-moderator-management-popup {
+          background: transparent !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-moderator-management-popup .pingbash-popup-content {
+          background: var(--dark-bg-secondary) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-moderator-management-popup .pingbash-popup-header {
+          background: var(--dark-bg-secondary) !important;
+          border-bottom-color: var(--dark-border) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-moderator-management-popup .pingbash-popup-header h3 {
+          color: var(--dark-text-primary) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-moderator-management-popup .pingbash-popup-body {
+          background: var(--dark-bg-secondary) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-moderator-management-popup .pingbash-popup-footer {
+          background: var(--dark-bg-secondary) !important;
+          border-top-color: var(--dark-border) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-moderator-management-content {
+          background: var(--dark-bg-secondary) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-moderators-section,
+        .pingbash-dark-mode .pingbash-add-moderator-section {
+          border-bottom-color: var(--dark-border) !important;
+          background: var(--dark-bg-secondary) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-moderators-section h4,
+        .pingbash-dark-mode .pingbash-add-moderator-section h4 {
+          color: var(--dark-text-primary) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-moderators-list {
+          background: var(--dark-bg-secondary) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-moderator-card {
+          background: var(--dark-bg-tertiary) !important;
+          border-color: var(--dark-border) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-moderator-item {
+          background: var(--dark-bg-tertiary) !important;
+          border-color: var(--dark-border) !important;
+          color: var(--dark-text-primary) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-moderator-name,
+        .pingbash-dark-mode .pingbash-moderator-permissions {
+          color: var(--dark-text-primary) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-permission-item label,
+        .pingbash-dark-mode .pingbash-permission-label,
+        .pingbash-dark-mode .pingbash-permission-description {
+          color: var(--dark-text-primary) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-moderator-search,
+        .pingbash-dark-mode .pingbash-add-moderator-input {
+          background: var(--dark-bg-input) !important;
+          border-color: var(--dark-border) !important;
+          color: var(--dark-text-primary) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-moderator-search::placeholder,
+        .pingbash-dark-mode .pingbash-add-moderator-input::placeholder {
+          color: var(--dark-text-muted) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-no-moderators-message {
+          color: var(--dark-text-muted) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-search-results {
+          background: var(--dark-bg-tertiary) !important;
+          border-color: var(--dark-border) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-search-result-item {
+          background: var(--dark-bg-tertiary) !important;
+          border-color: var(--dark-border) !important;
+          color: var(--dark-text-primary) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-search-result-item:hover {
+          background: var(--dark-bg-hover) !important;
+        }
+        
+        /* Censored Content Dark Mode - COMPLETE */
+        .pingbash-dark-mode .pingbash-censored-content-popup {
+          background: transparent !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-censored-content-popup .pingbash-popup-content {
+          background: var(--dark-bg-secondary) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-censored-content-popup .pingbash-popup-header {
+          background: var(--dark-bg-secondary) !important;
+          border-bottom-color: var(--dark-border) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-censored-content-popup .pingbash-popup-header h3 {
+          color: var(--dark-text-primary) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-censored-content-popup .pingbash-popup-body {
+          background: var(--dark-bg-secondary) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-censored-content-popup .pingbash-popup-footer {
+          background: var(--dark-bg-secondary) !important;
+          border-top-color: var(--dark-border) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-censored-content {
+          background: var(--dark-bg-secondary) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-censored-list {
+          background: var(--dark-bg-secondary) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-censored-item {
+          background: var(--dark-bg-tertiary) !important;
+          border-color: var(--dark-border) !important;
+          color: var(--dark-text-primary) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-censored-word {
+          color: var(--dark-text-primary) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-censored-input-container {
+          background: var(--dark-bg-secondary) !important;
+          border-color: var(--dark-border) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-censored-input {
+          background: var(--dark-bg-input) !important;
+          border-color: var(--dark-border) !important;
+          color: var(--dark-text-primary) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-censored-input::placeholder {
+          color: var(--dark-text-muted) !important;
+        }
+        
+        /* Banned Users & IP Bans Dark Mode */
+        .pingbash-dark-mode .pingbash-banned-users-popup .pingbash-popup-content,
+        .pingbash-dark-mode .pingbash-ip-bans-popup .pingbash-popup-content {
+          background: var(--dark-bg-secondary) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-banned-content,
+        .pingbash-dark-mode .pingbash-ip-bans-content {
+          background: var(--dark-bg-secondary) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-banned-list,
+        .pingbash-dark-mode .pingbash-ip-ban-list {
+          background: var(--dark-bg-secondary) !important;
+          color: var(--dark-text-primary) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-banned-item,
+        .pingbash-dark-mode .pingbash-ip-ban-item {
+          background: var(--dark-bg-tertiary) !important;
+          border-color: var(--dark-border) !important;
+          color: var(--dark-text-primary) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-banned-user-name,
+        .pingbash-dark-mode .pingbash-banned-user-id,
+        .pingbash-dark-mode .pingbash-ip-address,
+        .pingbash-dark-mode .pingbash-ban-reason {
+          color: var(--dark-text-primary) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-no-banned-message,
+        .pingbash-dark-mode .pingbash-no-ip-bans-message {
+          color: var(--dark-text-muted) !important;
+        }
+        
+        /* Send Notification Dialog Dark Mode - COMPLETE */
+        .pingbash-dark-mode .pingbash-notification-modal {
+          background: transparent !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-notification-modal .pingbash-popup-content {
+          background: var(--dark-bg-secondary) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-notification-modal .pingbash-popup-header {
+          background: var(--dark-bg-secondary) !important;
+          border-bottom-color: var(--dark-border) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-notification-modal .pingbash-popup-header h3 {
+          color: var(--dark-text-primary) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-notification-modal .pingbash-popup-body {
+          background: var(--dark-bg-secondary) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-notification-modal .pingbash-popup-footer {
+          background: var(--dark-bg-secondary) !important;
+          border-top-color: var(--dark-border) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-notification-modal .pingbash-notification-form {
+          background: var(--dark-bg-secondary) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-notification-modal .pingbash-notification-form label,
+        .pingbash-dark-mode .pingbash-notification-form p {
+          color: var(--dark-text-primary) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-notification-modal textarea {
+          background: var(--dark-bg-input) !important;
+          border-color: var(--dark-border) !important;
+          color: var(--dark-text-primary) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-notification-modal textarea::placeholder {
+          color: var(--dark-text-muted) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-notification-modal textarea:focus {
+          border-color: var(--dark-accent) !important;
+          box-shadow: 0 0 0 2px rgba(74, 158, 255, 0.1) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-notification-preview {
+          background: var(--dark-bg-primary) !important;
+          border-color: var(--dark-border) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-notification-message-display {
+          background: var(--dark-bg-tertiary) !important;
+          border-color: var(--dark-border) !important;
+          color: var(--dark-text-primary) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-notification-preview-label {
+          color: var(--dark-text-primary) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-notification-sender {
+          color: var(--dark-accent) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-notification-character-count {
+          color: var(--dark-text-secondary) !important;
+        }
+        
+        /* Sign In & Sign Up Modals Dark Mode */
+        .pingbash-dark-mode .pingbash-signin-modal .pingbash-popup-content,
+        .pingbash-dark-mode .pingbash-signup-modal .pingbash-popup-content {
+          background: var(--dark-bg-secondary) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-auth-footer p {
+          color: var(--dark-text-primary) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-continue-anon-link {
+          color: var(--dark-accent) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-continue-anon-link:hover {
+          color: #7ab8d4 !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-show-signup-btn,
+        .pingbash-dark-mode .pingbash-show-signin-btn {
+          color: var(--dark-accent) !important;
+          background: transparent !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-show-signup-btn:hover,
+        .pingbash-dark-mode .pingbash-show-signin-btn:hover {
+          text-decoration: underline !important;
+        }
+        
+        /* Email Verification Modal Dark Mode */
+        .pingbash-dark-mode .pingbash-verification-modal .pingbash-popup-content {
+          background: var(--dark-bg-secondary) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-verification-text {
+          color: var(--dark-text-primary) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-verification-email {
+          color: var(--dark-accent) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-otp-input {
+          background: var(--dark-bg-input) !important;
+          border-color: var(--dark-border) !important;
+          color: var(--dark-text-primary) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-otp-input:focus {
+          border-color: var(--dark-accent) !important;
+          box-shadow: 0 0 0 2px rgba(74, 158, 255, 0.1) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-verification-timer {
+          color: var(--dark-text-secondary) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-timer-display {
+          color: var(--dark-accent) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-verification-footer p {
+          color: var(--dark-text-primary) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-back-to-signin-btn {
+          color: var(--dark-accent) !important;
+          background: transparent !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-back-to-signin-btn:hover {
+          text-decoration: underline !important;
+        }
+        
+        /* User Search Modal Dark Mode - Complete */
+        .pingbash-dark-mode .pingbash-user-search-modal .pingbash-popup-content {
+          background: var(--dark-bg-secondary) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-search-input-container {
+          background: var(--dark-bg-input) !important;
+          border-color: var(--dark-border) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-search-icon {
+          color: var(--dark-text-muted) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-search-icon path {
+          fill: var(--dark-text-muted) !important;
+        }
+        
+        /* Sound Settings Popup Dark Mode - Complete */
+        .pingbash-dark-mode .pingbash-sound-popup .pingbash-popup-content {
+          background: var(--dark-bg-secondary) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-sound-option {
+          color: var(--dark-text-primary) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-sound-option input[type="radio"] {
+          accent-color: var(--dark-accent) !important;
+        }
+        
+        /* Chat Rules Popup Dark Mode - Complete */
+        .pingbash-dark-mode .pingbash-chat-rules-popup .pingbash-popup-content {
+          background: var(--dark-bg-secondary) !important;
+        }
+        
+        /* Delete Message Modal Dark Mode */
+        .pingbash-dark-mode .pingbash-delete-message-modal .pingbash-popup-content {
+          background: var(--dark-bg-secondary) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-delete-options button {
+          opacity: 1 !important;
+        }
+        
+        /* Moderator Permissions Popup Dark Mode */
+        .pingbash-dark-mode .pingbash-mod-permissions-popup .pingbash-mod-permissions-content {
+          background: var(--dark-bg-secondary) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-mod-permissions-popup .pingbash-popup-header {
+          background: var(--dark-bg-secondary) !important;
+          border-bottom-color: var(--dark-border) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-permissions-list {
+          background: var(--dark-bg-secondary) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-permission-group {
+          background: var(--dark-bg-tertiary) !important;
+          border-color: var(--dark-border) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-permission-group h4 {
+          color: var(--dark-text-primary) !important;
+        }
+        
+        /* Group Creation Modal Dark Mode - Complete */
+        .pingbash-dark-mode .pingbash-group-creation-modal .pingbash-popup-content {
+          background: var(--dark-bg-secondary) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-group-creation-modal-body .pingbash-popup-content {
+          background: var(--dark-bg-secondary) !important;
+        }
+        
+        /* Emoji & GIF Picker Modal Dark Mode */
+        .pingbash-dark-mode .pingbash-emoji-modal .pingbash-popup-content {
+          background: var(--dark-bg-secondary) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-emoji-picker {
+          background: var(--dark-bg-secondary) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-emoji-header {
+          background: var(--dark-bg-tertiary) !important;
+          border-bottom-color: var(--dark-border) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-emoji-search {
+          background: var(--dark-bg-input) !important;
+          border-color: var(--dark-border) !important;
+          color: var(--dark-text-primary) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-emoji-search::placeholder {
+          color: var(--dark-text-muted) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-emoji-search:focus {
+          border-color: var(--dark-accent) !important;
+          box-shadow: 0 0 0 2px rgba(74, 158, 255, 0.1) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-emoji-close {
+          color: var(--dark-text-primary) !important;
+          background: transparent !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-emoji-close:hover {
+          background: var(--dark-bg-hover) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-emoji-tabs {
+          background: var(--dark-bg-tertiary) !important;
+          border-bottom-color: var(--dark-border) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-emoji-tab {
+          color: var(--dark-text-secondary) !important;
+          background: transparent !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-emoji-tab:hover {
+          background: var(--dark-bg-hover) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-emoji-tab.active {
+          color: var(--dark-accent) !important;
+          border-bottom-color: var(--dark-accent) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-emoji-content {
+          background: var(--dark-bg-secondary) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-emoji-grid {
+          background: var(--dark-bg-secondary) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-emoji:hover {
+          background: var(--dark-bg-hover) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-gif-grid {
+          background: var(--dark-bg-secondary) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-gif-item:hover {
+          opacity: 0.8 !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-gif-loading,
+        .pingbash-dark-mode .pingbash-gif-error {
+          color: var(--dark-text-secondary) !important;
+        }
+        
+        /* @ Mention Modal Dark Mode */
+        .pingbash-dark-mode .pingbash-mention-modal .pingbash-popup-content {
+          background: var(--dark-bg-secondary) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-mention-list {
+          background: var(--dark-bg-secondary) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-mention-item {
+          background: var(--dark-bg-tertiary) !important;
+          border-color: var(--dark-border) !important;
+          color: var(--dark-text-primary) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-mention-item:hover {
+          background: var(--dark-bg-hover) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-mention-name {
+          color: var(--dark-text-primary) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-mention-username {
+          color: var(--dark-text-secondary) !important;
+        }
+        
+        /* Profile Popup Dark Mode - Complete */
+        .pingbash-dark-mode .pingbash-profile-popup .pingbash-popup-content {
+          background: var(--dark-bg-secondary) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-profile-popup .pingbash-popup-header {
+          background: var(--dark-bg-secondary) !important;
+          border-bottom-color: var(--dark-border) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-profile-popup .pingbash-popup-header h2 {
+          color: var(--dark-text-primary) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-profile-popup .pingbash-popup-body {
+          background: var(--dark-bg-secondary) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-profile-popup .pingbash-popup-footer {
+          background: var(--dark-bg-secondary) !important;
+          border-top-color: var(--dark-border) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-profile-content {
+          background: var(--dark-bg-secondary) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-profile-avatar-section {
+          background: var(--dark-bg-secondary) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-profile-avatar-container {
+          background: var(--dark-bg-tertiary) !important;
+          border-color: var(--dark-border) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-profile-avatar {
+          border-color: var(--dark-border) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-avatar-upload-btn {
+          background: var(--dark-bg-tertiary) !important;
+          color: var(--dark-text-primary) !important;
+          border-color: var(--dark-border) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-avatar-upload-btn:hover {
+          background: var(--dark-bg-hover) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-profile-form {
+          background: var(--dark-bg-secondary) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-profile-form .pingbash-form-group label {
+          color: var(--dark-text-primary) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-profile-form input,
+        .pingbash-dark-mode .pingbash-profile-form select,
+        .pingbash-dark-mode .pingbash-profile-form textarea {
+          background: var(--dark-bg-input) !important;
+          border-color: var(--dark-border) !important;
+          color: var(--dark-text-primary) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-profile-form input:focus,
+        .pingbash-dark-mode .pingbash-profile-form select:focus,
+        .pingbash-dark-mode .pingbash-profile-form textarea:focus {
+          border-color: var(--dark-accent) !important;
+          box-shadow: 0 0 0 2px rgba(74, 158, 255, 0.1) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-profile-form input::placeholder,
+        .pingbash-dark-mode .pingbash-profile-form textarea::placeholder {
+          color: var(--dark-text-muted) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-profile-form input[readonly] {
+          background: var(--dark-bg-tertiary) !important;
+          cursor: not-allowed !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-form-row {
+          background: var(--dark-bg-secondary) !important;
+        }
+        
+        .pingbash-dark-mode .pingbash-profile-save-btn {
+          opacity: 1 !important;
+        }
+        
         /* Form Elements Dark Mode */
         .pingbash-dark-mode .pingbash-form-input {
           background: var(--dark-bg-input) !important;
@@ -1110,14 +1893,17 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
         }
         
         /* Button Dark Mode */
+        .pingbash-dark-mode .pingbash-signin-submit-btn,
+        .pingbash-dark-mode .pingbash-signup-submit-btn,
         .pingbash-dark-mode .pingbash-continue-anon-btn {
-          background: var(--dark-bg-tertiary) !important;
-          color: var(--dark-text-primary) !important;
-          border-color: var(--dark-border) !important;
+          background: #5dbbdf !important;
+          color: white !important;
         }
         
+        .pingbash-dark-mode .pingbash-signin-submit-btn:hover,
+        .pingbash-dark-mode .pingbash-signup-submit-btn:hover,
         .pingbash-dark-mode .pingbash-continue-anon-btn:hover {
-          background: var(--dark-bg-hover) !important;
+          background: #4aabcd !important;
         }
         
         /* Chat Rules Dark Mode */
@@ -2241,6 +3027,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
         
         .pingbash-popup-body {
           padding: 20px;
+          text-align: left;
         }
         
         .pingbash-sound-option {
@@ -2472,41 +3259,38 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
         
         .pingbash-signin-options {
           display: flex;
+          flex-direction: column;
           gap: 12px;
           margin-top: 8px;
         }
         
-        .pingbash-signin-submit-btn {
-          flex: 1;
-          background: #2596be;
+        .pingbash-signin-submit-btn,
+        .pingbash-continue-anon-btn {
+          width: 100%;
+          background: #5dbbdf;
           color: white;
           border: none;
-          padding: 10px 16px;
-          border-radius: 4px;
+          padding: 12px 20px;
+          border-radius: 24px;
           cursor: pointer;
-          font-size: 14px;
+          font-size: 16px;
           font-weight: 600;
-          transition: background-color 0.2s ease;
+          transition: all 0.2s ease;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 10px;
         }
         
-        .pingbash-signin-submit-btn:hover {
-          background: #1e7ba8;
-        }
-        
-        .pingbash-continue-anon-btn {
-          flex: 1;
-          background: #f0f0f0;
-          color: #333;
-          border: none;
-          padding: 10px 16px;
-          border-radius: 4px;
-          cursor: pointer;
-          font-size: 14px;
-          transition: background-color 0.2s ease;
-        }
-        
+        .pingbash-signin-submit-btn:hover,
         .pingbash-continue-anon-btn:hover {
-          background: #e0e0e0;
+          background: #4aabcd;
+          transform: translateY(-1px);
+          box-shadow: 0 4px 8px rgba(93, 187, 223, 0.3);
+        }
+        
+        .pingbash-btn-icon {
+          flex-shrink: 0;
         }
         
         /* Auth Footer Styles */
@@ -2518,9 +3302,25 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
         }
         
         .pingbash-auth-footer p {
-          margin: 0;
+          margin: 8px 0;
           font-size: 14px;
           color: #666;
+        }
+        
+        .pingbash-continue-anon-text {
+          margin-top: 12px !important;
+        }
+        
+        .pingbash-continue-anon-link {
+          color: #2596be;
+          text-decoration: none;
+          font-size: 14px;
+          transition: all 0.2s ease;
+        }
+        
+        .pingbash-continue-anon-link:hover {
+          color: #1d7a9e;
+          text-decoration: underline;
         }
         
         .pingbash-show-signup-btn,
@@ -2562,25 +3362,32 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype)
         
         .pingbash-signup-options {
           display: flex;
+          flex-direction: column;
           gap: 12px;
           margin-top: 8px;
         }
         
         .pingbash-signup-submit-btn {
-          flex: 1;
-          background: #28a745;
+          width: 100%;
+          background: #5dbbdf;
           color: white;
           border: none;
-          padding: 10px 16px;
-          border-radius: 4px;
+          padding: 12px 20px;
+          border-radius: 24px;
           cursor: pointer;
-          font-size: 14px;
+          font-size: 16px;
           font-weight: 600;
-          transition: background-color 0.2s ease;
+          transition: all 0.2s ease;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 10px;
         }
         
         .pingbash-signup-submit-btn:hover {
-          background: #218838;
+          background: #4aabcd;
+          transform: translateY(-1px);
+          box-shadow: 0 4px 8px rgba(93, 187, 223, 0.3);
         }
         
         /* Email Verification Modal */

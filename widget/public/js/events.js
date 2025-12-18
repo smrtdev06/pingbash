@@ -231,20 +231,23 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
       const signinModal = this.dialog.querySelector('.pingbash-signin-modal');
       const signinCloseBtn = signinModal?.querySelector('.pingbash-popup-close');
       const signinSubmitBtn = this.dialog.querySelector('.pingbash-signin-submit-btn');
-      const continueAnonBtns = this.dialog.querySelectorAll('.pingbash-continue-anon-btn');
+      const continueAnonLinks = this.dialog.querySelectorAll('.pingbash-continue-anon-link');
       const signinOverlay = signinModal?.querySelector('.pingbash-popup-overlay');
 
       if( window.isDebugging ) console.log('🔍 [Widget] Button elements found:', {
         signinCloseBtn: !!signinCloseBtn,
         signinSubmitBtn: !!signinSubmitBtn,
-        continueAnonBtns: continueAnonBtns.length
+        continueAnonLinks: continueAnonLinks.length
       });
 
-      // Debug: Add visual indicator to all continue buttons
-      continueAnonBtns.forEach((btn, index) => {
-        btn.style.border = '2px solid red';
-        btn.style.backgroundColor = '#ffcccc';
-        if( window.isDebugging ) console.log(`🔍 [Widget] Continue button ${index + 1} styled for debugging`);
+      // Add event listeners for "Continue as Guest" text links
+      continueAnonLinks.forEach((link, index) => {
+        link.addEventListener('click', (e) => {
+          e.preventDefault();
+          if( window.isDebugging ) console.log(`🔍 [Widget] Continue as Guest link ${index + 1} clicked`);
+          this.continueAsAnonymous();
+        });
+        if( window.isDebugging ) console.log(`🔍 [Widget] Continue as Guest link ${index + 1} listener attached`);
       });
 
       signinCloseBtn?.addEventListener('click', () => this.hideSigninModal());
@@ -265,7 +268,7 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
       showSigninBtn?.addEventListener('click', () => this.switchToSignin());
 
                // Add Enter key support for signup form
-       const signupInputs = this.dialog.querySelectorAll('#signup-email, #signup-name, #signup-password, #signup-confirm-password');
+       const signupInputs = this.dialog.querySelectorAll('#signup-username, #signup-email, #signup-password, #signup-confirm-password');
        signupInputs.forEach(input => {
          input.addEventListener('keypress', (e) => {
            if (e.key === 'Enter') {
@@ -327,28 +330,9 @@ if (window.PingbashChatWidget && window.PingbashChatWidget.prototype) {
            if (e.key === 'Backspace' && !input.value && index > 0) {
              otpInputs[index - 1].focus();
            }
-         });
-       });
-
-      // Attach event listeners to ALL Continue As Guest buttons
-      continueAnonBtns.forEach((continueAnonBtn, index) => {
-        if( window.isDebugging ) console.log(`🔍 [Widget] Adding click listener to Continue As Guest button ${index + 1}`);
-
-        // Only ONE click handler to prevent duplicate calls
-        continueAnonBtn.addEventListener('click', (event) => {
-          if( window.isDebugging ) console.log(`🔍 [Widget] Continue As Guest button ${index + 1} CLICKED!`);
-          event.preventDefault();
-          event.stopPropagation();
-          this.continueAsAnonymous();
         });
-
-        // Mark that listener has been attached
-        continueAnonBtn._listenerAttached = true;
       });
 
-      if (continueAnonBtns.length === 0) {
-        console.error('❌ [Widget] No Continue As Guest buttons found!');
-      }
       signinOverlay?.addEventListener('click', () => this.hideSigninModal());
 
       // Chat rules popup
